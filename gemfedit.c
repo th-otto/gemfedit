@@ -2,6 +2,7 @@
 #include <osbind.h>
 #include <mintbind.h>
 #include <time.h>
+#include <ctype.h>
 #include <mint/arch/nf_ops.h>
 #define FONT_HDR LA_FONT_HDR
 #define FONTS LA_FONTS
@@ -22,7 +23,7 @@ static _WORD gl_wchar, gl_hchar;
 
 typedef struct
 {
-    FONT_HDR *font[3];
+    FONT_HDR *font[4];
 } FONTS;
 
 
@@ -428,10 +429,10 @@ static void panel_click(_WORD x, _WORD y)
 	
 	set_panel_pos();
 	obj = objc_find(panel, ROOT, MAX_DEPTH, x, y);
-	if (obj >= PANEL_FIRST && obj <= PANEL_LAST)
+	if (obj >= PANEL_FIRST && obj <= PANEL_LAST && font_cw > 0)
 	{
 		objc_offset(panel, obj, &ox, &oy);
-		cur_char = (obj - PANEL_FIRST) * 16 + (x - ox) / gl_wchar;
+		cur_char = (obj - PANEL_FIRST) * 16 + (x - ox) / font_cw;
 		redraw_win(mainwin);
 	}
 }
@@ -801,7 +802,7 @@ static _BOOL check_gemfnt_header(FONT_HDR *h, unsigned long l)
 		return FALSE;
 	form_width = h->form_width;
 	form_height = h->form_height;
-	if ((dat_offset + form_width * form_height) > l)
+	if ((dat_offset + (_ULONG)form_width * form_height) > l)
 		return FALSE;
 	h->last_ade = lastc;
 	return TRUE;
@@ -924,7 +925,7 @@ static char *xbasename(const char *path)
 
 static void font_loaded(unsigned char *h, const char *filename)
 {
-#if 1
+#if 0
 	nf_debugprintf("Filename: %s\n", filename);
 	nf_debugprintf("Name: %s\n", fontname);
 	nf_debugprintf("Id: %d\n", fonthdr.font_id);
@@ -1038,7 +1039,11 @@ static _BOOL font_load_sysfont(int fontnum)
 	FONT_HDR *hdr = &fonthdr;
 	const unsigned char *h;
 	unsigned char *m;
-	const char *filename = fontnum == 0 ? "system0.fnt" : fontnum == 1 ? "system1.fnt" : "system2.fnt";
+	const char *filename =
+		fontnum == 0 ? "system0.fnt" :
+		fontnum == 1 ? "system1.fnt" :
+		fontnum == 3 ? "system3.fnt" :
+		"system2.fnt";
 	unsigned long l;
 	unsigned long offtable_size;
 	unsigned long form_size;
@@ -1069,6 +1074,9 @@ static _BOOL font_load_sysfont(int fontnum)
 	memcpy(m, h, SIZEOF_FONT_HDR);
 	memcpy(m + SIZEOF_FONT_HDR, off_table, offtable_size);
 	memcpy(m + SIZEOF_FONT_HDR + offtable_size, dat_table, form_size);
+	
+	off_table = (unsigned short *)(m + SIZEOF_FONT_HDR);
+	dat_table = m + SIZEOF_FONT_HDR + offtable_size;
 	
 	font_loaded(m, filename);
 
@@ -1188,15 +1196,19 @@ static void save_font(const char *filename)
 	char filename_buf[128];
 	char *p;
 	
-	if (filename)
-	{
-		strcpy(path, filename);
-	} else if (path[0] == '\0')
+	if (path[0] == '\0')
 	{
 		path[0] = Dgetdrv() + 'A';
 		path[1] = ':';
 		Dgetpath(path + 2, 0);
 		strcat(path, "\\");
+	}
+	if (filename)
+	{
+		if (isalpha(filename[0]) && filename[1] == ':')
+			strcpy(path, filename);
+		else
+			strcpy(xbasename(path), filename);
 	}
 	p = xbasename(path);
 	strcpy(p, "*.FNT");
@@ -1342,6 +1354,9 @@ static void handle_message(_WORD *message, _WORD mox, _WORD moy)
 		case FSYS_8X16:
 			font_load_sysfont(2);
 			break;
+		case FSYS_16X32:
+			font_load_sysfont(3);
+			break;
 		case FINFO:
 			font_info();
 			break;
@@ -1364,6 +1379,8 @@ static void mainloop(void)
 
 	if (dat_table == NULL)
 		msg_mn_select(TFILE, FOPEN);
+	init_linea();
+	menu_ienable(menu, FSYS_16X32, Fonts != NULL && Fonts->font[3] != NULL);
 	
 	while (!quit_app)
 	{
@@ -1395,13 +1412,13 @@ static void mainloop(void)
 			default:
 				switch ((k >> 8) & 0xff)
 				{
-				case 0x48:
+				case 0x48: /* cursor up */
 					scalex++;
 					scaley++;
 					resize_window();
 					redraw_win(mainwin);
 					break;
-				case 0x50:
+				case 0x50: /* cursor down */
 					if (scaley > 1)
 					{
 						scalex--;
@@ -1409,6 +1426,14 @@ static void mainloop(void)
 						resize_window();
 						redraw_win(mainwin);
 					}
+					break;
+				case 0x4b: /* cursor left */
+					cur_char = (cur_char - fonthdr.first_ade - 1) % numoffs + fonthdr.first_ade;
+					redraw_win(mainwin);
+					break;
+				case 0x4d: /* cursor right */
+					cur_char = (cur_char - fonthdr.first_ade + 1) % numoffs + fonthdr.first_ade;
+					redraw_win(mainwin);
 					break;
 				}
 				break;
@@ -1491,7 +1516,8 @@ int main(int argc, char **argv)
 	
 	graf_mouse(ARROW, NULL);
 	
-	mainloop();
+	if (!quit_app)
+		mainloop();
 	
 	destroy_win();
 	cleanup();
