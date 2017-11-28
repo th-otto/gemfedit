@@ -3,6 +3,15 @@
 #include <mintbind.h>
 #include <time.h>
 #include <mint/arch/nf_ops.h>
+#define FONT_HDR LA_FONT_HDR
+#define FONTS LA_FONTS
+#define Fonts LA_Fonts
+#define fonthdr la_fonthdr
+#include <linea.h>
+#undef fonthdr
+#undef FONT_HDR
+#undef FONTS
+#undef Fonts
 static _WORD gl_wchar, gl_hchar;
 #define GetTextSize(w, h) *(w) = gl_wchar, *(h) = gl_hchar
 #define hfix_objs(a, b, c)
@@ -10,6 +19,12 @@ static _WORD gl_wchar, gl_hchar;
 #include "gemfedit.h"
 #include "fonthdr.h"
 #include "swap.h"
+
+typedef struct
+{
+    FONT_HDR *font[3];
+} FONTS;
+
 
 #define PANEL_Y_MARGIN 20
 #define PANEL_X_MARGIN 20
@@ -44,6 +59,11 @@ static unsigned short cur_char;
 static _BOOL font_changed = FALSE;
 
 #define FONT_BIG ((fonthdr.flags & FONTF_BIGENDIAN) != 0)
+
+LINEA *Linea;
+VDIESC *Vdiesc;
+FONTS *Fonts;
+LINEA_FUNP *Linea_funp;
 
 static char const program_name[] = "gemfedit";
 
@@ -788,13 +808,50 @@ static _BOOL check_gemfnt_header(FONT_HDR *h, unsigned long l)
 
 
 
+static void font_get_tables(unsigned char *h, const char *filename)
+{
+	FONT_HDR *hdr = &fonthdr;
+	unsigned short *u;
+	_BOOL hor_table_valid;
+
+	numoffs = hdr->last_ade - hdr->first_ade + 1;
+	off_table = (unsigned short *)(h + hdr->off_table);
+	dat_table = h + hdr->dat_table;
+	hor_table_valid = hdr->hor_table != 0 && hdr->hor_table != hdr->off_table && (hdr->off_table - hdr->hor_table) >= (numoffs * 2);
+	if ((hdr->flags & FONTF_HORTABLE) && hor_table_valid)
+	{
+		hor_table = h + hdr->hor_table;
+	} else
+	{
+		if (hdr->flags & FONTF_HORTABLE)
+		{
+			nf_debugprintf("%s: warning: %s: flag for horizontal table set, but there is none\n", program_name, filename);
+			hdr->flags &= ~FONTF_HORTABLE;
+		} else if (hor_table_valid)
+		{
+			nf_debugprintf("%s: warning: %s: offset table present but flag not set\n", program_name, filename);
+		}
+		hor_table = NULL;
+		hdr->hor_table = 0;
+	}
+	if (FONT_BIG != HOST_BIG)
+	{
+		for (u = off_table; u <= off_table + numoffs; u++)
+		{
+			SWAP_W(*u);
+		}
+	}
+	
+	font_cw = hdr->max_cell_width;
+	font_ch = hdr->form_height;
+	cur_char = 'A';
+}
+
 
 
 static _BOOL font_gen_gemfont(unsigned char *h, const char *filename, unsigned long l)
 {
 	FONT_HDR *hdr = &fonthdr;
-	unsigned short *u;
-	_BOOL hor_table_valid;
 	
 	font_gethdr(hdr, h);
 	
@@ -839,37 +896,7 @@ static _BOOL font_gen_gemfont(unsigned char *h, const char *filename, unsigned l
 		}
 	}
 	
-	numoffs = hdr->last_ade - hdr->first_ade + 1;
-	off_table = (unsigned short *)(h + hdr->off_table);
-	dat_table = h + hdr->dat_table;
-	hor_table_valid = hdr->hor_table != 0 && hdr->hor_table != hdr->off_table && (hdr->off_table - hdr->hor_table) >= (numoffs * 2);
-	if ((hdr->flags & FONTF_HORTABLE) && hor_table_valid)
-	{
-		hor_table = h + hdr->hor_table;
-	} else
-	{
-		if (hdr->flags & FONTF_HORTABLE)
-		{
-			nf_debugprintf("%s: warning: %s: flag for horizontal table set, but there is none\n", program_name, filename);
-			hdr->flags &= ~FONTF_HORTABLE;
-		} else if (hor_table_valid)
-		{
-			nf_debugprintf("%s: warning: %s: offset table present but flag not set\n", program_name, filename);
-		}
-		hor_table = NULL;
-		hdr->hor_table = 0;
-	}
-	if (FONT_BIG != HOST_BIG)
-	{
-		for (u = off_table; u <= off_table + numoffs; u++)
-		{
-			SWAP_W(*u);
-		}
-	}
-	
-	font_cw = hdr->max_cell_width;
-	font_ch = hdr->form_height;
-	cur_char = 'A';
+	font_get_tables(h, filename);
 	
 	return TRUE;
 }
@@ -886,6 +913,55 @@ static char *xbasename(const char *path)
 	else
 		++p;
 	return p;
+}
+
+
+static void font_loaded(unsigned char *h, const char *filename)
+{
+#if 1
+	nf_debugprintf("Filename: %s\n", filename);
+	nf_debugprintf("Name: %s\n", fontname);
+	nf_debugprintf("Id: %d\n", fonthdr.font_id);
+	nf_debugprintf("Size: %dpt\n", fonthdr.point);
+	nf_debugprintf("First ade: %d\n", fonthdr.first_ade);
+	nf_debugprintf("Last ade: %d\n", fonthdr.last_ade);
+	nf_debugprintf("Top: %d\n", fonthdr.top);
+	nf_debugprintf("Ascent: %d\n", fonthdr.ascent);
+	nf_debugprintf("Half: %d\n", fonthdr.half);
+	nf_debugprintf("Descent: %d\n", fonthdr.descent);
+	nf_debugprintf("Bottom: %d\n", fonthdr.bottom);
+	nf_debugprintf("Max charwidth: %d\n", fonthdr.max_char_width);
+	nf_debugprintf("Max cellwidth: %d\n", fonthdr.max_cell_width);
+	nf_debugprintf("Left offset: %d\n", fonthdr.left_offset);
+	nf_debugprintf("Right offset: %d\n", fonthdr.right_offset);
+	nf_debugprintf("Thicken: %d\n", fonthdr.thicken);
+	nf_debugprintf("Underline size: %d\n", fonthdr.ul_size);
+	nf_debugprintf("Lighten: $%x\n", fonthdr.lighten);
+	nf_debugprintf("Skew: $%x\n", fonthdr.skew);
+	nf_debugprintf("Flags: $%x (%s%s%s-endian %s%s)\n", fonthdr.flags,
+		fonthdr.flags & FONTF_SYSTEM ? "system " : "",
+		fonthdr.flags & FONTF_HORTABLE ? "offsets " : "",
+		fonthdr.flags & FONTF_BIGENDIAN ? "big" : "little",
+		fonthdr.flags & FONTF_MONOSPACED ? "monospaced" : "proportional",
+		fonthdr.flags & FONTF_EXTENDED ? " extended" : "");
+	nf_debugprintf("Horizontal table: %lu\n", (unsigned long)fonthdr.hor_table);
+	nf_debugprintf("Offset table: %lu\n", (unsigned long)fonthdr.off_table);
+	nf_debugprintf("Data: %lu\n", (unsigned long)fonthdr.dat_table);
+	nf_debugprintf("Form width: %d\n", fonthdr.form_width);
+	nf_debugprintf("Form height: %d\n", fonthdr.form_height);
+	nf_debugprintf("\n");
+#endif
+
+	free(fontmem);
+	fontmem = h;
+	resize_window();
+	resize_panel();
+	wind_set_str(mainwin, WF_NAME, fontname);
+	fontbasename = xbasename(filename);
+	wind_set_str(panelwin, WF_NAME, fontbasename);
+	redraw_win(mainwin);
+	redraw_win(panelwin);
+	font_changed = FALSE;
 }
 
 
@@ -923,50 +999,7 @@ static _BOOL font_load_gemfont(const char *filename)
 
 	if (ret)
 	{
-#if 0
-		nf_debugprintf("Filename: %s\n", filename);
-		nf_debugprintf("Name: %s\n", fontname);
-		nf_debugprintf("Id: %d\n", fonthdr.font_id);
-		nf_debugprintf("Size: %dpt\n", fonthdr.point);
-		nf_debugprintf("First ade: %d\n", fonthdr.first_ade);
-		nf_debugprintf("Last ade: %d\n", fonthdr.last_ade);
-		nf_debugprintf("Top: %d\n", fonthdr.top);
-		nf_debugprintf("Ascent: %d\n", fonthdr.ascent);
-		nf_debugprintf("Half: %d\n", fonthdr.half);
-		nf_debugprintf("Descent: %d\n", fonthdr.descent);
-		nf_debugprintf("Bottom: %d\n", fonthdr.bottom);
-		nf_debugprintf("Max charwidth: %d\n", fonthdr.max_char_width);
-		nf_debugprintf("Max cellwidth: %d\n", fonthdr.max_cell_width);
-		nf_debugprintf("Left offset: %d\n", fonthdr.left_offset);
-		nf_debugprintf("Right offset: %d\n", fonthdr.right_offset);
-		nf_debugprintf("Thicken: %d\n", fonthdr.thicken);
-		nf_debugprintf("Underline size: %d\n", fonthdr.ul_size);
-		nf_debugprintf("Lighten: $%x\n", fonthdr.lighten);
-		nf_debugprintf("Skew: $%x\n", fonthdr.skew);
-		nf_debugprintf("Flags: $%x (%s%s%s-endian %s%s)\n", fonthdr.flags,
-			fonthdr.flags & FONTF_SYSTEM ? "system " : "",
-			fonthdr.flags & FONTF_HORTABLE ? "offsets " : "",
-			fonthdr.flags & FONTF_BIGENDIAN ? "big" : "little",
-			fonthdr.flags & FONTF_MONOSPACED ? "monospaced" : "proportional",
-			fonthdr.flags & FONTF_EXTENDED ? " extended" : "");
-		nf_debugprintf("Horizontal table: %lu\n", fonthdr.hor_table);
-		nf_debugprintf("Offset table: %u\n", fonthdr.off_table);
-		nf_debugprintf("Data: %u\n", fonthdr.dat_table);
-		nf_debugprintf("Form width: %d\n", fonthdr.form_width);
-		nf_debugprintf("Form height: %d\n", fonthdr.form_height);
-		nf_debugprintf("\n");
-#endif
-
-		free(fontmem);
-		fontmem = h;
-		resize_window();
-		resize_panel();
-		wind_set_str(mainwin, WF_NAME, fontname);
-		fontbasename = xbasename(filename);
-		wind_set_str(panelwin, WF_NAME, fontbasename);
-		redraw_win(mainwin);
-		redraw_win(panelwin);
-		font_changed = FALSE;
+		font_loaded(h, filename);
 	}
 
 	return ret;
@@ -974,19 +1007,65 @@ static _BOOL font_load_gemfont(const char *filename)
 
 
 #ifdef __PUREC__
+static void push_a2(void) 0x2F0A;
+static long pop_a2(void) 0x245F;
+static void *get_a1(void) 0x2049;
+static void *get_a2(void) 0x204A;
+
+static void *linea0(void) 0xa000;
+
+static void init_linea(void)
+{
+	push_a2();
+	Linea = linea0();
+	Vdiesc = (VDIESC *)((char *)Linea - sizeof(VDIESC));
+	Fonts = get_a1();
+	Linea_funp = get_a2();
+	pop_a2();
+}
 #endif
+
 
 static _BOOL font_load_sysfont(int fontnum)
 {
-	(void) fontnum;
-
+	FONT_HDR *hdr = &fonthdr;
+	const unsigned char *h;
+	unsigned char *m;
+	const char *filename = fontnum == 0 ? "system6x6" : fontnum == 1 ? "system8x8" : "system8x16";
+	unsigned long l;
+	unsigned long offtable_size;
+	unsigned long form_size;
+	
 	if (font_changed)
 	{
 		if (form_alert(1, rs_str(AL_CHANGED)) != 2)
 			return FALSE;
 	}
 	
-	return FALSE;
+	init_linea();
+	
+	h = (const unsigned char *)(Fonts->font[fontnum]);
+	
+	font_gethdr(hdr, h);
+	numoffs = hdr->last_ade - hdr->first_ade + 1;
+	font_get_tables(NULL, filename);
+	offtable_size = (unsigned long)(numoffs + 1) * 2;
+	form_size = (unsigned long)hdr->form_width * (unsigned long)hdr->form_height;
+	l = 84 + offtable_size + form_size;
+
+	m = malloc(l);
+	if (m == NULL)
+	{
+		form_alert(1, rs_str(AL_NOMEM));
+		return FALSE;
+	}
+	memcpy(m, h, 84);
+	memcpy(m + 84, off_table, offtable_size);
+	memcpy(m + 84 + offtable_size, dat_table, form_size);
+	
+	font_loaded(m, filename);
+
+	return TRUE;
 }
 
 
