@@ -53,6 +53,7 @@ static unsigned char *dat_table;
 static unsigned short *off_table;
 static unsigned char *hor_table;
 static char fontname[VDI_FONTNAMESIZE + 1];
+static const char *fontfilename;
 static const char *fontbasename;
 static unsigned short numoffs;
 static unsigned short cur_char;
@@ -733,7 +734,7 @@ static void font_gethdr(FONT_HDR *hdr, const unsigned char *h)
 
 static void swap_gemfnt_header(FONT_HDR *hdr, unsigned long l)
 {
-	if (l < 84)
+	if (l < SIZEOF_FONT_HDR)
 		return;
 	SWAP_W(hdr->font_id);
 	SWAP_W(hdr->point);
@@ -774,7 +775,7 @@ static _BOOL check_gemfnt_header(FONT_HDR *h, unsigned long l)
 	UL dat_offset;
 	UL off_table;
 	
-	if (l < 84)
+	if (l < SIZEOF_FONT_HDR)
 		return FALSE;
 	firstc = h->first_ade;
 	lastc = h->last_ade;
@@ -790,10 +791,10 @@ static _BOOL check_gemfnt_header(FONT_HDR *h, unsigned long l)
 	if (h->hor_table >= l)
 		return FALSE;
 	off_table = h->off_table;
-	if (off_table < 84 || (off_table + (lastc - firstc + 1) * 2) > l)
+	if (off_table < SIZEOF_FONT_HDR || (off_table + (lastc - firstc + 1) * 2) > l)
 		return FALSE;
 	dat_offset = h->dat_table;
-	if (dat_offset < 84 || dat_offset >= l)
+	if (dat_offset < SIZEOF_FONT_HDR || dat_offset >= l)
 		return FALSE;
 	cellwidth = h->max_cell_width;
 	if (cellwidth == 0)
@@ -845,6 +846,11 @@ static void font_get_tables(unsigned char *h, const char *filename)
 	font_cw = hdr->max_cell_width;
 	font_ch = hdr->form_height;
 	cur_char = 'A';
+	
+	if (hor_table)
+	{
+		form_alert(1, rs_str(AL_NO_OFFTABLE));
+	}
 }
 
 
@@ -957,6 +963,7 @@ static void font_loaded(unsigned char *h, const char *filename)
 	resize_window();
 	resize_panel();
 	wind_set_str(mainwin, WF_NAME, fontname);
+	fontfilename = filename;
 	fontbasename = xbasename(filename);
 	wind_set_str(panelwin, WF_NAME, fontbasename);
 	redraw_win(mainwin);
@@ -1031,7 +1038,7 @@ static _BOOL font_load_sysfont(int fontnum)
 	FONT_HDR *hdr = &fonthdr;
 	const unsigned char *h;
 	unsigned char *m;
-	const char *filename = fontnum == 0 ? "system6x6" : fontnum == 1 ? "system8x8" : "system8x16";
+	const char *filename = fontnum == 0 ? "system0.fnt" : fontnum == 1 ? "system1.fnt" : "system2.fnt";
 	unsigned long l;
 	unsigned long offtable_size;
 	unsigned long form_size;
@@ -1051,7 +1058,7 @@ static _BOOL font_load_sysfont(int fontnum)
 	font_get_tables(NULL, filename);
 	offtable_size = (unsigned long)(numoffs + 1) * 2;
 	form_size = (unsigned long)hdr->form_width * (unsigned long)hdr->form_height;
-	l = 84 + offtable_size + form_size;
+	l = SIZEOF_FONT_HDR + offtable_size + form_size;
 
 	m = malloc(l);
 	if (m == NULL)
@@ -1059,9 +1066,9 @@ static _BOOL font_load_sysfont(int fontnum)
 		form_alert(1, rs_str(AL_NOMEM));
 		return FALSE;
 	}
-	memcpy(m, h, 84);
-	memcpy(m + 84, off_table, offtable_size);
-	memcpy(m + 84 + offtable_size, dat_table, form_size);
+	memcpy(m, h, SIZEOF_FONT_HDR);
+	memcpy(m + SIZEOF_FONT_HDR, off_table, offtable_size);
+	memcpy(m + SIZEOF_FONT_HDR + offtable_size, dat_table, form_size);
 	
 	font_loaded(m, filename);
 
@@ -1098,6 +1105,108 @@ static void select_font(void)
 	p = xbasename(path);
 	strcpy(p, filename);
 	font_load_gemfont(path);
+}
+
+
+static _BOOL font_save_gemfont(const char *filename)
+{
+	FONT_HDR *hdr = &fonthdr;
+	FILE *fp;
+	unsigned long offtable_size;
+	unsigned long form_size;
+	unsigned char h[SIZEOF_FONT_HDR + 4];
+	unsigned short *u;
+	_BOOL swapped;
+	
+	fp = fopen(filename, "rb");
+	if (fp != NULL)
+	{
+		fclose(fp);
+		if (form_alert(1, rs_str(AL_EXISTS)) != 2)
+			return FALSE;
+	}
+	fp = fopen(filename, "wb");
+	if (fp == NULL)
+	{
+		char buf[256];
+		
+		sprintf(buf, rs_str(AL_FCREATE), filename);
+		form_alert(1, buf);
+		return FALSE;
+	}
+	
+	offtable_size = (unsigned long)(numoffs + 1) * 2;
+	form_size = (unsigned long)hdr->form_width * (unsigned long)hdr->form_height;
+
+	hdr->next_font = 0;
+	hdr->hor_table = 0;
+	hdr->off_table = sizeof(h);
+	hdr->dat_table = hdr->off_table + offtable_size;
+	
+	swapped = FONT_BIG != HOST_BIG;
+	if (swapped)
+	{
+		swap_gemfnt_header(hdr, sizeof(*hdr));
+		for (u = off_table; u <= off_table + numoffs; u++)
+		{
+			SWAP_W(*u);
+		}
+	}
+
+	memcpy(h, hdr, sizeof(h));
+	memcpy(h + 4, fontname, VDI_FONTNAMESIZE);
+	
+	fwrite(h, 1, sizeof(h), fp);
+	fwrite(off_table, 1, offtable_size, fp);
+	fwrite(dat_table, 1, form_size, fp);
+	
+	fclose(fp);
+	
+	if (swapped)
+	{
+		swap_gemfnt_header(hdr, sizeof(*hdr));
+		for (u = off_table; u <= off_table + numoffs; u++)
+		{
+			SWAP_W(*u);
+		}
+	}
+
+	fontfilename = filename;
+	fontbasename = xbasename(filename);
+	wind_set_str(panelwin, WF_NAME, fontbasename);
+
+	font_changed = FALSE;
+	
+	return TRUE;
+}
+
+
+static void save_font(const char *filename)
+{
+	_WORD button;
+	static char path[128];
+	char filename_buf[128];
+	char *p;
+	
+	if (filename)
+	{
+		strcpy(path, filename);
+	} else if (path[0] == '\0')
+	{
+		path[0] = Dgetdrv() + 'A';
+		path[1] = ':';
+		Dgetpath(path + 2, 0);
+		strcat(path, "\\");
+	}
+	p = xbasename(path);
+	strcpy(p, "*.FNT");
+	strcpy(filename_buf, "");
+	
+	if (!fsel_exinput(path, filename_buf, &button, rs_str(SEL_OUTPUT)) || !button)
+		return;
+	p = xbasename(path);
+	strcpy(p, filename_buf);
+	font_save_gemfont(path);
 }
 
 
@@ -1220,6 +1329,10 @@ static void handle_message(_WORD *message, _WORD mox, _WORD moy)
 		case FOPEN:
 			select_font();
 			break;
+		case FSAVE:
+			if (dat_table)
+				save_font(fontfilename);
+			break;
 		case FSYS_6X6:
 			font_load_sysfont(0);
 			break;
@@ -1268,6 +1381,10 @@ static void mainloop(void)
 			{
 			case 0x0f:
 				select_font();
+				break;
+			case 0x13:
+				if (dat_table)
+					save_font(fontfilename);
 				break;
 			case 0x09:
 				font_info();

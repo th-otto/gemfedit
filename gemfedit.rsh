@@ -288,13 +288,13 @@ extern _VOID *hfix_objs(RSHDR *_hdr, OBJECT *_ob, _WORD _num_objs);
 #undef NUM_OBS
 #undef NUM_TREE
 #undef NUM_UD
-#define NUM_STRINGS 96
+#define NUM_STRINGS 100
 #define NUM_BB		0
 #define NUM_IB		0
 #define NUM_CIB     0
 #define NUM_CIC     0
 #define NUM_TI		13
-#define NUM_FRSTR	7
+#define NUM_FRSTR	11
 #define NUM_FRIMG	0
 #define NUM_OBS     74
 #define NUM_TREE	5
@@ -398,6 +398,10 @@ static char gemfedit_string_92[] = "[3][Not enough memory.][Abort]";
 static char gemfedit_string_93[] = "Select Font";
 static char gemfedit_string_94[] = "[2][Font has been changed.|Quit Anyway?][No|Yes]";
 static char gemfedit_string_95[] = "[2][Font has been changed.|Load Anyway?][No|Yes]";
+static char gemfedit_string_96[] = "Select Output File";
+static char gemfedit_string_97[] = "[2][File already exists.|Overwrite?][No|Yes]";
+static char gemfedit_string_98[] = "[3][Can\'t create|%s][Abort]";
+static char gemfedit_string_99[] = "[3][Fonts with horizontal offset table|are not supported.][Abort]";
 
 
 static char *rs_frstr[NUM_FRSTR] = {
@@ -407,7 +411,11 @@ static char *rs_frstr[NUM_FRSTR] = {
 	gemfedit_string_92,
 	gemfedit_string_93,
 	gemfedit_string_94,
-	gemfedit_string_95
+	gemfedit_string_95,
+	gemfedit_string_96,
+	gemfedit_string_97,
+	gemfedit_string_98,
+	gemfedit_string_99
 };
 
 
@@ -722,8 +730,8 @@ _WORD gemfedit_rsc_free()
 #endif /* RSC_NAMED_FUNCTIONS */
 
 #else /* !RSC_STATIC_FILE */
-int rs_numstrings = 96;
-int rs_numfrstr = 7;
+int rs_numstrings = 100;
+int rs_numfrstr = 11;
 
 int rs_nuser = 0;
 int rs_numimages = 0;

@@ -5,19 +5,19 @@
  */
 
 /*
- * Number of Strings:        96
+ * Number of Strings:        100
  * Number of Bitblks:        0
  * Number of Iconblks:       0
  * Number of Color Iconblks: 0
  * Number of Color Icons:    0
  * Number of Tedinfos:       13
- * Number of Free Strings:   7
+ * Number of Free Strings:   11
  * Number of Free Images:    0
  * Number of Objects:        74
  * Number of Trees:          5
  * Number of Userblks:       0
  * Number of Images:         0
- * Total file size:          4098
+ * Total file size:          4272
  */
 
 #undef RSC_NAME
@@ -35,8 +35,8 @@
 # define RSC_STATIC_FILE 0
 #endif
 #if !RSC_STATIC_FILE
-#define NUM_STRINGS 96
-#define NUM_FRSTR 7
+#define NUM_STRINGS 100
+#define NUM_FRSTR 11
 #define NUM_UD 0
 #define NUM_IMAGES 0
 #define NUM_BB 0
@@ -110,6 +110,18 @@
 
 #define AL_CHANGED                         6 /* Alert string */
 /* [2][Font has been changed.|Load Anyway?][No|Yes] */
+
+#define SEL_OUTPUT                         7 /* Free string */
+/* Select Output File */
+
+#define AL_EXISTS                          8 /* Alert string */
+/* [2][File already exists.|Overwrite?][No|Yes] */
+
+#define AL_FCREATE                         9 /* Alert string */
+/* [3][Can't create|%s][Abort] */
+
+#define AL_NO_OFFTABLE                    10 /* Alert string */
+/* [3][Fonts with horizontal offset table|are not supported.][Abort] */
 
 
 

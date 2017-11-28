@@ -35,7 +35,8 @@ typedef struct FONT_HDR
 } FONT_HDR;
 
 
-#define SIZEOF_FONT_HDR 90
+/* #define SIZEOF_FONT_HDR 90 in memory only */
+#define SIZEOF_FONT_HDR 84
 
 /* definitions for flags */
 #define FONTF_SYSTEM     0x0001            /* Default system font */
