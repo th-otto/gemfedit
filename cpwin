@@ -1,0 +1,158 @@
+#! /bin/sh
+
+listonly=false
+automatic=false
+
+while test "$1" != ""; do
+	case $1 in
+	-l)
+		listonly=true
+		shift
+		;;
+	-a)
+		automatic=true
+		shift
+		;;
+	*)
+		echo bogus >&2
+		exit 1
+		;;
+	esac
+done
+
+thisdir="$HOME/atari/gemfedit"
+otherdir="/windows/c/atari/src/gemfedit"
+
+find . \( -type f \) \
+	! -type l \
+	! -name config.h ! -name config.log ! -name config.status ! -name config.h.in.orig \
+	! -name "*.o" ! -name "*.a" ! -name "*.exe" \
+	! -name "*.html" \
+	! -name "lt-*.c" \
+	! -name "*.ldg" \
+	! -name "*.slb" \
+	! -name "*.pcf" \
+	! -name "*.prg" \
+	! -name "*.pdb" \
+	! -name "*.ref" \
+	! -name "*.rtf" \
+	! -name "*.cnt" \
+	! -name "*.hhk" \
+	! -name "*.chm" \
+	! -name "Makefile" \
+	! -name "cpwin" \
+	! -name "stamp*" \
+	! -name ".gdbinit" \
+	! -name ".dirstamp" \
+	! -name "index.lst" \
+	! -name "or_helpx.c" \
+	! -name "gc_helpx.c" \
+	! -name "orcs.inf" ! -name "convert.inf" \
+	! -name "version.ui" ! -name "gcsvers.ui" \
+	! -name "udo_fc.*" ! -name "udo_fo.*" ! -name "udo_fs.*" ! -name orcs.stg ! -name gc_ork.stg \
+	! -name "aaa.cfg" ! -name "p1.cfg" ! -name "pd.cfg" \
+	! -name "*.uls" ! -name "*.hyp" \
+	! -name gcs_user.txt ! -name gcserver.txt ! -name gcmapps.txt ! -name conquer.txt ! -name gcserver.ger ! -name gcserver.eng \
+	! -name "*.tar.*" \
+	! -path "*.libs/*" \
+	! -path "*.deps/*" \
+	! -path "*/autom4te.cache/*" \
+	! -path "*/.xlk/*" \
+	! -path "./.git*" \
+	! -path "./bin/*" \
+	! -path "*/modules/*" \
+	! -path "./upload/*" \
+	! -path "./orcs/test/*" \
+	! -path "*/help/*/html/*" \
+	| while read i
+do
+	test -f "$i.in" && continue
+	t=`file -b "$i"`
+	case "$t" in
+           *executable* | TeX\ font\ metric*) continue ;;
+        esac
+	case "$i" in
+	*/Makefile.in)
+		f="${i%.in}.am"
+		if test -f "$f"; then
+			: echo "skipped: $i ($f exists)"
+			continue
+		fi
+		;;
+	*/configure)
+		test -f "$i.ac" && continue
+		;;
+	*.h)
+		f="${i%.h}.in.h"
+		if test -f "$f"; then
+			: echo "skipped: $i ($f exists)"
+			continue
+		fi
+		;;
+	*.c)
+		f="${i%.c}.in.c"
+		if test -f "$f"; then
+			: echo "skipped: $i ($f exists)"
+			continue
+		fi
+		;;
+	esac
+	if test ! -f "$otherdir/$i"; then
+		c=c
+	elif test ! -f "$thisdir/$i"; then
+		c=b
+	elif test "$thisdir/$i" -nt "$otherdir/$i"; then
+		c=c
+	elif test "$otherdir/$i" -nt "$thisdir/$i"; then
+		c=b
+	elif $listonly; then
+		c=x
+	else
+		c=
+	fi
+	if test "$c" != ""; then
+		if $listonly; then
+			if diff -b "$otherdir/$i" "$thisdir/$i" >/dev/null; then
+				:
+			else
+				echo "$i differs"
+			fi
+			#if test "$c" = c; then
+			#	echo "$thisdir/$i newer than $otherdir/$i"
+			#elif test "$c" = b; then
+			#	echo "$otherdir/$i newer than $thisdir/$i"
+			#fi
+		else
+			diff -b -u "$otherdir/$i" "$thisdir/$i" 2>/dev/null
+			ls -l "$otherdir/$i" "$thisdir/$i"
+			if test "$c" = c; then
+				echo "$thisdir/$i newer than $otherdir/$i"
+			elif test "$c" = b; then
+				echo "$otherdir/$i newer than $thisdir/$i"
+			fi
+			/bin/echo -n "$i: [$c] "
+			if $automatic; then
+				a="$c"
+				echo $a
+			else
+				read a < /dev/tty
+				if test "$a" = ""; then a="$c"; fi
+			fi
+			case "$a" in
+			b) cp -a -v "$otherdir/$i" "$thisdir/$i"
+			   cr2nl -n "$thisdir/$i"
+	                   ;;
+			c) cp -a -v "$thisdir/$i" "$otherdir/$i"
+			   case "$i" in */Makefile.in | */Makefile.am | */config* | */*.m4)
+			      ;;
+			   *)
+			      (cd $otherdir; cr2nl -d "$i")
+			      ;;
+                           esac
+			   ;;
+			x) exit 1 ;;
+			*) echo "skipped $thisdir/$i" ;;
+			esac
+		fi
+	fi
+done
