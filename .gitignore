@@ -6,8 +6,6 @@ config.h.in.orig
 config.log
 config.status
 configure
-Makefile
-Makefile.in
 version_date.h
 .DS_Store
 *.framework

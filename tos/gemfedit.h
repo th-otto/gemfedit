@@ -5,7 +5,7 @@
  */
 
 /*
- * Number of Strings:        103
+ * Number of Strings:        104
  * Number of Bitblks:        0
  * Number of Iconblks:       0
  * Number of Color Iconblks: 0
@@ -13,11 +13,11 @@
  * Number of Tedinfos:       13
  * Number of Free Strings:   11
  * Number of Free Images:    0
- * Number of Objects:        77
+ * Number of Objects:        78
  * Number of Trees:          5
  * Number of Userblks:       0
  * Number of Images:         0
- * Total file size:          4410
+ * Total file size:          4452
  */
 
 #undef RSC_NAME
@@ -35,7 +35,7 @@
 # define RSC_STATIC_FILE 0
 #endif
 #if !RSC_STATIC_FILE
-#define NUM_STRINGS 103
+#define NUM_STRINGS 104
 #define NUM_FRSTR 11
 #define NUM_UD 0
 #define NUM_IMAGES 0
@@ -44,7 +44,7 @@
 #define NUM_IB 0
 #define NUM_CIB 0
 #define NUM_TI 13
-#define NUM_OBS 77
+#define NUM_OBS 78
 #define NUM_TREE 5
 #endif
 
@@ -58,11 +58,12 @@
 #define FSAVE                             17 /* STRING in tree MAINMENU */
 #define FINFO                             18 /* STRING in tree MAINMENU */
 #define FEXPORTC                          20 /* STRING in tree MAINMENU */
-#define FSYS_6X6                          22 /* STRING in tree MAINMENU */
-#define FSYS_8X8                          23 /* STRING in tree MAINMENU */
-#define FSYS_8X16                         24 /* STRING in tree MAINMENU */
-#define FSYS_16X32                        25 /* STRING in tree MAINMENU */
-#define FQUIT                             27 /* STRING in tree MAINMENU */
+#define FEXPORTTXT                        21 /* STRING in tree MAINMENU */
+#define FSYS_6X6                          23 /* STRING in tree MAINMENU */
+#define FSYS_8X8                          24 /* STRING in tree MAINMENU */
+#define FSYS_8X16                         25 /* STRING in tree MAINMENU */
+#define FSYS_16X32                        26 /* STRING in tree MAINMENU */
+#define FQUIT                             28 /* STRING in tree MAINMENU */
 
 /* Zeichensatz */
 #define CHARSET                            1 /* free form */
@@ -123,7 +124,7 @@
 /* [3][Can't create|%s][Abort] */
 
 #define AL_NO_OFFTABLE                    10 /* Alert string */
-/* [3][Fonts with horizontal offset table|are not supported.][Abort] */
+/* [3][Fonts with horizontal offset|tables are not supported.][Abort] */
 
 
 

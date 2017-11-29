@@ -288,7 +288,7 @@ extern _VOID *hfix_objs(RSHDR *_hdr, OBJECT *_ob, _WORD _num_objs);
 #undef NUM_OBS
 #undef NUM_TREE
 #undef NUM_UD
-#define NUM_STRINGS 103
+#define NUM_STRINGS 104
 #define NUM_BB		0
 #define NUM_IB		0
 #define NUM_CIB     0
@@ -296,7 +296,7 @@ extern _VOID *hfix_objs(RSHDR *_hdr, OBJECT *_ob, _WORD _num_objs);
 #define NUM_TI		13
 #define NUM_FRSTR	11
 #define NUM_FRIMG	0
-#define NUM_OBS     77
+#define NUM_OBS     78
 #define NUM_TREE	5
 #define NUM_UD		0
 #endif
@@ -317,98 +317,98 @@ static char gemfedit_string_11[] = "  Save           ^S";
 static char gemfedit_string_12[] = "  Info           ^I";
 static char gemfedit_string_13[] = "--------------------";
 static char gemfedit_string_14[] = "  Export as C    ^E";
-static char gemfedit_string_15[] = "--------------------";
-static char gemfedit_string_16[] = "  Load system 6x6";
-static char gemfedit_string_17[] = "  Load system 8x8";
-static char gemfedit_string_18[] = "  Load system 8x16";
-static char gemfedit_string_19[] = "  Load system 16x32";
-static char gemfedit_string_20[] = "--------------------";
-static char gemfedit_string_21[] = "  Quit           ^Q";
-static char gemfedit_string_22[] = "  \001 \002 \003 \004 \005 \006 \007 \b \t \n \013 \f \r \016 \017 \020 \021 \022 \023 \024 \025 \026 \027 \030 \031 \032 \033 \034 \035 \036 \037";
-static char gemfedit_string_23[] = "  ! \" # $ % & \' ( ) * + , - . / 0 1 2 3 4 5 6 7 8 9 : ; < = > ?";
-static char gemfedit_string_24[] = "@ A B C D E F G H I J K L M N O P Q R S T U V W X Y Z [ \\ ] ^ _";
-static char gemfedit_string_25[] = "` a b c d e f g h i j k l m n o p q r s t u v w x y z { | } ~ \177";
-static char gemfedit_string_26[] = "\200 \201 \202 \203 \204 \205 \206 \207 \210 \211 \212 \213 \214 \215 \216 \217 \220 \221 \222 \223 \224 \225 \226 \227 \230 \231 \232 \233 \234 \235 \236 \237";
-static char gemfedit_string_27[] = "\240 \241 \242 \243 \244 \245 \246 \247 \250 \251 \252 \253 \254 \255 \256 \257 \260 \261 \262 \263 \264 \265 \266 \267 \270 \271 \272 \273 \274 \275 \276 \277";
-static char gemfedit_string_28[] = "\300 \301 \302 \303 \304 \305 \306 \307 \310 \311 \312 \313 \314 \315 \316 \317 \320 \321 \322 \323 \324 \325 \326 \327 \330 \331 \332 \333 \334 \335 \336 \337";
-static char gemfedit_string_29[] = "\340 \341 \342 \343 \344 \345 \346 \347 \350 \351 \352 \353 \354 \355 \356 \357 \360 \361 \362 \363 \364 \365 \366 \367 \370 \371 \372 \373 \374 \375 \376 \377";
-static char gemfedit_string_30[] = "FONT PARAMETERS";
-static char gemfedit_string_31[] = "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@";
-static char gemfedit_string_32[] = "Font name        : ________________________________";
-static char gemfedit_string_33[] = "X";
-static char gemfedit_string_34[] = "@@@@@";
-static char gemfedit_string_35[] = "Font ID          : _____";
-static char gemfedit_string_36[] = "9";
-static char gemfedit_string_37[] = "@@@@@";
-static char gemfedit_string_38[] = "Point size       : _____";
-static char gemfedit_string_39[] = "9";
-static char gemfedit_string_40[] = "@@@";
-static char gemfedit_string_41[] = "Top line         : ___";
-static char gemfedit_string_42[] = "9";
-static char gemfedit_string_43[] = "@@@";
-static char gemfedit_string_44[] = "Max width         : ___";
-static char gemfedit_string_45[] = "9";
-static char gemfedit_string_46[] = "@@@";
-static char gemfedit_string_47[] = "Ascent line      : ___";
-static char gemfedit_string_48[] = "9";
-static char gemfedit_string_49[] = "@@@";
-static char gemfedit_string_50[] = "Cell height       : ___";
-static char gemfedit_string_51[] = "9";
-static char gemfedit_string_52[] = "@@@";
-static char gemfedit_string_53[] = "Half line        : ___";
-static char gemfedit_string_54[] = "9";
-static char gemfedit_string_55[] = "@@@";
-static char gemfedit_string_56[] = "Descent line     : ___";
-static char gemfedit_string_57[] = "9";
-static char gemfedit_string_58[] = "@@@";
-static char gemfedit_string_59[] = "Bottom line      : ___";
-static char gemfedit_string_60[] = "9";
-static char gemfedit_string_61[] = "@@@";
-static char gemfedit_string_62[] = "First ascii code : ___";
-static char gemfedit_string_63[] = "9";
-static char gemfedit_string_64[] = "@@@";
-static char gemfedit_string_65[] = "Last ascii code  : ___";
-static char gemfedit_string_66[] = "9";
-static char gemfedit_string_67[] = "OK";
-static char gemfedit_string_68[] = " \001\002\003\004\005\006\007\b\t\n\013\f\r\016\017";
-static char gemfedit_string_69[] = "\020\021\022\023\024\025\026\027\030\031\032\033\034\035\036\037";
-static char gemfedit_string_70[] = " !\"#$%&\'()*+,-./";
-static char gemfedit_string_71[] = "0123456789:;<=>?";
-static char gemfedit_string_72[] = "@ABCDEFGHIJKLMNO";
-static char gemfedit_string_73[] = "PQRSTUVWXYZ[\\]^_";
-static char gemfedit_string_74[] = "`abcdefghijklmno";
-static char gemfedit_string_75[] = "pqrstuvwxyz{|}~\177";
-static char gemfedit_string_76[] = "\200\201\202\203\204\205\206\207\210\211\212\213\214\215\216\217";
-static char gemfedit_string_77[] = "\220\221\222\223\224\225\226\227\230\231\232\233\234\235\236\237";
-static char gemfedit_string_78[] = "\240\241\242\243\244\245\246\247\250\251\252\253\254\255\256\257";
-static char gemfedit_string_79[] = "\260\261\262\263\264\265\266\267\270\271\272\273\274\275\276\277";
-static char gemfedit_string_80[] = "\300\301\302\303\304\305\306\307\310\311\312\313\314\315\316\317";
-static char gemfedit_string_81[] = "\320\321\322\323\324\325\326\327\330\331\332\333\334\335\336\337";
-static char gemfedit_string_82[] = "\340\341\342\343\344\345\346\347\350\351\352\353\354\355\356\357";
-static char gemfedit_string_83[] = "\360\361\362\363\364\365\366\367\370\371\372\373\374\375\376\377";
-static char gemfedit_string_84[] = "Simple Font Editor";
-static char gemfedit_string_85[] = "For Atari ST/TT/Falcon";
-static char gemfedit_string_86[] = "";
+static char gemfedit_string_15[] = "  Export as TXT";
+static char gemfedit_string_16[] = "--------------------";
+static char gemfedit_string_17[] = "  Load system 6x6";
+static char gemfedit_string_18[] = "  Load system 8x8";
+static char gemfedit_string_19[] = "  Load system 8x16";
+static char gemfedit_string_20[] = "  Load system 16x32";
+static char gemfedit_string_21[] = "--------------------";
+static char gemfedit_string_22[] = "  Quit           ^Q";
+static char gemfedit_string_23[] = "  \001 \002 \003 \004 \005 \006 \007 \b \t \n \013 \f \r \016 \017 \020 \021 \022 \023 \024 \025 \026 \027 \030 \031 \032 \033 \034 \035 \036 \037";
+static char gemfedit_string_24[] = "  ! \" # $ % & \' ( ) * + , - . / 0 1 2 3 4 5 6 7 8 9 : ; < = > ?";
+static char gemfedit_string_25[] = "@ A B C D E F G H I J K L M N O P Q R S T U V W X Y Z [ \\ ] ^ _";
+static char gemfedit_string_26[] = "` a b c d e f g h i j k l m n o p q r s t u v w x y z { | } ~ \177";
+static char gemfedit_string_27[] = "\200 \201 \202 \203 \204 \205 \206 \207 \210 \211 \212 \213 \214 \215 \216 \217 \220 \221 \222 \223 \224 \225 \226 \227 \230 \231 \232 \233 \234 \235 \236 \237";
+static char gemfedit_string_28[] = "\240 \241 \242 \243 \244 \245 \246 \247 \250 \251 \252 \253 \254 \255 \256 \257 \260 \261 \262 \263 \264 \265 \266 \267 \270 \271 \272 \273 \274 \275 \276 \277";
+static char gemfedit_string_29[] = "\300 \301 \302 \303 \304 \305 \306 \307 \310 \311 \312 \313 \314 \315 \316 \317 \320 \321 \322 \323 \324 \325 \326 \327 \330 \331 \332 \333 \334 \335 \336 \337";
+static char gemfedit_string_30[] = "\340 \341 \342 \343 \344 \345 \346 \347 \350 \351 \352 \353 \354 \355 \356 \357 \360 \361 \362 \363 \364 \365 \366 \367 \370 \371 \372 \373 \374 \375 \376 \377";
+static char gemfedit_string_31[] = "FONT PARAMETERS";
+static char gemfedit_string_32[] = "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@";
+static char gemfedit_string_33[] = "Font name        : ________________________________";
+static char gemfedit_string_34[] = "X";
+static char gemfedit_string_35[] = "@@@@@";
+static char gemfedit_string_36[] = "Font ID          : _____";
+static char gemfedit_string_37[] = "9";
+static char gemfedit_string_38[] = "@@@@@";
+static char gemfedit_string_39[] = "Point size       : _____";
+static char gemfedit_string_40[] = "9";
+static char gemfedit_string_41[] = "@@@";
+static char gemfedit_string_42[] = "Top line         : ___";
+static char gemfedit_string_43[] = "9";
+static char gemfedit_string_44[] = "@@@";
+static char gemfedit_string_45[] = "Max width         : ___";
+static char gemfedit_string_46[] = "9";
+static char gemfedit_string_47[] = "@@@";
+static char gemfedit_string_48[] = "Ascent line      : ___";
+static char gemfedit_string_49[] = "9";
+static char gemfedit_string_50[] = "@@@";
+static char gemfedit_string_51[] = "Cell height       : ___";
+static char gemfedit_string_52[] = "9";
+static char gemfedit_string_53[] = "@@@";
+static char gemfedit_string_54[] = "Half line        : ___";
+static char gemfedit_string_55[] = "9";
+static char gemfedit_string_56[] = "@@@";
+static char gemfedit_string_57[] = "Descent line     : ___";
+static char gemfedit_string_58[] = "9";
+static char gemfedit_string_59[] = "@@@";
+static char gemfedit_string_60[] = "Bottom line      : ___";
+static char gemfedit_string_61[] = "9";
+static char gemfedit_string_62[] = "@@@";
+static char gemfedit_string_63[] = "First ascii code : ___";
+static char gemfedit_string_64[] = "9";
+static char gemfedit_string_65[] = "@@@";
+static char gemfedit_string_66[] = "Last ascii code  : ___";
+static char gemfedit_string_67[] = "9";
+static char gemfedit_string_68[] = "OK";
+static char gemfedit_string_69[] = " \001\002\003\004\005\006\007\b\t\n\013\f\r\016\017";
+static char gemfedit_string_70[] = "\020\021\022\023\024\025\026\027\030\031\032\033\034\035\036\037";
+static char gemfedit_string_71[] = " !\"#$%&\'()*+,-./";
+static char gemfedit_string_72[] = "0123456789:;<=>?";
+static char gemfedit_string_73[] = "@ABCDEFGHIJKLMNO";
+static char gemfedit_string_74[] = "PQRSTUVWXYZ[\\]^_";
+static char gemfedit_string_75[] = "`abcdefghijklmno";
+static char gemfedit_string_76[] = "pqrstuvwxyz{|}~\177";
+static char gemfedit_string_77[] = "\200\201\202\203\204\205\206\207\210\211\212\213\214\215\216\217";
+static char gemfedit_string_78[] = "\220\221\222\223\224\225\226\227\230\231\232\233\234\235\236\237";
+static char gemfedit_string_79[] = "\240\241\242\243\244\245\246\247\250\251\252\253\254\255\256\257";
+static char gemfedit_string_80[] = "\260\261\262\263\264\265\266\267\270\271\272\273\274\275\276\277";
+static char gemfedit_string_81[] = "\300\301\302\303\304\305\306\307\310\311\312\313\314\315\316\317";
+static char gemfedit_string_82[] = "\320\321\322\323\324\325\326\327\330\331\332\333\334\335\336\337";
+static char gemfedit_string_83[] = "\340\341\342\343\344\345\346\347\350\351\352\353\354\355\356\357";
+static char gemfedit_string_84[] = "\360\361\362\363\364\365\366\367\370\371\372\373\374\375\376\377";
+static char gemfedit_string_85[] = "Simple Font Editor";
+static char gemfedit_string_86[] = "For Atari ST/TT/Falcon";
 static char gemfedit_string_87[] = "";
-static char gemfedit_string_88[] = "Written by Thorsten Otto";
-static char gemfedit_string_89[] = "Version 1.0";
-static char gemfedit_string_90[] = "Apr 20 2017";
-static char gemfedit_string_91[] = "OK";
-static char gemfedit_string_92[] = "[3][Cannot create window][Abort]";
-static char gemfedit_string_93[] = "[3][Can\'t open|%s][Abort]";
-static char gemfedit_string_94[] = "[3][Not a GEM font.][Abort]";
-static char gemfedit_string_95[] = "[3][Not enough memory.][Abort]";
-static char gemfedit_string_96[] = "Select Font";
-static char gemfedit_string_97[] = "[2][Font has been changed.|Quit Anyway?][No|Yes]";
-static char gemfedit_string_98[] = "[2][Font has been changed.|Load Anyway?][No|Yes]";
-static char gemfedit_string_99[] = "Select Output File";
-static char gemfedit_string_100[] = "[2][File already exists.|Overwrite?][No|Yes]";
-static char gemfedit_string_101[] = "[3][Can\'t create|%s][Abort]";
-static char gemfedit_string_102[] = "[3][Fonts with horizontal offset|tables are not supported.][Abort]";
+static char gemfedit_string_88[] = "";
+static char gemfedit_string_89[] = "Written by Thorsten Otto";
+static char gemfedit_string_90[] = "Version 1.0";
+static char gemfedit_string_91[] = "Nov 30 2017";
+static char gemfedit_string_92[] = "OK";
+static char gemfedit_string_93[] = "[3][Cannot create window][Abort]";
+static char gemfedit_string_94[] = "[3][Can\'t open|%s][Abort]";
+static char gemfedit_string_95[] = "[3][Not a GEM font.][Abort]";
+static char gemfedit_string_96[] = "[3][Not enough memory.][Abort]";
+static char gemfedit_string_97[] = "Select Font";
+static char gemfedit_string_98[] = "[2][Font has been changed.|Quit Anyway?][No|Yes]";
+static char gemfedit_string_99[] = "[2][Font has been changed.|Load Anyway?][No|Yes]";
+static char gemfedit_string_100[] = "Select Output File";
+static char gemfedit_string_101[] = "[2][File already exists.|Overwrite?][No|Yes]";
+static char gemfedit_string_102[] = "[3][Can\'t create|%s][Abort]";
+static char gemfedit_string_103[] = "[3][Fonts with horizontal offset|tables are not supported.][Abort]";
 
 
 static char *rs_frstr[NUM_FRSTR] = {
-	gemfedit_string_92,
 	gemfedit_string_93,
 	gemfedit_string_94,
 	gemfedit_string_95,
@@ -418,24 +418,25 @@ static char *rs_frstr[NUM_FRSTR] = {
 	gemfedit_string_99,
 	gemfedit_string_100,
 	gemfedit_string_101,
-	gemfedit_string_102
+	gemfedit_string_102,
+	gemfedit_string_103
 };
 
 
 static TEDINFO rs_tedinfo[NUM_TI] = {
-	{ gemfedit_string_31, gemfedit_string_32, gemfedit_string_33, IBM, 6, TE_LEFT, 0x1180, 0x0, -1, 33,52 }, /* FONT_NAME */
-	{ gemfedit_string_34, gemfedit_string_35, gemfedit_string_36, IBM, 6, TE_LEFT, 0x1180, 0x0, -1, 6,25 }, /* FONT_ID */
-	{ gemfedit_string_37, gemfedit_string_38, gemfedit_string_39, IBM, 6, TE_LEFT, 0x1180, 0x0, -1, 6,25 }, /* FONT_POINT */
-	{ gemfedit_string_40, gemfedit_string_41, gemfedit_string_42, IBM, 6, TE_LEFT, 0x1180, 0x0, -1, 4,23 }, /* FONT_TOP */
-	{ gemfedit_string_43, gemfedit_string_44, gemfedit_string_45, IBM, 6, TE_LEFT, 0x1180, 0x0, -1, 4,24 }, /* FONT_WIDTH */
-	{ gemfedit_string_46, gemfedit_string_47, gemfedit_string_48, IBM, 6, TE_LEFT, 0x1180, 0x0, -1, 4,23 }, /* FONT_ASCENT */
-	{ gemfedit_string_49, gemfedit_string_50, gemfedit_string_51, IBM, 6, TE_LEFT, 0x1180, 0x0, -1, 4,24 }, /* FONT_HEIGHT */
-	{ gemfedit_string_52, gemfedit_string_53, gemfedit_string_54, IBM, 6, TE_LEFT, 0x1180, 0x0, -1, 4,23 }, /* FONT_HALF */
-	{ gemfedit_string_55, gemfedit_string_56, gemfedit_string_57, IBM, 6, TE_LEFT, 0x1180, 0x0, -1, 4,23 }, /* FONT_DESCENT */
-	{ gemfedit_string_58, gemfedit_string_59, gemfedit_string_60, IBM, 6, TE_LEFT, 0x1180, 0x0, -1, 4,23 }, /* FONT_BOTTOM */
-	{ gemfedit_string_61, gemfedit_string_62, gemfedit_string_63, IBM, 257, TE_LEFT, 0x1180, 0x7EF8, 0, 4,23 }, /* FONT_FIRST_ADE */
-	{ gemfedit_string_64, gemfedit_string_65, gemfedit_string_66, IBM, 257, TE_LEFT, 0x1180, 0x7EF8, 0, 4,23 }, /* FONT_LAST_ADE */
-	{ gemfedit_string_85, gemfedit_string_86, gemfedit_string_87, SMALL, 0, TE_LEFT, 0x1B00, 0x0, -1, 23,1 }
+	{ gemfedit_string_32, gemfedit_string_33, gemfedit_string_34, IBM, 6, TE_LEFT, 0x1180, 0x0, -1, 33,52 }, /* FONT_NAME */
+	{ gemfedit_string_35, gemfedit_string_36, gemfedit_string_37, IBM, 6, TE_LEFT, 0x1180, 0x0, -1, 6,25 }, /* FONT_ID */
+	{ gemfedit_string_38, gemfedit_string_39, gemfedit_string_40, IBM, 6, TE_LEFT, 0x1180, 0x0, -1, 6,25 }, /* FONT_POINT */
+	{ gemfedit_string_41, gemfedit_string_42, gemfedit_string_43, IBM, 6, TE_LEFT, 0x1180, 0x0, -1, 4,23 }, /* FONT_TOP */
+	{ gemfedit_string_44, gemfedit_string_45, gemfedit_string_46, IBM, 6, TE_LEFT, 0x1180, 0x0, -1, 4,24 }, /* FONT_WIDTH */
+	{ gemfedit_string_47, gemfedit_string_48, gemfedit_string_49, IBM, 6, TE_LEFT, 0x1180, 0x0, -1, 4,23 }, /* FONT_ASCENT */
+	{ gemfedit_string_50, gemfedit_string_51, gemfedit_string_52, IBM, 6, TE_LEFT, 0x1180, 0x0, -1, 4,24 }, /* FONT_HEIGHT */
+	{ gemfedit_string_53, gemfedit_string_54, gemfedit_string_55, IBM, 6, TE_LEFT, 0x1180, 0x0, -1, 4,23 }, /* FONT_HALF */
+	{ gemfedit_string_56, gemfedit_string_57, gemfedit_string_58, IBM, 6, TE_LEFT, 0x1180, 0x0, -1, 4,23 }, /* FONT_DESCENT */
+	{ gemfedit_string_59, gemfedit_string_60, gemfedit_string_61, IBM, 6, TE_LEFT, 0x1180, 0x0, -1, 4,23 }, /* FONT_BOTTOM */
+	{ gemfedit_string_62, gemfedit_string_63, gemfedit_string_64, IBM, 257, TE_LEFT, 0x1180, 0x7EF8, 0, 4,23 }, /* FONT_FIRST_ADE */
+	{ gemfedit_string_65, gemfedit_string_66, gemfedit_string_67, IBM, 257, TE_LEFT, 0x1180, 0x7EF8, 0, 4,23 }, /* FONT_LAST_ADE */
+	{ gemfedit_string_86, gemfedit_string_87, gemfedit_string_88, SMALL, 0, TE_LEFT, 0x1B00, 0x0, -1, 23,1 }
 };
 
 
@@ -457,36 +458,37 @@ static OBJECT rs_object[NUM_OBS] = {
 	{ 13, -1, -1, G_STRING, OF_NONE, OS_NORMAL, C_UNION(gemfedit_string_7), 0,5, 21,1 },
 	{ 14, -1, -1, G_STRING, OF_NONE, OS_NORMAL, C_UNION(gemfedit_string_8), 0,6, 21,1 },
 	{ 6, -1, -1, G_STRING, OF_NONE, OS_NORMAL, C_UNION(gemfedit_string_9), 0,7, 21,1 },
-	{ 5, 16, 27, G_BOX, OF_NONE, OS_NORMAL, C_UNION(0xFF1100L), 8,0, 20,12 },
+	{ 5, 16, 28, G_BOX, OF_NONE, OS_NORMAL, C_UNION(0xFF1100L), 8,0, 20,13 },
 	{ 17, -1, -1, G_STRING, OF_NONE, OS_NORMAL, C_UNION(gemfedit_string_10), 0,0, 20,1 }, /* FOPEN */
 	{ 18, -1, -1, G_STRING, OF_NONE, OS_NORMAL, C_UNION(gemfedit_string_11), 0,1, 20,1 }, /* FSAVE */
 	{ 19, -1, -1, G_STRING, OF_NONE, OS_NORMAL, C_UNION(gemfedit_string_12), 0,2, 20,1 }, /* FINFO */
 	{ 20, -1, -1, G_STRING, OF_NONE, OS_DISABLED, C_UNION(gemfedit_string_13), 0,3, 20,1 },
 	{ 21, -1, -1, G_STRING, OF_NONE, OS_NORMAL, C_UNION(gemfedit_string_14), 0,4, 20,1 }, /* FEXPORTC */
-	{ 22, -1, -1, G_STRING, OF_NONE, OS_DISABLED, C_UNION(gemfedit_string_15), 0,5, 20,1 },
-	{ 23, -1, -1, G_STRING, OF_NONE, OS_NORMAL, C_UNION(gemfedit_string_16), 0,6, 20,1 }, /* FSYS_6X6 */
-	{ 24, -1, -1, G_STRING, OF_NONE, OS_NORMAL, C_UNION(gemfedit_string_17), 0,7, 20,1 }, /* FSYS_8X8 */
-	{ 25, -1, -1, G_STRING, OF_NONE, OS_NORMAL, C_UNION(gemfedit_string_18), 0,8, 20,1 }, /* FSYS_8X16 */
-	{ 26, -1, -1, G_STRING, OF_NONE, OS_NORMAL, C_UNION(gemfedit_string_19), 0,9, 20,1 }, /* FSYS_16X32 */
-	{ 27, -1, -1, G_STRING, OF_NONE, OS_DISABLED, C_UNION(gemfedit_string_20), 0,10, 20,1 },
-	{ 15, -1, -1, G_STRING, OF_LASTOB, OS_NORMAL, C_UNION(gemfedit_string_21), 0,11, 20,1 }, /* FQUIT */
+	{ 22, -1, -1, G_STRING, OF_NONE, OS_NORMAL, C_UNION(gemfedit_string_15), 0,5, 20,1 }, /* FEXPORTTXT */
+	{ 23, -1, -1, G_STRING, OF_NONE, OS_DISABLED, C_UNION(gemfedit_string_16), 0,6, 20,1 },
+	{ 24, -1, -1, G_STRING, OF_NONE, OS_NORMAL, C_UNION(gemfedit_string_17), 0,7, 20,1 }, /* FSYS_6X6 */
+	{ 25, -1, -1, G_STRING, OF_NONE, OS_NORMAL, C_UNION(gemfedit_string_18), 0,8, 20,1 }, /* FSYS_8X8 */
+	{ 26, -1, -1, G_STRING, OF_NONE, OS_NORMAL, C_UNION(gemfedit_string_19), 0,9, 20,1 }, /* FSYS_8X16 */
+	{ 27, -1, -1, G_STRING, OF_NONE, OS_NORMAL, C_UNION(gemfedit_string_20), 0,10, 20,1 }, /* FSYS_16X32 */
+	{ 28, -1, -1, G_STRING, OF_NONE, OS_DISABLED, C_UNION(gemfedit_string_21), 0,11, 20,1 },
+	{ 15, -1, -1, G_STRING, OF_LASTOB, OS_NORMAL, C_UNION(gemfedit_string_22), 0,12, 20,1 }, /* FQUIT */
 
 /* CHARSET */
 
 	{ -1, 1, 8, G_BOX, OF_NONE, OS_OUTLINED, C_UNION(0x21100L), 0,0, 66,10 },
-	{ 2, -1, -1, (1<<8)+G_STRING, OF_NONE, OS_NORMAL, C_UNION(gemfedit_string_22), 1,1, 63,1 },
-	{ 3, -1, -1, G_STRING, OF_NONE, OS_NORMAL, C_UNION(gemfedit_string_23), 1,2, 63,1 },
-	{ 4, -1, -1, G_STRING, OF_NONE, OS_NORMAL, C_UNION(gemfedit_string_24), 1,3, 63,1 },
-	{ 5, -1, -1, G_STRING, OF_NONE, OS_NORMAL, C_UNION(gemfedit_string_25), 1,4, 63,1 },
-	{ 6, -1, -1, G_STRING, OF_NONE, OS_NORMAL, C_UNION(gemfedit_string_26), 1,5, 63,1 },
-	{ 7, -1, -1, G_STRING, OF_NONE, OS_NORMAL, C_UNION(gemfedit_string_27), 1,6, 63,1 },
-	{ 8, -1, -1, G_STRING, OF_NONE, OS_NORMAL, C_UNION(gemfedit_string_28), 1,7, 63,1 },
-	{ 0, -1, -1, G_STRING, OF_LASTOB, OS_NORMAL, C_UNION(gemfedit_string_29), 1,8, 63,1 },
+	{ 2, -1, -1, (1<<8)+G_STRING, OF_NONE, OS_NORMAL, C_UNION(gemfedit_string_23), 1,1, 63,1 },
+	{ 3, -1, -1, G_STRING, OF_NONE, OS_NORMAL, C_UNION(gemfedit_string_24), 1,2, 63,1 },
+	{ 4, -1, -1, G_STRING, OF_NONE, OS_NORMAL, C_UNION(gemfedit_string_25), 1,3, 63,1 },
+	{ 5, -1, -1, G_STRING, OF_NONE, OS_NORMAL, C_UNION(gemfedit_string_26), 1,4, 63,1 },
+	{ 6, -1, -1, G_STRING, OF_NONE, OS_NORMAL, C_UNION(gemfedit_string_27), 1,5, 63,1 },
+	{ 7, -1, -1, G_STRING, OF_NONE, OS_NORMAL, C_UNION(gemfedit_string_28), 1,6, 63,1 },
+	{ 8, -1, -1, G_STRING, OF_NONE, OS_NORMAL, C_UNION(gemfedit_string_29), 1,7, 63,1 },
+	{ 0, -1, -1, G_STRING, OF_LASTOB, OS_NORMAL, C_UNION(gemfedit_string_30), 1,8, 63,1 },
 
 /* FONT_PARAMS */
 
 	{ -1, 1, 14, G_BOX, OF_NONE, OS_OUTLINED, C_UNION(0x21110L), 1,0, 54,16 },
-	{ 2, -1, -1, G_STRING, OF_NONE, OS_NORMAL, C_UNION(gemfedit_string_30), 20,1, 15,1 },
+	{ 2, -1, -1, G_STRING, OF_NONE, OS_NORMAL, C_UNION(gemfedit_string_31), 20,1, 15,1 },
 	{ 3, -1, -1, G_FTEXT, OF_NONE, OS_NORMAL, C_UNION(&rs_tedinfo[0]), 2,3, 51,1 }, /* FONT_NAME */
 	{ 4, -1, -1, G_FTEXT, OF_NONE, OS_NORMAL, C_UNION(&rs_tedinfo[1]), 2,4, 24,1 }, /* FONT_ID */
 	{ 5, -1, -1, G_FTEXT, OF_NONE, OS_NORMAL, C_UNION(&rs_tedinfo[2]), 2,5, 24,1 }, /* FONT_POINT */
@@ -499,47 +501,47 @@ static OBJECT rs_object[NUM_OBS] = {
 	{ 12, -1, -1, G_FTEXT, OF_NONE, OS_NORMAL, C_UNION(&rs_tedinfo[9]), 2,11, 22,1 }, /* FONT_BOTTOM */
 	{ 13, -1, -1, G_FTEXT, OF_NONE, OS_NORMAL, C_UNION(&rs_tedinfo[10]), 2,13, 22,1 }, /* FONT_FIRST_ADE */
 	{ 14, -1, -1, G_FTEXT, OF_NONE, OS_NORMAL, C_UNION(&rs_tedinfo[11]), 2,14, 22,1 }, /* FONT_LAST_ADE */
-	{ 0, -1, -1, G_BUTTON, 0x27, OS_NORMAL, C_UNION(gemfedit_string_67), 44,14, 8,1 }, /* FONT_OK */
+	{ 0, -1, -1, G_BUTTON, 0x27, OS_NORMAL, C_UNION(gemfedit_string_68), 44,14, 8,1 }, /* FONT_OK */
 
 /* PANEL */
 
 	{ -1, 1, 1, G_BOX, OF_NONE, OS_NORMAL, C_UNION(0x74001100L), 0,0, 24,20 }, /* PANEL_BG */
 	{ 0, 2, 17, G_BOX, OF_NONE, OS_OUTLINED, C_UNION(0x21100L), 2,1, 20,18 }, /* PANEL_BOX */
-	{ 3, -1, -1, G_STRING, OF_NONE, OS_NORMAL, C_UNION(gemfedit_string_68), 2,1, 16,1 }, /* PANEL_FIRST */
-	{ 4, -1, -1, G_STRING, OF_NONE, OS_NORMAL, C_UNION(gemfedit_string_69), 2,2, 16,1 },
-	{ 5, -1, -1, G_STRING, OF_NONE, OS_NORMAL, C_UNION(gemfedit_string_70), 2,3, 16,1 },
-	{ 6, -1, -1, G_STRING, OF_NONE, OS_NORMAL, C_UNION(gemfedit_string_71), 2,4, 16,1 },
-	{ 7, -1, -1, G_STRING, OF_NONE, OS_NORMAL, C_UNION(gemfedit_string_72), 2,5, 16,1 },
-	{ 8, -1, -1, G_STRING, OF_NONE, OS_NORMAL, C_UNION(gemfedit_string_73), 2,6, 16,1 },
-	{ 9, -1, -1, G_STRING, OF_NONE, OS_NORMAL, C_UNION(gemfedit_string_74), 2,7, 16,1 },
-	{ 10, -1, -1, G_STRING, OF_NONE, OS_NORMAL, C_UNION(gemfedit_string_75), 2,8, 16,1 },
-	{ 11, -1, -1, G_STRING, OF_NONE, OS_NORMAL, C_UNION(gemfedit_string_76), 2,9, 16,1 },
-	{ 12, -1, -1, G_STRING, OF_NONE, OS_NORMAL, C_UNION(gemfedit_string_77), 2,10, 16,1 },
-	{ 13, -1, -1, G_STRING, OF_NONE, OS_NORMAL, C_UNION(gemfedit_string_78), 2,11, 16,1 },
-	{ 14, -1, -1, G_STRING, OF_NONE, OS_NORMAL, C_UNION(gemfedit_string_79), 2,12, 16,1 },
-	{ 15, -1, -1, G_STRING, OF_NONE, OS_NORMAL, C_UNION(gemfedit_string_80), 2,13, 16,1 },
-	{ 16, -1, -1, G_STRING, OF_NONE, OS_NORMAL, C_UNION(gemfedit_string_81), 2,14, 16,1 },
-	{ 17, -1, -1, G_STRING, OF_NONE, OS_NORMAL, C_UNION(gemfedit_string_82), 2,15, 16,1 },
-	{ 1, -1, -1, G_STRING, OF_LASTOB, OS_NORMAL, C_UNION(gemfedit_string_83), 2,16, 16,1 }, /* PANEL_LAST */
+	{ 3, -1, -1, G_STRING, OF_NONE, OS_NORMAL, C_UNION(gemfedit_string_69), 2,1, 16,1 }, /* PANEL_FIRST */
+	{ 4, -1, -1, G_STRING, OF_NONE, OS_NORMAL, C_UNION(gemfedit_string_70), 2,2, 16,1 },
+	{ 5, -1, -1, G_STRING, OF_NONE, OS_NORMAL, C_UNION(gemfedit_string_71), 2,3, 16,1 },
+	{ 6, -1, -1, G_STRING, OF_NONE, OS_NORMAL, C_UNION(gemfedit_string_72), 2,4, 16,1 },
+	{ 7, -1, -1, G_STRING, OF_NONE, OS_NORMAL, C_UNION(gemfedit_string_73), 2,5, 16,1 },
+	{ 8, -1, -1, G_STRING, OF_NONE, OS_NORMAL, C_UNION(gemfedit_string_74), 2,6, 16,1 },
+	{ 9, -1, -1, G_STRING, OF_NONE, OS_NORMAL, C_UNION(gemfedit_string_75), 2,7, 16,1 },
+	{ 10, -1, -1, G_STRING, OF_NONE, OS_NORMAL, C_UNION(gemfedit_string_76), 2,8, 16,1 },
+	{ 11, -1, -1, G_STRING, OF_NONE, OS_NORMAL, C_UNION(gemfedit_string_77), 2,9, 16,1 },
+	{ 12, -1, -1, G_STRING, OF_NONE, OS_NORMAL, C_UNION(gemfedit_string_78), 2,10, 16,1 },
+	{ 13, -1, -1, G_STRING, OF_NONE, OS_NORMAL, C_UNION(gemfedit_string_79), 2,11, 16,1 },
+	{ 14, -1, -1, G_STRING, OF_NONE, OS_NORMAL, C_UNION(gemfedit_string_80), 2,12, 16,1 },
+	{ 15, -1, -1, G_STRING, OF_NONE, OS_NORMAL, C_UNION(gemfedit_string_81), 2,13, 16,1 },
+	{ 16, -1, -1, G_STRING, OF_NONE, OS_NORMAL, C_UNION(gemfedit_string_82), 2,14, 16,1 },
+	{ 17, -1, -1, G_STRING, OF_NONE, OS_NORMAL, C_UNION(gemfedit_string_83), 2,15, 16,1 },
+	{ 1, -1, -1, G_STRING, OF_LASTOB, OS_NORMAL, C_UNION(gemfedit_string_84), 2,16, 16,1 }, /* PANEL_LAST */
 
 /* ABOUT_DIALOG */
 
 	{ -1, 1, 6, G_BOX, OF_FL3DBAK, OS_OUTLINED, C_UNION(0x21100L), 0,0, 32,13 },
-	{ 2, -1, -1, G_STRING, OF_NONE, OS_NORMAL, C_UNION(gemfedit_string_84), 3,1, 18,1 },
+	{ 2, -1, -1, G_STRING, OF_NONE, OS_NORMAL, C_UNION(gemfedit_string_85), 3,1, 18,1 },
 	{ 3, -1, -1, G_TEXT, OF_NONE, OS_NORMAL, C_UNION(&rs_tedinfo[12]), 3,2, 1040,1 },
-	{ 4, -1, -1, G_STRING, OF_NONE, OS_NORMAL, C_UNION(gemfedit_string_88), 3,4, 24,1 },
-	{ 5, -1, -1, G_STRING, OF_NONE, OS_NORMAL, C_UNION(gemfedit_string_89), 3,6, 11,1 }, /* ABOUT_VERSION */
-	{ 6, -1, -1, G_STRING, OF_NONE, OS_NORMAL, C_UNION(gemfedit_string_90), 3,8, 11,1 }, /* ABOUT_DATE */
-	{ 0, -1, -1, G_BUTTON, 0x627, OS_NORMAL, C_UNION(gemfedit_string_91), 22,11, 8,1 }
+	{ 4, -1, -1, G_STRING, OF_NONE, OS_NORMAL, C_UNION(gemfedit_string_89), 3,4, 24,1 },
+	{ 5, -1, -1, G_STRING, OF_NONE, OS_NORMAL, C_UNION(gemfedit_string_90), 3,6, 11,1 }, /* ABOUT_VERSION */
+	{ 6, -1, -1, G_STRING, OF_NONE, OS_NORMAL, C_UNION(gemfedit_string_91), 3,8, 11,1 }, /* ABOUT_DATE */
+	{ 0, -1, -1, G_BUTTON, 0x627, OS_NORMAL, C_UNION(gemfedit_string_92), 22,11, 8,1 }
 };
 
 
 static OBJECT *rs_trindex[NUM_TREE] = {
 	&rs_object[0], /* MAINMENU */
-	&rs_object[28], /* CHARSET */
-	&rs_object[37], /* FONT_PARAMS */
-	&rs_object[52], /* PANEL */
-	&rs_object[70] /* ABOUT_DIALOG */
+	&rs_object[29], /* CHARSET */
+	&rs_object[38], /* FONT_PARAMS */
+	&rs_object[53], /* PANEL */
+	&rs_object[71] /* ABOUT_DIALOG */
 };
 
 
@@ -736,7 +738,7 @@ _WORD gemfedit_rsc_free()
 #endif /* RSC_NAMED_FUNCTIONS */
 
 #else /* !RSC_STATIC_FILE */
-int rs_numstrings = 103;
+int rs_numstrings = 104;
 int rs_numfrstr = 11;
 
 int rs_nuser = 0;
@@ -746,7 +748,7 @@ int rs_numfrimg = 0;
 int rs_numib = 0;
 int rs_numcib = 0;
 int rs_numti = 13;
-int rs_numobs = 77;
+int rs_numobs = 78;
 int rs_numtree = 5;
 
 char rs_name[] = "gemfedit.rsc";

@@ -3,23 +3,27 @@
 #include <mintbind.h>
 #include <time.h>
 #include <ctype.h>
+#include <stdint.h>
+#include <string.h>
+#include <stdlib.h>
+#include <stdio.h>
 #include <mint/arch/nf_ops.h>
-#define FONT_HDR LA_FONT_HDR
-#define FONTS LA_FONTS
-#define Fonts LA_Fonts
-#define fonthdr la_fonthdr
-#include <linea.h>
-#undef fonthdr
-#undef FONT_HDR
-#undef FONTS
-#undef Fonts
+#include "gemfedit.h"
 static _WORD gl_wchar, gl_hchar;
 #define GetTextSize(w, h) *(w) = gl_wchar, *(h) = gl_hchar
 #define hfix_objs(a, b, c)
 #define hrelease_objs(a, b)
-#include "gemfedit.h"
 #include "fonthdr.h"
 #include "swap.h"
+
+#ifndef _BOOL
+# define _BOOL int
+#endif
+#ifndef FALSE
+# define FALSE 0
+# define TRUE  1
+#endif
+
 
 typedef struct
 {
@@ -62,10 +66,12 @@ static _BOOL font_changed = FALSE;
 
 #define FONT_BIG ((fonthdr.flags & FONTF_BIGENDIAN) != 0)
 
+#if 0
 LINEA *Linea;
 VDIESC *Vdiesc;
-FONTS *Fonts;
 LINEA_FUNP *Linea_funp;
+#endif
+FONTS *Fonts;
 
 static char const program_name[] = "gemfedit";
 
@@ -217,7 +223,7 @@ static _BOOL char_testbit(unsigned short c, _WORD x, _WORD y)
 	o = off_table[c] + x;
 	b = o & 0x7;
 	mask = 0x80 >> b;
-	dat = dat_table + (_ULONG)y * fonthdr.form_width + (o >> 3);
+	dat = dat_table + (unsigned long)y * fonthdr.form_width + (o >> 3);
 	return (*dat & mask) != 0;
 }
 
@@ -243,7 +249,7 @@ static _BOOL char_togglebit(unsigned short c, _WORD x, _WORD y)
 	o = off_table[c] + x;
 	b = o & 0x7;
 	mask = 0x80 >> b;
-	dat = dat_table + (_ULONG)y * fonthdr.form_width + (o >> 3);
+	dat = dat_table + (unsigned long)y * fonthdr.form_width + (o >> 3);
 	*dat ^= mask;
 	
 	return TRUE;
@@ -271,7 +277,7 @@ static _BOOL char_setbit(unsigned short c, _WORD x, _WORD y)
 	o = off_table[c] + x;
 	b = o & 0x7;
 	mask = 0x80 >> b;
-	dat = dat_table + (_ULONG)y * fonthdr.form_width + (o >> 3);
+	dat = dat_table + (unsigned long)y * fonthdr.form_width + (o >> 3);
 	if (!(*dat & mask))
 	{
 		*dat |= mask;
@@ -302,7 +308,7 @@ static _BOOL char_clearbit(unsigned short c, _WORD x, _WORD y)
 	o = off_table[c] + x;
 	b = o & 0x7;
 	mask = 0x80 >> b;
-	dat = dat_table + (_ULONG)y * fonthdr.form_width + (o >> 3);
+	dat = dat_table + (unsigned long)y * fonthdr.form_width + (o >> 3);
 	if (*dat & mask)
 	{
 		*dat &= ~mask;
@@ -329,7 +335,7 @@ static void draw_char(unsigned short c, _WORD x0, _WORD y0)
 	width = off_table[c + 1] - off_table[c];
 	height = font_ch;
 
-	vsf_color(vdihandle, BLACK);
+	vsf_color(vdihandle, G_BLACK);
 	o = off_table[c];
 	b = o & 0x7;
 	dat = dat_table + (o >> 3);
@@ -380,12 +386,12 @@ static void mainwin_draw(const GRECT *area)
 			pxy[3] = gr.g_y + gr.g_h - 1;
 			vs_clip(vdihandle, 1, pxy);
 			vswr_mode(vdihandle, MD_REPLACE);
-			vsf_color(vdihandle, WHITE);
+			vsf_color(vdihandle, G_WHITE);
 			vsf_perimeter(vdihandle, 0);
 			vsf_interior(vdihandle, FIS_SOLID);
 			vr_recfl(vdihandle, pxy);
 	
-			vsf_color(vdihandle, RED);
+			vsf_color(vdihandle, G_RED);
 			for (y = 0; y < (font_ch + 1); y++)
 			{
 				pxy[0] = work.g_x + MAIN_X_MARGIN;
@@ -636,10 +642,10 @@ static _WORD _CDECL draw_font(PARMBLK *pb)
 	vqt_attributes(aeshandle, tattrib);
 	vqf_attributes(aeshandle, fattrib);
 	vqm_attributes(aeshandle, mattrib);
-	vsf_color(aeshandle, WHITE);
+	vsf_color(aeshandle, G_WHITE);
 	vsf_interior(aeshandle, FIS_SOLID);
 	vsf_perimeter(aeshandle, FALSE);
-	vsm_color(aeshandle, BLACK);
+	vsm_color(aeshandle, G_BLACK);
 	vsm_type(aeshandle, 1);
 	vsm_height(aeshandle, 1);
 	pxy[0] = pb->pb_x;
@@ -846,7 +852,7 @@ static _BOOL check_gemfnt_header(FONT_HDR *h, unsigned long l)
 		return FALSE;
 	form_width = h->form_width;
 	form_height = h->form_height;
-	if ((dat_offset + (_ULONG)form_width * form_height) > l)
+	if ((dat_offset + (unsigned long)form_width * form_height) > l)
 		return FALSE;
 	h->last_ade = lastc;
 	return TRUE;
@@ -1069,11 +1075,34 @@ static void *linea0(void) 0xa000;
 static void init_linea(void)
 {
 	push_a2();
+#if 0
 	Linea = linea0();
 	Vdiesc = (VDIESC *)((char *)Linea - sizeof(VDIESC));
 	Fonts = get_a1();
 	Linea_funp = get_a2();
+#else
+	linea0();
+	Fonts = get_a1();
+#endif
 	pop_a2();
+}
+#endif
+
+
+#ifdef __GNUC__
+static void init_linea(void)
+{
+	__asm__ __volatile__(
+#ifdef __mcoldfire__
+		"\tdc.w 0xa920\n"
+#else
+		"\tdc.w 0xa000\n"
+#endif
+		"\tmove.l %%a1,%0\n"
+	: "=m"(Fonts)
+	:
+	: "d0", "d1", "d2", "a0", "a1", "a2", "cc", "memory"
+	);
 }
 #endif
 
@@ -1277,7 +1306,7 @@ static void save_font(const char *filename)
 }
 
 
-static _BOOL font_export_gemfont(const char *filename)
+static _BOOL font_export_as_c(const char *filename)
 {
 	FONT_HDR *hdr = &fonthdr;
 	FILE *fp;
@@ -1415,7 +1444,14 @@ static _BOOL font_export_gemfont(const char *filename)
 }
 
 
-static void export_font(void)
+static _BOOL font_export_as_txt(const char *filename)
+{
+	(void) filename;
+	return TRUE;
+}
+
+
+static void export_font_c(void)
 {
 	static char path[128];
 	static char mask[128] = "*.C";
@@ -1434,7 +1470,30 @@ static void export_font(void)
 	
 	if (!do_fsel_input(path, filename_buf, mask, rs_str(SEL_OUTPUT)))
 		return;
-	font_export_gemfont(path);
+	font_export_as_c(path);
+}
+
+
+static void export_font_txt(void)
+{
+	static char path[128];
+	static char mask[128] = "*.TXT";
+	char filename_buf[128];
+	
+	if (!is_font_loaded())
+		return;
+	if (path[0] == '\0')
+	{
+		path[0] = Dgetdrv() + 'A';
+		path[1] = ':';
+		Dgetpath(path + 2, 0);
+		strcat(path, "\\");
+	}
+	strcpy(filename_buf, "");
+	
+	if (!do_fsel_input(path, filename_buf, mask, rs_str(SEL_OUTPUT)))
+		return;
+	font_export_as_txt(path);
 }
 
 
@@ -1466,7 +1525,7 @@ static void font_info(void)
 	objc_draw_grect(tree, ROOT, MAX_DEPTH, &gr);
 	ret = form_do(tree, ROOT);
 	ret &= 0x7fff;
-	tree[ret].ob_state &= ~SELECTED;
+	tree[ret].ob_state &= ~OS_SELECTED;
 	
 	form_dial_grect(FMD_FINISH, &gr, &gr);
 	
@@ -1489,7 +1548,7 @@ static void do_about(void)
 	objc_draw_grect(tree, ROOT, MAX_DEPTH, &gr);
 	ret = form_do(tree, ROOT);
 	ret &= 0x7fff;
-	tree[ret].ob_state &= ~SELECTED;
+	tree[ret].ob_state &= ~OS_SELECTED;
 	form_dial_grect(FMD_FINISH, &gr, &gr);
 }
 
@@ -1568,7 +1627,7 @@ static void handle_message(_WORD *message, _WORD mox, _WORD moy)
 			save_font(fontfilename);
 			break;
 		case FEXPORTC:
-			export_font();
+			export_font_c();
 			break;
 		case FSYS_6X6:
 			font_load_sysfont(0);
@@ -1632,7 +1691,7 @@ static void mainloop(void)
 				save_font(fontfilename);
 				break;
 			case 0x05:
-				export_font();
+				export_font_c();
 				break;
 			case 0x09:
 				font_info();
