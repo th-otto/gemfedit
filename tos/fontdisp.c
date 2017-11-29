@@ -3,6 +3,8 @@
 #include <mintbind.h>
 #include <time.h>
 #include <mint/arch/nf_ops.h>
+#include <stdint.h>
+#include "fontdisp.h"
 #define RSC_NAMED_FUNCTIONS 1
 static _WORD gl_wchar, gl_hchar;
 #define GetTextSize(w, h) *(w) = gl_wchar, *(h) = gl_hchar
@@ -116,11 +118,13 @@ static void draw_char(unsigned short c, _WORD x0, _WORD y0)
 	
 	if (dat_table == NULL)
 		return;
+	if (c < fonthdr.first_ade || c > fonthdr.last_ade)
+		return;
 	c -= fonthdr.first_ade;
 	width = off_table[c + 1] - off_table[c];
 	height = font_ch;
 
-	vsf_color(vdihandle, BLACK);
+	vsf_color(vdihandle, G_BLACK);
 	o = off_table[c];
 	b = o & 0x7;
 	dat = dat_table + (o >> 3);
@@ -171,12 +175,12 @@ static void mainwin_draw(const GRECT *area)
 			pxy[3] = gr.g_y + gr.g_h - 1;
 			vs_clip(vdihandle, 1, pxy);
 			vswr_mode(vdihandle, MD_REPLACE);
-			vsf_color(vdihandle, WHITE);
+			vsf_color(vdihandle, G_WHITE);
 			vsf_perimeter(vdihandle, 0);
 			vsf_interior(vdihandle, FIS_SOLID);
 			vr_recfl(vdihandle, pxy);
 	
-			vsf_color(vdihandle, RED);
+			vsf_color(vdihandle, G_RED);
 			for (y = 0; y < 17; y++)
 			{
 				pxy[0] = work.g_x + MAIN_X_MARGIN;
@@ -599,9 +603,9 @@ static _BOOL font_load_gemfont(const char *filename)
 			fonthdr.flags & FONTF_BIGENDIAN ? "big" : "little",
 			fonthdr.flags & FONTF_MONOSPACED ? "monospaced" : "proportional",
 			fonthdr.flags & FONTF_EXTENDED ? " extended" : "");
-		nf_debugprintf("Horizontal table: %lu\n", fonthdr.hor_table);
-		nf_debugprintf("Offset table: %u\n", fonthdr.off_table);
-		nf_debugprintf("Data: %u\n", fonthdr.dat_table);
+		nf_debugprintf("Horizontal table: %lu\n", (unsigned long)fonthdr.hor_table);
+		nf_debugprintf("Offset table: %lu\n", (unsigned long)fonthdr.off_table);
+		nf_debugprintf("Data: %lu\n", (unsigned long)fonthdr.dat_table);
 		nf_debugprintf("Form width: %d\n", fonthdr.form_width);
 		nf_debugprintf("Form height: %d\n", fonthdr.form_height);
 		nf_debugprintf("\n");
@@ -678,7 +682,7 @@ static void font_info(void)
 	objc_draw_grect(tree, ROOT, MAX_DEPTH, &gr);
 	ret = form_do(tree, ROOT);
 	ret &= 0x7fff;
-	tree[ret].ob_state &= ~SELECTED;
+	tree[ret].ob_state &= ~OS_SELECTED;
 	
 	form_dial_grect(FMD_FINISH, &gr, &gr);
 }
@@ -695,7 +699,7 @@ static void do_about(void)
 	objc_draw_grect(tree, ROOT, MAX_DEPTH, &gr);
 	ret = form_do(tree, ROOT);
 	ret &= 0x7fff;
-	tree[ret].ob_state &= ~SELECTED;
+	tree[ret].ob_state &= ~OS_SELECTED;
 	form_dial_grect(FMD_FINISH, &gr, &gr);
 }
 
@@ -873,6 +877,10 @@ int main(int argc, char **argv)
 		menu_bar(menu, TRUE);
 		if (argc > 1)
 			font_load_gemfont(argv[1]);
+#if 1
+		else
+			font_load_gemfont("..\\fonts\\tos\\system10.fnt");
+#endif
 	}
 	
 	graf_mouse(ARROW, NULL);

@@ -1,4 +1,4 @@
-#ifdef __PUREC__
+#if defined(__PUREC__) || defined(__mc68000__)
 #define WORDS_BIGENDIAN 1
 #endif
 
@@ -9,6 +9,7 @@ static const int HOST_BIG = 0;
 #endif
 
 
+#undef INLINE
 #ifdef __PUREC__
 #define INLINE
 #else

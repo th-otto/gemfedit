@@ -1,7 +1,7 @@
 /*
  * GEM resource C output of fontdisp
  *
- * created by ORCS 2.14
+ * created by ORCS 2.15
  */
 
 #include <portab.h>
@@ -28,9 +28,19 @@
 #else
 #  ifdef __GNUC__
 #    ifndef __PORTAES_H__
-#      include <aesbind.h>
-#      define _WORD int
-#      define CP (char *)
+#      if __GNUC__ < 4
+#        include <aesbind.h>
+#        ifndef _WORD
+#          define _WORD int
+#        endif
+#        define CP (char *)
+#      else
+#        include <mt_gem.h>
+#        ifndef _WORD
+#          define _WORD short
+#        endif
+#        define CP (short *)
+#      endif
 #      define CW (short *)
 #    endif
 #  endif
@@ -176,8 +186,15 @@
 #  endif
 #endif
 
+#ifndef _LONG_PTR
+#  define _LONG_PTR _LONG
+#endif
+
 #ifndef C_UNION
 #ifdef __PORTAES_H__
+#  define C_UNION(x) { (_LONG_PTR)(x) }
+#endif
+#ifdef __GEMLIB__
 #  define C_UNION(x) { (_LONG_PTR)(x) }
 #endif
 #ifdef __PUREC__

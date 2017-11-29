@@ -77,6 +77,9 @@ static char const program_name[] = "gemfedit";
 
 #define is_font_loaded() (dat_table != NULL)
 
+/******************************************************************************/
+/* -------------------------------------------------------------------------- */
+/******************************************************************************/
 
 static OBJECT *rs_tree(_WORD num)
 {
@@ -85,6 +88,7 @@ static OBJECT *rs_tree(_WORD num)
 	return tree;
 }
 
+/* -------------------------------------------------------------------------- */
 	
 static char *rs_str(_WORD num)
 {
@@ -93,6 +97,7 @@ static char *rs_str(_WORD num)
 	return str;
 }
 
+/* -------------------------------------------------------------------------- */
 	
 static void chomp(char *dst, const char *src, size_t maxlen)
 {
@@ -105,6 +110,22 @@ static void chomp(char *dst, const char *src, size_t maxlen)
 		dst[--len] = '\0';
 }
 
+/* -------------------------------------------------------------------------- */
+
+static char *xbasename(const char *path)
+{
+	char *p = strrchr(path, '\\');
+	char *q = strrchr(path, '/');
+	if (p == NULL || q > p)
+		p = q;
+	if (p == NULL)
+		p = (char *)path;
+	else
+		++p;
+	return p;
+}
+
+/* -------------------------------------------------------------------------- */
 
 static void cleanup(void)
 {
@@ -117,6 +138,7 @@ static void cleanup(void)
 	}
 }
 
+/* -------------------------------------------------------------------------- */
 
 static void destroy_win(void)
 {
@@ -139,6 +161,7 @@ static void destroy_win(void)
 	}
 }
 
+/* -------------------------------------------------------------------------- */
 
 static void redraw_win(_WORD win)
 {
@@ -152,6 +175,7 @@ static void redraw_win(_WORD win)
 	appl_write(gl_apid, 16, message);
 }
 
+/* -------------------------------------------------------------------------- */
 
 static void set_panel_pos(void)
 {
@@ -168,6 +192,7 @@ static void set_panel_pos(void)
 	panel[ROOT].ob_y = gr.g_y + oy;
 }
 
+/* -------------------------------------------------------------------------- */
 
 static void redraw_pixel(_WORD x, _WORD y)
 {
@@ -196,9 +221,7 @@ static void redraw_pixel(_WORD x, _WORD y)
 	appl_write(gl_apid, 16, message);
 }
 
-
-
-
+/* -------------------------------------------------------------------------- */
 
 #define ror(x) (((x) >> 1) | ((x) & 1 ? 0x80 : 0))
 
@@ -227,6 +250,7 @@ static _BOOL char_testbit(unsigned short c, _WORD x, _WORD y)
 	return (*dat & mask) != 0;
 }
 
+/* -------------------------------------------------------------------------- */
 
 static _BOOL char_togglebit(unsigned short c, _WORD x, _WORD y)
 {
@@ -255,6 +279,7 @@ static _BOOL char_togglebit(unsigned short c, _WORD x, _WORD y)
 	return TRUE;
 }
 
+/* -------------------------------------------------------------------------- */
 
 static _BOOL char_setbit(unsigned short c, _WORD x, _WORD y)
 {
@@ -286,6 +311,7 @@ static _BOOL char_setbit(unsigned short c, _WORD x, _WORD y)
 	return FALSE;
 }
 
+/* -------------------------------------------------------------------------- */
 
 static _BOOL char_clearbit(unsigned short c, _WORD x, _WORD y)
 {
@@ -317,6 +343,7 @@ static _BOOL char_clearbit(unsigned short c, _WORD x, _WORD y)
 	return FALSE;
 }
 
+/* -------------------------------------------------------------------------- */
 
 static void draw_char(unsigned short c, _WORD x0, _WORD y0)
 {
@@ -362,6 +389,7 @@ static void draw_char(unsigned short c, _WORD x0, _WORD y0)
 	}
 }
 
+/* -------------------------------------------------------------------------- */
 
 static void mainwin_draw(const GRECT *area)
 {
@@ -418,6 +446,7 @@ static void mainwin_draw(const GRECT *area)
 	v_show_c(vdihandle, 1);
 }
 
+/* -------------------------------------------------------------------------- */
 
 static void panelwin_draw(const GRECT *area)
 {
@@ -438,6 +467,7 @@ static void panelwin_draw(const GRECT *area)
 	v_show_c(vdihandle, 1);
 }
 
+/* -------------------------------------------------------------------------- */
 
 static void panel_click(_WORD x, _WORD y)
 {
@@ -455,6 +485,7 @@ static void panel_click(_WORD x, _WORD y)
 	}
 }
 
+/* -------------------------------------------------------------------------- */
 
 static void handle_message(_WORD *message, _WORD mox, _WORD moy);
 
@@ -527,6 +558,7 @@ static void mainwin_click(_WORD x, _WORD y)
 	} while (button & 3);
 }
 
+/* -------------------------------------------------------------------------- */
 
 static _BOOL open_screen(void)
 {
@@ -539,6 +571,7 @@ static _BOOL open_screen(void)
 	return TRUE;
 }
 
+/* -------------------------------------------------------------------------- */
 
 static _BOOL create_panel_window(void)
 {
@@ -569,6 +602,7 @@ static _BOOL create_panel_window(void)
 	return TRUE;
 }
 
+/* -------------------------------------------------------------------------- */
 
 static _BOOL create_window(void)
 {
@@ -606,6 +640,7 @@ static _BOOL create_window(void)
 	return TRUE;
 }
 
+/* -------------------------------------------------------------------------- */
 
 static void resize_window(void)
 {
@@ -627,7 +662,36 @@ static void resize_window(void)
 	wind_set_grect(mainwin, WF_CURRXYWH, &gr);
 }
 
+/* -------------------------------------------------------------------------- */
 
+#ifdef __PUREC__
+/*
+ * the original Pure-C pcgemlib uses static arrays,
+ * and there is no need to use the udef_* functions
+ */
+#define udef_vqt_attributes vqt_attributes
+#define udef_vqf_attributes vqf_attributes
+#define udef_vqm_attributes vqm_attributes
+#define udef_vswr_mode vswr_mode
+#define udef_vsm_color vsm_color
+#define udef_vsm_type vsm_type
+#define udef_vsm_height vsm_height
+#define udef_vsf_color vsf_color
+#define udef_vsf_interior vsf_interior
+#define udef_vsf_perimeter vsf_perimeter
+#define udef_vsf_style vsf_style 
+#define udef_vr_recfl vr_recfl
+#define udef_v_pmarker v_pmarker
+#define udef_vst_color vst_color
+#define udef_vst_rotation vst_rotation
+#define udef_vst_alignment vst_alignment
+#define udef_vst_height vst_height
+#endif
+
+/*
+ * draw one line of characters in the panel window.
+ * called by a user-defined object
+ */
 static _WORD _CDECL draw_font(PARMBLK *pb)
 {
 	_WORD tattrib[10];
@@ -639,20 +703,20 @@ static _WORD _CDECL draw_font(PARMBLK *pb)
 	_WORD dummy;
 	_WORD basec;
 	
-	vqt_attributes(aeshandle, tattrib);
-	vqf_attributes(aeshandle, fattrib);
-	vqm_attributes(aeshandle, mattrib);
-	vsf_color(aeshandle, G_WHITE);
-	vsf_interior(aeshandle, FIS_SOLID);
-	vsf_perimeter(aeshandle, FALSE);
-	vsm_color(aeshandle, G_BLACK);
-	vsm_type(aeshandle, 1);
-	vsm_height(aeshandle, 1);
+	udef_vqt_attributes(aeshandle, tattrib);
+	udef_vqf_attributes(aeshandle, fattrib);
+	udef_vqm_attributes(aeshandle, mattrib);
+	udef_vsf_color(aeshandle, G_WHITE);
+	udef_vsf_interior(aeshandle, FIS_SOLID);
+	udef_vsf_perimeter(aeshandle, FALSE);
+	udef_vsm_color(aeshandle, G_BLACK);
+	udef_vsm_type(aeshandle, 1);
+	udef_vsm_height(aeshandle, 1);
 	pxy[0] = pb->pb_x;
 	pxy[1] = pb->pb_y;
 	pxy[2] = pb->pb_x + pb->pb_w - 1;
 	pxy[3] = pb->pb_y + pb->pb_h - 1;
-	vr_recfl(aeshandle, pxy);
+	udef_vr_recfl(aeshandle, pxy);
 	basec = (pb->pb_obj - PANEL_FIRST) * 16;
 	for (c = 0; c < 16; c++)
 	{
@@ -664,32 +728,38 @@ static _WORD _CDECL draw_font(PARMBLK *pb)
 				{
 					pxy[0] = pb->pb_x + c * font_cw + x;
 					pxy[1] = pb->pb_y + y;
-					v_pmarker(aeshandle, 1, pxy);
+					udef_v_pmarker(aeshandle, 1, pxy);
 				}
 			}
 		}
 	}
 
-	vst_color(aeshandle, tattrib[1]);
-	vst_rotation(aeshandle, tattrib[2]);
-	vst_alignment(aeshandle, tattrib[3], tattrib[4], &dummy, &dummy);
-	vst_height(aeshandle, tattrib[7], &dummy, &dummy, &dummy, &dummy);
+	udef_vst_color(aeshandle, tattrib[1]);
+	udef_vst_rotation(aeshandle, tattrib[2]);
+	udef_vst_alignment(aeshandle, tattrib[3], tattrib[4], &dummy, &dummy);
+	udef_vst_height(aeshandle, tattrib[7], &dummy, &dummy, &dummy, &dummy);
 
-	vsf_interior(aeshandle, fattrib[0]);
-	vsf_color(aeshandle, fattrib[1]);
-	vsf_style(aeshandle, fattrib[2]);
-	vswr_mode(aeshandle, fattrib[3]);
-	vsf_perimeter(aeshandle, fattrib[4]);
+	udef_vsf_interior(aeshandle, fattrib[0]);
+	udef_vsf_color(aeshandle, fattrib[1]);
+	udef_vsf_style(aeshandle, fattrib[2]);
+	udef_vswr_mode(aeshandle, fattrib[3]);
+	udef_vsf_perimeter(aeshandle, fattrib[4]);
 
-	vsm_type(aeshandle, mattrib[0]);
-	vsm_color(aeshandle, mattrib[1]);
-	vsm_height(aeshandle, mattrib[3]);
+	udef_vsm_type(aeshandle, mattrib[0]);
+	udef_vsm_color(aeshandle, mattrib[1]);
+	udef_vsm_height(aeshandle, mattrib[3]);
 	
 	return 0;
 }
 
+/* -------------------------------------------------------------------------- */
+
 static USERBLK draw_font_userblk = { draw_font, 0 };
 
+/*
+ * resize the panel window, and install the
+ * user-defined objects that do the actual drawing
+ */
 static void resize_panel(void)
 {
 	GRECT gr, desk;
@@ -721,6 +791,9 @@ static void resize_panel(void)
 	wind_set_grect(panelwin, WF_CURRXYWH, &gr);
 }
 
+/******************************************************************************/
+/* -------------------------------------------------------------------------- */
+/******************************************************************************/
 
 static void font_gethdr(FONT_HDR *hdr, const unsigned char *h)
 {
@@ -752,6 +825,7 @@ static void font_gethdr(FONT_HDR *hdr, const unsigned char *h)
 	hdr->next_font = 0;
 }
 
+/* -------------------------------------------------------------------------- */
 
 static void font_puthdr(const FONT_HDR *hdr, unsigned char *h)
 {
@@ -782,6 +856,7 @@ static void font_puthdr(const FONT_HDR *hdr, unsigned char *h)
 	STORE_UL(h + 84, hdr->next_font);
 }
 
+/* -------------------------------------------------------------------------- */
 
 static void swap_gemfnt_header(FONT_HDR *hdr, unsigned long l)
 {
@@ -813,6 +888,7 @@ static void swap_gemfnt_header(FONT_HDR *hdr, unsigned long l)
 	SWAP_W(hdr->form_height);
 }
 
+/* -------------------------------------------------------------------------- */
 
 /*
  * There are apparantly several fonts that have the Motorola flag set
@@ -858,7 +934,7 @@ static _BOOL check_gemfnt_header(FONT_HDR *h, unsigned long l)
 	return TRUE;
 }
 
-
+/* -------------------------------------------------------------------------- */
 
 static void font_get_tables(unsigned char *h, const char *filename)
 {
@@ -904,7 +980,7 @@ static void font_get_tables(unsigned char *h, const char *filename)
 	}
 }
 
-
+/* -------------------------------------------------------------------------- */
 
 static _BOOL font_gen_gemfont(unsigned char *h, const char *filename, unsigned long l)
 {
@@ -958,21 +1034,11 @@ static _BOOL font_gen_gemfont(unsigned char *h, const char *filename, unsigned l
 	return TRUE;
 }
 
+/* -------------------------------------------------------------------------- */
 
-static char *xbasename(const char *path)
-{
-	char *p = strrchr(path, '\\');
-	char *q = strrchr(path, '/');
-	if (p == NULL || q > p)
-		p = q;
-	if (p == NULL)
-		p = (char *)path;
-	else
-		++p;
-	return p;
-}
-
-
+/*
+ * update some global vars after a font has been loaded
+ */
 static void font_loaded(unsigned char *h, const char *filename)
 {
 #if 0
@@ -1022,6 +1088,7 @@ static void font_loaded(unsigned char *h, const char *filename)
 	font_changed = FALSE;
 }
 
+/* -------------------------------------------------------------------------- */
 
 static _BOOL font_load_gemfont(const char *filename)
 {
@@ -1063,6 +1130,7 @@ static _BOOL font_load_gemfont(const char *filename)
 	return ret;
 }
 
+/* -------------------------------------------------------------------------- */
 
 #ifdef __PUREC__
 static void push_a2(void) 0x2F0A;
@@ -1106,6 +1174,7 @@ static void init_linea(void)
 }
 #endif
 
+/* -------------------------------------------------------------------------- */
 
 static _BOOL font_load_sysfont(int fontnum)
 {
@@ -1155,6 +1224,7 @@ static _BOOL font_load_sysfont(int fontnum)
 	return TRUE;
 }
 
+/* -------------------------------------------------------------------------- */
 
 static _BOOL do_fsel_input(char *path, char *filename, char *mask, const char *title)
 {
@@ -1176,6 +1246,7 @@ static _BOOL do_fsel_input(char *path, char *filename, char *mask, const char *t
 	return TRUE;
 }
 
+/* -------------------------------------------------------------------------- */
 
 static void select_font(void)
 {
@@ -1203,6 +1274,7 @@ static void select_font(void)
 	font_load_gemfont(path);
 }
 
+/* -------------------------------------------------------------------------- */
 
 static _BOOL font_save_gemfont(const char *filename)
 {
@@ -1275,6 +1347,7 @@ static _BOOL font_save_gemfont(const char *filename)
 	return TRUE;
 }
 
+/* -------------------------------------------------------------------------- */
 
 static void save_font(const char *filename)
 {
@@ -1305,6 +1378,7 @@ static void save_font(const char *filename)
 	font_save_gemfont(path);
 }
 
+/* -------------------------------------------------------------------------- */
 
 static _BOOL font_export_as_c(const char *filename)
 {
@@ -1443,6 +1517,7 @@ static _BOOL font_export_as_c(const char *filename)
 	return TRUE;
 }
 
+/* -------------------------------------------------------------------------- */
 
 static _BOOL font_export_as_txt(const char *filename)
 {
@@ -1450,6 +1525,7 @@ static _BOOL font_export_as_txt(const char *filename)
 	return TRUE;
 }
 
+/* -------------------------------------------------------------------------- */
 
 static void export_font_c(void)
 {
@@ -1473,6 +1549,7 @@ static void export_font_c(void)
 	font_export_as_c(path);
 }
 
+/* -------------------------------------------------------------------------- */
 
 static void export_font_txt(void)
 {
@@ -1496,6 +1573,7 @@ static void export_font_txt(void)
 	font_export_as_txt(path);
 }
 
+/* -------------------------------------------------------------------------- */
 
 static void font_info(void)
 {
@@ -1536,6 +1614,7 @@ static void font_info(void)
 	}
 }
 
+/* -------------------------------------------------------------------------- */
 
 static void do_about(void)
 {
@@ -1552,6 +1631,9 @@ static void do_about(void)
 	form_dial_grect(FMD_FINISH, &gr, &gr);
 }
 
+/******************************************************************************/
+/* -------------------------------------------------------------------------- */
+/******************************************************************************/
 
 static void msg_mn_select(_WORD title, _WORD entry)
 {
@@ -1566,6 +1648,7 @@ static void msg_mn_select(_WORD title, _WORD entry)
 	appl_write(gl_apid, 16, message);
 }
 
+/* -------------------------------------------------------------------------- */
 
 static void handle_message(_WORD *message, _WORD mox, _WORD moy)
 {
@@ -1629,6 +1712,9 @@ static void handle_message(_WORD *message, _WORD mox, _WORD moy)
 		case FEXPORTC:
 			export_font_c();
 			break;
+		case FEXPORTTXT:
+			export_font_txt();
+			break;
 		case FSYS_6X6:
 			font_load_sysfont(0);
 			break;
@@ -1654,6 +1740,7 @@ static void handle_message(_WORD *message, _WORD mox, _WORD moy)
 	wind_update(END_UPDATE);
 }
 
+/* -------------------------------------------------------------------------- */
 
 static void mainloop(void)
 {
@@ -1757,6 +1844,7 @@ static void mainloop(void)
 	}
 }
 
+/* -------------------------------------------------------------------------- */
 
 int main(int argc, char **argv)
 {
@@ -1800,9 +1888,9 @@ int main(int argc, char **argv)
 		menu_bar(menu, TRUE);
 		if (argc > 1)
 			font_load_gemfont(argv[1]);
-#if 0
+#if 1
 		else
-			font_load_gemfont("system2.fnt");
+			font_load_gemfont("..\\fonts\\tos\\system10.fnt");
 #endif
 	}
 	
