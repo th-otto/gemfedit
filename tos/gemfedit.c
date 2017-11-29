@@ -206,6 +206,8 @@ static _BOOL char_testbit(unsigned short c, _WORD x, _WORD y)
 
 	if (!is_font_loaded())
 		return FALSE;
+	if (c < fonthdr.first_ade || c > fonthdr.last_ade)
+		return FALSE;
 	c -= fonthdr.first_ade;
 	width = off_table[c + 1] - off_table[c];
 	height = font_ch;
@@ -229,6 +231,8 @@ static _BOOL char_togglebit(unsigned short c, _WORD x, _WORD y)
 	unsigned char *dat;
 
 	if (!is_font_loaded())
+		return FALSE;
+	if (c < fonthdr.first_ade || c > fonthdr.last_ade)
 		return FALSE;
 	c -= fonthdr.first_ade;
 	width = off_table[c + 1] - off_table[c];
@@ -255,6 +259,8 @@ static _BOOL char_setbit(unsigned short c, _WORD x, _WORD y)
 	unsigned char *dat;
 
 	if (!is_font_loaded())
+		return FALSE;
+	if (c < fonthdr.first_ade || c > fonthdr.last_ade)
 		return FALSE;
 	c -= fonthdr.first_ade;
 	width = off_table[c + 1] - off_table[c];
@@ -285,6 +291,8 @@ static _BOOL char_clearbit(unsigned short c, _WORD x, _WORD y)
 	
 	if (!is_font_loaded())
 		return FALSE;
+	if (c < fonthdr.first_ade || c > fonthdr.last_ade)
+		return FALSE;
 	c -= fonthdr.first_ade;
 	width = off_table[c + 1] - off_table[c];
 	height = font_ch;
@@ -314,6 +322,8 @@ static void draw_char(unsigned short c, _WORD x0, _WORD y0)
 	unsigned char *dat, *p;
 	
 	if (!is_font_loaded())
+		return;
+	if (c < fonthdr.first_ade || c > fonthdr.last_ade)
 		return;
 	c -= fonthdr.first_ade;
 	width = off_table[c + 1] - off_table[c];
@@ -1117,18 +1127,23 @@ static _BOOL font_load_sysfont(int fontnum)
 }
 
 
-static _BOOL do_fsel_input(char *path, char *filename, const char *title)
+static _BOOL do_fsel_input(char *path, char *filename, char *mask, const char *title)
 {
 	_WORD button = 0;
 	_WORD ret;
+	char *p;
 	
+	p = xbasename(path);
+	strcpy(p, mask);
 	if (gl_ap_version >= 0x0140)
 		ret = fsel_exinput(path, filename, &button, title);
 	else
 		ret = fsel_input(path, filename, &button);
 	if (ret == 0 || button == 0)
 		return FALSE;
-	strcpy(xbasename(path), filename);
+	p = xbasename(path);
+	strcpy(mask, p);
+	strcpy(p, filename);
 	return TRUE;
 }
 
@@ -1137,7 +1152,7 @@ static void select_font(void)
 {
 	char filename[128];
 	static char path[128];
-	char *p;
+	static char mask[128] = "*.FNT";
 	
 	if (font_changed)
 	{
@@ -1152,11 +1167,9 @@ static void select_font(void)
 		Dgetpath(path + 2, 0);
 		strcat(path, "\\");
 	}
-	p = xbasename(path);
-	strcpy(p, "*.FNT");
 	strcpy(filename, "");
 	
-	if (!do_fsel_input(path, filename, rs_str(SEL_FONT)))
+	if (!do_fsel_input(path, filename, mask, rs_str(SEL_FONT)))
 		return;
 	font_load_gemfont(path);
 }
@@ -1237,8 +1250,8 @@ static _BOOL font_save_gemfont(const char *filename)
 static void save_font(const char *filename)
 {
 	static char path[128];
+	static char mask[128] = "*.FNT";
 	char filename_buf[128];
-	char *p;
 	
 	if (!is_font_loaded())
 		return;
@@ -1256,11 +1269,9 @@ static void save_font(const char *filename)
 		else
 			strcpy(xbasename(path), filename);
 	}
-	p = xbasename(path);
-	strcpy(p, "*.FNT");
 	strcpy(filename_buf, "");
 	
-	if (!do_fsel_input(path, filename_buf, rs_str(SEL_OUTPUT)))
+	if (!do_fsel_input(path, filename_buf, mask, rs_str(SEL_OUTPUT)))
 		return;
 	font_save_gemfont(path);
 }
@@ -1407,8 +1418,8 @@ static _BOOL font_export_gemfont(const char *filename)
 static void export_font(void)
 {
 	static char path[128];
+	static char mask[128] = "*.C";
 	char filename_buf[128];
-	char *p;
 	
 	if (!is_font_loaded())
 		return;
@@ -1419,11 +1430,9 @@ static void export_font(void)
 		Dgetpath(path + 2, 0);
 		strcat(path, "\\");
 	}
-	p = xbasename(path);
-	strcpy(p, "*.C");
 	strcpy(filename_buf, "");
 	
-	if (!do_fsel_input(path, filename_buf, rs_str(SEL_OUTPUT)))
+	if (!do_fsel_input(path, filename_buf, mask, rs_str(SEL_OUTPUT)))
 		return;
 	font_export_gemfont(path);
 }

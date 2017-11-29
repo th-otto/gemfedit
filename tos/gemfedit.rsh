@@ -404,7 +404,7 @@ static char gemfedit_string_98[] = "[2][Font has been changed.|Load Anyway?][No|
 static char gemfedit_string_99[] = "Select Output File";
 static char gemfedit_string_100[] = "[2][File already exists.|Overwrite?][No|Yes]";
 static char gemfedit_string_101[] = "[3][Can\'t create|%s][Abort]";
-static char gemfedit_string_102[] = "[3][Fonts with horizontal offset table|are not supported.][Abort]";
+static char gemfedit_string_102[] = "[3][Fonts with horizontal offset|tables are not supported.][Abort]";
 
 
 static char *rs_frstr[NUM_FRSTR] = {

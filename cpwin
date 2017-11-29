@@ -52,7 +52,6 @@ find . \( -type f \) \
 	! -name "udo_fc.*" ! -name "udo_fo.*" ! -name "udo_fs.*" ! -name orcs.stg ! -name gc_ork.stg \
 	! -name "aaa.cfg" ! -name "p1.cfg" ! -name "pd.cfg" \
 	! -name "*.uls" ! -name "*.hyp" \
-	! -name gcs_user.txt ! -name gcserver.txt ! -name gcmapps.txt ! -name conquer.txt ! -name gcserver.ger ! -name gcserver.eng \
 	! -name "*.tar.*" \
 	! -path "*.libs/*" \
 	! -path "*.deps/*" \
@@ -69,6 +68,7 @@ do
 	test -f "$i.in" && continue
 	t=`file -b "$i"`
 	case "$t" in
+           *MS-DOS\ executable*) : ;;
            *executable* | TeX\ font\ metric*) continue ;;
         esac
 	case "$i" in
