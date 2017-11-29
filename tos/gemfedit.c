@@ -50,6 +50,9 @@ static _WORD scalex = 16;
 static _WORD scaley = 16;
 static const int scaled_margin = 1;
 
+#define F_NO_CHAR 0xffffu
+typedef unsigned short fchar_t;
+
 static _WORD font_cw;
 static _WORD font_ch;
 static FONT_HDR fonthdr;
@@ -60,8 +63,8 @@ static unsigned char *hor_table;
 static char fontname[VDI_FONTNAMESIZE + 1];
 static const char *fontfilename;
 static const char *fontbasename;
-static unsigned short numoffs;
-static unsigned short cur_char;
+static fchar_t numoffs;
+static fchar_t cur_char;
 static _BOOL font_changed = FALSE;
 
 #define FONT_BIG ((fonthdr.flags & FONTF_BIGENDIAN) != 0)
@@ -225,7 +228,7 @@ static void redraw_pixel(_WORD x, _WORD y)
 
 #define ror(x) (((x) >> 1) | ((x) & 1 ? 0x80 : 0))
 
-static _BOOL char_testbit(unsigned short c, _WORD x, _WORD y)
+static _BOOL char_testbit(fchar_t c, _WORD x, _WORD y)
 {
 	_WORD width, height;
 	unsigned short o;
@@ -252,7 +255,7 @@ static _BOOL char_testbit(unsigned short c, _WORD x, _WORD y)
 
 /* -------------------------------------------------------------------------- */
 
-static _BOOL char_togglebit(unsigned short c, _WORD x, _WORD y)
+static _BOOL char_togglebit(fchar_t c, _WORD x, _WORD y)
 {
 	_WORD width, height;
 	unsigned short o;
@@ -281,7 +284,7 @@ static _BOOL char_togglebit(unsigned short c, _WORD x, _WORD y)
 
 /* -------------------------------------------------------------------------- */
 
-static _BOOL char_setbit(unsigned short c, _WORD x, _WORD y)
+static _BOOL char_setbit(fchar_t c, _WORD x, _WORD y)
 {
 	_WORD width, height;
 	unsigned short o;
@@ -313,7 +316,7 @@ static _BOOL char_setbit(unsigned short c, _WORD x, _WORD y)
 
 /* -------------------------------------------------------------------------- */
 
-static _BOOL char_clearbit(unsigned short c, _WORD x, _WORD y)
+static _BOOL char_clearbit(fchar_t c, _WORD x, _WORD y)
 {
 	_WORD width, height;
 	unsigned short o;
@@ -345,7 +348,7 @@ static _BOOL char_clearbit(unsigned short c, _WORD x, _WORD y)
 
 /* -------------------------------------------------------------------------- */
 
-static void draw_char(unsigned short c, _WORD x0, _WORD y0)
+static void draw_char(fchar_t c, _WORD x0, _WORD y0)
 {
 	_WORD x, y;
 	_WORD width, height;
@@ -698,7 +701,7 @@ static _WORD _CDECL draw_font(PARMBLK *pb)
 	_WORD fattrib[5];
 	_WORD mattrib[5];
 	_WORD x, y;
-	unsigned short c;
+	fchar_t c;
 	_WORD pxy[4];
 	_WORD dummy;
 	_WORD basec;
@@ -1384,7 +1387,7 @@ static _BOOL font_export_as_c(const char *filename)
 {
 	FONT_HDR *hdr = &fonthdr;
 	FILE *fp;
-	unsigned short i, end;
+	fchar_t i, end;
 	
 	fp = fopen(filename, "rb");
 	if (fp != NULL)
@@ -1462,6 +1465,7 @@ static _BOOL font_export_as_c(const char *filename)
 
 #define SET_WORD(a)  fprintf(fp, "    %u,  /* " #a " */\n", hdr->a)
 #define SET_UWORD(a) fprintf(fp, "    0x%04x,  /* " #a " */\n", hdr->a)
+
 	SET_WORD(font_id);
 	SET_WORD(point);
 	fprintf(fp, "    \"");
@@ -1521,7 +1525,123 @@ static _BOOL font_export_as_c(const char *filename)
 
 static _BOOL font_export_as_txt(const char *filename)
 {
-	(void) filename;
+	FONT_HDR *hdr = &fonthdr;
+	FILE *fp;
+	fchar_t i;
+	
+	fp = fopen(filename, "rb");
+	if (fp != NULL)
+	{
+		fclose(fp);
+		if (form_alert(1, rs_str(AL_EXISTS)) != 2)
+			return FALSE;
+	}
+	fp = fopen(filename, "w");
+	if (fp == NULL)
+	{
+		char buf[256];
+		
+		sprintf(buf, rs_str(AL_FCREATE), filename);
+		form_alert(1, buf);
+		return FALSE;
+	}
+	
+	fprintf(fp, "GDOSFONT\n");
+	fprintf(fp, "version 1.0\n");
+
+#define SET_WORD(a)  fprintf(fp, #a " %u\n", hdr->a)
+#define SET_UWORD(a) fprintf(fp, #a " 0x%04x\n", hdr->a)
+
+	SET_WORD(font_id);
+	SET_WORD(point);
+
+	fprintf(fp, "name \"");
+	for (i = 0; i < VDI_FONTNAMESIZE; i++)
+	{
+		char c = hdr->name[i];
+
+		if (c == 0)
+			break;
+		if (c < 32 || c > 126 || c == '\\' || c == '"')
+		{
+			fprintf(fp, "\\%03o", c);
+		} else
+		{
+			fprintf(fp, "%c", c);
+		}
+	}
+	fprintf(fp, "\"\n");
+
+	SET_WORD(first_ade);
+	SET_WORD(last_ade);
+	SET_WORD(top);
+	SET_WORD(ascent);
+	SET_WORD(half);
+	SET_WORD(descent);
+	SET_WORD(bottom);
+	SET_WORD(max_char_width);
+	SET_WORD(max_cell_width);
+	SET_WORD(left_offset);
+	SET_WORD(right_offset);
+	SET_WORD(thicken);
+	SET_WORD(ul_size);
+
+	SET_UWORD(lighten);
+	SET_UWORD(skew);
+	SET_UWORD(flags);
+
+	SET_WORD(form_height);
+
+#undef SET_WORD
+#undef SET_UWORD
+
+	/* then, output char bitmaps */
+	for (i = hdr->first_ade; i <= hdr->last_ade; i++)
+	{
+		unsigned short y, x, w, off;
+		fchar_t c;
+		
+		off = off_table[i];
+		if (off == F_NO_CHAR)
+			continue;
+		w = off_table[i + 1] - off_table[i];
+		if (off + w > 8 * hdr->form_width)
+		{
+			fprintf(stderr, "char %d: offset %d + width %d out of range (%d)\n", i, off, w, 8 * hdr->form_width);
+			continue;
+		}
+		c = i + hdr->first_ade;
+		if (c < 32 || c > 126)
+		{
+			fprintf(fp, "char 0x%02x\n", c);
+		} else if (c == '\\' || c == '\'')
+		{
+			fprintf(fp, "char '\\%c'\n", c);
+		} else
+		{
+			fprintf(fp, "char '%c'\n", c);
+		}
+
+		for (y = 0; y < hdr->form_height; y++)
+		{
+			for (x = 0; x < w; x++)
+			{
+				if (char_testbit(i, x, y))
+				{
+					fprintf(fp, "X");
+				} else
+				{
+					fprintf(fp, ".");
+				}
+			}
+			fprintf(fp, "\n");
+		}
+		fprintf(fp, "endchar\n");
+	}
+	fprintf(fp, "endfont\n");
+
+	fclose(fp);
+	
 	return TRUE;
 }
 
