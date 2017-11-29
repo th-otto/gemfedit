@@ -30,13 +30,13 @@ typedef struct FONT_HDR
 /* 80 */       unsigned short form_width;           /* width of raster in bytes */
 /* 82 */       unsigned short form_height;          /* height of raster in lines */
 /* 84 */       uint32_t next_font;                  /* pointer to next font */
-/* 88 */    unsigned short font_seg; /* new */
+/* 88 */       unsigned short next_seg;				/* new */
 /* 90 */
 } FONT_HDR;
 
 
 /* #define SIZEOF_FONT_HDR 90 in memory only */
-#define SIZEOF_FONT_HDR 84
+#define SIZEOF_FONT_HDR 88
 
 /* definitions for flags */
 #define FONTF_SYSTEM     0x0001            /* Default system font */

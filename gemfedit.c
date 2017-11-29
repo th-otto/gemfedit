@@ -69,6 +69,8 @@ LINEA_FUNP *Linea_funp;
 
 static char const program_name[] = "gemfedit";
 
+#define is_font_loaded() (dat_table != NULL)
+
 
 static OBJECT *rs_tree(_WORD num)
 {
@@ -202,7 +204,7 @@ static _BOOL char_testbit(unsigned short c, _WORD x, _WORD y)
 	unsigned char mask;
 	unsigned char *dat;
 
-	if (dat_table == NULL)
+	if (!is_font_loaded())
 		return FALSE;
 	c -= fonthdr.first_ade;
 	width = off_table[c + 1] - off_table[c];
@@ -226,7 +228,7 @@ static _BOOL char_togglebit(unsigned short c, _WORD x, _WORD y)
 	unsigned char mask;
 	unsigned char *dat;
 
-	if (dat_table == NULL)
+	if (!is_font_loaded())
 		return FALSE;
 	c -= fonthdr.first_ade;
 	width = off_table[c + 1] - off_table[c];
@@ -252,7 +254,7 @@ static _BOOL char_setbit(unsigned short c, _WORD x, _WORD y)
 	unsigned char mask;
 	unsigned char *dat;
 
-	if (dat_table == NULL)
+	if (!is_font_loaded())
 		return FALSE;
 	c -= fonthdr.first_ade;
 	width = off_table[c + 1] - off_table[c];
@@ -281,7 +283,7 @@ static _BOOL char_clearbit(unsigned short c, _WORD x, _WORD y)
 	unsigned char mask;
 	unsigned char *dat;
 	
-	if (dat_table == NULL)
+	if (!is_font_loaded())
 		return FALSE;
 	c -= fonthdr.first_ade;
 	width = off_table[c + 1] - off_table[c];
@@ -311,7 +313,7 @@ static void draw_char(unsigned short c, _WORD x0, _WORD y0)
 	unsigned char mask;
 	unsigned char *dat, *p;
 	
-	if (dat_table == NULL)
+	if (!is_font_loaded())
 		return;
 	c -= fonthdr.first_ade;
 	width = off_table[c + 1] - off_table[c];
@@ -709,6 +711,7 @@ static void font_gethdr(FONT_HDR *hdr, const unsigned char *h)
 	hdr->font_id = LOAD_W(h + 0);
 	hdr->point = LOAD_W(h + 2);
 	chomp(fontname, (const char *)h + 4, VDI_FONTNAMESIZE + 1);
+	memcpy(hdr->name, fontname, VDI_FONTNAMESIZE);
 	hdr->first_ade = LOAD_UW(h + 36);
 	hdr->last_ade = LOAD_UW(h + 38);
 	hdr->top = LOAD_UW(h + 40);
@@ -730,6 +733,37 @@ static void font_gethdr(FONT_HDR *hdr, const unsigned char *h)
 	hdr->dat_table = LOAD_UL(h + 76);
 	hdr->form_width = LOAD_UW(h + 80);
 	hdr->form_height = LOAD_UW(h + 82);
+	hdr->next_font = 0;
+}
+
+
+static void font_puthdr(const FONT_HDR *hdr, unsigned char *h)
+{
+	STORE_W(h + 0, hdr->font_id);
+	STORE_W(h + 2, hdr->point);
+	memcpy(h + 4, hdr->name, VDI_FONTNAMESIZE);
+	STORE_UW(h + 36, hdr->first_ade);
+	STORE_UW(h + 38, hdr->last_ade);
+	STORE_UW(h + 40, hdr->top);
+	STORE_UW(h + 42, hdr->ascent);
+	STORE_UW(h + 44, hdr->half);
+	STORE_UW(h + 46, hdr->descent);
+	STORE_UW(h + 48, hdr->bottom);
+	STORE_UW(h + 50, hdr->max_char_width);
+	STORE_UW(h + 52, hdr->max_cell_width);
+	STORE_UW(h + 54, hdr->left_offset);
+	STORE_UW(h + 56, hdr->right_offset);
+	STORE_UW(h + 58, hdr->thicken);
+	STORE_UW(h + 60, hdr->ul_size);
+	STORE_UW(h + 62, hdr->lighten);
+	STORE_UW(h + 64, hdr->skew);
+	STORE_UW(h + 66, hdr->flags); 
+	STORE_UL(h + 68, hdr->hor_table);
+	STORE_UL(h + 72, hdr->off_table);
+	STORE_UL(h + 76, hdr->dat_table);
+	STORE_UW(h + 80, hdr->form_width);
+	STORE_UW(h + 82, hdr->form_height);
+	STORE_UL(h + 84, hdr->next_font);
 }
 
 
@@ -1059,7 +1093,6 @@ static _BOOL font_load_sysfont(int fontnum)
 	h = (const unsigned char *)(Fonts->font[fontnum]);
 	
 	font_gethdr(hdr, h);
-	numoffs = hdr->last_ade - hdr->first_ade + 1;
 	font_get_tables(NULL, filename);
 	offtable_size = (unsigned long)(numoffs + 1) * 2;
 	form_size = (unsigned long)hdr->form_width * (unsigned long)hdr->form_height;
@@ -1084,9 +1117,24 @@ static _BOOL font_load_sysfont(int fontnum)
 }
 
 
+static _BOOL do_fsel_input(char *path, char *filename, const char *title)
+{
+	_WORD button = 0;
+	_WORD ret;
+	
+	if (gl_ap_version >= 0x0140)
+		ret = fsel_exinput(path, filename, &button, title);
+	else
+		ret = fsel_input(path, filename, &button);
+	if (ret == 0 || button == 0)
+		return FALSE;
+	strcpy(xbasename(path), filename);
+	return TRUE;
+}
+
+
 static void select_font(void)
 {
-	_WORD button;
 	char filename[128];
 	static char path[128];
 	char *p;
@@ -1108,10 +1156,8 @@ static void select_font(void)
 	strcpy(p, "*.FNT");
 	strcpy(filename, "");
 	
-	if (!fsel_exinput(path, filename, &button, rs_str(SEL_FONT)) || !button)
+	if (!do_fsel_input(path, filename, rs_str(SEL_FONT)))
 		return;
-	p = xbasename(path);
-	strcpy(p, filename);
 	font_load_gemfont(path);
 }
 
@@ -1122,7 +1168,7 @@ static _BOOL font_save_gemfont(const char *filename)
 	FILE *fp;
 	unsigned long offtable_size;
 	unsigned long form_size;
-	unsigned char h[SIZEOF_FONT_HDR + 4];
+	unsigned char h[SIZEOF_FONT_HDR];
 	unsigned short *u;
 	_BOOL swapped;
 	
@@ -1161,8 +1207,7 @@ static _BOOL font_save_gemfont(const char *filename)
 		}
 	}
 
-	memcpy(h, hdr, sizeof(h));
-	memcpy(h + 4, fontname, VDI_FONTNAMESIZE);
+	font_puthdr(hdr, h);
 	
 	fwrite(h, 1, sizeof(h), fp);
 	fwrite(off_table, 1, offtable_size, fp);
@@ -1191,11 +1236,12 @@ static _BOOL font_save_gemfont(const char *filename)
 
 static void save_font(const char *filename)
 {
-	_WORD button;
 	static char path[128];
 	char filename_buf[128];
 	char *p;
 	
+	if (!is_font_loaded())
+		return;
 	if (path[0] == '\0')
 	{
 		path[0] = Dgetdrv() + 'A';
@@ -1214,21 +1260,183 @@ static void save_font(const char *filename)
 	strcpy(p, "*.FNT");
 	strcpy(filename_buf, "");
 	
-	if (!fsel_exinput(path, filename_buf, &button, rs_str(SEL_OUTPUT)) || !button)
+	if (!do_fsel_input(path, filename_buf, rs_str(SEL_OUTPUT)))
 		return;
-	p = xbasename(path);
-	strcpy(p, filename_buf);
 	font_save_gemfont(path);
+}
+
+
+static _BOOL font_export_gemfont(const char *filename)
+{
+	FONT_HDR *hdr = &fonthdr;
+	FILE *fp;
+	unsigned short i, end;
+	
+	fp = fopen(filename, "rb");
+	if (fp != NULL)
+	{
+		fclose(fp);
+		if (form_alert(1, rs_str(AL_EXISTS)) != 2)
+			return FALSE;
+	}
+	fp = fopen(filename, "w");
+	if (fp == NULL)
+	{
+		char buf[256];
+		
+		sprintf(buf, rs_str(AL_FCREATE), filename);
+		form_alert(1, buf);
+		return FALSE;
+	}
+	
+	fprintf(fp, "\
+/*\n\
+ * %s - a font in standard format\n\
+ *\n\
+ * Automatically generated by %s\n\
+ */\n", xbasename(filename), program_name);
+ 
+	fprintf(fp, "\
+\n\
+#include \"portab.h\"\n\
+#include \"fonthdr.h\"\n\
+\n");
+
+	fprintf(fp, "static UWORD const off_table[] =\n{\n");
+	end = hdr->last_ade + 2;
+	for (i = hdr->first_ade; i < end; i++)
+	{
+		if ((i & 7) == 0)
+			fprintf(fp, "    ");
+		else
+			fprintf(fp, " ");
+		fprintf(fp, "0x%04x", off_table[i]);
+		if (i != (end - 1))
+			fprintf(fp, ",");
+		if ((i & 7) == 7)
+			fprintf(fp, "\n");
+	}
+	if ((i & 7) != 0)
+		fprintf(fp, "\n");
+	fprintf(fp, "};\n\n");
+
+	fprintf(fp, "static UWORD const dat_table[] =\n{\n");
+	{
+		unsigned long j, h;
+		unsigned short a;
+		
+		h = ((unsigned long)hdr->form_height * hdr->form_width) / 2;
+		for (j = 0; j < h; j++)
+		{
+			if ((j & 7) == 0)
+				fprintf(fp, "    ");
+			else
+				fprintf(fp, " ");
+			a = (dat_table[2 * j] << 8) | (dat_table[2 * j + 1] & 0xFF);
+			fprintf(fp, "0x%04x", a);
+			if (j != (h - 1))
+				fprintf(fp, ",");
+			if ((j & 7) == 7)
+				fprintf(fp, "\n");
+		}
+		if ((j & 7) != 0)
+			fprintf(fp, "\n");
+	}
+	fprintf(fp, "};\n\n");
+
+	fprintf(fp, "struct FONT_HDR const THISFONT = {\n");
+
+#define SET_WORD(a)  fprintf(fp, "    %u,  /* " #a " */\n", hdr->a)
+#define SET_UWORD(a) fprintf(fp, "    0x%04x,  /* " #a " */\n", hdr->a)
+	SET_WORD(font_id);
+	SET_WORD(point);
+	fprintf(fp, "    \"");
+	for (i = 0; i < VDI_FONTNAMESIZE; i++)
+	{
+		char c = fontname[i];
+
+		if (c == 0)
+			break;
+		if (c < 32 || c > 126 || c == '\\' || c == '"')
+		{
+			fprintf(fp, "\\%03o", c);
+		} else
+		{
+			fprintf(fp, "%c", c);
+		}
+	}
+
+	fprintf(fp, "\",  /*   BYTE name[32]	*/\n");
+
+	SET_WORD(first_ade);
+	SET_WORD(last_ade);
+	SET_WORD(top);
+	SET_WORD(ascent);
+	SET_WORD(half);
+	SET_WORD(descent);
+	SET_WORD(bottom);
+	SET_WORD(max_char_width);
+	SET_WORD(max_cell_width);
+	SET_WORD(left_offset);
+	SET_WORD(right_offset);
+	SET_WORD(thicken);
+	SET_WORD(ul_size);
+
+	SET_UWORD(lighten);
+	SET_UWORD(skew);
+	SET_UWORD(flags);
+	fprintf(fp, "    0,			/*   UBYTE *hor_table	*/\n");
+	fprintf(fp, "    off_table,		/*   UWORD *off_table	*/\n");
+	fprintf(fp, "    dat_table,		/*   UWORD *dat_table	*/\n");
+
+	SET_WORD(form_width);
+	SET_WORD(form_height);
+	fprintf(fp, "    0,  /* struct font * next_font */\n");
+	fprintf(fp, "    0   /* UWORD next_seg */\n");
+	fprintf(fp, "};\n\n");
+
+#undef SET_WORD
+#undef SET_UWORD
+
+	fclose(fp);
+	
+	return TRUE;
+}
+
+
+static void export_font(void)
+{
+	static char path[128];
+	char filename_buf[128];
+	char *p;
+	
+	if (!is_font_loaded())
+		return;
+	if (path[0] == '\0')
+	{
+		path[0] = Dgetdrv() + 'A';
+		path[1] = ':';
+		Dgetpath(path + 2, 0);
+		strcat(path, "\\");
+	}
+	p = xbasename(path);
+	strcpy(p, "*.C");
+	strcpy(filename_buf, "");
+	
+	if (!do_fsel_input(path, filename_buf, rs_str(SEL_OUTPUT)))
+		return;
+	font_export_gemfont(path);
 }
 
 
 static void font_info(void)
 {
+	FONT_HDR *hdr = &fonthdr;
 	OBJECT *tree = rs_tree(FONT_PARAMS);
 	GRECT gr;
 	_WORD ret;
 	
-	if (dat_table == NULL)
+	if (!is_font_loaded())
 		return;
 	form_center_grect(tree, &gr);
 	form_dial_grect(FMD_START, &gr, &gr);
@@ -1252,6 +1460,12 @@ static void font_info(void)
 	tree[ret].ob_state &= ~SELECTED;
 	
 	form_dial_grect(FMD_FINISH, &gr, &gr);
+	
+	if (ret == FONT_OK)
+	{
+		chomp(fontname, tree[FONT_NAME].ob_spec.tedinfo->te_ptext, VDI_FONTNAMESIZE + 1);
+		memcpy(hdr->name, fontname, VDI_FONTNAMESIZE);
+	}
 }
 
 
@@ -1342,8 +1556,10 @@ static void handle_message(_WORD *message, _WORD mox, _WORD moy)
 			select_font();
 			break;
 		case FSAVE:
-			if (dat_table)
-				save_font(fontfilename);
+			save_font(fontfilename);
+			break;
+		case FEXPORTC:
+			export_font();
 			break;
 		case FSYS_6X6:
 			font_load_sysfont(0);
@@ -1377,13 +1593,17 @@ static void mainloop(void)
 	_WORD message[8];
 	_WORD k, kstate, dummy, mox, moy;
 
-	if (dat_table == NULL)
+	if (!is_font_loaded())
 		msg_mn_select(TFILE, FOPEN);
 	init_linea();
 	menu_ienable(menu, FSYS_16X32, Fonts != NULL && Fonts->font[3] != NULL);
 	
 	while (!quit_app)
 	{
+		menu_ienable(menu, FINFO, is_font_loaded());
+		menu_ienable(menu, FSAVE, is_font_loaded());
+		menu_ienable(menu, FEXPORTC, is_font_loaded());
+		
 		event = evnt_multi(MU_KEYBD | MU_MESAG | MU_BUTTON,
 			256|2, 3, 0,
 			0, 0, 0, 0, 0,
@@ -1400,8 +1620,10 @@ static void mainloop(void)
 				select_font();
 				break;
 			case 0x13:
-				if (dat_table)
-					save_font(fontfilename);
+				save_font(fontfilename);
+				break;
+			case 0x05:
+				export_font();
 				break;
 			case 0x09:
 				font_info();
@@ -1510,8 +1732,10 @@ int main(int argc, char **argv)
 		menu_bar(menu, TRUE);
 		if (argc > 1)
 			font_load_gemfont(argv[1]);
+#if 0
 		else
 			font_load_gemfont("system2.fnt");
+#endif
 	}
 	
 	graf_mouse(ARROW, NULL);
