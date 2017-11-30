@@ -1609,21 +1609,19 @@ static _BOOL font_export_as_txt(const char *filename)
 #undef SET_UWORD
 
 	/* then, output char bitmaps */
-	for (i = hdr->first_ade; i <= hdr->last_ade; i++)
+	for (i = 0; i < numoffs; i++)
 	{
 		unsigned short y, x, w, off;
 		fchar_t c;
 		
+		c = i + hdr->first_ade;
 		off = off_table[i];
-		if (off == F_NO_CHAR)
-			continue;
 		w = off_table[i + 1] - off_table[i];
 		if (off + w > 8 * hdr->form_width)
 		{
-			nf_debugprintf("char %d: offset %d + width %d out of range (%d)\n", i, off, w, 8 * hdr->form_width);
+			nf_debugprintf("char %d: offset %d + width %d out of range (%d)\n", c, off, w, 8 * hdr->form_width);
 			continue;
 		}
-		c = i + hdr->first_ade;
 		if (c < 32 || c > 126)
 		{
 			fprintf(fp, "char 0x%02x\n", c);
@@ -1639,7 +1637,7 @@ static _BOOL font_export_as_txt(const char *filename)
 		{
 			for (x = 0; x < w; x++)
 			{
-				if (char_testbit(i, x, y))
+				if (char_testbit(c, x, y))
 				{
 					fprintf(fp, "X");
 				} else
@@ -1742,7 +1740,9 @@ static int inextsh(FILE *f, int *lineno)
 /* -------------------------------------------------------------------------- */
 
 /* read a line, ignoring comments, initial white, trailing white,
- * empty lines and long lines 
+ * and long lines.
+ * Note that empty lines are not ignored,
+ * because there might be characters without a bitmap.
  */
 static _BOOL igetline(FILE *f, char *buf, int max, int *lineno)
 {
@@ -1788,7 +1788,6 @@ static _BOOL igetline(FILE *f, char *buf, int max, int *lineno)
 	{
 		if (c == EOF)
 			return FALSE;						/* EOF */
-		goto again;
 	}
 	return TRUE;
 }
@@ -2211,7 +2210,7 @@ static _BOOL font_import_from_txt(const char *filename)
 				goto error;
 			}
 		}
-		if (!igetline(f, line, max, &lineno) || strcmp(line, "endchar"))
+		if (!igetline(f, line, max, &lineno) || strcmp(line, "endchar") != 0)
 			goto fail;
 		off_tab[ch - p.first_ade] = width;
 	}
@@ -2219,7 +2218,7 @@ static _BOOL font_import_from_txt(const char *filename)
 
 	/* compute size of final form, and compute offs from widths */
 	o = 0;
-	for (i = p.first_ade; i <= p.last_ade; i++)
+	for (i = 0; i < bmnum; i++)
 	{
 		w = off_tab[i];
 		off_tab[i] = o;
