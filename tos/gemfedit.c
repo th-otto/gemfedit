@@ -2636,6 +2636,14 @@ static void mainloop(void)
 				case 0x62: /* Help */
 					do_help();
 					break;
+				default:
+					k &= 0xff;
+					if (k >= fonthdr.first_ade && k <= fonthdr.last_ade)
+					{
+						cur_char = k;
+						redraw_win(mainwin);
+					}
+					break;
 				}
 				break;
 			}

@@ -288,7 +288,7 @@ extern _VOID *hfix_objs(RSHDR *_hdr, OBJECT *_ob, _WORD _num_objs);
 #undef NUM_OBS
 #undef NUM_TREE
 #undef NUM_UD
-#define NUM_STRINGS 119
+#define NUM_STRINGS 121
 #define NUM_BB		0
 #define NUM_IB		0
 #define NUM_CIB     0
@@ -296,7 +296,7 @@ extern _VOID *hfix_objs(RSHDR *_hdr, OBJECT *_ob, _WORD _num_objs);
 #define NUM_TI		13
 #define NUM_FRSTR	18
 #define NUM_FRIMG	0
-#define NUM_OBS     87
+#define NUM_OBS     89
 #define NUM_TREE	6
 #define NUM_UD		0
 #endif
@@ -403,29 +403,29 @@ static char gemfedit_string_97[] = "Cursor up   : scale window up";
 static char gemfedit_string_98[] = "Cursor down : scale window down";
 static char gemfedit_string_99[] = "Cursor left : select previous char";
 static char gemfedit_string_100[] = "Cursor right: select next char";
-static char gemfedit_string_101[] = "[3][Cannot create window][Abort]";
-static char gemfedit_string_102[] = "[3][Can\'t open|%s][Abort]";
-static char gemfedit_string_103[] = "[3][Not a GEM font.][Abort]";
-static char gemfedit_string_104[] = "[3][Not enough memory.][Abort]";
-static char gemfedit_string_105[] = "Select Font";
-static char gemfedit_string_106[] = "[2][Font has been changed.|Quit Anyway?][No|Yes]";
-static char gemfedit_string_107[] = "[2][Font has been changed.|Load Anyway?][No|Yes]";
-static char gemfedit_string_108[] = "Select Output File";
-static char gemfedit_string_109[] = "[2][File already exists.|Overwrite?][No|Yes]";
-static char gemfedit_string_110[] = "[3][Can\'t create|%s][Abort]";
-static char gemfedit_string_111[] = "[3][Fonts with horizontal offset|tables are not supported.][Abort]";
-static char gemfedit_string_112[] = "Select Input File";
-static char gemfedit_string_113[] = "[2][Error in file|%s|line %d.][Abort]";
-static char gemfedit_string_114[] = "[2][Wrong char range:|first = %u, last = %u][Abort]";
-static char gemfedit_string_115[] = "[2][Unreasonable font size:|%ux%u.][Abort]";
-static char gemfedit_string_116[] = "[2][Wrong character number|%u at line %d.][Abort]";
-static char gemfedit_string_117[] = "[2][Bitmap line to long at line %d.][Abort]";
-static char gemfedit_string_118[] = "[2][Bitmap lines of different|length at line %d.][Abort]";
+static char gemfedit_string_101[] = "Clicking in the font overview";
+static char gemfedit_string_102[] = "will select the character.";
+static char gemfedit_string_103[] = "[3][Cannot create window][Abort]";
+static char gemfedit_string_104[] = "[3][Can\'t open|%s][Abort]";
+static char gemfedit_string_105[] = "[3][Not a GEM font.][Abort]";
+static char gemfedit_string_106[] = "[3][Not enough memory.][Abort]";
+static char gemfedit_string_107[] = "Select Font";
+static char gemfedit_string_108[] = "[2][Font has been changed.|Quit anyway?][No|Yes]";
+static char gemfedit_string_109[] = "[2][Font has been changed.|Load anyway?][No|Yes]";
+static char gemfedit_string_110[] = "Select Output File";
+static char gemfedit_string_111[] = "[2][File already exists.|Overwrite?][No|Yes]";
+static char gemfedit_string_112[] = "[3][Can\'t create|%s][Abort]";
+static char gemfedit_string_113[] = "[3][Fonts with horizontal offset|tables are not supported.][Abort]";
+static char gemfedit_string_114[] = "Select Input File";
+static char gemfedit_string_115[] = "[2][Error in file|%s|line %d.][Abort]";
+static char gemfedit_string_116[] = "[2][Wrong char range:|first = %u, last = %u][Abort]";
+static char gemfedit_string_117[] = "[2][Unreasonable font size:|%ux%u.][Abort]";
+static char gemfedit_string_118[] = "[2][Wrong character number|%u at line %d.][Abort]";
+static char gemfedit_string_119[] = "[2][Bitmap line to long at line %d.][Abort]";
+static char gemfedit_string_120[] = "[2][Bitmap lines of different|length at line %d.][Abort]";
 
 
 static char *rs_frstr[NUM_FRSTR] = {
-	gemfedit_string_101,
-	gemfedit_string_102,
 	gemfedit_string_103,
 	gemfedit_string_104,
 	gemfedit_string_105,
@@ -441,7 +441,9 @@ static char *rs_frstr[NUM_FRSTR] = {
 	gemfedit_string_115,
 	gemfedit_string_116,
 	gemfedit_string_117,
-	gemfedit_string_118
+	gemfedit_string_118,
+	gemfedit_string_119,
+	gemfedit_string_120
 };
 
 
@@ -560,13 +562,15 @@ static OBJECT rs_object[NUM_OBS] = {
 
 /* HELP_DIALOG */
 
-	{ -1, 1, 6, G_BOX, OF_FL3DBAK, OS_OUTLINED, C_UNION(0x21100L), 0,0, 39,13 },
+	{ -1, 1, 8, G_BOX, OF_FL3DBAK, OS_OUTLINED, C_UNION(0x21100L), 0,0, 39,13 },
 	{ 2, -1, -1, G_STRING, OF_NONE, OS_NORMAL, C_UNION(gemfedit_string_95), 3,1, 19,1 },
 	{ 3, -1, -1, G_BUTTON, 0x607, OS_NORMAL, C_UNION(gemfedit_string_96), 29,11, 8,1 },
 	{ 4, -1, -1, G_STRING, OF_NONE, OS_NORMAL, C_UNION(gemfedit_string_97), 3,3, 29,1 },
 	{ 5, -1, -1, G_STRING, OF_NONE, OS_NORMAL, C_UNION(gemfedit_string_98), 3,4, 31,1 },
 	{ 6, -1, -1, G_STRING, OF_NONE, OS_NORMAL, C_UNION(gemfedit_string_99), 3,5, 34,1 },
-	{ 0, -1, -1, G_STRING, OF_LASTOB, OS_NORMAL, C_UNION(gemfedit_string_100), 3,6, 33,1 }
+	{ 7, -1, -1, G_STRING, OF_NONE, OS_NORMAL, C_UNION(gemfedit_string_100), 3,6, 33,1 },
+	{ 8, -1, -1, G_STRING, OF_NONE, OS_NORMAL, C_UNION(gemfedit_string_101), 3,8, 29,1 },
+	{ 0, -1, -1, G_STRING, OF_LASTOB, OS_NORMAL, C_UNION(gemfedit_string_102), 3,9, 26,1 }
 };
 
 
@@ -773,7 +777,7 @@ _WORD gemfedit_rsc_free()
 #endif /* RSC_NAMED_FUNCTIONS */
 
 #else /* !RSC_STATIC_FILE */
-int rs_numstrings = 119;
+int rs_numstrings = 121;
 int rs_numfrstr = 18;
 
 int rs_nuser = 0;
@@ -783,7 +787,7 @@ int rs_numfrimg = 0;
 int rs_numib = 0;
 int rs_numcib = 0;
 int rs_numti = 13;
-int rs_numobs = 87;
+int rs_numobs = 89;
 int rs_numtree = 6;
 
 char rs_name[] = "gemfedit.rsc";

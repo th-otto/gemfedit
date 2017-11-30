@@ -1,0 +1,30 @@
+gemfedit - a very basic Atari font editor
+
+Written by Thorsten Otto <admin@tho-otto.de>
+
+All the code is covered by the GPL (see COPYING for details).
+
+contents
+--------
+
+tos             the source for the editor, and a simple viewer
+unix            the source for a simple viewer, using X11
+win32           the source for a simple viewer, using win32
+fonts/tos       Atari ST original system fonts (dumped from TOS ROM into
+                FNT format using this tool)
+fonts/emutos    System fonts in different encodings, used by EmuTOS
+                for certain languages
+fonts/gem       Some GEM fonts taken from http://www.deltasoft.com/downloads-gemworld.htm,
+                for testing the byte-swapped format. Not all of them can be displayed.
+tools           fnt2bdf.c: a small tool to convert font files to BDF; adapted from STonX
+
+
+Known bugs:
+- horizontal offset tables are not handled
+- Some GEM font files containing an extended header cannot be loaded
+- Width & height of the cells, as well as the number of characters
+  cannot be changed once a font is loaded. You can export them to a txt
+  file, edit that and import it back again to achieve that.
+- Only the first 256 characters in a font are displayed (reading &
+  writing works, though; also i haven't found any fonts yet that
+  have more characters)
