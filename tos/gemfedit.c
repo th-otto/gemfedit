@@ -704,7 +704,8 @@ static _WORD _CDECL draw_font(PARMBLK *pb)
 	fchar_t c;
 	_WORD pxy[4];
 	_WORD dummy;
-	_WORD basec;
+	fchar_t basec, ch;
+	_WORD width;
 	
 	udef_vqt_attributes(aeshandle, tattrib);
 	udef_vqf_attributes(aeshandle, fattrib);
@@ -723,11 +724,15 @@ static _WORD _CDECL draw_font(PARMBLK *pb)
 	basec = (pb->pb_obj - PANEL_FIRST) * 16;
 	for (c = 0; c < 16; c++)
 	{
+		ch = basec + c;
+		if (ch < fonthdr.first_ade || ch > fonthdr.last_ade)
+			continue;
+		width = font_cw; /* char_testbit already checks actual width of character */
 		for (y = 0; y < font_ch; y++)
 		{
-			for (x = 0; x < font_cw; x++)
+			for (x = 0; x < width; x++)
 			{
-				if (char_testbit(basec + c, x, y))
+				if (char_testbit(ch, x, y))
 				{
 					pxy[0] = pb->pb_x + c * font_cw + x;
 					pxy[1] = pb->pb_y + y;
@@ -2165,6 +2170,8 @@ static _BOOL font_import_from_txt(const char *filename)
 		c = line;
 		if (!igetline(f, line, max, &lineno))
 			goto fail;
+		if (*line == '\0')
+			continue;
 		if (strcmp(line, "endfont") == 0)
 			break;
 		if (!try_given_string(&c, "char") || !try_white(&c) || !try_unsigned(&c, &u) || !try_eol(&c))
