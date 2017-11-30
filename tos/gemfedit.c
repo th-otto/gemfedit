@@ -249,7 +249,7 @@ static _BOOL char_testbit(fchar_t c, _WORD x, _WORD y)
 	o = off_table[c] + x;
 	b = o & 0x7;
 	mask = 0x80 >> b;
-	dat = dat_table + (unsigned long)y * fonthdr.form_width + (o >> 3);
+	dat = dat_table + (size_t)y * fonthdr.form_width + (o >> 3);
 	return (*dat & mask) != 0;
 }
 
@@ -276,7 +276,7 @@ static _BOOL char_togglebit(fchar_t c, _WORD x, _WORD y)
 	o = off_table[c] + x;
 	b = o & 0x7;
 	mask = 0x80 >> b;
-	dat = dat_table + (unsigned long)y * fonthdr.form_width + (o >> 3);
+	dat = dat_table + (size_t)y * fonthdr.form_width + (o >> 3);
 	*dat ^= mask;
 	
 	return TRUE;
@@ -305,7 +305,7 @@ static _BOOL char_setbit(fchar_t c, _WORD x, _WORD y)
 	o = off_table[c] + x;
 	b = o & 0x7;
 	mask = 0x80 >> b;
-	dat = dat_table + (unsigned long)y * fonthdr.form_width + (o >> 3);
+	dat = dat_table + (size_t)y * fonthdr.form_width + (o >> 3);
 	if (!(*dat & mask))
 	{
 		*dat |= mask;
@@ -337,7 +337,7 @@ static _BOOL char_clearbit(fchar_t c, _WORD x, _WORD y)
 	o = off_table[c] + x;
 	b = o & 0x7;
 	mask = 0x80 >> b;
-	dat = dat_table + (unsigned long)y * fonthdr.form_width + (o >> 3);
+	dat = dat_table + (size_t)y * fonthdr.form_width + (o >> 3);
 	if (*dat & mask)
 	{
 		*dat &= ~mask;
@@ -931,7 +931,7 @@ static _BOOL check_gemfnt_header(FONT_HDR *h, unsigned long l)
 		return FALSE;
 	form_width = h->form_width;
 	form_height = h->form_height;
-	if ((dat_offset + (unsigned long)form_width * form_height) > l)
+	if ((dat_offset + (size_t)form_width * form_height) > l)
 		return FALSE;
 	h->last_ade = lastc;
 	return TRUE;
@@ -1082,10 +1082,20 @@ static void font_loaded(unsigned char *h, const char *filename)
 	fontmem = h;
 	resize_window();
 	resize_panel();
-	wind_set_str(mainwin, WF_NAME, fontname);
-	fontfilename = filename;
-	fontbasename = xbasename(filename);
-	wind_set_str(panelwin, WF_NAME, fontbasename);
+	if (h)
+	{
+		wind_set_str(mainwin, WF_NAME, fontname);
+		fontfilename = filename;
+		fontbasename = xbasename(filename);
+		wind_set_str(panelwin, WF_NAME, fontbasename);
+	} else
+	{
+		wind_set_str(mainwin, WF_NAME, "");
+		wind_set_str(panelwin, WF_NAME, "");
+		fontfilename = NULL;
+		fontbasename = NULL;
+		dat_table = NULL;
+	}
 	redraw_win(mainwin);
 	redraw_win(panelwin);
 	font_changed = FALSE;
@@ -1125,10 +1135,13 @@ static _BOOL font_load_gemfont(const char *filename)
 	ret = font_gen_gemfont(h, filename, l);
 	fclose(in);
 
-	if (ret)
+	if (ret == FALSE)
 	{
-		font_loaded(h, filename);
+		free(h);
+		h = NULL;
+		filename = NULL;
 	}
+	font_loaded(h, filename);
 
 	return ret;
 }
@@ -1190,8 +1203,8 @@ static _BOOL font_load_sysfont(int fontnum)
 		fontnum == 3 ? "system3.fnt" :
 		"system2.fnt";
 	unsigned long l;
-	unsigned long offtable_size;
-	unsigned long form_size;
+	size_t offtable_size;
+	size_t form_size;
 	
 	if (font_changed)
 	{
@@ -1205,8 +1218,8 @@ static _BOOL font_load_sysfont(int fontnum)
 	
 	font_gethdr(hdr, h);
 	font_get_tables(NULL, filename);
-	offtable_size = (unsigned long)(numoffs + 1) * 2;
-	form_size = (unsigned long)hdr->form_width * (unsigned long)hdr->form_height;
+	offtable_size = (size_t)(numoffs + 1) * 2;
+	form_size = (size_t)hdr->form_width * (size_t)hdr->form_height;
 	l = SIZEOF_FONT_HDR + offtable_size + form_size;
 
 	m = malloc(l);
@@ -1283,8 +1296,8 @@ static _BOOL font_save_gemfont(const char *filename)
 {
 	FONT_HDR *hdr = &fonthdr;
 	FILE *fp;
-	unsigned long offtable_size;
-	unsigned long form_size;
+	size_t offtable_size;
+	size_t form_size;
 	unsigned char h[SIZEOF_FONT_HDR];
 	unsigned short *u;
 	_BOOL swapped;
@@ -1306,8 +1319,8 @@ static _BOOL font_save_gemfont(const char *filename)
 		return FALSE;
 	}
 	
-	offtable_size = (unsigned long)(numoffs + 1) * 2;
-	form_size = (unsigned long)hdr->form_width * (unsigned long)hdr->form_height;
+	offtable_size = (size_t)(numoffs + 1) * 2;
+	form_size = (size_t)hdr->form_width * (size_t)hdr->form_height;
 
 	hdr->next_font = 0;
 	hdr->hor_table = 0;
@@ -1439,10 +1452,10 @@ static _BOOL font_export_as_c(const char *filename)
 
 	fprintf(fp, "static UWORD const dat_table[] =\n{\n");
 	{
-		unsigned long j, h;
+		size_t j, h;
 		unsigned short a;
 		
-		h = ((unsigned long)hdr->form_height * hdr->form_width) / 2;
+		h = ((size_t)hdr->form_height * hdr->form_width) / 2;
 		for (j = 0; j < h; j++)
 		{
 			if ((j & 7) == 0)
@@ -1607,7 +1620,7 @@ static _BOOL font_export_as_txt(const char *filename)
 		w = off_table[i + 1] - off_table[i];
 		if (off + w > 8 * hdr->form_width)
 		{
-			fprintf(stderr, "char %d: offset %d + width %d out of range (%d)\n", i, off, w, 8 * hdr->form_width);
+			nf_debugprintf("char %d: offset %d + width %d out of range (%d)\n", i, off, w, 8 * hdr->form_width);
 			continue;
 		}
 		c = i + hdr->first_ade;
@@ -1693,7 +1706,629 @@ static void export_font_txt(void)
 	font_export_as_txt(path);
 }
 
+/******************************************************************************/
 /* -------------------------------------------------------------------------- */
+/******************************************************************************/
+
+/* returns the next logical char, in sh syntax */
+static int inextsh(FILE *f, int *lineno)
+{
+	int ret;
+
+	ret = getc(f);
+	if (ret == 015)
+	{
+		ret = getc(f);
+		if (ret == 012)
+		{
+			(*lineno)++;
+			return '\n';
+		} else
+		{
+			if (ret != EOF)
+				ungetc(ret, f);
+			return 015;
+		}
+	} else if (ret == 012)
+	{
+		(*lineno)++;
+		return '\n';
+	} else
+	{
+		return ret;
+	}
+}
+
+/* -------------------------------------------------------------------------- */
+
+/* read a line, ignoring comments, initial white, trailing white,
+ * empty lines and long lines 
+ */
+static _BOOL igetline(FILE *f, char *buf, int max, int *lineno)
+{
+	char *b;
+	char *bmax = buf + max - 1;
+	int c;
+
+  again:
+	c = inextsh(f, lineno);
+	b = buf;
+	if (c == '#')
+	{
+	  ignore:
+		while (c != EOF && c != '\n')
+		{
+			c = inextsh(f, lineno);
+		}
+		goto again;
+	}
+	while (c == ' ' || c == '\t')
+	{
+		c = inextsh(f, lineno);
+	}
+	while (c != EOF && c != '\n')
+	{
+		if (b >= bmax)
+		{
+			nf_debugprintf("line %d too long\n", *lineno);
+			goto ignore;
+		}
+		*b++ = c;
+		c = inextsh(f, lineno);
+	}
+	/* remove trailing white */
+	b--;
+	while (b >= buf && (*b == ' ' || *b == '\t'))
+	{
+		b--;
+	}
+	b++;
+	*b = 0;
+	if (b == buf)
+	{
+		if (c == EOF)
+			return FALSE;						/* EOF */
+		goto again;
+	}
+	return TRUE;
+}
+
+/* -------------------------------------------------------------------------- */
+
+/*
+ * functions to try read some patterns.
+ * they look in a string, return 1 if read, 0 if not read.
+ * if the pattern was read, the string pointer is set to the
+ * character immediately after the last character of the pattern.
+ */
+
+/* backslash sequences in C strings */
+static _BOOL try_backslash(char **cc, long *val)
+{
+	long ret;
+	char *c = *cc;
+
+	if (*c++ != '\\')
+		return FALSE;
+	switch (*c)
+	{
+	case 0:
+		return FALSE;
+	case 'a':
+		ret = '\a';
+		c++;
+		break;
+	case 'b':
+		ret = '\b';
+		c++;
+		break;
+	case 'f':
+		ret = '\f';
+		c++;
+		break;
+	case 'n':
+		ret = '\n';
+		c++;
+		break;
+	case 'r':
+		ret = '\r';
+		c++;
+		break;
+	case 't':
+		ret = '\t';
+		c++;
+		break;
+	case 'v':
+		ret = '\v';
+		c++;
+		break;
+	case '\\':
+	case '\'':
+	case '\"':
+		ret = *c++;
+		break;
+	default:
+		if (*c >= '0' && *c <= '7')
+		{
+			ret = *c++ - '0';
+			if (*c >= '0' && *c <= '7')
+			{
+				ret <<= 3;
+				ret |= *c++ - '0';
+				if (*c >= '0' && *c <= '7')
+				{
+					ret <<= 3;
+					ret |= *c++ - '0';
+				}
+			}
+		} else
+		{
+			ret = *c++;
+		}
+		break;
+	}
+	*cc = c;
+	*val = ret;
+	return TRUE;
+}
+
+/* -------------------------------------------------------------------------- */
+
+static _BOOL try_unsigned(char **cc, long *val)
+{
+	long ret;
+	char *c = *cc;
+
+	if (*c == '0')
+	{
+		c++;
+		if (*c == 'x')
+		{
+			c++;
+			ret = 0;
+			if (*c == 0)
+				return FALSE;
+			while (*c)
+			{
+				if (*c >= '0' && *c <= '9')
+				{
+					ret <<= 4;
+					ret |= (*c - '0');
+				} else if (*c >= 'a' && *c <= 'f')
+				{
+					ret <<= 4;
+					ret |= (*c - 'a' + 10);
+				} else if (*c >= 'A' && *c <= 'F')
+				{
+					ret <<= 4;
+					ret |= (*c - 'A' + 10);
+				} else
+					break;
+				c++;
+			}
+		} else
+		{
+			ret = 0;
+			while (*c >= '0' && *c <= '7')
+			{
+				ret <<= 3;
+				ret |= (*c++ - '0');
+			}
+		}
+	} else if (*c >= '1' && *c <= '9')
+	{
+
+		ret = 0;
+		while (*c >= '0' && *c <= '9')
+		{
+			ret *= 10;
+			ret += (*c++ - '0');
+		}
+	} else if (*c == '\'')
+	{
+		c++;
+		if (try_backslash(&c, &ret))
+		{
+			if (*c++ != '\'')
+				return 0;
+		} else if (*c == '\'' || *c < 32 || *c >= 127)
+		{
+			return 0;
+		} else
+		{
+			ret = (*c++) & 0xFF;
+			if (*c++ != '\'')
+				return 0;
+		}
+	} else
+	{
+		return FALSE;
+	}
+	*cc = c;
+	*val = ret;
+	return TRUE;
+}
+
+/* -------------------------------------------------------------------------- */
+
+static _BOOL try_given_string(char **cc, char *s)
+{
+	size_t n = strlen(s);
+
+	if (strncmp(*cc, s, n) == 0)
+	{
+		*cc += n;
+		return TRUE;
+	}
+	return FALSE;
+}
+
+/* -------------------------------------------------------------------------- */
+
+static _BOOL try_c_string(char **cc, char *s, int max)
+{
+	char *c = *cc;
+	char *smax = s + max - 1;
+	long u;
+
+	if (*c != '"')
+	{
+		/* fprintf(stderr, "c='%c'\n", *c); */
+		return FALSE;
+	}
+	c++;
+	while (*c != '"')
+	{
+		if (*c == 0)
+		{
+			/* fprintf(stderr, "c='%c'\n", *c); */
+			return FALSE;
+		}
+		if (s >= smax)
+		{
+			/* fprintf(stderr, "c='%c'\n", *c); */
+			return FALSE;
+		}
+		if (try_backslash(&c, &u))
+		{
+			*s++ = u;
+		} else
+		{
+			*s++ = *c++;
+		}
+	}
+	c++;
+	*s++ = 0;
+	*cc = c;
+	return TRUE;
+}
+
+/* -------------------------------------------------------------------------- */
+
+static _BOOL try_white(char **cc)
+{
+	char *c = *cc;
+
+	if (*c == ' ' || *c == '\t')
+	{
+		c++;
+		while (*c == ' ' || *c == '\t')
+			c++;
+		*cc = c;
+		return TRUE;
+	}
+	return FALSE;
+}
+
+/* -------------------------------------------------------------------------- */
+
+static _BOOL try_eol(char **cc)
+{
+	return (**cc == 0) ? TRUE : FALSE;
+}
+
+/* -------------------------------------------------------------------------- */
+
+/*
+ * simple bitmap read/write
+ */
+
+static _BOOL get_bit(unsigned char *addr, size_t i)
+{
+	return (addr[i / 8] & (1 << (7 - (i & 7)))) ? 1 : 0;
+}
+
+static void set_bit(unsigned char *addr, size_t i)
+{
+	addr[i / 8] |= (1 << (7 - (i & 7)));
+}
+
+/* -------------------------------------------------------------------------- */
+
+static _BOOL font_import_from_txt(const char *filename)
+{
+	int lineno = 0;
+	FILE *f;
+	char line[200];
+	char *c;
+	long u;
+	const int max = (int)sizeof(line);
+	FONT_HDR p;
+	char buf[256];
+	unsigned long l;
+	size_t offtable_size;
+	size_t bmsize;
+	fchar_t bmnum;
+	unsigned char *h = NULL;
+	fchar_t i;
+	fchar_t ch;
+	unsigned short *off_tab = NULL;
+	unsigned char *b;
+	unsigned char *bms;
+	unsigned short w, width;
+	size_t k;
+	unsigned short j;
+	unsigned short o;
+	
+	f = fopen(filename, "rb");
+	if (f == NULL)
+	{
+		sprintf(buf, rs_str(AL_FOPEN), filename);
+		form_alert(1, buf);
+		return FALSE;
+	}
+
+#define EXPECT(a) \
+	if(!igetline(f, line, max, &lineno) || strcmp(line, a) != 0) goto fail;
+
+	EXPECT("GDOSFONT");
+	EXPECT("version 1.0");
+
+#define EXPECTNUM(a) c=line; \
+	if (!igetline(f, line, max, &lineno) || \
+		!try_given_string(&c, #a) || \
+		!try_white(&c) || \
+		!try_unsigned(&c, &u) || \
+		!try_eol(&c)) \
+		goto fail; \
+	p.a = u;
+
+	EXPECTNUM(font_id);
+	EXPECTNUM(point);
+
+	c = line;
+	if (!igetline(f, line, max, &lineno) ||
+		!try_given_string(&c, "name") ||
+		!try_white(&c) ||
+		!try_c_string(&c, p.name, VDI_FONTNAMESIZE) ||
+		!try_eol(&c))
+		goto fail;
+
+	EXPECTNUM(first_ade);
+	EXPECTNUM(last_ade);
+	EXPECTNUM(top);
+	EXPECTNUM(ascent);
+	EXPECTNUM(half);
+	EXPECTNUM(descent);
+	EXPECTNUM(bottom);
+	EXPECTNUM(max_char_width);
+	EXPECTNUM(max_cell_width);
+	EXPECTNUM(left_offset);
+	EXPECTNUM(right_offset);
+	EXPECTNUM(thicken);
+	EXPECTNUM(ul_size);
+	EXPECTNUM(lighten);
+	EXPECTNUM(skew);
+	EXPECTNUM(flags);
+	EXPECTNUM(form_height);
+
+#undef EXPECT
+#undef EXPECTNUM
+
+	if (p.first_ade > 255 || p.last_ade > 255 || p.first_ade > p.last_ade)
+	{
+		sprintf(buf, rs_str(AL_CHAR_RANGE), p.first_ade, p.last_ade);
+		goto error;
+	}
+	
+	if (p.max_cell_width == 0 || p.max_cell_width > 1000 || p.form_height == 0 || p.form_height > 1000)
+	{
+		sprintf(buf, rs_str(AL_FONT_SIZE), p.max_cell_width, p.form_height);
+		goto error;
+	}
+	
+	/*
+	 * allocate a temporary buffer big enough to hold the
+	 * the offset table and all bitmaps.
+	 * The bitmaps are organized per char here.
+	 */
+	bmnum = p.last_ade - p.first_ade + 1;
+	offtable_size = (size_t)(bmnum + 1) * 2;
+	bmsize = (((size_t)p.max_cell_width + 7) >> 3) * (size_t)p.form_height;
+	l = offtable_size + bmsize * bmnum;
+	off_tab = malloc(l);
+	if (off_tab == NULL)
+	{
+		fclose(f);
+		form_alert(1, rs_str(AL_NOMEM));
+		return FALSE;
+	}
+	memset(off_tab, 0, l);
+	bms = (unsigned char *)off_tab + offtable_size;
+	
+	for (i = 0; i < bmnum; i++)
+	{
+		off_tab[i] = F_NO_CHAR;
+	}
+
+	for (;;)
+	{									/* for each char */
+		c = line;
+		if (!igetline(f, line, max, &lineno))
+			goto fail;
+		if (strcmp(line, "endfont") == 0)
+			break;
+		if (!try_given_string(&c, "char") || !try_white(&c) || !try_unsigned(&c, &u) || !try_eol(&c))
+			goto fail;
+		ch = u;
+		if (ch < p.first_ade || ch > p.last_ade)
+		{
+			sprintf(buf, rs_str(AL_WRONG_CHAR), ch, lineno);
+			goto error;
+		}
+
+		b = bms + (ch - p.first_ade) * bmsize;
+
+		k = 0;
+		width = 0;
+		for (i = 0; i < p.form_height; i++)
+		{
+			if (!igetline(f, line, max, &lineno))
+				goto fail;
+			for (c = line, w = 0; *c; c++, w++)
+			{
+				if (w >= p.max_cell_width)
+				{
+					sprintf(buf, rs_str(AL_LINE_TOO_LONG), lineno);
+					goto error;
+				} else if (*c == 'X')
+				{
+					set_bit(b, k);
+				} else if (*c == '.')
+				{
+				} else
+				{
+					goto fail;
+				}
+				k++;
+			}
+			if (i == 0)
+			{
+				width = w;
+			} else if (w != width)
+			{
+				sprintf(buf, rs_str(AL_DIFFERENT_LENGTH), lineno);
+				goto error;
+			}
+		}
+		if (!igetline(f, line, max, &lineno) || strcmp(line, "endchar"))
+			goto fail;
+		off_tab[ch - p.first_ade] = width;
+	}
+	fclose(f);
+
+	/* compute size of final form, and compute offs from widths */
+	o = 0;
+	for (i = p.first_ade; i <= p.last_ade; i++)
+	{
+		w = off_tab[i];
+		off_tab[i] = o;
+		if (w != F_NO_CHAR)
+			o += w;
+	}
+	off_tab[i] = o;
+
+	/*
+	 * allocate a buffer big enough to hold the
+	 * font header, the offset table and all bitmaps
+	 */
+	/*
+	 * form_width seems to be always rounded up to an even number of bytes
+	 */
+	p.form_width = ((o + 15) >> 4) << 1;
+	l = SIZEOF_FONT_HDR + offtable_size + (size_t)p.form_width * p.form_height;
+	h = malloc(l);
+	if (h == NULL)
+	{
+		free(off_tab);
+		form_alert(1, rs_str(AL_NOMEM));
+		return FALSE;
+	}
+	memset(h, 0, l);
+
+	off_table = (unsigned short *)(h + SIZEOF_FONT_HDR);
+	dat_table = h + SIZEOF_FONT_HDR + offtable_size;
+	
+	/* now, pack the bitmaps in the destination form */
+	for (i = 0; i < bmnum; i++)
+	{
+		o = off_tab[i];
+		off_table[i] = o;
+		width = off_tab[i + 1] - o;
+		b = bms + bmsize * i;
+		k = 0;
+		for (j = 0; j < p.form_height; j++)
+		{
+			for (w = 0; w < width; w++)
+			{
+				if (get_bit(b, k))
+				{
+					set_bit(dat_table + (size_t)j * p.form_width, o + w);
+				}
+				k++;
+			}
+		}
+	}
+
+	/* copy last offset */
+	o = off_tab[i];
+	off_table[i] = o;
+
+	/* updated remaining vars */
+	p.off_table = SIZEOF_FONT_HDR;
+	p.dat_table = SIZEOF_FONT_HDR + offtable_size;
+	p.hor_table = 0;
+	if (HOST_BIG)
+		p.flags |= FONTF_BIGENDIAN;
+	else
+		p.flags &= ~FONTF_BIGENDIAN;
+	fonthdr = p;
+	font_puthdr(&p, h);
+	chomp(fontname, p.name, VDI_FONTNAMESIZE + 1);
+	font_get_tables(h, filename);
+	
+	/* free temporary form */
+	free(off_tab);
+
+	font_loaded(h, filename);
+	
+	return TRUE;
+
+fail:
+	sprintf(buf, rs_str(AL_FIMPORT), xbasename(filename), lineno);
+error:
+	fclose(f);
+	free(off_tab);
+	form_alert(1, buf);
+
+	return FALSE;
+}
+
+/* -------------------------------------------------------------------------- */
+
+static void import_font_txt(void)
+{
+	static char path[128];
+	static char mask[128] = "*.TXT";
+	char filename_buf[128];
+	
+	if (path[0] == '\0')
+	{
+		path[0] = Dgetdrv() + 'A';
+		path[1] = ':';
+		Dgetpath(path + 2, 0);
+		strcat(path, "\\");
+	}
+	strcpy(filename_buf, "");
+	
+	if (!do_fsel_input(path, filename_buf, mask, rs_str(SEL_INPUT)))
+		return;
+	font_import_from_txt(path);
+}
+
+/******************************************************************************/
+/* -------------------------------------------------------------------------- */
+/******************************************************************************/
 
 static void font_info(void)
 {
@@ -1835,6 +2470,9 @@ static void handle_message(_WORD *message, _WORD mox, _WORD moy)
 		case FEXPORTTXT:
 			export_font_txt();
 			break;
+		case FIMPORTTXT:
+			import_font_txt();
+			break;
 		case FSYS_6X6:
 			font_load_sysfont(0);
 			break;
@@ -1878,6 +2516,7 @@ static void mainloop(void)
 		menu_ienable(menu, FINFO, is_font_loaded());
 		menu_ienable(menu, FSAVE, is_font_loaded());
 		menu_ienable(menu, FEXPORTC, is_font_loaded());
+		menu_ienable(menu, FEXPORTTXT, is_font_loaded());
 		
 		event = evnt_multi(MU_KEYBD | MU_MESAG | MU_BUTTON,
 			256|2, 3, 0,
@@ -1891,19 +2530,19 @@ static void mainloop(void)
 		{
 			switch (k & 0xff)
 			{
-			case 0x0f:
+			case 0x0f: /* Ctrl-O */
 				select_font();
 				break;
-			case 0x13:
+			case 0x13: /* Ctrl-S */
 				save_font(fontfilename);
 				break;
-			case 0x05:
+			case 0x05: /* Ctrl-E */
 				export_font_c();
 				break;
-			case 0x09:
+			case 0x09: /* Ctrl-I */
 				font_info();
 				break;
-			case 0x11:
+			case 0x11: /* Ctrl-Q */
 				quit_app = TRUE;
 				break;
 			default:
