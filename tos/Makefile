@@ -37,4 +37,4 @@ fontdisp.prg: fontdisp.c fontdisp.h
 
 
 clean::
-	rm -f *.o .out $(PROGRAMS)
+	rm -f *.o .out *.pdb $(PROGRAMS)

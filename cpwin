@@ -39,6 +39,7 @@ find . \( -type f \) \
 	! -name "*.cnt" \
 	! -name "*.hhk" \
 	! -name "*.chm" \
+	! -name "*.zip" \
 	! -name "Makefile" \
 	! -name "cpwin" \
 	! -name "stamp*" \

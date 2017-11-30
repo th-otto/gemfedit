@@ -2620,11 +2620,17 @@ static void mainloop(void)
 					}
 					break;
 				case 0x4b: /* cursor left */
-					cur_char = (cur_char - fonthdr.first_ade - 1) % numoffs + fonthdr.first_ade;
+					if (cur_char <= fonthdr.first_ade)
+						cur_char = fonthdr.last_ade;
+					else
+						cur_char = (cur_char - fonthdr.first_ade - 1u) % numoffs + fonthdr.first_ade;
 					redraw_win(mainwin);
 					break;
 				case 0x4d: /* cursor right */
-					cur_char = (cur_char - fonthdr.first_ade + 1) % numoffs + fonthdr.first_ade;
+					if (cur_char >= fonthdr.last_ade)
+						cur_char = fonthdr.first_ade;
+					else
+						cur_char = (cur_char - fonthdr.first_ade + 1u) % numoffs + fonthdr.first_ade;
 					redraw_win(mainwin);
 					break;
 				case 0x62: /* Help */
