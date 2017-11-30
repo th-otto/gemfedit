@@ -592,7 +592,7 @@ static _BOOL open_screen(void)
 	 * enforce some default values
 	 */
 	vst_color(vdihandle, G_BLACK);
-	vst_alignment(vdihandle, ALI_LEFT, ALI_TOP, &dummy, &dummy);
+	vst_alignment(vdihandle, TA_LEFT, TA_TOP, &dummy, &dummy);
 	
 	return TRUE;
 }
@@ -2413,9 +2413,9 @@ static void font_info(void)
 
 /* -------------------------------------------------------------------------- */
 
-static void do_about(void)
+static void do_dialog(_WORD num)
 {
-	OBJECT *tree = rs_tree(ABOUT_DIALOG);
+	OBJECT *tree = rs_tree(num);
 	GRECT gr;
 	_WORD ret;
 
@@ -2426,6 +2426,20 @@ static void do_about(void)
 	ret &= 0x7fff;
 	tree[ret].ob_state &= ~OS_SELECTED;
 	form_dial_grect(FMD_FINISH, &gr, &gr);
+}
+
+/* -------------------------------------------------------------------------- */
+
+static void do_about(void)
+{
+	do_dialog(ABOUT_DIALOG);
+}
+
+/* -------------------------------------------------------------------------- */
+
+static void do_help(void)
+{
+	do_dialog(HELP_DIALOG);
 }
 
 /******************************************************************************/
@@ -2612,6 +2626,9 @@ static void mainloop(void)
 				case 0x4d: /* cursor right */
 					cur_char = (cur_char - fonthdr.first_ade + 1) % numoffs + fonthdr.first_ade;
 					redraw_win(mainwin);
+					break;
+				case 0x62: /* Help */
+					do_help();
 					break;
 				}
 				break;

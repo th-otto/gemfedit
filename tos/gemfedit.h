@@ -5,7 +5,7 @@
  */
 
 /*
- * Number of Strings:        113
+ * Number of Strings:        119
  * Number of Bitblks:        0
  * Number of Iconblks:       0
  * Number of Color Iconblks: 0
@@ -13,11 +13,11 @@
  * Number of Tedinfos:       13
  * Number of Free Strings:   18
  * Number of Free Images:    0
- * Number of Objects:        80
- * Number of Trees:          5
+ * Number of Objects:        87
+ * Number of Trees:          6
  * Number of Userblks:       0
  * Number of Images:         0
- * Total file size:          4854
+ * Total file size:          5178
  */
 
 #undef RSC_NAME
@@ -35,7 +35,7 @@
 # define RSC_STATIC_FILE 0
 #endif
 #if !RSC_STATIC_FILE
-#define NUM_STRINGS 113
+#define NUM_STRINGS 119
 #define NUM_FRSTR 18
 #define NUM_UD 0
 #define NUM_IMAGES 0
@@ -44,8 +44,8 @@
 #define NUM_IB 0
 #define NUM_CIB 0
 #define NUM_TI 13
-#define NUM_OBS 80
-#define NUM_TREE 5
+#define NUM_OBS 87
+#define NUM_TREE 6
 #endif
 
 
@@ -94,6 +94,8 @@
 #define ABOUT_DIALOG                       4 /* form/dialog */
 #define ABOUT_VERSION                      4 /* STRING in tree ABOUT_DIALOG */
 #define ABOUT_DATE                         5 /* STRING in tree ABOUT_DIALOG */
+
+#define HELP_DIALOG                        5 /* form/dialog */
 
 #define AL_NOWINDOW                        0 /* Alert string */
 /* [3][Cannot create window][Abort] */
