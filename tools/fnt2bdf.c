@@ -543,7 +543,7 @@ static void fnttobdf(UB *b, int l, FILE *out, const char *filename)
 
 
 
-#include "stcharmap.h"
+#include "../include/stcharmap.h"
 
 static struct option const long_options[] = {
 	{ "translate", no_argument, NULL, 't' },
