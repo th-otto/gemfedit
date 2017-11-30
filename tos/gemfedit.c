@@ -401,6 +401,7 @@ static void mainwin_draw(const GRECT *area)
 	_WORD pxy[8];
 	_WORD x, y;
 	_WORD scaled_w, scaled_h;
+	char buf[80];
 	
 	v_hide_c(vdihandle);
 	wind_get_grect(mainwin, WF_WORKXYWH, &work);
@@ -423,6 +424,9 @@ static void mainwin_draw(const GRECT *area)
 			vr_recfl(vdihandle, pxy);
 	
 			vsf_color(vdihandle, G_RED);
+			/*
+			 * draw horizontal grid lines
+			 */
 			for (y = 0; y < (font_ch + 1); y++)
 			{
 				pxy[0] = work.g_x + MAIN_X_MARGIN;
@@ -431,6 +435,9 @@ static void mainwin_draw(const GRECT *area)
 				pxy[3] = pxy[1] + scaled_margin - 1;
 				vr_recfl(vdihandle, pxy);
 			}
+			/*
+			 * draw vertical grid lines
+			 */
 			for (x = 0; x < (font_cw + 1); x++)
 			{
 				pxy[0] = work.g_x + MAIN_X_MARGIN + x * (scalex + scaled_margin);
@@ -440,8 +447,17 @@ static void mainwin_draw(const GRECT *area)
 				vr_recfl(vdihandle, pxy);
 			}
 			
+			x = work.g_x + MAIN_X_MARGIN + font_cw * (scalex + scaled_margin) + gl_wchar;
+			y = work.g_y + MAIN_Y_MARGIN;
 			if (cur_char >= fonthdr.first_ade && cur_char <= fonthdr.last_ade)
+			{
 				draw_char(cur_char, work.g_x + MAIN_X_MARGIN + scaled_margin, work.g_y + MAIN_Y_MARGIN + scaled_margin);
+				sprintf(buf, "Char: $%02x", cur_char);
+				v_gtext(vdihandle, x, y, buf);
+			} else
+			{
+				v_gtext(vdihandle, x, y, "Char: -");
+			}
 		}
 		
 		wind_get_grect(mainwin, WF_NEXTXYWH, &gr);
@@ -567,9 +583,16 @@ static _BOOL open_screen(void)
 {
 	_WORD work_in[] = { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2 };
 	_WORD work_out[57];
-
+	_WORD dummy;
+	
 	vdihandle = aeshandle;
 	(void) v_opnvwk(work_in, &vdihandle, work_out);	/* VDI workstation needed */
+	
+	/*
+	 * enforce some default values
+	 */
+	vst_color(vdihandle, G_BLACK);
+	vst_alignment(vdihandle, ALI_LEFT, ALI_TOP, &dummy, &dummy);
 	
 	return TRUE;
 }
@@ -651,9 +674,10 @@ static void resize_window(void)
 	_WORD wkind;
 	_WORD width, height;
 	
-	width = MAIN_X_MARGIN * 2 + scalex * font_cw + (font_cw + 1) * scaled_margin + 50;
+	width = MAIN_X_MARGIN * 2 + scalex * font_cw + (font_cw + 1) * scaled_margin + 12 * gl_wchar;
 	height = MAIN_Y_MARGIN * 2 + scaley * font_ch + (font_ch + 1) * scaled_margin;
-	
+	if (height < 5 * gl_hchar)
+		height = 5 * gl_hchar;
 	wind_get_grect(mainwin, WF_CURRXYWH, &gr);
 	wind_get_grect(DESK, WF_WORKXYWH, &desk);
 	wkind = MAIN_WKIND;
@@ -2638,6 +2662,7 @@ int main(int argc, char **argv)
 	}
 	aeshandle = graf_handle(&gl_wchar, &gl_hchar, &dummy, &dummy);
 	
+	/* just in case; might be unnecessary */
 	font_cw = gl_wchar;
 	font_ch = gl_hchar;
 	
