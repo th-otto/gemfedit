@@ -5,7 +5,7 @@
  */
 
 /*
- * Number of Strings:        112
+ * Number of Strings:        113
  * Number of Bitblks:        0
  * Number of Iconblks:       0
  * Number of Color Iconblks: 0
@@ -13,11 +13,11 @@
  * Number of Tedinfos:       13
  * Number of Free Strings:   18
  * Number of Free Images:    0
- * Number of Objects:        79
+ * Number of Objects:        80
  * Number of Trees:          5
  * Number of Userblks:       0
  * Number of Images:         0
- * Total file size:          4824
+ * Total file size:          4854
  */
 
 #undef RSC_NAME
@@ -35,7 +35,7 @@
 # define RSC_STATIC_FILE 0
 #endif
 #if !RSC_STATIC_FILE
-#define NUM_STRINGS 112
+#define NUM_STRINGS 113
 #define NUM_FRSTR 18
 #define NUM_UD 0
 #define NUM_IMAGES 0
@@ -44,7 +44,7 @@
 #define NUM_IB 0
 #define NUM_CIB 0
 #define NUM_TI 13
-#define NUM_OBS 79
+#define NUM_OBS 80
 #define NUM_TREE 5
 #endif
 
@@ -83,6 +83,7 @@
 #define FONT_FIRST_ADE                    12 /* FTEXT in tree FONT_PARAMS */ /* max len 3 */
 #define FONT_LAST_ADE                     13 /* FTEXT in tree FONT_PARAMS */ /* max len 3 */
 #define FONT_OK                           14 /* BUTTON in tree FONT_PARAMS */
+#define FONT_CANCEL                       15 /* BUTTON in tree FONT_PARAMS */
 
 #define PANEL                              3 /* unknown form */
 #define PANEL_BG                           0 /* BOX in tree PANEL */
@@ -146,7 +147,7 @@
 /* [2][Bitmap line to long at line %d.][Abort] */
 
 #define AL_DIFFERENT_LENGTH               17 /* Alert string */
-/* [2][Bitmap lines of different length|at line %d.][Abort] */
+/* [2][Bitmap lines of different|length at line %d.][Abort] */
 
 
 

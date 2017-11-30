@@ -2366,6 +2366,18 @@ static void font_info(void)
 	{
 		chomp(fontname, tree[FONT_NAME].ob_spec.tedinfo->te_ptext, VDI_FONTNAMESIZE + 1);
 		memcpy(hdr->name, fontname, VDI_FONTNAMESIZE);
+		fonthdr.font_id = atoi(tree[FONT_ID].ob_spec.tedinfo->te_ptext);
+		fonthdr.point = atoi(tree[FONT_POINT].ob_spec.tedinfo->te_ptext);
+		fonthdr.top = atoi(tree[FONT_TOP].ob_spec.tedinfo->te_ptext);
+		fonthdr.ascent = atoi(tree[FONT_ASCENT].ob_spec.tedinfo->te_ptext);
+		fonthdr.half = atoi(tree[FONT_HALF].ob_spec.tedinfo->te_ptext);
+		fonthdr.descent = atoi(tree[FONT_DESCENT].ob_spec.tedinfo->te_ptext);
+		fonthdr.bottom = atoi(tree[FONT_BOTTOM].ob_spec.tedinfo->te_ptext);
+		fonthdr.form_height = atoi(tree[FONT_HEIGHT].ob_spec.tedinfo->te_ptext);
+		fonthdr.max_cell_width = atoi(tree[FONT_WIDTH].ob_spec.tedinfo->te_ptext);
+		fonthdr.first_ade = atoi(tree[FONT_FIRST_ADE].ob_spec.tedinfo->te_ptext);
+		fonthdr.last_ade = atoi(tree[FONT_LAST_ADE].ob_spec.tedinfo->te_ptext);
+		wind_set_str(mainwin, WF_NAME, fontname);
 	}
 }
 
