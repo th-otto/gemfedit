@@ -11,8 +11,13 @@ static _WORD gl_wchar, gl_hchar;
 #define hfix_objs(a, b, c)
 #define hrelease_objs(a, b)
 #include "fontdisp.rsh"
+#include "s_endian.h"
 #include "fonthdr.h"
-#include "swap.h"
+
+#undef SWAP_W
+#undef SWAP_L
+#define SWAP_W(s) s = cpu_swab16(s)
+#define SWAP_L(s) s = cpu_swab32(s)
 
 #define PANEL_Y_MARGIN 20
 #define PANEL_X_MARGIN 20
@@ -467,15 +472,23 @@ static _BOOL font_gen_gemfont(unsigned char *h, const char *filename, unsigned l
 		{
 			if (FONT_BIG)
 			{
+				nf_debugprintf("%s: warning: %s: wrong endian flag in header\n", program_name, filename);
 				if (HOST_BIG)
 				{
-					nf_debugprintf("%s: warning: %s: wrong endian flag in header\n", program_name, filename);
 					/*
-					 * host big-endian, font claims to be big-endian,
+					 * host big-endian, font claims to be little-endian,
+					 * but check succeded only after swapping:
+					 * font apparently is big-endian, set flag
+					 */
+					SM_UW(h + 66, LM_UW(h + 66) | FONTF_BIGENDIAN);
+				} else
+				{
+					/*
+					 * host little-endian, font claims to be big-endian,
 					 * but check succeded only after swapping:
 					 * font apparently is little-endian, clear flag
 					 */
-					hdr->flags &= ~FONTF_BIGENDIAN;
+					SM_UW(h + 66, LM_UW(h + 66) & ~FONTF_BIGENDIAN);
 				}
 			}
 		}
@@ -483,15 +496,23 @@ static _BOOL font_gen_gemfont(unsigned char *h, const char *filename, unsigned l
 	{
 		if (!FONT_BIG)
 		{
+			nf_debugprintf("%s: warning: %s: wrong endian flag in header\n", program_name, filename);
 			if (HOST_BIG)
 			{
-				nf_debugprintf("%s: warning: %s: wrong endian flag in header\n", program_name, filename);
 				/*
 				 * host big-endian, font claims to be little-endian,
 				 * but check succeded without swapping:
 				 * font apparently is big-endian, set flag
 				 */
-				hdr->flags |= FONTF_BIGENDIAN;
+				SM_UW(h + 66, LM_UW(h + 66) | FONTF_BIGENDIAN);
+			} else
+			{
+				/*
+				 * host little-endian, font claims to be big-endian,
+				 * but check succeded without swapping:
+				 * font apparently is little-endian, clear flag
+				 */
+				SM_UW(h + 66, LM_UW(h + 66) & ~FONTF_BIGENDIAN);
 			}
 		}
 	}

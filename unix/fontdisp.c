@@ -1,5 +1,9 @@
 /* gcc -O2 -Wall fontdisp.c -lX11 */
+/* i686-pc-mingw32-gcc -mwin32 -O2 -Wall fontdisp.c -lgdi32 -lcomdlg32 */
 
+#ifdef _WIN32
+#include <windows.h>
+#endif
 #include <stdlib.h>
 #include <string.h>
 #include <signal.h>
@@ -8,82 +12,12 @@
 #include <stdint.h>
 #include <unistd.h>
 #include <errno.h>
-#include "../include/fonthdr.h"
-
-
-typedef unsigned char UB;
-typedef   signed char B;
-typedef unsigned short UW;
-typedef   signed short W;
-typedef unsigned int UL;
-typedef   signed int L;
-
-typedef int gboolean;
-#define FALSE 0
-#define TRUE  1
-
 
 #define INLINE __inline
 
-static INLINE B *TO_B(void *s) { return (B *)s; }
-static INLINE UB *TO_UB(void *s) { return (UB *)s; }
-static INLINE W *TO_W(void *s) { return (W *)s; }
-static INLINE UW *TO_UW(void *s) { return (UW *)s; }
-static INLINE L *TO_L(void *s) { return (L *)s; }
-static INLINE UL *TO_UL(void *s) { return (UL *)s; }
+#include "../include/s_endian.h"
+#include "../include/fonthdr.h"
 
-/* Load/Store primitives (without address checking) */
-#define LOAD_B(_s) (*(TO_B(_s)))
-#define LOAD_UB(_s) (*(TO_UB(_s)))
-#define LOAD_W(_s) (*(TO_W(_s)))
-#define LOAD_UW(_s) (*(TO_UW(_s)))
-#define LOAD_L(_s) (*(TO_L(_s)))
-#define LOAD_UL(_s) (*(TO_UL(_s)))
-
-#define STORE_B(_d,_v) *(TO_B(_d)) = _v
-#define STORE_UB(_d,_v)	*(TO_UB(_d)) = _v
-#define STORE_W(_d,_v) *(TO_W(_d)) = _v
-#define STORE_UW(_d,_v) *(TO_UW(_d)) = _v
-#define STORE_L(_d,_v) *(TO_L(_d)) = _v
-#define STORE_UL(_d,_v) *(TO_UL(_d)) = _v
-
-static inline UW swap_w(UW x)
-{
-	return ((((x) >> 8) & 0xff) | (((x) & 0xff) << 8));
-}
-
-static inline UL swap_l(UL x)
-{
-	return ((((x) & 0xff000000) >> 24) | (((x) & 0x00ff0000) >>  8) |
-      (((x) & 0x0000ff00) <<  8) | (((x) & 0x000000ff) << 24));
-}
-
-#define SWAP_W(s) STORE_UW(s, ((UW)swap_w(LOAD_UW(s))))
-#define SWAP_L(s) STORE_UL(s, ((UL)swap_l(LOAD_UL(s))))
-
-#ifdef WORDS_BIGENDIAN
-
-#define LM_W(s) LOAD_W(s)
-#define LM_UW(s) LOAD_UW(s)
-#define LM_L(s) LOAD_L(s)
-#define LM_UL(s) LOAD_UL(s)
-#define SM_W(d, v) STORE_W(d, v)
-#define SM_UW(d, v) STORE_UW(d, v)
-#define SM_L(d, v) STORE_L(d, v)
-#define SM_UL(d, v) STORE_UL(d, v)
-
-#else
-
-#define LM_W(s) ((W)swap_w(LOAD_W(s)))
-#define LM_UW(s) ((UW)swap_w(LOAD_UW(s)))
-#define LM_L(s) ((L)swap_l(LOAD_L(s)))
-#define LM_UL(s) ((UL)swap_l(LOAD_UL(s)))
-#define SM_W(d, v) STORE_W(d, swap_w(v))
-#define SM_UW(d, v) STORE_UW(d, swap_w(v))
-#define SM_L(d, v) STORE_L(d, swap_l(v))
-#define SM_UL(d, v) STORE_UL(d, swap_l(v))
-
-#endif /* WORDS_BIGENDIAN */
 
 #undef access
 
@@ -100,10 +34,16 @@ typedef struct {
 	short descent;			/* baseline to bottom edge of raster */
 } vdi_charinfo;
 
+
+#ifdef __WIN32__
+#define VDI_DRIVER_WIN32
+static HDC *scaled_pixmaps;
+#define GetInstance() ((HINSTANCE)GetModuleHandle(NULL))
+#else
+#define VDI_DRIVER_X
 #ifdef __GNUC__
 # pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 #endif
-
 #include <X11/Xlib.h>
 #include <X11/Xlibint.h>
 #include <X11/Xutil.h>
@@ -113,6 +53,7 @@ static int screen;
 static Visual *visual;
 static XImage **char_images;
 static Pixmap *scaled_pixmaps;
+#endif
 static UB *bitmap;
 static int bitmap_line_width;
 static UB *off_table;
@@ -164,7 +105,7 @@ static const char *const sysfontname[SYSFONTS] = {
 
 static char const program_name[] = "fontdisp";
 static int cw, ch;
-static const int scaled_margin = 2;
+static int scaled_margin = 2;
 static int scale = 3;
 static int scaled_w, scaled_h;
 
@@ -235,13 +176,13 @@ static gboolean check_gemfnt_header(UB *h, unsigned int l)
 }
 
 
-#ifdef WORDS_BIGENDIAN
+#if BYTE_ORDER == BIG_ENDIAN
 #  define HOST_BIG 1
 #else
 #  define HOST_BIG 0
 #endif
 
-#define FONT_BIG ((LM_UW(h + 66) & 0x04) != 0)
+#define FONT_BIG ((LM_UW(h + 66) & FONTF_BIGENDIAN) != 0)
 
 
 static void chomp(char *dst, const char *src, size_t maxlen)
@@ -287,7 +228,9 @@ static void gen_glyph_line(UB *dat, int off, int w, UB *out)
 }
 
 
-static Pixmap scale_ximage(XImage *img, int scale, int margin)
+#ifdef VDI_DRIVER_X
+
+static Pixmap scale_ximage(XImage *img, int scale)
 {
 	unsigned int x, y;
 	unsigned width = img->width;
@@ -297,7 +240,6 @@ static Pixmap scale_ximage(XImage *img, int scale, int margin)
 	int pixw = width ? width * scale : 1;
 	int pixh = height ? height * scale : 1;
 	
-	(void) margin;
 	p2 = XCreatePixmap(x_display, RootWindow(x_display, screen), pixw, pixh, img->depth);
 	gc = XCreateGC(x_display, p2, 0, 0);
 
@@ -325,9 +267,73 @@ static void create_scaled_images(FONT_DESC *sf)
 	{
 		if (scaled_pixmaps[i])
 			XFreePixmap(x_display, scaled_pixmaps[i]);
-		scaled_pixmaps[i] = scale_ximage(char_images[i], scale, scaled_margin);
+		scaled_pixmaps[i] = scale_ximage(char_images[i], scale);
 	}
 }
+#endif
+
+
+#ifdef VDI_DRIVER_WIN32
+
+static void create_scaled_images(FONT_DESC *sf)
+{
+	int i, numoffs;
+	HDC scrdc;
+	HDC pixmap;
+	HBITMAP cbm;
+	HBRUSH blackbrush, whitebrush;
+	int x, y;
+	RECT rc;
+	
+	scrdc = GetDC(NULL);
+	whitebrush = GetStockObject(WHITE_BRUSH);
+	blackbrush = GetStockObject(BLACK_BRUSH);
+	numoffs = sf->last_char - sf->first_char + 1;
+	for (i = 0; i < numoffs; i++)
+	{
+		vdi_charinfo *charinfo = &sf->per_char[i];
+		int width = charinfo->width;
+		int height = sf->cellheight;
+		int pixw = width ? width * scale : 1;
+		int pixh = height ? height * scale : 1;
+
+		if (scaled_pixmaps[i])
+			DeleteObject(scaled_pixmaps[i]);
+		pixmap = CreateCompatibleDC(scrdc);
+
+		cbm = CreateCompatibleBitmap(scrdc, pixw, pixh);
+		SelectObject(pixmap, cbm);
+		SetBkMode(pixmap, OPAQUE);
+
+		rc.left = 0;
+		rc.top = 0;
+		rc.right = pixw;
+		rc.bottom = pixh;
+		FillRect(pixmap, &rc, whitebrush);
+		for (y = 0; y < height; y++)
+		{
+			for (x = 0; x < width; x++)
+			{
+				int o = LM_UW(off_table + 2 * i) + x;
+				int b = o & 0x7;
+				UB mask = 0x80 >> b;
+				UB *dat = bitmap + y * bitmap_line_width + (o >> 3);
+				
+				if (*dat & mask)
+				{
+					rc.left = x * scale;
+					rc.top = y * scale;
+					rc.right = rc.left + scale;
+					rc.bottom = rc.top + scale;
+					FillRect(pixmap, &rc, blackbrush);
+				}
+			}
+		}
+		
+		scaled_pixmaps[i] = pixmap;
+	}
+}
+#endif
 
 
 static FONT_DESC *font_gen_gemfont(UB *h, const char *filename, unsigned int l, gboolean fix_offsets)
@@ -341,6 +347,7 @@ static FONT_DESC *font_gen_gemfont(UB *h, const char *filename, unsigned int l, 
 	UB *dat_table;
 	UB *u;
 	int bitmap_width, bitmap_height;
+	gboolean hor_table_valid;
 	
 	if (!check_gemfnt_header(h, l))
 	{
@@ -355,23 +362,12 @@ static FONT_DESC *font_gen_gemfont(UB *h, const char *filename, unsigned int l, 
 			if (FONT_BIG)
 			{
 				fprintf(stderr, "%s: warning: %s: wrong endian flag in header\n", program_name, filename);
-				if (HOST_BIG)
-				{
-					/*
-					 * host big-endian, font claims to be little-endian,
-					 * but check succeded only after swapping:
-					 * font apparently is big-endian, set flag
-					 */
-					SM_UW(h + 66, LM_UW(h + 66) | 0x0004);
-				} else
-				{
-					/*
-					 * host little-endian, font claims to be big-endian,
-					 * but check succeded only after swapping:
-					 * font apparently is little-endian, clear flag
-					 */
-					SM_UW(h + 66, LM_UW(h + 66) & ~0x0004);
-				}
+				/*
+				 * font claims to be big-endian,
+				 * but check succeded only after swapping:
+				 * font apparently is little-endian, clear flag
+				 */
+				SM_UW(h + 66, LM_UW(h + 66) & ~FONTF_BIGENDIAN);
 			}
 		}
 	} else
@@ -379,23 +375,12 @@ static FONT_DESC *font_gen_gemfont(UB *h, const char *filename, unsigned int l, 
 		if (!FONT_BIG)
 		{
 			fprintf(stderr, "%s: warning: %s: wrong endian flag in header\n", program_name, filename);
-			if (HOST_BIG)
-			{
-				/*
-				 * host big-endian, font claims to be little-endian,
-				 * but check succeded without swapping:
-				 * font apparently is big-endian, set flag
-				 */
-				SM_UW(h + 66, LM_UW(h + 66) | 0x0004);
-			} else
-			{
-				/*
-				 * host little-endian, font claims to be big-endian,
-				 * but check succeded without swapping:
-				 * font apparently is little-endian, clear flag
-				 */
-				SM_UW(h + 66, LM_UW(h + 66) & ~0x0004);
-			}
+			/*
+			 * font claims to be little-endian,
+			 * but check succeded without swapping:
+			 * font apparently is big-endian, set flag
+			 */
+			SM_UW(h + 66, LM_UW(h + 66) | FONTF_BIGENDIAN);
 		}
 	}
 	
@@ -463,12 +448,27 @@ static FONT_DESC *font_gen_gemfont(UB *h, const char *filename, unsigned int l, 
 		{
 			SWAP_W(u);
 		}
-		if ((flags & FONTF_HORTABLE) && hor_table != h && hor_table != off_table && (off_table - hor_table) >= (numoffs * 2))
+	}
+	hor_table_valid = hor_table != h && hor_table != off_table && (off_table - hor_table) >= (numoffs * 2);
+	if ((flags & FONTF_HORTABLE) && hor_table_valid)
+	{
+		if (!(flags & FONTF_BIGENDIAN))
 		{
 			for (u = hor_table; u < hor_table + numoffs * 2; u += 2)
 			{
 				SWAP_W(u);
 			}
+		}
+	} else
+	{
+		if (flags & FONTF_HORTABLE)
+		{
+			fprintf(stderr, "%s: warning: %s: flag for horizontal table set, but there is none\n", program_name, filename);
+			flags &= ~FONTF_HORTABLE;
+			SM_UW(h + 66, flags);
+		} else if (hor_table_valid)
+		{
+			fprintf(stderr, "%s: warning: %s: offset table present but flag not set\n", program_name, filename);
 		}
 	}
 	
@@ -502,6 +502,7 @@ static FONT_DESC *font_gen_gemfont(UB *h, const char *filename, unsigned int l, 
 		}
 	}
 
+#ifdef VDI_DRIVER_X
 	{
 		XImage ximage;
 		XImage *charimage;
@@ -553,6 +554,15 @@ static FONT_DESC *font_gen_gemfont(UB *h, const char *filename, unsigned int l, 
 
 	g_free(bitmap);
 	
+#endif
+
+#ifdef VDI_DRIVER_WIN32
+	{
+		scaled_pixmaps = g_malloc0(numoffs * sizeof(*scaled_pixmaps));
+		(void) bitmap_height;
+	}
+#endif
+
 	return font;
 }
 
@@ -609,6 +619,261 @@ static gboolean font_load_gemfont(const char *filename)
 }
 
 
+
+#ifdef VDI_DRIVER_WIN32
+
+static HWND GlMainHwnd;
+static HINSTANCE hInstance;
+
+static void draw_window(HDC hdc, RECT *rc)
+{
+	int x, y;
+	FONT_DESC *sf = sysfont;
+	HBRUSH redbrush;
+	RECT line;
+	
+	SetBkMode(hdc, OPAQUE);
+	SetTextAlign(hdc, TA_TOP | TA_LEFT | TA_NOUPDATECP);
+	SetBkColor(hdc, RGB(255, 255, 255));
+	SetTextColor(hdc, RGB(0, 0, 0));
+
+	FillRect(hdc, rc, GetStockObject(WHITE_BRUSH));
+
+	redbrush = CreateSolidBrush(RGB(255, 0, 0));
+	
+	for (y = 0; y < 17; y++)
+	{
+		line.left = 0;
+		line.top = y * (ch * scale + scaled_margin);
+		line.right = line.left + scaled_w;
+		line.bottom = line.top + scaled_margin;
+		FillRect(hdc, &line, redbrush);
+	}
+	for (x = 0; x < 17; x++)
+	{
+		line.left = x * (cw * scale + scaled_margin);
+		line.top = 0;
+		line.right = line.left + scaled_margin;
+		line.bottom = line.top + scaled_h;
+		FillRect(hdc, &line, redbrush);
+	}
+
+	for (y = 0; y < 16; y++)
+	{
+		for (x = 0; x < 16; x++)
+		{
+			int c = y * 16 + x;
+			if (c < sf->first_char || c > sf->last_char)
+				c = sf->default_char;
+			{
+				c -= sf->first_char;
+				BitBlt(hdc, x * (cw * scale + scaled_margin) + scaled_margin, y * (ch * scale + scaled_margin) + scaled_margin, cw * scale, ch * scale, scaled_pixmaps[c], 0, 0, SRCCOPY);
+			}
+		}
+	}
+	
+	DeleteObject(redbrush);
+}
+
+
+static void create_win(void)
+{
+	scaled_margin = scale == 1 ? 1 : 2;
+	scaled_w = cw * 16 * scale + 17 * scaled_margin;
+	scaled_h = ch * 16 * scale + 17 * scaled_margin;
+	if (GlMainHwnd == 0)
+	{
+		GlMainHwnd = CreateWindowEx(
+			WS_EX_OVERLAPPEDWINDOW,
+			"bla",
+			sysfont->name,
+			WS_OVERLAPPEDWINDOW,
+			CW_USEDEFAULT, CW_USEDEFAULT, scaled_w, scaled_h,
+			NULL, /* parent */
+			NULL, /* menu */
+			hInstance,
+			NULL);
+	}
+		
+	{
+		RECT r, pos;
+		
+		GetWindowRect(GlMainHwnd, &r);
+		pos = r;
+		r.right = r.left + scaled_w;
+		r.bottom = r.top + scaled_h;
+		AdjustWindowRectEx(&r, GetWindowLong(GlMainHwnd, GWL_STYLE), FALSE, GetWindowLong(GlMainHwnd, GWL_EXSTYLE));
+		scaled_w = r.right - r.left;
+		scaled_h = r.bottom - r.top;
+		MoveWindow(GlMainHwnd, pos.left, pos.top, scaled_w, scaled_h, TRUE);
+	}
+	ShowWindow(GlMainHwnd, SW_SHOW);
+
+	UpdateWindow(GlMainHwnd);
+}
+
+
+
+static LRESULT CALLBACK mainWndProc(HWND hwnd, UINT message, WPARAM wparam, LPARAM lparam)
+{
+	switch (message)
+	{
+	case WM_DESTROY:
+		PostQuitMessage(0);
+		GlMainHwnd = 0;
+		return 0L;
+
+	case WM_PAINT:
+		{
+			PAINTSTRUCT ps;
+			HDC hdc;
+			RECT rc;
+	
+			hdc = BeginPaint(hwnd, &ps);
+			GetClientRect(hwnd, &rc);
+			draw_window(hdc, &rc);
+			EndPaint(hwnd, &ps);
+		}
+		return 0;
+	
+	case WM_KEYDOWN:
+		switch (wparam)
+		{
+		case VK_UP:
+			scale++;
+			create_scaled_images(sysfont);
+			create_win();
+			break;
+		case VK_DOWN:
+			if (scale > 1)
+			{
+				scale--;
+				create_scaled_images(sysfont);
+				create_win();
+			}
+			break;
+		}
+		break;
+
+	case WM_CHAR:
+		switch (wparam)
+		{
+		case 'q':
+		case 0x1b:
+			DestroyWindow(hwnd);
+			break;
+		}
+		break;
+	}
+	return DefWindowProc(hwnd, message, wparam, lparam);
+}
+
+
+int main(int argc, const char **argv)
+{
+	int font;
+	const char *filename;
+	MSG MainMsg;
+	FONT_DESC *sf;
+	int from_commandline;
+	int fontok;
+	
+	hInstance = GetInstance();
+	
+	font = 2;
+	if (argc > 1)
+	{
+		char *end = NULL;
+		
+		font = strtol(argv[1], &end, 0);
+		if (end && *end == '\0' && font >= 0 && font < SYSFONTS)
+			filename = sysfontname[font];
+		else
+			filename = argv[1];
+		from_commandline = TRUE;
+	} else
+	{
+		filename = NULL;
+		from_commandline = FALSE;
+	}
+	
+	fontok = FALSE;
+	while (!fontok)
+	{
+		if (filename == NULL)
+		{
+			OPENFILENAME ofn;
+			static char filenamebuf[256];
+			
+			memset(&ofn, 0, sizeof(ofn));
+			ofn.lStructSize = sizeof(ofn);
+			ofn.hInstance = hInstance;
+			ofn.lpstrFilter = "FontFiles\0*.fnt\0All Files\0*.*\0\0";
+			ofn.lpstrFile = filenamebuf;
+			ofn.nMaxFile = sizeof(filenamebuf);
+			ofn.Flags = OFN_EXPLORER | OFN_ENABLESIZING | OFN_FILEMUSTEXIST | OFN_HIDEREADONLY | OFN_NONETWORKBUTTON;
+			
+			if (GetOpenFileName(&ofn) == 0)
+				return 1;
+			filename = filenamebuf;
+		}
+		if (!font_load_gemfont(filename))
+		{
+			const char *err = strerror(errno);
+			if (from_commandline)
+			{
+				fprintf(stderr, "%s: cant load font %s: %s\n", program_name, filename, err);
+			} else
+			{
+				char *buf = g_malloc(strlen(err) + strlen(filename) + 100);
+				sprintf(buf, "cant load font %s: %s", filename, err);
+				MessageBox(NULL, buf, program_name, MB_OK);
+				g_free(buf);
+			}
+			filename = NULL;
+			from_commandline = FALSE;
+		} else
+		{
+			fontok = TRUE;
+		}
+	}
+		
+	{
+		WNDCLASS wndclass;
+
+		wndclass.style = CS_BYTEALIGNCLIENT | CS_HREDRAW | CS_VREDRAW | CS_OWNDC;
+		wndclass.lpfnWndProc = mainWndProc;
+		wndclass.cbClsExtra = 0;
+		wndclass.cbWndExtra = 0;
+		wndclass.hInstance = hInstance;
+		wndclass.hIcon = LoadIcon(hInstance, "AAA_ICON_1" /* IDI_APPLICATION */ );
+		wndclass.hCursor = LoadCursor(NULL, IDC_ARROW);
+		wndclass.hbrBackground = (HBRUSH) (COLOR_APPWORKSPACE + 1);
+		wndclass.lpszMenuName = NULL;
+		wndclass.lpszClassName = "bla";
+
+		RegisterClass(&wndclass);
+	}
+
+	sf = sysfont;
+	create_scaled_images(sf);
+	create_win();
+	
+	while (GetMessage(&MainMsg, NULL, 0, 0))
+	{
+		TranslateMessage(&MainMsg);
+		DispatchMessage(&MainMsg);
+	}
+
+	if (GlMainHwnd)
+		DestroyWindow(GlMainHwnd);
+	
+	UnregisterClass("bla", hInstance);
+	
+	return 0;
+}
+
+#else /* !__WIN32__ */
 
 static Window win;
 static Atom xa_wm_delete_window;
@@ -684,6 +949,7 @@ static void create_win(void)
 	x = y = 0;
 	if (win)
 		XDestroyWindow(x_display, win);
+	scaled_margin = scale == 1 ? 1 : 2;
 	scaled_w = cw * 16 * scale + 17 * scaled_margin;
 	scaled_h = ch * 16 * scale + 17 * scaled_margin;
 	hints->x = x + 20;
@@ -803,3 +1069,5 @@ int main(int argc, const char **argv)
 	
 	return 0;
 }
+
+#endif /* __WIN32__ */
