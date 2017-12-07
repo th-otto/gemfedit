@@ -13,15 +13,16 @@ static _WORD gl_wchar, gl_hchar;
 #define GetTextSize(w, h) *(w) = gl_wchar, *(h) = gl_hchar
 #define hfix_objs(a, b, c)
 #define hrelease_objs(a, b)
+#include "s_endian.h"
 #include "fonthdr.h"
-#include "swap.h"
+
+#undef SWAP_W
+#undef SWAP_L
+#define SWAP_W(s) s = cpu_swab16(s)
+#define SWAP_L(s) s = cpu_swab32(s)
 
 #ifndef _BOOL
 # define _BOOL int
-#endif
-#ifndef FALSE
-# define FALSE 0
-# define TRUE  1
 #endif
 
 
@@ -55,6 +56,7 @@ typedef unsigned short fchar_t;
 
 static _WORD font_cw;
 static _WORD font_ch;
+static _WORD last_display_cw;
 static FONT_HDR fonthdr;
 static unsigned char *fontmem;
 static unsigned char *dat_table;
@@ -402,10 +404,18 @@ static void mainwin_draw(const GRECT *area)
 	_WORD x, y;
 	_WORD scaled_w, scaled_h;
 	char buf[80];
+	_WORD cw;
 	
+	if (is_font_loaded() && cur_char >= fonthdr.first_ade && cur_char <= fonthdr.last_ade)
+	{
+		cw = off_table[cur_char - fonthdr.first_ade + 1] - off_table[cur_char - fonthdr.first_ade];
+	} else
+	{
+		cw = font_cw;
+	}
 	v_hide_c(vdihandle);
 	wind_get_grect(mainwin, WF_WORKXYWH, &work);
-	scaled_w = font_cw * scalex + (font_cw + 1) * scaled_margin;
+	scaled_w = cw * scalex + (cw + 1) * scaled_margin;
 	scaled_h = font_ch * scaley + (font_ch + 1) * scaled_margin;
 	wind_get_grect(mainwin, WF_FIRSTXYWH, &gr);
 	while (gr.g_w > 0 && gr.g_h > 0)
@@ -438,7 +448,7 @@ static void mainwin_draw(const GRECT *area)
 			/*
 			 * draw vertical grid lines
 			 */
-			for (x = 0; x < (font_cw + 1); x++)
+			for (x = 0; x < (cw + 1); x++)
 			{
 				pxy[0] = work.g_x + MAIN_X_MARGIN + x * (scalex + scaled_margin);
 				pxy[1] = work.g_y + MAIN_Y_MARGIN;
@@ -447,7 +457,7 @@ static void mainwin_draw(const GRECT *area)
 				vr_recfl(vdihandle, pxy);
 			}
 			
-			x = work.g_x + MAIN_X_MARGIN + font_cw * (scalex + scaled_margin) + gl_wchar;
+			x = work.g_x + MAIN_X_MARGIN + cw * (scalex + scaled_margin) + gl_wchar;
 			y = work.g_y + MAIN_Y_MARGIN;
 			if (cur_char >= fonthdr.first_ade && cur_char <= fonthdr.last_ade)
 			{
@@ -488,6 +498,56 @@ static void panelwin_draw(const GRECT *area)
 
 /* -------------------------------------------------------------------------- */
 
+static void do_resize_window(_WORD cw)
+{
+	GRECT gr, desk;
+	_WORD wkind;
+	_WORD width, height;
+	
+	width = MAIN_X_MARGIN * 2 + scalex * cw + (cw + 1) * scaled_margin + 12 * gl_wchar;
+	height = MAIN_Y_MARGIN * 2 + scaley * font_ch + (font_ch + 1) * scaled_margin;
+	if (height < 5 * gl_hchar)
+		height = 5 * gl_hchar;
+	wind_get_grect(mainwin, WF_CURRXYWH, &gr);
+	wind_get_grect(DESK, WF_WORKXYWH, &desk);
+	wkind = MAIN_WKIND;
+	wind_calc_grect(WC_WORK, wkind, &gr, &gr);
+	gr.g_w = width;
+	gr.g_h = height;
+	wind_calc_grect(WC_BORDER, wkind, &gr, &gr);
+	rc_intersect(&desk, &gr);
+	wind_set_grect(mainwin, WF_CURRXYWH, &gr);
+}
+
+/* -------------------------------------------------------------------------- */
+
+static void resize_window(void)
+{
+	do_resize_window(last_display_cw);
+}
+
+/* -------------------------------------------------------------------------- */
+
+static void maybe_resize_window(void)
+{
+	_WORD cw;
+	
+	if (is_font_loaded() && cur_char >= fonthdr.first_ade && cur_char <= fonthdr.last_ade)
+	{
+		cw = off_table[cur_char - fonthdr.first_ade + 1] - off_table[cur_char - fonthdr.first_ade];
+	} else
+	{
+		cw = font_cw;
+	}
+	if (cw != last_display_cw)
+	{
+		last_display_cw = cw;
+		resize_window();
+	}
+}
+
+/* -------------------------------------------------------------------------- */
+
 static void panel_click(_WORD x, _WORD y)
 {
 	OBJECT *panel = rs_tree(PANEL);
@@ -500,6 +560,7 @@ static void panel_click(_WORD x, _WORD y)
 	{
 		objc_offset(panel, obj, &ox, &oy);
 		cur_char = (obj - PANEL_FIRST) * 16 + (x - ox) / font_cw;
+		maybe_resize_window();
 		redraw_win(mainwin);
 	}
 }
@@ -664,29 +725,6 @@ static _BOOL create_window(void)
 	wind_open_grect(mainwin, &gr);
 	
 	return TRUE;
-}
-
-/* -------------------------------------------------------------------------- */
-
-static void resize_window(void)
-{
-	GRECT gr, desk;
-	_WORD wkind;
-	_WORD width, height;
-	
-	width = MAIN_X_MARGIN * 2 + scalex * font_cw + (font_cw + 1) * scaled_margin + 12 * gl_wchar;
-	height = MAIN_Y_MARGIN * 2 + scaley * font_ch + (font_ch + 1) * scaled_margin;
-	if (height < 5 * gl_hchar)
-		height = 5 * gl_hchar;
-	wind_get_grect(mainwin, WF_CURRXYWH, &gr);
-	wind_get_grect(DESK, WF_WORKXYWH, &desk);
-	wkind = MAIN_WKIND;
-	wind_calc_grect(WC_WORK, wkind, &gr, &gr);
-	gr.g_w = width;
-	gr.g_h = height;
-	wind_calc_grect(WC_BORDER, wkind, &gr, &gr);
-	rc_intersect(&desk, &gr);
-	wind_set_grect(mainwin, WF_CURRXYWH, &gr);
 }
 
 /* -------------------------------------------------------------------------- */
@@ -1109,7 +1147,8 @@ static void font_loaded(unsigned char *h, const char *filename)
 
 	free(fontmem);
 	fontmem = h;
-	resize_window();
+	last_display_cw = 0;
+	maybe_resize_window();
 	resize_panel();
 	if (h)
 	{
@@ -1124,6 +1163,7 @@ static void font_loaded(unsigned char *h, const char *filename)
 		fontfilename = NULL;
 		fontbasename = NULL;
 		dat_table = NULL;
+		last_display_cw = 0;
 	}
 	redraw_win(mainwin);
 	redraw_win(panelwin);
@@ -2624,6 +2664,7 @@ static void mainloop(void)
 						cur_char = fonthdr.last_ade;
 					else
 						cur_char = (cur_char - fonthdr.first_ade - 1u) % numoffs + fonthdr.first_ade;
+					maybe_resize_window();
 					redraw_win(mainwin);
 					break;
 				case 0x4d: /* cursor right */
@@ -2631,6 +2672,7 @@ static void mainloop(void)
 						cur_char = fonthdr.first_ade;
 					else
 						cur_char = (cur_char - fonthdr.first_ade + 1u) % numoffs + fonthdr.first_ade;
+					maybe_resize_window();
 					redraw_win(mainwin);
 					break;
 				case 0x62: /* Help */
@@ -2641,6 +2683,7 @@ static void mainloop(void)
 					if (k >= fonthdr.first_ade && k <= fonthdr.last_ade)
 					{
 						cur_char = k;
+						maybe_resize_window();
 						redraw_win(mainwin);
 					}
 					break;
