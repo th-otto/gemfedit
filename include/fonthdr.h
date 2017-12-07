@@ -44,6 +44,9 @@ typedef struct FONT_HDR
 #define FONTF_BIGENDIAN  0x0004            /* Font image is in byteswapped format */
 #define FONTF_MONOSPACED 0x0008            /* Font is monospaced */
 #define FONTF_EXTENDED   0x0020            /* Extended font header */
+#define FONTF_COMPRESSED FONTF_EXTENDED
 #define FONTF_FULLID     0x2000            /* Use 'full font ID' */
+
+void decode_gemfnt(unsigned char *dst, const unsigned char *src, unsigned short form_width, unsigned short form_height);
 
 #endif /* FONTHDR_H */

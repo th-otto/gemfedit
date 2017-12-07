@@ -43,7 +43,7 @@ static _WORD font_ch;
 static FONT_HDR fonthdr;
 static unsigned char *fontmem;
 static unsigned char *dat_table;
-static unsigned short *off_table;
+static uint16_t *off_table;
 static unsigned char *hor_table;
 static char fontname[VDI_FONTNAMESIZE + 1];
 static unsigned short numoffs;
@@ -74,8 +74,28 @@ static void chomp(char *dst, const char *src, size_t maxlen)
 	len = strlen(dst);
 	while (len > 0 && dst[len - 1] == ' ')
 		dst[--len] = '\0';
+	while (len > 0 && dst[0] == ' ')
+	{
+		memmove(dst, dst + 1, len);
+		len--;
+	}
 }
 
+
+/* -------------------------------------------------------------------------- */
+
+static char *xbasename(const char *path)
+{
+	char *p = strrchr(path, '\\');
+	char *q = strrchr(path, '/');
+	if (p == NULL || q > p)
+		p = q;
+	if (p == NULL)
+		p = (char *)path;
+	else
+		++p;
+	return p;
+}
 
 static void cleanup(void)
 {
@@ -411,7 +431,6 @@ static void swap_gemfnt_header(FONT_HDR *hdr, unsigned long l)
 static _BOOL check_gemfnt_header(FONT_HDR *h, unsigned long l)
 {
 	UW firstc, lastc, points;
-	UW form_width, form_height;
 	UW cellwidth;
 	UL dat_offset;
 	UL off_table;
@@ -440,10 +459,15 @@ static _BOOL check_gemfnt_header(FONT_HDR *h, unsigned long l)
 	cellwidth = h->max_cell_width;
 	if (cellwidth == 0)
 		return FALSE;
+	if (!(h->flags & FONTF_COMPRESSED))
+	{
+	UW form_width, form_height;
 	form_width = h->form_width;
 	form_height = h->form_height;
-	if ((dat_offset + form_width * form_height) > l)
+	if ((dat_offset + (size_t)form_width * form_height) > l)
 		return FALSE;
+	}
+
 	h->last_ade = lastc;
 	return TRUE;
 }
@@ -452,11 +476,15 @@ static _BOOL check_gemfnt_header(FONT_HDR *h, unsigned long l)
 
 
 
-static _BOOL font_gen_gemfont(unsigned char *h, const char *filename, unsigned long l)
+static _BOOL font_gen_gemfont(unsigned char **m, const char *filename, unsigned long l)
 {
 	FONT_HDR *hdr = &fonthdr;
-	unsigned short *u;
+	uint16_t *u;
 	_BOOL hor_table_valid;
+	uint32_t dat_offset, off_offset, hor_offset;
+	int decode_ok = TRUE;
+	uint16_t last_offset;
+	unsigned char *h = *m;
 	
 	font_gethdr(hdr, h);
 	
@@ -476,19 +504,19 @@ static _BOOL font_gen_gemfont(unsigned char *h, const char *filename, unsigned l
 				if (HOST_BIG)
 				{
 					/*
-					 * host big-endian, font claims to be little-endian,
+					 * host big-endian, font claims to be big-endian,
 					 * but check succeded only after swapping:
-					 * font apparently is big-endian, set flag
+					 * font apparently is little-endian, clear flag
 					 */
-					SM_UW(h + 66, LM_UW(h + 66) | FONTF_BIGENDIAN);
+					hdr->flags &= ~FONTF_BIGENDIAN;
 				} else
 				{
 					/*
 					 * host little-endian, font claims to be big-endian,
 					 * but check succeded only after swapping:
-					 * font apparently is little-endian, clear flag
+					 * font apparently is big-endian, set flag
 					 */
-					SM_UW(h + 66, LM_UW(h + 66) & ~FONTF_BIGENDIAN);
+					hdr->flags |= FONTF_BIGENDIAN;
 				}
 			}
 		}
@@ -504,7 +532,7 @@ static _BOOL font_gen_gemfont(unsigned char *h, const char *filename, unsigned l
 				 * but check succeded without swapping:
 				 * font apparently is big-endian, set flag
 				 */
-				SM_UW(h + 66, LM_UW(h + 66) | FONTF_BIGENDIAN);
+				hdr->flags |= FONTF_BIGENDIAN;
 			} else
 			{
 				/*
@@ -512,15 +540,84 @@ static _BOOL font_gen_gemfont(unsigned char *h, const char *filename, unsigned l
 				 * but check succeded without swapping:
 				 * font apparently is little-endian, clear flag
 				 */
-				SM_UW(h + 66, LM_UW(h + 66) & ~FONTF_BIGENDIAN);
+				hdr->flags &= ~FONTF_BIGENDIAN;
 			}
 		}
 	}
 	
 	numoffs = hdr->last_ade - hdr->first_ade + 1;
-	off_table = (unsigned short *)(h + hdr->off_table);
-	dat_table = h + hdr->dat_table;
-	hor_table_valid = hdr->hor_table != 0 && hdr->hor_table != hdr->off_table && (hdr->off_table - hdr->hor_table) >= (numoffs * 2);
+
+	hor_offset = hdr->hor_table;
+	off_offset = hdr->off_table;
+	dat_offset = hdr->dat_table;
+
+	if (!(hdr->flags & FONTF_COMPRESSED))
+	{
+		if ((dat_offset + (size_t)hdr->form_width * hdr->form_height) > l)
+			nf_debugprintf("%s: warning: %s: file may be truncated\n", program_name, filename);
+	}
+		
+	if (!(hdr->flags & FONTF_COMPRESSED))
+	{
+		if (dat_offset > off_offset && (off_offset + (numoffs + 1) * 2) < dat_offset)
+			nf_debugprintf("%s: warning: %s: gap of %lu bytes before data\n", program_name, filename, (unsigned long)dat_offset - (off_offset + (numoffs + 1) * 2));
+	}
+
+	if (hdr->flags & FONTF_COMPRESSED)
+	{
+		size_t offset;
+		size_t font_file_data_size;
+		size_t compressed_size;
+		size_t form_size;
+		unsigned char *compressed;
+		
+		offset = hor_offset;
+		if (offset == 0)
+			offset = off_offset;
+		if (l > 152 && offset >= 152)
+		{
+			compressed_size = LOAD_UW(h + 150);
+			if (HOST_BIG != FONT_BIG)
+				compressed_size = cpu_swab16(compressed_size);
+			compressed_size -= dat_offset - offset;
+			offset = dat_offset;
+		} else
+		{
+			offset = dat_offset;
+			compressed_size = l - offset;
+		}
+		form_size = (size_t)hdr->form_width * hdr->form_height;
+		font_file_data_size = form_size;
+		if (font_file_data_size < compressed_size)
+		{
+			fprintf(stderr, "%s: warning: %s: compressed size %lu > uncompressed size %lu\n", program_name, filename, (unsigned long)compressed_size, (unsigned long)font_file_data_size);
+			decode_ok = FALSE;
+		} else
+		{
+			*m = h = realloc(h, l - compressed_size + font_file_data_size);
+			compressed = malloc(compressed_size);
+			memcpy(compressed, h + offset, compressed_size);
+			decode_gemfnt(h + offset, compressed, hdr->form_width, hdr->form_height);
+			free(compressed);
+		}
+	}
+	
+	off_table = (uint16_t *)(h + off_offset);
+	dat_table = h + dat_offset;
+
+	if (FONT_BIG != HOST_BIG)
+	{
+		for (u = off_table; u <= off_table + numoffs; u++)
+		{
+			SWAP_W(*u);
+		}
+	}
+	
+	last_offset = off_table[numoffs];
+	if ((((last_offset + 15) >> 4) << 1) != hdr->form_width)
+		nf_debugprintf("%s: warning: %s: offset of last character %u does not match form_width %u\n", program_name, filename, last_offset, hdr->form_width);
+
+	hor_table_valid = hor_offset != 0 && hor_offset < off_offset && (off_offset - hor_offset) >= (numoffs * 2);
 	if ((hdr->flags & FONTF_HORTABLE) && hor_table_valid)
 	{
 		hor_table = h + hdr->hor_table;
@@ -537,18 +634,11 @@ static _BOOL font_gen_gemfont(unsigned char *h, const char *filename, unsigned l
 		hor_table = NULL;
 		hdr->hor_table = 0;
 	}
-	if (FONT_BIG != HOST_BIG)
-	{
-		for (u = off_table; u <= off_table + numoffs; u++)
-		{
-			SWAP_W(*u);
-		}
-	}
-	
+
 	font_cw = hdr->max_cell_width;
 	font_ch = hdr->form_height;
 	
-	return TRUE;
+	return decode_ok;
 }
 
 
@@ -569,7 +659,7 @@ static _BOOL font_load_gemfont(const char *filename)
 {
 	FILE *in;
 	unsigned long l;
-	unsigned char *h, *m;
+	unsigned char *h;
 	_BOOL ret;
 	
 	in = fopen(filename, "rb");
@@ -584,17 +674,16 @@ static _BOOL font_load_gemfont(const char *filename)
 	fseek(in, 0, SEEK_END);
 	l = ftell(in);
 	fseek(in, 0, SEEK_SET);
-	m = malloc(l);
-	if (m == NULL)
+	h = malloc(l);
+	if (h == NULL)
 	{
 		fclose(in);
 		form_alert(1, rs_str(AL_NOMEM));
 		return FALSE;
 	}
-	l = fread(m, 1, l, in);
-	h = m;
+	l = fread(h, 1, l, in);
 
-	ret = font_gen_gemfont(h, filename, l);
+	ret = font_gen_gemfont(&h, filename, l);
 	fclose(in);
 
 	if (ret)
@@ -642,12 +731,33 @@ static _BOOL font_load_gemfont(const char *filename)
 }
 
 
+/* -------------------------------------------------------------------------- */
+
+static _BOOL do_fsel_input(char *path, char *filename, char *mask, const char *title)
+{
+	_WORD button = 0;
+	_WORD ret;
+	char *p;
+	
+	p = xbasename(path);
+	strcpy(p, mask);
+	if (gl_ap_version >= 0x0140)
+		ret = fsel_exinput(path, filename, &button, title);
+	else
+		ret = fsel_input(path, filename, &button);
+	if (ret == 0 || button == 0)
+		return FALSE;
+	p = xbasename(path);
+	strcpy(mask, p);
+	strcpy(p, filename);
+	return TRUE;
+}
+
 static void select_font(void)
 {
-	_WORD button;
 	char filename[128];
 	static char path[128];
-	char *p;
+	static char mask[128] = "*.FNT";
 	
 	if (path[0] == '\0')
 	{
@@ -656,22 +766,10 @@ static void select_font(void)
 		Dgetpath(path + 2, 0);
 		strcat(path, "\\");
 	}
-	p = strrchr(path, '\\');
-	if (p == NULL)
-		p = path;
-	else
-		++p;
-	strcpy(p, "*.FNT");
 	strcpy(filename, "");
 	
-	if (!fsel_exinput(path, filename, &button, rs_str(SEL_FONT)) || !button)
+	if (!do_fsel_input(path, filename, mask, rs_str(SEL_FONT)))
 		return;
-	p = strrchr(path, '\\');
-	if (p == NULL)
-		p = path;
-	else
-		++p;
-	strcpy(p, filename);
 	font_load_gemfont(path);
 }
 
@@ -871,7 +969,7 @@ int main(int argc, char **argv)
 	app_id = appl_init();
 	if (app_id < 0)
 	{
-		fprintf(stderr, "Could not open display\n");
+		/* fprintf(stderr, "Could not open display\n"); */
 		return 1;
 	}
 	aeshandle = graf_handle(&gl_wchar, &gl_hchar, &dummy, &dummy);

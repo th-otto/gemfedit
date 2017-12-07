@@ -17,6 +17,7 @@ fontdisp.prg
 =
 cstartv.o
 fontdisp.c
+decode.c
 
 pcgemlib.lib
 pcstdlib.lib

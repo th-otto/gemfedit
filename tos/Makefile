@@ -29,11 +29,20 @@ PROGRAMS = gemfedit.prg fontdisp.prg
 all: $(PROGRAMS)
 
 
-gemfedit.prg: gemfedit.c gemfedit.h
-	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $< $(LIBS)
+gemfedit.prg: gemfedit.o decode.o
+	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $^ $(LIBS)
 
-fontdisp.prg: fontdisp.c fontdisp.h
-	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $< $(LIBS)
+fontdisp.prg: fontdisp.o decode.o
+	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $^ $(LIBS)
+
+gemfedit.o: gemfedit.c gemfedit.h
+	$(CC) $(CFLAGS) -c -o $@ $<
+
+fontdisp.o: fontdisp.c fontdisp.h
+	$(CC) $(CFLAGS) -c -o $@ $<
+
+decode.o: decode.c fontdisp.h
+	$(CC) $(CFLAGS) -c -o $@ $<
 
 
 clean::

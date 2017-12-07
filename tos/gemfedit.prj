@@ -17,6 +17,7 @@ gemfedit.prg
 =
 cstartv.o
 gemfedit.c
+decode.c
 
 pcgemlib.lib
 pcstdlib.lib

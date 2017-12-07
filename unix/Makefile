@@ -1,7 +1,18 @@
+CC = gcc
+CFLAGS = -O2 -Wall -I../include
+LDFLAGS = -s
+LIBS= -lX11
+
 all: fontdisp
 
-fontdisp: fontdisp.c
-	gcc -O2 -Wall fontdisp.c -lX11 -s -o $@
+fontdisp: fontdisp.o decode.o
+	$(CC) $(CFLAGS) $(LDFLAGS) $^ $(LIBS) -o $@
+
+fontdisp.o: fontdisp.c
+	$(CC) $(CFLAGS) $< -c -o $@
+
+deocde.o: decode.c
+	$(CC) $(CFLAGS) $< -c -o $@
 
 clean::
-	rm -f fontdisp
+	rm -f fontdisp *.o

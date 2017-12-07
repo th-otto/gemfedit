@@ -15,8 +15,8 @@
 
 #define INLINE __inline
 
-#include "../include/s_endian.h"
-#include "../include/fonthdr.h"
+#include "s_endian.h"
+#include "fonthdr.h"
 
 
 #undef access
@@ -138,7 +138,6 @@ static void swap_gemfnt_header(UB *h, unsigned int l)
 static gboolean check_gemfnt_header(UB *h, unsigned int l)
 {
 	UW firstc, lastc, points;
-	UW form_width, form_height;
 	UW cellwidth;
 	UL dat_offset;
 	UL off_table;
@@ -167,10 +166,16 @@ static gboolean check_gemfnt_header(UB *h, unsigned int l)
 	cellwidth = LM_UW(h + 52);
 	if (cellwidth == 0)
 		return FALSE;
+#if 0
+	{
+	UW form_width, form_height;
 	form_width = LM_UW(h + 80);
 	form_height = LM_UW(h + 82);
 	if ((dat_offset + form_width * form_height) > l)
 		return FALSE;
+	}
+#endif
+
 	SM_UW(h + 38, lastc);
 	return TRUE;
 }
@@ -194,10 +199,14 @@ static void chomp(char *dst, const char *src, size_t maxlen)
 	len = strlen(dst);
 	while (len > 0 && dst[len - 1] == ' ')
 		dst[--len] = '\0';
+	while (len > 0 && dst[0] == ' ')
+	{
+		memmove(dst, dst + 1, len);
+		len--;
+	}
 }
 
 
-#define VADDR(p) ((UL)((char *)(p) - (char *)h))
 #define MEMADDR(a) ((void *)((char *)h + (UL)(a)))
 
 
@@ -336,7 +345,7 @@ static void create_scaled_images(FONT_DESC *sf)
 #endif
 
 
-static FONT_DESC *font_gen_gemfont(UB *h, const char *filename, unsigned int l, gboolean fix_offsets)
+static FONT_DESC *font_gen_gemfont(UB **m, const char *filename, unsigned int l)
 {
 	FONT_DESC *font;
 	UW form_width, form_height;
@@ -347,7 +356,11 @@ static FONT_DESC *font_gen_gemfont(UB *h, const char *filename, unsigned int l, 
 	UB *dat_table;
 	UB *u;
 	int bitmap_width, bitmap_height;
+	UL dat_offset, off_offset, hor_offset;
 	gboolean hor_table_valid;
+	UB *h = *m;
+	int decode_ok = TRUE;
+	UW last_offset;
 	
 	if (!check_gemfnt_header(h, l))
 	{
@@ -386,21 +399,10 @@ static FONT_DESC *font_gen_gemfont(UB *h, const char *filename, unsigned int l, 
 	
 	font = g_malloc0(sizeof(*font));
 	
-	if (fix_offsets)
-	{
-		UL off;
-		
-		off = LM_UL(h + 68);
-		if (off != 0)
-			SM_UL(h + 68, VADDR(h) + off);
-		off = LM_UL(h + 72);
-		if (off != 0)
-			SM_UL(h + 72, VADDR(h) + off);
-		off = LM_UL(h + 76);
-		if (off != 0)
-			SM_UL(h + 76, VADDR(h) + off);
-	}
-		
+	hor_offset = LM_UL(h + 68);
+	off_offset = LM_UL(h + 72);
+	dat_offset = LM_UL(h + 76);
+	
 	/*
 	 * fontheader at this point always big-endian
 	 */
@@ -436,11 +438,62 @@ static FONT_DESC *font_gen_gemfont(UB *h, const char *filename, unsigned int l, 
 	flags = LM_UW(h + 66);
 	font->monospaced = (flags & FONTF_MONOSPACED) != 0;
 	
-	hor_table = MEMADDR(LM_UL(h + 68));
-	off_table = MEMADDR(LM_UL(h + 72));
-	dat_table = MEMADDR(LM_UL(h + 76));
-
 	numoffs = lastc - firstc + 1;
+
+	if (!(flags & FONTF_COMPRESSED))
+	{
+		if ((dat_offset + form_width * form_height) > l)
+			fprintf(stderr, "%s: warning: %s: file may be truncated\n", program_name, filename);
+	}
+		
+	if (!(flags & FONTF_COMPRESSED))
+	{
+		if (dat_offset > off_offset && (off_offset + (numoffs + 1) * 2) < dat_offset)
+			fprintf(stderr, "%s: warning: %s: gap of %u bytes before data\n", program_name, filename, dat_offset - (off_offset + (numoffs + 1) * 2));
+	}
+
+	if (flags & FONTF_COMPRESSED)
+	{
+		size_t offset;
+		size_t font_file_data_size;
+		size_t compressed_size;
+		size_t form_size;
+		unsigned char *compressed;
+		
+		offset = hor_offset;
+		if (offset == 0)
+			offset = off_offset;
+		if (l > 152 && offset >= 152)
+		{
+			compressed_size = LOAD_UW(h + 150);
+			if (HOST_BIG != FONT_BIG)
+				compressed_size = cpu_swab16(compressed_size);
+			compressed_size -= dat_offset - offset;
+			offset = dat_offset;
+		} else
+		{
+			offset = dat_offset;
+			compressed_size = l - offset;
+		}
+		form_size = (size_t)form_width * form_height;
+		font_file_data_size = form_size;
+		if (font_file_data_size < compressed_size)
+		{
+			fprintf(stderr, "%s: warning: %s: compressed size %lu > uncompressed size %lu\n", program_name, filename, (unsigned long)compressed_size, (unsigned long)font_file_data_size);
+			decode_ok = FALSE;
+		} else
+		{
+			*m = h = realloc(h, l - compressed_size + font_file_data_size);
+			compressed = malloc(compressed_size);
+			memcpy(compressed, h + offset, compressed_size);
+			decode_gemfnt(h + offset, compressed, form_width, form_height);
+			free(compressed);
+		}
+	}
+	
+	hor_table = MEMADDR(hor_offset);
+	off_table = MEMADDR(off_offset);
+	dat_table = MEMADDR(dat_offset);
 
 	if (!(flags & FONTF_BIGENDIAN))
 	{
@@ -449,7 +502,12 @@ static FONT_DESC *font_gen_gemfont(UB *h, const char *filename, unsigned int l, 
 			SWAP_W(u);
 		}
 	}
-	hor_table_valid = hor_table != h && hor_table != off_table && (off_table - hor_table) >= (numoffs * 2);
+
+	last_offset = LM_UW(off_table + 2 * numoffs);
+	if ((((last_offset + 15) >> 4) << 1) != form_width)
+		fprintf(stderr, "%s: warning: %s: offset of last character %u does not match form_width %u\n", program_name, filename, last_offset, form_width);
+
+	hor_table_valid = hor_offset != 0 && hor_offset < off_offset && (off_offset - hor_offset) >= (numoffs * 2);
 	if ((flags & FONTF_HORTABLE) && hor_table_valid)
 	{
 		if (!(flags & FONTF_BIGENDIAN))
@@ -470,6 +528,13 @@ static FONT_DESC *font_gen_gemfont(UB *h, const char *filename, unsigned int l, 
 		{
 			fprintf(stderr, "%s: warning: %s: offset table present but flag not set\n", program_name, filename);
 		}
+	}
+	
+	if (!decode_ok)
+	{
+		g_free(font);
+		errno = EINVAL;
+		return NULL;
 	}
 	
 	/*
@@ -586,7 +651,7 @@ static gboolean font_load_gemfont(const char *filename)
 	l = fread(m, 1, l, in);
 	h = m;
 
-	sysfont = font_gen_gemfont(h, filename, l, TRUE);
+	sysfont = font_gen_gemfont(&h, filename, l);
 	fclose(in);
 
 	if (sysfont != NULL)

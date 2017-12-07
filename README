@@ -21,10 +21,10 @@ tools           fnt2bdf.c: a small tool to convert font files to BDF; adapted fr
 
 Known bugs:
 - horizontal offset tables are not handled
-- Some GEM font files containing an extended header cannot be loaded
 - Width & height of the cells, as well as the number of characters
   cannot be changed once a font is loaded. You can export them to a txt
   file, edit that and import it back again to achieve that.
 - Only the first 256 characters in a font are displayed (reading &
   writing works, though; also i haven't found any fonts yet that
   have more characters)
+- Compressed fonts from GEM can be loaded, but are saved as uncompressed
