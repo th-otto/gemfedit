@@ -1,23 +1,23 @@
 /*
  * resource set indices for fontdisp
  *
- * created by ORCS 2.14
+ * created by ORCS 2.15
  */
 
 /*
- * Number of Strings:        81
+ * Number of Strings:        86
  * Number of Bitblks:        0
  * Number of Iconblks:       0
  * Number of Color Iconblks: 0
  * Number of Color Icons:    0
  * Number of Tedinfos:       13
- * Number of Free Strings:   5
+ * Number of Free Strings:   10
  * Number of Free Images:    0
  * Number of Objects:        60
  * Number of Trees:          4
  * Number of Userblks:       0
  * Number of Images:         0
- * Total file size:          3036
+ * Total file size:          3368
  */
 
 #undef RSC_NAME
@@ -35,8 +35,8 @@
 # define RSC_STATIC_FILE 0
 #endif
 #if !RSC_STATIC_FILE
-#define NUM_STRINGS 81
-#define NUM_FRSTR 5
+#define NUM_STRINGS 86
+#define NUM_FRSTR 10
 #define NUM_UD 0
 #define NUM_IMAGES 0
 #define NUM_BB 0
@@ -93,6 +93,21 @@
 
 #define SEL_FONT                           4 /* Free string */
 /* Select Font */
+
+#define AL_TRUNCATED                       5 /* Alert string */
+/* [1][Warning:|File may be truncated.][Continue] */
+
+#define AL_MISSING_HOR_TABLE               6 /* Alert string */
+/* [1][Warning:|Flag for horizontal table set,|but there is none.][Continue] */
+
+#define AL_MISSING_HOR_TABLE_FLAG          7 /* Alert string */
+/* [1][Warning:|Horizontal offset table present,|but flag not set.][Continue] */
+
+#define AL_COMPRESSED_SIZE                 8 /* Alert string */
+/* [3][Compressed size %lu larger|than uncompressed size %lu.][Abort] */
+
+#define AL_ENDIAN_FLAG                     9 /* Alert string */
+/* [1][Warning:|Wrong endian flag in header.][Continue] */
 
 
 

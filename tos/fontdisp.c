@@ -485,6 +485,7 @@ static _BOOL font_gen_gemfont(unsigned char **m, const char *filename, unsigned 
 	int decode_ok = TRUE;
 	uint16_t last_offset;
 	unsigned char *h = *m;
+	char buf[256];
 	
 	font_gethdr(hdr, h);
 	
@@ -500,7 +501,7 @@ static _BOOL font_gen_gemfont(unsigned char **m, const char *filename, unsigned 
 		{
 			if (FONT_BIG)
 			{
-				nf_debugprintf("%s: warning: %s: wrong endian flag in header\n", program_name, filename);
+				form_alert(1, rs_str(AL_ENDIAN_FLAG));
 				if (HOST_BIG)
 				{
 					/*
@@ -524,7 +525,7 @@ static _BOOL font_gen_gemfont(unsigned char **m, const char *filename, unsigned 
 	{
 		if (!FONT_BIG)
 		{
-			nf_debugprintf("%s: warning: %s: wrong endian flag in header\n", program_name, filename);
+			form_alert(1, rs_str(AL_ENDIAN_FLAG));
 			if (HOST_BIG)
 			{
 				/*
@@ -554,7 +555,7 @@ static _BOOL font_gen_gemfont(unsigned char **m, const char *filename, unsigned 
 	if (!(hdr->flags & FONTF_COMPRESSED))
 	{
 		if ((dat_offset + (size_t)hdr->form_width * hdr->form_height) > l)
-			nf_debugprintf("%s: warning: %s: file may be truncated\n", program_name, filename);
+			form_alert(1, rs_str(AL_TRUNCATED));
 	}
 		
 	if (!(hdr->flags & FONTF_COMPRESSED))
@@ -590,7 +591,8 @@ static _BOOL font_gen_gemfont(unsigned char **m, const char *filename, unsigned 
 		font_file_data_size = form_size;
 		if (font_file_data_size < compressed_size)
 		{
-			fprintf(stderr, "%s: warning: %s: compressed size %lu > uncompressed size %lu\n", program_name, filename, (unsigned long)compressed_size, (unsigned long)font_file_data_size);
+			sprintf(buf, rs_str(AL_COMPRESSED_SIZE), (unsigned long)compressed_size, (unsigned long)font_file_data_size);
+			form_alert(1, buf);
 			decode_ok = FALSE;
 		} else
 		{
@@ -625,11 +627,11 @@ static _BOOL font_gen_gemfont(unsigned char **m, const char *filename, unsigned 
 	{
 		if (hdr->flags & FONTF_HORTABLE)
 		{
-			nf_debugprintf("%s: warning: %s: flag for horizontal table set, but there is none\n", program_name, filename);
+			form_alert(1, rs_str(AL_MISSING_HOR_TABLE));
 			hdr->flags &= ~FONTF_HORTABLE;
 		} else if (hor_table_valid)
 		{
-			nf_debugprintf("%s: warning: %s: offset table present but flag not set\n", program_name, filename);
+			form_alert(1, rs_str(AL_MISSING_HOR_TABLE_FLAG));
 		}
 		hor_table = NULL;
 		hdr->hor_table = 0;

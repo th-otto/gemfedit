@@ -288,13 +288,13 @@ extern _VOID *hfix_objs(RSHDR *_hdr, OBJECT *_ob, _WORD _num_objs);
 #undef NUM_OBS
 #undef NUM_TREE
 #undef NUM_UD
-#define NUM_STRINGS 81
+#define NUM_STRINGS 86
 #define NUM_BB		0
 #define NUM_IB		0
 #define NUM_CIB     0
 #define NUM_CIC     0
 #define NUM_TI		13
-#define NUM_FRSTR	5
+#define NUM_FRSTR	10
 #define NUM_FRIMG	0
 #define NUM_OBS     60
 #define NUM_TREE	4
@@ -383,6 +383,11 @@ static char fontdisp_string_77[] = "[3][Can\'t open|%s][Abort]";
 static char fontdisp_string_78[] = "[3][Not a GEM font.][Abort]";
 static char fontdisp_string_79[] = "[3][Not enough memory.][Abort]";
 static char fontdisp_string_80[] = "Select Font";
+static char fontdisp_string_81[] = "[1][Warning:|File may be truncated.][Continue]";
+static char fontdisp_string_82[] = "[1][Warning:|Flag for horizontal table set,|but there is none.][Continue]";
+static char fontdisp_string_83[] = "[1][Warning:|Horizontal offset table present,|but flag not set.][Continue]";
+static char fontdisp_string_84[] = "[3][Compressed size %lu larger|than uncompressed size %lu.][Abort]";
+static char fontdisp_string_85[] = "[1][Warning:|Wrong endian flag in header.][Continue]";
 
 
 static char *rs_frstr[NUM_FRSTR] = {
@@ -390,23 +395,28 @@ static char *rs_frstr[NUM_FRSTR] = {
 	fontdisp_string_77,
 	fontdisp_string_78,
 	fontdisp_string_79,
-	fontdisp_string_80
+	fontdisp_string_80,
+	fontdisp_string_81,
+	fontdisp_string_82,
+	fontdisp_string_83,
+	fontdisp_string_84,
+	fontdisp_string_85
 };
 
 
 static TEDINFO rs_tedinfo[NUM_TI] = {
-	{ fontdisp_string_15, fontdisp_string_16, fontdisp_string_17, IBM, 6, TE_LEFT, 0x1180, 0x0, -1, 33,52 }, /* FONT_NAME */
-	{ fontdisp_string_18, fontdisp_string_19, fontdisp_string_20, IBM, 6, TE_LEFT, 0x1180, 0x0, -1, 6,25 }, /* FONT_ID */
-	{ fontdisp_string_21, fontdisp_string_22, fontdisp_string_23, IBM, 6, TE_LEFT, 0x1180, 0x0, -1, 6,25 }, /* FONT_POINT */
-	{ fontdisp_string_24, fontdisp_string_25, fontdisp_string_26, IBM, 6, TE_LEFT, 0x1180, 0x0, -1, 4,23 }, /* FONT_TOP */
-	{ fontdisp_string_27, fontdisp_string_28, fontdisp_string_29, IBM, 6, TE_LEFT, 0x1180, 0x0, -1, 4,24 }, /* FONT_WIDTH */
-	{ fontdisp_string_30, fontdisp_string_31, fontdisp_string_32, IBM, 6, TE_LEFT, 0x1180, 0x0, -1, 4,23 }, /* FONT_ASCENT */
-	{ fontdisp_string_33, fontdisp_string_34, fontdisp_string_35, IBM, 6, TE_LEFT, 0x1180, 0x0, -1, 4,24 }, /* FONT_HEIGHT */
-	{ fontdisp_string_36, fontdisp_string_37, fontdisp_string_38, IBM, 6, TE_LEFT, 0x1180, 0x0, -1, 4,23 }, /* FONT_HALF */
-	{ fontdisp_string_39, fontdisp_string_40, fontdisp_string_41, IBM, 6, TE_LEFT, 0x1180, 0x0, -1, 4,23 }, /* FONT_DESCENT */
-	{ fontdisp_string_42, fontdisp_string_43, fontdisp_string_44, IBM, 6, TE_LEFT, 0x1180, 0x0, -1, 4,23 }, /* FONT_BOTTOM */
-	{ fontdisp_string_45, fontdisp_string_46, fontdisp_string_47, IBM, 257, TE_LEFT, 0x1180, 0x7EF8, 0, 4,23 }, /* FONT_FIRST_ADE */
-	{ fontdisp_string_48, fontdisp_string_49, fontdisp_string_50, IBM, 257, TE_LEFT, 0x1180, 0x7EF8, 0, 4,23 }, /* FONT_LAST_ADE */
+	{ fontdisp_string_15, fontdisp_string_16, fontdisp_string_17, IBM, 0, TE_LEFT, 0x1180, 0x0, -1, 33,52 }, /* FONT_NAME */
+	{ fontdisp_string_18, fontdisp_string_19, fontdisp_string_20, IBM, 0, TE_LEFT, 0x1180, 0x0, -1, 6,25 }, /* FONT_ID */
+	{ fontdisp_string_21, fontdisp_string_22, fontdisp_string_23, IBM, 0, TE_LEFT, 0x1180, 0x0, -1, 6,25 }, /* FONT_POINT */
+	{ fontdisp_string_24, fontdisp_string_25, fontdisp_string_26, IBM, 0, TE_LEFT, 0x1180, 0x0, -1, 4,23 }, /* FONT_TOP */
+	{ fontdisp_string_27, fontdisp_string_28, fontdisp_string_29, IBM, 0, TE_LEFT, 0x1180, 0x0, -1, 4,24 }, /* FONT_WIDTH */
+	{ fontdisp_string_30, fontdisp_string_31, fontdisp_string_32, IBM, 0, TE_LEFT, 0x1180, 0x0, -1, 4,23 }, /* FONT_ASCENT */
+	{ fontdisp_string_33, fontdisp_string_34, fontdisp_string_35, IBM, 0, TE_LEFT, 0x1180, 0x0, -1, 4,24 }, /* FONT_HEIGHT */
+	{ fontdisp_string_36, fontdisp_string_37, fontdisp_string_38, IBM, 0, TE_LEFT, 0x1180, 0x0, -1, 4,23 }, /* FONT_HALF */
+	{ fontdisp_string_39, fontdisp_string_40, fontdisp_string_41, IBM, 0, TE_LEFT, 0x1180, 0x0, -1, 4,23 }, /* FONT_DESCENT */
+	{ fontdisp_string_42, fontdisp_string_43, fontdisp_string_44, IBM, 0, TE_LEFT, 0x1180, 0x0, -1, 4,23 }, /* FONT_BOTTOM */
+	{ fontdisp_string_45, fontdisp_string_46, fontdisp_string_47, IBM, 0, TE_LEFT, 0x1180, 0x0, 0, 4,23 }, /* FONT_FIRST_ADE */
+	{ fontdisp_string_48, fontdisp_string_49, fontdisp_string_50, IBM, 0, TE_LEFT, 0x1180, 0x0, 0, 4,23 }, /* FONT_LAST_ADE */
 	{ fontdisp_string_69, fontdisp_string_70, fontdisp_string_71, SMALL, 0, TE_LEFT, 0x1B00, 0x0, -1, 23,1 }
 };
 
@@ -687,8 +697,8 @@ _WORD fontdisp_rsc_free()
 #endif /* RSC_NAMED_FUNCTIONS */
 
 #else /* !RSC_STATIC_FILE */
-int rs_numstrings = 81;
-int rs_numfrstr = 5;
+int rs_numstrings = 86;
+int rs_numfrstr = 10;
 
 int rs_nuser = 0;
 int rs_numimages = 0;

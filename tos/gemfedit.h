@@ -5,19 +5,19 @@
  */
 
 /*
- * Number of Strings:        121
+ * Number of Strings:        126
  * Number of Bitblks:        0
  * Number of Iconblks:       0
  * Number of Color Iconblks: 0
  * Number of Color Icons:    0
  * Number of Tedinfos:       13
- * Number of Free Strings:   18
+ * Number of Free Strings:   23
  * Number of Free Images:    0
  * Number of Objects:        89
  * Number of Trees:          6
  * Number of Userblks:       0
  * Number of Images:         0
- * Total file size:          5282
+ * Total file size:          5618
  */
 
 #undef RSC_NAME
@@ -35,8 +35,8 @@
 # define RSC_STATIC_FILE 0
 #endif
 #if !RSC_STATIC_FILE
-#define NUM_STRINGS 121
-#define NUM_FRSTR 18
+#define NUM_STRINGS 126
+#define NUM_FRSTR 23
 #define NUM_UD 0
 #define NUM_IMAGES 0
 #define NUM_BB 0
@@ -113,10 +113,10 @@
 /* Select Font */
 
 #define AL_QUIT                            5 /* Alert string */
-/* [2][Font has been changed.|Quit Anyway?][No|Yes] */
+/* [2][Font has been changed.|Quit anyway?][No|Yes] */
 
 #define AL_CHANGED                         6 /* Alert string */
-/* [2][Font has been changed.|Load Anyway?][No|Yes] */
+/* [2][Font has been changed.|Load anyway?][No|Yes] */
 
 #define SEL_OUTPUT                         7 /* Free string */
 /* Select Output File */
@@ -150,6 +150,21 @@
 
 #define AL_DIFFERENT_LENGTH               17 /* Alert string */
 /* [2][Bitmap lines of different|length at line %d.][Abort] */
+
+#define AL_TRUNCATED                      18 /* Alert string */
+/* [1][Warning:|File may be truncated.][Continue] */
+
+#define AL_MISSING_HOR_TABLE              19 /* Alert string */
+/* [1][Warning:|Flag for horizontal table set,|but there is none.][Continue] */
+
+#define AL_MISSING_HOR_TABLE_FLAG         20 /* Alert string */
+/* [1][Warning:|Horizontal offset table present,|but flag not set.][Continue] */
+
+#define AL_COMPRESSED_SIZE                21 /* Alert string */
+/* [3][Compressed size %lu larger|than uncompressed size %lu.][Abort] */
+
+#define AL_ENDIAN_FLAG                    22 /* Alert string */
+/* [1][Warning:|Wrong endian flag in header.][Continue] */
 
 
 

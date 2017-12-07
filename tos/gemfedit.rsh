@@ -288,13 +288,13 @@ extern _VOID *hfix_objs(RSHDR *_hdr, OBJECT *_ob, _WORD _num_objs);
 #undef NUM_OBS
 #undef NUM_TREE
 #undef NUM_UD
-#define NUM_STRINGS 121
+#define NUM_STRINGS 126
 #define NUM_BB		0
 #define NUM_IB		0
 #define NUM_CIB     0
 #define NUM_CIC     0
 #define NUM_TI		13
-#define NUM_FRSTR	18
+#define NUM_FRSTR	23
 #define NUM_FRIMG	0
 #define NUM_OBS     89
 #define NUM_TREE	6
@@ -423,6 +423,11 @@ static char gemfedit_string_117[] = "[2][Unreasonable font size:|%ux%u.][Abort]"
 static char gemfedit_string_118[] = "[2][Wrong character number|%u at line %d.][Abort]";
 static char gemfedit_string_119[] = "[2][Bitmap line to long at line %d.][Abort]";
 static char gemfedit_string_120[] = "[2][Bitmap lines of different|length at line %d.][Abort]";
+static char gemfedit_string_121[] = "[1][Warning:|File may be truncated.][Continue]";
+static char gemfedit_string_122[] = "[1][Warning:|Flag for horizontal table set,|but there is none.][Continue]";
+static char gemfedit_string_123[] = "[1][Warning:|Horizontal offset table present,|but flag not set.][Continue]";
+static char gemfedit_string_124[] = "[3][Compressed size %lu larger|than uncompressed size %lu.][Abort]";
+static char gemfedit_string_125[] = "[1][Warning:|Wrong endian flag in header.][Continue]";
 
 
 static char *rs_frstr[NUM_FRSTR] = {
@@ -443,23 +448,28 @@ static char *rs_frstr[NUM_FRSTR] = {
 	gemfedit_string_117,
 	gemfedit_string_118,
 	gemfedit_string_119,
-	gemfedit_string_120
+	gemfedit_string_120,
+	gemfedit_string_121,
+	gemfedit_string_122,
+	gemfedit_string_123,
+	gemfedit_string_124,
+	gemfedit_string_125
 };
 
 
 static TEDINFO rs_tedinfo[NUM_TI] = {
-	{ gemfedit_string_33, gemfedit_string_34, gemfedit_string_35, IBM, 6, TE_LEFT, 0x1180, 0x0, -1, 33,52 }, /* FONT_NAME */
-	{ gemfedit_string_36, gemfedit_string_37, gemfedit_string_38, IBM, 6, TE_LEFT, 0x1180, 0x0, -1, 6,25 }, /* FONT_ID */
-	{ gemfedit_string_39, gemfedit_string_40, gemfedit_string_41, IBM, 6, TE_LEFT, 0x1180, 0x0, -1, 6,25 }, /* FONT_POINT */
-	{ gemfedit_string_42, gemfedit_string_43, gemfedit_string_44, IBM, 6, TE_LEFT, 0x1180, 0x0, -1, 4,23 }, /* FONT_TOP */
-	{ gemfedit_string_45, gemfedit_string_46, gemfedit_string_47, IBM, 6, TE_LEFT, 0x1180, 0x0, -1, 4,24 }, /* FONT_WIDTH */
-	{ gemfedit_string_48, gemfedit_string_49, gemfedit_string_50, IBM, 6, TE_LEFT, 0x1180, 0x0, -1, 4,23 }, /* FONT_ASCENT */
-	{ gemfedit_string_51, gemfedit_string_52, gemfedit_string_53, IBM, 6, TE_LEFT, 0x1180, 0x0, -1, 4,24 }, /* FONT_HEIGHT */
-	{ gemfedit_string_54, gemfedit_string_55, gemfedit_string_56, IBM, 6, TE_LEFT, 0x1180, 0x0, -1, 4,23 }, /* FONT_HALF */
-	{ gemfedit_string_57, gemfedit_string_58, gemfedit_string_59, IBM, 6, TE_LEFT, 0x1180, 0x0, -1, 4,23 }, /* FONT_DESCENT */
-	{ gemfedit_string_60, gemfedit_string_61, gemfedit_string_62, IBM, 6, TE_LEFT, 0x1180, 0x0, -1, 4,23 }, /* FONT_BOTTOM */
-	{ gemfedit_string_63, gemfedit_string_64, gemfedit_string_65, IBM, 257, TE_LEFT, 0x1180, 0x7EF8, 0, 4,23 }, /* FONT_FIRST_ADE */
-	{ gemfedit_string_66, gemfedit_string_67, gemfedit_string_68, IBM, 257, TE_LEFT, 0x1180, 0x7EF8, 0, 4,23 }, /* FONT_LAST_ADE */
+	{ gemfedit_string_33, gemfedit_string_34, gemfedit_string_35, IBM, 0, TE_LEFT, 0x1180, 0x0, -1, 33,52 }, /* FONT_NAME */
+	{ gemfedit_string_36, gemfedit_string_37, gemfedit_string_38, IBM, 0, TE_LEFT, 0x1180, 0x0, -1, 6,25 }, /* FONT_ID */
+	{ gemfedit_string_39, gemfedit_string_40, gemfedit_string_41, IBM, 0, TE_LEFT, 0x1180, 0x0, -1, 6,25 }, /* FONT_POINT */
+	{ gemfedit_string_42, gemfedit_string_43, gemfedit_string_44, IBM, 0, TE_LEFT, 0x1180, 0x0, -1, 4,23 }, /* FONT_TOP */
+	{ gemfedit_string_45, gemfedit_string_46, gemfedit_string_47, IBM, 0, TE_LEFT, 0x1180, 0x0, -1, 4,24 }, /* FONT_WIDTH */
+	{ gemfedit_string_48, gemfedit_string_49, gemfedit_string_50, IBM, 0, TE_LEFT, 0x1180, 0x0, -1, 4,23 }, /* FONT_ASCENT */
+	{ gemfedit_string_51, gemfedit_string_52, gemfedit_string_53, IBM, 0, TE_LEFT, 0x1180, 0x0, -1, 4,24 }, /* FONT_HEIGHT */
+	{ gemfedit_string_54, gemfedit_string_55, gemfedit_string_56, IBM, 0, TE_LEFT, 0x1180, 0x0, -1, 4,23 }, /* FONT_HALF */
+	{ gemfedit_string_57, gemfedit_string_58, gemfedit_string_59, IBM, 0, TE_LEFT, 0x1180, 0x0, -1, 4,23 }, /* FONT_DESCENT */
+	{ gemfedit_string_60, gemfedit_string_61, gemfedit_string_62, IBM, 0, TE_LEFT, 0x1180, 0x0, -1, 4,23 }, /* FONT_BOTTOM */
+	{ gemfedit_string_63, gemfedit_string_64, gemfedit_string_65, IBM, 0, TE_LEFT, 0x1180, 0x0, 0, 4,23 }, /* FONT_FIRST_ADE */
+	{ gemfedit_string_66, gemfedit_string_67, gemfedit_string_68, IBM, 0, TE_LEFT, 0x1180, 0x0, 0, 4,23 }, /* FONT_LAST_ADE */
 	{ gemfedit_string_88, gemfedit_string_89, gemfedit_string_90, SMALL, 0, TE_LEFT, 0x1B00, 0x0, -1, 23,1 }
 };
 
@@ -777,8 +787,8 @@ _WORD gemfedit_rsc_free()
 #endif /* RSC_NAMED_FUNCTIONS */
 
 #else /* !RSC_STATIC_FILE */
-int rs_numstrings = 121;
-int rs_numfrstr = 18;
+int rs_numstrings = 126;
+int rs_numfrstr = 23;
 
 int rs_nuser = 0;
 int rs_numimages = 0;
