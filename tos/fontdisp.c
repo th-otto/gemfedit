@@ -776,8 +776,19 @@ static void select_font(void)
 }
 
 
+static void EnableObjState(OBJECT *tree, _WORD idx, _UWORD state, _BOOL enable)
+{
+	if (enable)
+		tree[idx].ob_state |= state;
+	else
+		tree[idx].ob_state &= ~state;
+}
+
+/* -------------------------------------------------------------------------- */
+
 static void font_info(void)
 {
+	FONT_HDR *hdr = &fonthdr;
 	OBJECT *tree = rs_tree(FONT_PARAMS);
 	GRECT gr;
 	_WORD ret;
@@ -788,17 +799,23 @@ static void font_info(void)
 	form_dial_grect(FMD_START, &gr, &gr);
 	
 	strcpy(tree[FONT_NAME].ob_spec.tedinfo->te_ptext, fontname);
-	sprintf(tree[FONT_ID].ob_spec.tedinfo->te_ptext, "%5d", fonthdr.font_id);
-	sprintf(tree[FONT_POINT].ob_spec.tedinfo->te_ptext, "%5d", fonthdr.point);
-	sprintf(tree[FONT_TOP].ob_spec.tedinfo->te_ptext, "%3d", fonthdr.top);
-	sprintf(tree[FONT_ASCENT].ob_spec.tedinfo->te_ptext, "%3d", fonthdr.ascent);
-	sprintf(tree[FONT_HALF].ob_spec.tedinfo->te_ptext, "%3d", fonthdr.half);
-	sprintf(tree[FONT_DESCENT].ob_spec.tedinfo->te_ptext, "%3d", fonthdr.descent);
-	sprintf(tree[FONT_BOTTOM].ob_spec.tedinfo->te_ptext, "%3d", fonthdr.descent);
-	sprintf(tree[FONT_HEIGHT].ob_spec.tedinfo->te_ptext, "%3d", fonthdr.form_height);
-	sprintf(tree[FONT_WIDTH].ob_spec.tedinfo->te_ptext, "%3d", fonthdr.max_cell_width);
-	sprintf(tree[FONT_FIRST_ADE].ob_spec.tedinfo->te_ptext, "%3d", fonthdr.first_ade);
-	sprintf(tree[FONT_LAST_ADE].ob_spec.tedinfo->te_ptext, "%3d", fonthdr.last_ade);
+	sprintf(tree[FONT_ID].ob_spec.tedinfo->te_ptext, "%5d", hdr->font_id);
+	sprintf(tree[FONT_POINT].ob_spec.tedinfo->te_ptext, "%5d", hdr->point);
+	sprintf(tree[FONT_TOP].ob_spec.tedinfo->te_ptext, "%3d", hdr->top);
+	sprintf(tree[FONT_ASCENT].ob_spec.tedinfo->te_ptext, "%3d", hdr->ascent);
+	sprintf(tree[FONT_HALF].ob_spec.tedinfo->te_ptext, "%3d", hdr->half);
+	sprintf(tree[FONT_DESCENT].ob_spec.tedinfo->te_ptext, "%3d", hdr->descent);
+	sprintf(tree[FONT_BOTTOM].ob_spec.tedinfo->te_ptext, "%3d", hdr->descent);
+	sprintf(tree[FONT_HEIGHT].ob_spec.tedinfo->te_ptext, "%3d", hdr->form_height);
+	sprintf(tree[FONT_WIDTH].ob_spec.tedinfo->te_ptext, "%3d", hdr->max_cell_width);
+	sprintf(tree[FONT_FIRST_ADE].ob_spec.tedinfo->te_ptext, "%3d", hdr->first_ade);
+	sprintf(tree[FONT_LAST_ADE].ob_spec.tedinfo->te_ptext, "%3d", hdr->last_ade);
+	
+	EnableObjState(tree, FONT_SYSTEM, OS_SELECTED, (hdr->flags & FONTF_SYSTEM) != 0);
+	EnableObjState(tree, FONT_HORTABLE, OS_SELECTED, (hdr->flags & FONTF_HORTABLE) != 0);
+	EnableObjState(tree, FONT_BIGENDIAN, OS_SELECTED, (hdr->flags & FONTF_BIGENDIAN) != 0);
+	EnableObjState(tree, FONT_MONOSPACED, OS_SELECTED, (hdr->flags & FONTF_MONOSPACED) != 0);
+	EnableObjState(tree, FONT_COMPRESSED, OS_SELECTED, (hdr->flags & FONTF_COMPRESSED) != 0);
 	
 	objc_draw_grect(tree, ROOT, MAX_DEPTH, &gr);
 	ret = form_do(tree, ROOT);

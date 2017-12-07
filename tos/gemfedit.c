@@ -68,6 +68,7 @@ static const char *fontbasename;
 static fchar_t numoffs;
 static fchar_t cur_char;
 static _BOOL font_changed = FALSE;
+static MFDB screen_fdb;
 
 #define FONT_BIG ((fonthdr.flags & FONTF_BIGENDIAN) != 0)
 
@@ -648,6 +649,16 @@ static _BOOL open_screen(void)
 	
 	vdihandle = aeshandle;
 	(void) v_opnvwk(work_in, &vdihandle, work_out);	/* VDI workstation needed */
+	screen_fdb.fd_addr = 0;
+	screen_fdb.fd_w = work_out[0] + 1;
+	screen_fdb.fd_h = work_out[1] + 1;
+	screen_fdb.fd_wdwidth = screen_fdb.fd_w >> 4;
+	vq_extnd(vdihandle, 1, work_out);
+	screen_fdb.fd_nplanes = work_out[4];
+	screen_fdb.fd_stand = FALSE;
+	screen_fdb.fd_r1 = 0;
+	screen_fdb.fd_r2 = 0;
+	screen_fdb.fd_r3 = 0;
 	
 	/*
 	 * enforce some default values
@@ -751,6 +762,8 @@ static _BOOL create_window(void)
 #define udef_vst_rotation vst_rotation
 #define udef_vst_alignment vst_alignment
 #define udef_vst_height vst_height
+#define udef_vrt_cpyfm vrt_cpyfm
+#define udef_vro_cpyfm vro_cpyfm
 #endif
 
 /*
@@ -762,12 +775,15 @@ static _WORD _CDECL draw_font(PARMBLK *pb)
 	_WORD tattrib[10];
 	_WORD fattrib[5];
 	_WORD mattrib[5];
-	_WORD x, y;
 	fchar_t c;
-	_WORD pxy[4];
 	_WORD dummy;
 	fchar_t basec, ch;
 	_WORD width;
+	_WORD o;
+	MFDB src;
+	_WORD pxy[8];
+	_WORD colors[2];
+	_BOOL can_use_vrocpy;
 	
 	udef_vqt_attributes(aeshandle, tattrib);
 	udef_vqf_attributes(aeshandle, fattrib);
@@ -778,31 +794,72 @@ static _WORD _CDECL draw_font(PARMBLK *pb)
 	udef_vsm_color(aeshandle, G_BLACK);
 	udef_vsm_type(aeshandle, 1);
 	udef_vsm_height(aeshandle, 1);
-	pxy[0] = pb->pb_x;
-	pxy[1] = pb->pb_y;
-	pxy[2] = pb->pb_x + pb->pb_w - 1;
-	pxy[3] = pb->pb_y + pb->pb_h - 1;
-	udef_vr_recfl(aeshandle, pxy);
 	basec = (pb->pb_obj - PANEL_FIRST) * 16;
+
+	src.fd_addr = dat_table;
+	src.fd_w = fonthdr.form_width << 3;
+	src.fd_h = fonthdr.form_height;
+	src.fd_wdwidth = (src.fd_w + 15) >> 4;
+	src.fd_nplanes = 1;
+	src.fd_stand = FALSE;
+	src.fd_r1 = 0;
+	src.fd_r2 = 0;
+	src.fd_r3 = 0;
+	colors[0] = G_BLACK;
+	colors[1] = G_WHITE;
+	/* we can only use vro_cpyfm if form_width is even number of bytes */
+	can_use_vrocpy = (src.fd_wdwidth << 1) == fonthdr.form_width;
+
+	if (!can_use_vrocpy)
+	{
+		pxy[0] = pb->pb_x;
+		pxy[1] = pb->pb_y;
+		pxy[2] = pb->pb_x + pb->pb_w - 1;
+		pxy[3] = pb->pb_y + pb->pb_h - 1;
+		udef_vr_recfl(aeshandle, pxy);
+	}
+		
 	for (c = 0; c < 16; c++)
 	{
 		ch = basec + c;
 		if (ch < fonthdr.first_ade || ch > fonthdr.last_ade)
 			continue;
-		width = font_cw; /* char_testbit already checks actual width of character */
-		for (y = 0; y < font_ch; y++)
+		ch -= fonthdr.first_ade;
+		o = off_table[ch];
+		width = off_table[ch + 1] - o;
+		if (can_use_vrocpy)
 		{
-			for (x = 0; x < width; x++)
+			pxy[0] = o;
+			pxy[1] = 0;
+			pxy[2] = o + width - 1;
+			pxy[3] = fonthdr.form_height - 1;
+			pxy[4] = pb->pb_x + c * font_cw;
+			pxy[5] = pb->pb_y;
+			pxy[6] = pxy[4] + width - 1;
+			pxy[7] = pxy[5] + fonthdr.form_height - 1;
+			
+			if (screen_fdb.fd_nplanes == 1)
+				udef_vro_cpyfm(aeshandle, S_ONLY, pxy, &src, &screen_fdb);
+			else
+				udef_vrt_cpyfm(aeshandle, MD_REPLACE, pxy, &src, &screen_fdb, colors);
+		} else
+		{
+			_WORD x, y;
+			
+			for (y = 0; y < font_ch; y++)
 			{
-				if (char_testbit(ch, x, y))
+				for (x = 0; x < width; x++)
 				{
-					pxy[0] = pb->pb_x + c * font_cw + x;
-					pxy[1] = pb->pb_y + y;
-					udef_v_pmarker(aeshandle, 1, pxy);
+					if (char_testbit(ch, x, y))
+					{
+						pxy[0] = pb->pb_x + c * font_cw + x;
+						pxy[1] = pb->pb_y + y;
+						udef_v_pmarker(aeshandle, 1, pxy);
+					}
 				}
 			}
 		}
-	}
+	}		
 
 	udef_vst_color(aeshandle, tattrib[1]);
 	udef_vst_rotation(aeshandle, tattrib[2]);
@@ -2492,6 +2549,16 @@ static void import_font_txt(void)
 /* -------------------------------------------------------------------------- */
 /******************************************************************************/
 
+static void EnableObjState(OBJECT *tree, _WORD idx, _WORD state, _BOOL enable)
+{
+	if (enable)
+		tree[idx].ob_state |= state;
+	else
+		tree[idx].ob_state &= ~state;
+}
+
+/* -------------------------------------------------------------------------- */
+
 static void font_info(void)
 {
 	FONT_HDR *hdr = &fonthdr;
@@ -2505,17 +2572,23 @@ static void font_info(void)
 	form_dial_grect(FMD_START, &gr, &gr);
 	
 	strcpy(tree[FONT_NAME].ob_spec.tedinfo->te_ptext, fontname);
-	sprintf(tree[FONT_ID].ob_spec.tedinfo->te_ptext, "%5d", fonthdr.font_id);
-	sprintf(tree[FONT_POINT].ob_spec.tedinfo->te_ptext, "%5d", fonthdr.point);
-	sprintf(tree[FONT_TOP].ob_spec.tedinfo->te_ptext, "%3d", fonthdr.top);
-	sprintf(tree[FONT_ASCENT].ob_spec.tedinfo->te_ptext, "%3d", fonthdr.ascent);
-	sprintf(tree[FONT_HALF].ob_spec.tedinfo->te_ptext, "%3d", fonthdr.half);
-	sprintf(tree[FONT_DESCENT].ob_spec.tedinfo->te_ptext, "%3d", fonthdr.descent);
-	sprintf(tree[FONT_BOTTOM].ob_spec.tedinfo->te_ptext, "%3d", fonthdr.descent);
-	sprintf(tree[FONT_HEIGHT].ob_spec.tedinfo->te_ptext, "%3d", fonthdr.form_height);
-	sprintf(tree[FONT_WIDTH].ob_spec.tedinfo->te_ptext, "%3d", fonthdr.max_cell_width);
-	sprintf(tree[FONT_FIRST_ADE].ob_spec.tedinfo->te_ptext, "%3d", fonthdr.first_ade);
-	sprintf(tree[FONT_LAST_ADE].ob_spec.tedinfo->te_ptext, "%3d", fonthdr.last_ade);
+	sprintf(tree[FONT_ID].ob_spec.tedinfo->te_ptext, "%5d", hdr->font_id);
+	sprintf(tree[FONT_POINT].ob_spec.tedinfo->te_ptext, "%5d", hdr->point);
+	sprintf(tree[FONT_TOP].ob_spec.tedinfo->te_ptext, "%3d", hdr->top);
+	sprintf(tree[FONT_ASCENT].ob_spec.tedinfo->te_ptext, "%3d", hdr->ascent);
+	sprintf(tree[FONT_HALF].ob_spec.tedinfo->te_ptext, "%3d", hdr->half);
+	sprintf(tree[FONT_DESCENT].ob_spec.tedinfo->te_ptext, "%3d", hdr->descent);
+	sprintf(tree[FONT_BOTTOM].ob_spec.tedinfo->te_ptext, "%3d", hdr->descent);
+	sprintf(tree[FONT_HEIGHT].ob_spec.tedinfo->te_ptext, "%3d", hdr->form_height);
+	sprintf(tree[FONT_WIDTH].ob_spec.tedinfo->te_ptext, "%3d", hdr->max_cell_width);
+	sprintf(tree[FONT_FIRST_ADE].ob_spec.tedinfo->te_ptext, "%3d", hdr->first_ade);
+	sprintf(tree[FONT_LAST_ADE].ob_spec.tedinfo->te_ptext, "%3d", hdr->last_ade);
+	
+	EnableObjState(tree, FONT_SYSTEM, OS_SELECTED, (hdr->flags & FONTF_SYSTEM) != 0);
+	EnableObjState(tree, FONT_HORTABLE, OS_SELECTED, (hdr->flags & FONTF_HORTABLE) != 0);
+	EnableObjState(tree, FONT_BIGENDIAN, OS_SELECTED, (hdr->flags & FONTF_BIGENDIAN) != 0);
+	EnableObjState(tree, FONT_MONOSPACED, OS_SELECTED, (hdr->flags & FONTF_MONOSPACED) != 0);
+	EnableObjState(tree, FONT_COMPRESSED, OS_SELECTED, (hdr->flags & FONTF_COMPRESSED) != 0);
 	
 	objc_draw_grect(tree, ROOT, MAX_DEPTH, &gr);
 	ret = form_do(tree, ROOT);
@@ -2528,17 +2601,17 @@ static void font_info(void)
 	{
 		chomp(fontname, tree[FONT_NAME].ob_spec.tedinfo->te_ptext, VDI_FONTNAMESIZE + 1);
 		memcpy(hdr->name, fontname, VDI_FONTNAMESIZE);
-		fonthdr.font_id = atoi(tree[FONT_ID].ob_spec.tedinfo->te_ptext);
-		fonthdr.point = atoi(tree[FONT_POINT].ob_spec.tedinfo->te_ptext);
-		fonthdr.top = atoi(tree[FONT_TOP].ob_spec.tedinfo->te_ptext);
-		fonthdr.ascent = atoi(tree[FONT_ASCENT].ob_spec.tedinfo->te_ptext);
-		fonthdr.half = atoi(tree[FONT_HALF].ob_spec.tedinfo->te_ptext);
-		fonthdr.descent = atoi(tree[FONT_DESCENT].ob_spec.tedinfo->te_ptext);
-		fonthdr.bottom = atoi(tree[FONT_BOTTOM].ob_spec.tedinfo->te_ptext);
-		fonthdr.form_height = atoi(tree[FONT_HEIGHT].ob_spec.tedinfo->te_ptext);
-		fonthdr.max_cell_width = atoi(tree[FONT_WIDTH].ob_spec.tedinfo->te_ptext);
-		fonthdr.first_ade = atoi(tree[FONT_FIRST_ADE].ob_spec.tedinfo->te_ptext);
-		fonthdr.last_ade = atoi(tree[FONT_LAST_ADE].ob_spec.tedinfo->te_ptext);
+		hdr->font_id = atoi(tree[FONT_ID].ob_spec.tedinfo->te_ptext);
+		hdr->point = atoi(tree[FONT_POINT].ob_spec.tedinfo->te_ptext);
+		hdr->top = atoi(tree[FONT_TOP].ob_spec.tedinfo->te_ptext);
+		hdr->ascent = atoi(tree[FONT_ASCENT].ob_spec.tedinfo->te_ptext);
+		hdr->half = atoi(tree[FONT_HALF].ob_spec.tedinfo->te_ptext);
+		hdr->descent = atoi(tree[FONT_DESCENT].ob_spec.tedinfo->te_ptext);
+		hdr->bottom = atoi(tree[FONT_BOTTOM].ob_spec.tedinfo->te_ptext);
+		hdr->form_height = atoi(tree[FONT_HEIGHT].ob_spec.tedinfo->te_ptext);
+		hdr->max_cell_width = atoi(tree[FONT_WIDTH].ob_spec.tedinfo->te_ptext);
+		hdr->first_ade = atoi(tree[FONT_FIRST_ADE].ob_spec.tedinfo->te_ptext);
+		hdr->last_ade = atoi(tree[FONT_LAST_ADE].ob_spec.tedinfo->te_ptext);
 		wind_set_str(mainwin, WF_NAME, fontname);
 	}
 }

@@ -288,7 +288,7 @@ extern _VOID *hfix_objs(RSHDR *_hdr, OBJECT *_ob, _WORD _num_objs);
 #undef NUM_OBS
 #undef NUM_TREE
 #undef NUM_UD
-#define NUM_STRINGS 86
+#define NUM_STRINGS 91
 #define NUM_BB		0
 #define NUM_IB		0
 #define NUM_CIB     0
@@ -296,7 +296,7 @@ extern _VOID *hfix_objs(RSHDR *_hdr, OBJECT *_ob, _WORD _num_objs);
 #define NUM_TI		13
 #define NUM_FRSTR	10
 #define NUM_FRIMG	0
-#define NUM_OBS     60
+#define NUM_OBS     65
 #define NUM_TREE	4
 #define NUM_UD		0
 #endif
@@ -327,80 +327,85 @@ static char fontdisp_string_21[] = "@@@@@";
 static char fontdisp_string_22[] = "Point size       : _____";
 static char fontdisp_string_23[] = "X";
 static char fontdisp_string_24[] = "@@@";
-static char fontdisp_string_25[] = "Top line         : ___";
+static char fontdisp_string_25[] = "Max width         : ___";
 static char fontdisp_string_26[] = "9";
 static char fontdisp_string_27[] = "@@@";
-static char fontdisp_string_28[] = "Max width         : ___";
+static char fontdisp_string_28[] = "Cell height       : ___";
 static char fontdisp_string_29[] = "9";
 static char fontdisp_string_30[] = "@@@";
-static char fontdisp_string_31[] = "Ascent line      : ___";
+static char fontdisp_string_31[] = "Top line         : ___";
 static char fontdisp_string_32[] = "9";
 static char fontdisp_string_33[] = "@@@";
-static char fontdisp_string_34[] = "Cell height       : ___";
+static char fontdisp_string_34[] = "Ascent line      : ___";
 static char fontdisp_string_35[] = "9";
-static char fontdisp_string_36[] = "@@@";
-static char fontdisp_string_37[] = "Half line        : ___";
-static char fontdisp_string_38[] = "9";
-static char fontdisp_string_39[] = "@@@";
-static char fontdisp_string_40[] = "Descent line     : ___";
-static char fontdisp_string_41[] = "9";
-static char fontdisp_string_42[] = "@@@";
-static char fontdisp_string_43[] = "Bottom line      : ___";
-static char fontdisp_string_44[] = "9";
+static char fontdisp_string_36[] = "System Font";
+static char fontdisp_string_37[] = "@@@";
+static char fontdisp_string_38[] = "Half line        : ___";
+static char fontdisp_string_39[] = "9";
+static char fontdisp_string_40[] = "Horizontal table";
+static char fontdisp_string_41[] = "@@@";
+static char fontdisp_string_42[] = "Descent line     : ___";
+static char fontdisp_string_43[] = "9";
+static char fontdisp_string_44[] = "Big-Endian";
 static char fontdisp_string_45[] = "@@@";
-static char fontdisp_string_46[] = "First ascii code : ___";
+static char fontdisp_string_46[] = "Bottom line      : ___";
 static char fontdisp_string_47[] = "9";
-static char fontdisp_string_48[] = "@@@";
-static char fontdisp_string_49[] = "Last ascii code  : ___";
-static char fontdisp_string_50[] = "9";
-static char fontdisp_string_51[] = "OK";
-static char fontdisp_string_52[] = " \001\002\003\004\005\006\007\b\t\n\013\f\r\016\017";
-static char fontdisp_string_53[] = "\020\021\022\023\024\025\026\027\030\031\032\033\034\035\036\037";
-static char fontdisp_string_54[] = " !\"#$%&\'()*+,-./";
-static char fontdisp_string_55[] = "0123456789:;<=>?";
-static char fontdisp_string_56[] = "@ABCDEFGHIJKLMNO";
-static char fontdisp_string_57[] = "PQRSTUVWXYZ[\\]^_";
-static char fontdisp_string_58[] = "`abcdefghijklmno";
-static char fontdisp_string_59[] = "pqrstuvwxyz{|}~\177";
-static char fontdisp_string_60[] = "\200\201\202\203\204\205\206\207\210\211\212\213\214\215\216\217";
-static char fontdisp_string_61[] = "\220\221\222\223\224\225\226\227\230\231\232\233\234\235\236\237";
-static char fontdisp_string_62[] = "\240\241\242\243\244\245\246\247\250\251\252\253\254\255\256\257";
-static char fontdisp_string_63[] = "\260\261\262\263\264\265\266\267\270\271\272\273\274\275\276\277";
-static char fontdisp_string_64[] = "\300\301\302\303\304\305\306\307\310\311\312\313\314\315\316\317";
-static char fontdisp_string_65[] = "\320\321\322\323\324\325\326\327\330\331\332\333\334\335\336\337";
-static char fontdisp_string_66[] = "\340\341\342\343\344\345\346\347\350\351\352\353\354\355\356\357";
-static char fontdisp_string_67[] = "\360\361\362\363\364\365\366\367\370\371\372\373\374\375\376\377";
-static char fontdisp_string_68[] = "Font Displayer";
-static char fontdisp_string_69[] = "For Atari ST/TT/Falcon";
-static char fontdisp_string_70[] = "";
-static char fontdisp_string_71[] = "";
-static char fontdisp_string_72[] = "Written by Thorsten Otto";
-static char fontdisp_string_73[] = "Version 1.0";
-static char fontdisp_string_74[] = "Apr 20 2017";
-static char fontdisp_string_75[] = "OK";
-static char fontdisp_string_76[] = "[3][Cannot create window][Abort]";
-static char fontdisp_string_77[] = "[3][Can\'t open|%s][Abort]";
-static char fontdisp_string_78[] = "[3][Not a GEM font.][Abort]";
-static char fontdisp_string_79[] = "[3][Not enough memory.][Abort]";
-static char fontdisp_string_80[] = "Select Font";
-static char fontdisp_string_81[] = "[1][Warning:|File may be truncated.][Continue]";
-static char fontdisp_string_82[] = "[1][Warning:|Flag for horizontal table set,|but there is none.][Continue]";
-static char fontdisp_string_83[] = "[1][Warning:|Horizontal offset table present,|but flag not set.][Continue]";
-static char fontdisp_string_84[] = "[3][Compressed size %lu larger|than uncompressed size %lu.][Abort]";
-static char fontdisp_string_85[] = "[1][Warning:|Wrong endian flag in header.][Continue]";
+static char fontdisp_string_48[] = "Monospaced";
+static char fontdisp_string_49[] = "Compressed";
+static char fontdisp_string_50[] = "@@@";
+static char fontdisp_string_51[] = "First ascii code : ___";
+static char fontdisp_string_52[] = "9";
+static char fontdisp_string_53[] = "@@@";
+static char fontdisp_string_54[] = "Last ascii code  : ___";
+static char fontdisp_string_55[] = "9";
+static char fontdisp_string_56[] = "OK";
+static char fontdisp_string_57[] = " \001\002\003\004\005\006\007\b\t\n\013\f\r\016\017";
+static char fontdisp_string_58[] = "\020\021\022\023\024\025\026\027\030\031\032\033\034\035\036\037";
+static char fontdisp_string_59[] = " !\"#$%&\'()*+,-./";
+static char fontdisp_string_60[] = "0123456789:;<=>?";
+static char fontdisp_string_61[] = "@ABCDEFGHIJKLMNO";
+static char fontdisp_string_62[] = "PQRSTUVWXYZ[\\]^_";
+static char fontdisp_string_63[] = "`abcdefghijklmno";
+static char fontdisp_string_64[] = "pqrstuvwxyz{|}~\177";
+static char fontdisp_string_65[] = "\200\201\202\203\204\205\206\207\210\211\212\213\214\215\216\217";
+static char fontdisp_string_66[] = "\220\221\222\223\224\225\226\227\230\231\232\233\234\235\236\237";
+static char fontdisp_string_67[] = "\240\241\242\243\244\245\246\247\250\251\252\253\254\255\256\257";
+static char fontdisp_string_68[] = "\260\261\262\263\264\265\266\267\270\271\272\273\274\275\276\277";
+static char fontdisp_string_69[] = "\300\301\302\303\304\305\306\307\310\311\312\313\314\315\316\317";
+static char fontdisp_string_70[] = "\320\321\322\323\324\325\326\327\330\331\332\333\334\335\336\337";
+static char fontdisp_string_71[] = "\340\341\342\343\344\345\346\347\350\351\352\353\354\355\356\357";
+static char fontdisp_string_72[] = "\360\361\362\363\364\365\366\367\370\371\372\373\374\375\376\377";
+static char fontdisp_string_73[] = "Font Displayer";
+static char fontdisp_string_74[] = "For Atari ST/TT/Falcon";
+static char fontdisp_string_75[] = "";
+static char fontdisp_string_76[] = "";
+static char fontdisp_string_77[] = "Written by Thorsten Otto";
+static char fontdisp_string_78[] = "Version 1.0";
+static char fontdisp_string_79[] = "Apr 20 2017";
+static char fontdisp_string_80[] = "OK";
+static char fontdisp_string_81[] = "[3][Cannot create window][Abort]";
+static char fontdisp_string_82[] = "[3][Can\'t open|%s][Abort]";
+static char fontdisp_string_83[] = "[3][Not a GEM font.][Abort]";
+static char fontdisp_string_84[] = "[3][Not enough memory.][Abort]";
+static char fontdisp_string_85[] = "Select Font";
+static char fontdisp_string_86[] = "[1][Warning:|File may be truncated.][Continue]";
+static char fontdisp_string_87[] = "[1][Warning:|Flag for horizontal table set,|but there is none.][Continue]";
+static char fontdisp_string_88[] = "[1][Warning:|Horizontal offset table present,|but flag not set.][Continue]";
+static char fontdisp_string_89[] = "[3][Compressed size %lu larger|than uncompressed size %lu.][Abort]";
+static char fontdisp_string_90[] = "[1][Warning:|Wrong endian flag in header.][Continue]";
 
 
 static char *rs_frstr[NUM_FRSTR] = {
-	fontdisp_string_76,
-	fontdisp_string_77,
-	fontdisp_string_78,
-	fontdisp_string_79,
-	fontdisp_string_80,
 	fontdisp_string_81,
 	fontdisp_string_82,
 	fontdisp_string_83,
 	fontdisp_string_84,
-	fontdisp_string_85
+	fontdisp_string_85,
+	fontdisp_string_86,
+	fontdisp_string_87,
+	fontdisp_string_88,
+	fontdisp_string_89,
+	fontdisp_string_90
 };
 
 
@@ -408,16 +413,16 @@ static TEDINFO rs_tedinfo[NUM_TI] = {
 	{ fontdisp_string_15, fontdisp_string_16, fontdisp_string_17, IBM, 0, TE_LEFT, 0x1180, 0x0, -1, 33,52 }, /* FONT_NAME */
 	{ fontdisp_string_18, fontdisp_string_19, fontdisp_string_20, IBM, 0, TE_LEFT, 0x1180, 0x0, -1, 6,25 }, /* FONT_ID */
 	{ fontdisp_string_21, fontdisp_string_22, fontdisp_string_23, IBM, 0, TE_LEFT, 0x1180, 0x0, -1, 6,25 }, /* FONT_POINT */
-	{ fontdisp_string_24, fontdisp_string_25, fontdisp_string_26, IBM, 0, TE_LEFT, 0x1180, 0x0, -1, 4,23 }, /* FONT_TOP */
-	{ fontdisp_string_27, fontdisp_string_28, fontdisp_string_29, IBM, 0, TE_LEFT, 0x1180, 0x0, -1, 4,24 }, /* FONT_WIDTH */
-	{ fontdisp_string_30, fontdisp_string_31, fontdisp_string_32, IBM, 0, TE_LEFT, 0x1180, 0x0, -1, 4,23 }, /* FONT_ASCENT */
-	{ fontdisp_string_33, fontdisp_string_34, fontdisp_string_35, IBM, 0, TE_LEFT, 0x1180, 0x0, -1, 4,24 }, /* FONT_HEIGHT */
-	{ fontdisp_string_36, fontdisp_string_37, fontdisp_string_38, IBM, 0, TE_LEFT, 0x1180, 0x0, -1, 4,23 }, /* FONT_HALF */
-	{ fontdisp_string_39, fontdisp_string_40, fontdisp_string_41, IBM, 0, TE_LEFT, 0x1180, 0x0, -1, 4,23 }, /* FONT_DESCENT */
-	{ fontdisp_string_42, fontdisp_string_43, fontdisp_string_44, IBM, 0, TE_LEFT, 0x1180, 0x0, -1, 4,23 }, /* FONT_BOTTOM */
-	{ fontdisp_string_45, fontdisp_string_46, fontdisp_string_47, IBM, 0, TE_LEFT, 0x1180, 0x0, 0, 4,23 }, /* FONT_FIRST_ADE */
-	{ fontdisp_string_48, fontdisp_string_49, fontdisp_string_50, IBM, 0, TE_LEFT, 0x1180, 0x0, 0, 4,23 }, /* FONT_LAST_ADE */
-	{ fontdisp_string_69, fontdisp_string_70, fontdisp_string_71, SMALL, 0, TE_LEFT, 0x1B00, 0x0, -1, 23,1 }
+	{ fontdisp_string_24, fontdisp_string_25, fontdisp_string_26, IBM, 0, TE_LEFT, 0x1180, 0x0, -1, 4,24 }, /* FONT_WIDTH */
+	{ fontdisp_string_27, fontdisp_string_28, fontdisp_string_29, IBM, 0, TE_LEFT, 0x1180, 0x0, -1, 4,24 }, /* FONT_HEIGHT */
+	{ fontdisp_string_30, fontdisp_string_31, fontdisp_string_32, IBM, 0, TE_LEFT, 0x1180, 0x0, -1, 4,23 }, /* FONT_TOP */
+	{ fontdisp_string_33, fontdisp_string_34, fontdisp_string_35, IBM, 0, TE_LEFT, 0x1180, 0x0, -1, 4,23 }, /* FONT_ASCENT */
+	{ fontdisp_string_37, fontdisp_string_38, fontdisp_string_39, IBM, 0, TE_LEFT, 0x1180, 0x0, -1, 4,23 }, /* FONT_HALF */
+	{ fontdisp_string_41, fontdisp_string_42, fontdisp_string_43, IBM, 0, TE_LEFT, 0x1180, 0x0, -1, 4,23 }, /* FONT_DESCENT */
+	{ fontdisp_string_45, fontdisp_string_46, fontdisp_string_47, IBM, 0, TE_LEFT, 0x1180, 0x0, -1, 4,23 }, /* FONT_BOTTOM */
+	{ fontdisp_string_50, fontdisp_string_51, fontdisp_string_52, IBM, 0, TE_LEFT, 0x1180, 0x0, 0, 4,23 }, /* FONT_FIRST_ADE */
+	{ fontdisp_string_53, fontdisp_string_54, fontdisp_string_55, IBM, 0, TE_LEFT, 0x1180, 0x0, 0, 4,23 }, /* FONT_LAST_ADE */
+	{ fontdisp_string_74, fontdisp_string_75, fontdisp_string_76, SMALL, 0, TE_LEFT, 0x1B00, 0x0, -1, 23,1 }
 };
 
 
@@ -447,60 +452,65 @@ static OBJECT rs_object[NUM_OBS] = {
 
 /* FONT_PARAMS */
 
-	{ -1, 1, 14, G_BOX, OF_FL3DBAK, OS_OUTLINED, C_UNION(0x21100L), 4,1, 54,16 },
+	{ -1, 1, 19, G_BOX, OF_FL3DBAK, OS_OUTLINED, C_UNION(0x21100L), 4,1, 54,16 },
 	{ 2, -1, -1, G_STRING, OF_NONE, OS_NORMAL, C_UNION(fontdisp_string_14), 20,1, 15,1 },
 	{ 3, -1, -1, G_FTEXT, OF_NONE, OS_NORMAL, C_UNION(&rs_tedinfo[0]), 2,3, 51,1 }, /* FONT_NAME */
 	{ 4, -1, -1, G_FTEXT, OF_NONE, OS_NORMAL, C_UNION(&rs_tedinfo[1]), 2,4, 24,1 }, /* FONT_ID */
 	{ 5, -1, -1, G_FTEXT, OF_NONE, OS_NORMAL, C_UNION(&rs_tedinfo[2]), 2,5, 24,1 }, /* FONT_POINT */
-	{ 6, -1, -1, G_FTEXT, OF_NONE, OS_NORMAL, C_UNION(&rs_tedinfo[3]), 2,7, 22,1 }, /* FONT_TOP */
-	{ 7, -1, -1, G_FTEXT, OF_NONE, OS_NORMAL, C_UNION(&rs_tedinfo[4]), 28,7, 23,1 }, /* FONT_WIDTH */
-	{ 8, -1, -1, G_FTEXT, OF_NONE, OS_NORMAL, C_UNION(&rs_tedinfo[5]), 2,8, 22,1 }, /* FONT_ASCENT */
-	{ 9, -1, -1, G_FTEXT, OF_NONE, OS_NORMAL, C_UNION(&rs_tedinfo[6]), 28,8, 23,1 }, /* FONT_HEIGHT */
-	{ 10, -1, -1, G_FTEXT, OF_NONE, OS_NORMAL, C_UNION(&rs_tedinfo[7]), 2,9, 22,1 }, /* FONT_HALF */
-	{ 11, -1, -1, G_FTEXT, OF_NONE, OS_NORMAL, C_UNION(&rs_tedinfo[8]), 2,10, 22,1 }, /* FONT_DESCENT */
-	{ 12, -1, -1, G_FTEXT, OF_NONE, OS_NORMAL, C_UNION(&rs_tedinfo[9]), 2,11, 22,1 }, /* FONT_BOTTOM */
-	{ 13, -1, -1, G_FTEXT, OF_NONE, OS_NORMAL, C_UNION(&rs_tedinfo[10]), 2,13, 22,1 }, /* FONT_FIRST_ADE */
-	{ 14, -1, -1, G_FTEXT, OF_NONE, OS_NORMAL, C_UNION(&rs_tedinfo[11]), 2,14, 22,1 }, /* FONT_LAST_ADE */
-	{ 0, -1, -1, G_BUTTON, 0x627, OS_NORMAL, C_UNION(fontdisp_string_51), 44,14, 8,1 }, /* FONT_OK */
+	{ 6, -1, -1, G_FTEXT, OF_NONE, OS_NORMAL, C_UNION(&rs_tedinfo[3]), 28,5, 23,1 }, /* FONT_WIDTH */
+	{ 7, -1, -1, G_FTEXT, OF_NONE, OS_NORMAL, C_UNION(&rs_tedinfo[4]), 28,6, 23,1 }, /* FONT_HEIGHT */
+	{ 8, -1, -1, G_FTEXT, OF_NONE, OS_NORMAL, C_UNION(&rs_tedinfo[5]), 2,7, 22,1 }, /* FONT_TOP */
+	{ 9, -1, -1, G_FTEXT, OF_NONE, OS_NORMAL, C_UNION(&rs_tedinfo[6]), 2,8, 22,1 }, /* FONT_ASCENT */
+	{ 10, -1, -1, G_BUTTON, OF_NONE, OS_NORMAL, C_UNION(fontdisp_string_36), 28,8, 22,1 }, /* FONT_SYSTEM */
+	{ 11, -1, -1, G_FTEXT, OF_NONE, OS_NORMAL, C_UNION(&rs_tedinfo[7]), 2,9, 22,1 }, /* FONT_HALF */
+	{ 12, -1, -1, G_BUTTON, OF_NONE, OS_NORMAL, C_UNION(fontdisp_string_40), 28,9, 22,1 }, /* FONT_HORTABLE */
+	{ 13, -1, -1, G_FTEXT, OF_NONE, OS_NORMAL, C_UNION(&rs_tedinfo[8]), 2,10, 22,1 }, /* FONT_DESCENT */
+	{ 14, -1, -1, G_BUTTON, OF_NONE, OS_NORMAL, C_UNION(fontdisp_string_44), 28,10, 22,1 }, /* FONT_BIGENDIAN */
+	{ 15, -1, -1, G_FTEXT, OF_NONE, OS_NORMAL, C_UNION(&rs_tedinfo[9]), 2,11, 22,1 }, /* FONT_BOTTOM */
+	{ 16, -1, -1, G_BUTTON, OF_NONE, OS_NORMAL, C_UNION(fontdisp_string_48), 28,11, 22,1 }, /* FONT_MONOSPACED */
+	{ 17, -1, -1, G_BUTTON, OF_NONE, OS_NORMAL, C_UNION(fontdisp_string_49), 28,12, 22,1 }, /* FONT_COMPRESSED */
+	{ 18, -1, -1, G_FTEXT, OF_NONE, OS_NORMAL, C_UNION(&rs_tedinfo[10]), 2,13, 22,1 }, /* FONT_FIRST_ADE */
+	{ 19, -1, -1, G_FTEXT, OF_NONE, OS_NORMAL, C_UNION(&rs_tedinfo[11]), 2,14, 22,1 }, /* FONT_LAST_ADE */
+	{ 0, -1, -1, G_BUTTON, 0x627, OS_NORMAL, C_UNION(fontdisp_string_56), 44,14, 8,1 }, /* FONT_OK */
 
 /* PANEL */
 
 	{ -1, 1, 1, G_BOX, OF_FL3DBAK, OS_NORMAL, C_UNION(0x74001100L), 0,0, 24,20 },
 	{ 0, 2, 17, G_BOX, OF_NONE, OS_OUTLINED, C_UNION(0x21100L), 2,1, 20,18 },
-	{ 3, -1, -1, G_STRING, OF_NONE, OS_NORMAL, C_UNION(fontdisp_string_52), 2,1, 16,1 },
-	{ 4, -1, -1, G_STRING, OF_NONE, OS_NORMAL, C_UNION(fontdisp_string_53), 2,2, 16,1 },
-	{ 5, -1, -1, G_STRING, OF_NONE, OS_NORMAL, C_UNION(fontdisp_string_54), 2,3, 16,1 },
-	{ 6, -1, -1, G_STRING, OF_NONE, OS_NORMAL, C_UNION(fontdisp_string_55), 2,4, 16,1 },
-	{ 7, -1, -1, G_STRING, OF_NONE, OS_NORMAL, C_UNION(fontdisp_string_56), 2,5, 16,1 },
-	{ 8, -1, -1, G_STRING, OF_NONE, OS_NORMAL, C_UNION(fontdisp_string_57), 2,6, 16,1 },
-	{ 9, -1, -1, G_STRING, OF_NONE, OS_NORMAL, C_UNION(fontdisp_string_58), 2,7, 16,1 },
-	{ 10, -1, -1, G_STRING, OF_NONE, OS_NORMAL, C_UNION(fontdisp_string_59), 2,8, 16,1 },
-	{ 11, -1, -1, G_STRING, OF_NONE, OS_NORMAL, C_UNION(fontdisp_string_60), 2,9, 16,1 },
-	{ 12, -1, -1, G_STRING, OF_NONE, OS_NORMAL, C_UNION(fontdisp_string_61), 2,10, 16,1 },
-	{ 13, -1, -1, G_STRING, OF_NONE, OS_NORMAL, C_UNION(fontdisp_string_62), 2,11, 16,1 },
-	{ 14, -1, -1, G_STRING, OF_NONE, OS_NORMAL, C_UNION(fontdisp_string_63), 2,12, 16,1 },
-	{ 15, -1, -1, G_STRING, OF_NONE, OS_NORMAL, C_UNION(fontdisp_string_64), 2,13, 16,1 },
-	{ 16, -1, -1, G_STRING, OF_NONE, OS_NORMAL, C_UNION(fontdisp_string_65), 2,14, 16,1 },
-	{ 17, -1, -1, G_STRING, OF_NONE, OS_NORMAL, C_UNION(fontdisp_string_66), 2,15, 16,1 },
-	{ 1, -1, -1, G_STRING, OF_LASTOB, OS_NORMAL, C_UNION(fontdisp_string_67), 2,16, 16,1 },
+	{ 3, -1, -1, G_STRING, OF_NONE, OS_NORMAL, C_UNION(fontdisp_string_57), 2,1, 16,1 },
+	{ 4, -1, -1, G_STRING, OF_NONE, OS_NORMAL, C_UNION(fontdisp_string_58), 2,2, 16,1 },
+	{ 5, -1, -1, G_STRING, OF_NONE, OS_NORMAL, C_UNION(fontdisp_string_59), 2,3, 16,1 },
+	{ 6, -1, -1, G_STRING, OF_NONE, OS_NORMAL, C_UNION(fontdisp_string_60), 2,4, 16,1 },
+	{ 7, -1, -1, G_STRING, OF_NONE, OS_NORMAL, C_UNION(fontdisp_string_61), 2,5, 16,1 },
+	{ 8, -1, -1, G_STRING, OF_NONE, OS_NORMAL, C_UNION(fontdisp_string_62), 2,6, 16,1 },
+	{ 9, -1, -1, G_STRING, OF_NONE, OS_NORMAL, C_UNION(fontdisp_string_63), 2,7, 16,1 },
+	{ 10, -1, -1, G_STRING, OF_NONE, OS_NORMAL, C_UNION(fontdisp_string_64), 2,8, 16,1 },
+	{ 11, -1, -1, G_STRING, OF_NONE, OS_NORMAL, C_UNION(fontdisp_string_65), 2,9, 16,1 },
+	{ 12, -1, -1, G_STRING, OF_NONE, OS_NORMAL, C_UNION(fontdisp_string_66), 2,10, 16,1 },
+	{ 13, -1, -1, G_STRING, OF_NONE, OS_NORMAL, C_UNION(fontdisp_string_67), 2,11, 16,1 },
+	{ 14, -1, -1, G_STRING, OF_NONE, OS_NORMAL, C_UNION(fontdisp_string_68), 2,12, 16,1 },
+	{ 15, -1, -1, G_STRING, OF_NONE, OS_NORMAL, C_UNION(fontdisp_string_69), 2,13, 16,1 },
+	{ 16, -1, -1, G_STRING, OF_NONE, OS_NORMAL, C_UNION(fontdisp_string_70), 2,14, 16,1 },
+	{ 17, -1, -1, G_STRING, OF_NONE, OS_NORMAL, C_UNION(fontdisp_string_71), 2,15, 16,1 },
+	{ 1, -1, -1, G_STRING, OF_LASTOB, OS_NORMAL, C_UNION(fontdisp_string_72), 2,16, 16,1 },
 
 /* ABOUT_DIALOG */
 
 	{ -1, 1, 6, G_BOX, OF_FL3DBAK, OS_OUTLINED, C_UNION(0x21100L), 0,0, 32,13 },
-	{ 2, -1, -1, G_STRING, OF_NONE, OS_NORMAL, C_UNION(fontdisp_string_68), 3,1, 14,1 },
+	{ 2, -1, -1, G_STRING, OF_NONE, OS_NORMAL, C_UNION(fontdisp_string_73), 3,1, 14,1 },
 	{ 3, -1, -1, G_TEXT, OF_NONE, OS_NORMAL, C_UNION(&rs_tedinfo[12]), 3,2, 1040,1 },
-	{ 4, -1, -1, G_STRING, OF_NONE, OS_NORMAL, C_UNION(fontdisp_string_72), 3,4, 24,1 },
-	{ 5, -1, -1, G_STRING, OF_NONE, OS_NORMAL, C_UNION(fontdisp_string_73), 3,6, 11,1 }, /* ABOUT_VERSION */
-	{ 6, -1, -1, G_STRING, OF_NONE, OS_NORMAL, C_UNION(fontdisp_string_74), 3,8, 11,1 }, /* ABOUT_DATE */
-	{ 0, -1, -1, G_BUTTON, 0x627, OS_NORMAL, C_UNION(fontdisp_string_75), 22,11, 8,1 }
+	{ 4, -1, -1, G_STRING, OF_NONE, OS_NORMAL, C_UNION(fontdisp_string_77), 3,4, 24,1 },
+	{ 5, -1, -1, G_STRING, OF_NONE, OS_NORMAL, C_UNION(fontdisp_string_78), 3,6, 11,1 }, /* ABOUT_VERSION */
+	{ 6, -1, -1, G_STRING, OF_NONE, OS_NORMAL, C_UNION(fontdisp_string_79), 3,8, 11,1 }, /* ABOUT_DATE */
+	{ 0, -1, -1, G_BUTTON, 0x627, OS_NORMAL, C_UNION(fontdisp_string_80), 22,11, 8,1 }
 };
 
 
 static OBJECT *rs_trindex[NUM_TREE] = {
 	&rs_object[0], /* MAINMENU */
 	&rs_object[20], /* FONT_PARAMS */
-	&rs_object[35], /* PANEL */
-	&rs_object[53] /* ABOUT_DIALOG */
+	&rs_object[40], /* PANEL */
+	&rs_object[58] /* ABOUT_DIALOG */
 };
 
 
@@ -697,7 +707,7 @@ _WORD fontdisp_rsc_free()
 #endif /* RSC_NAMED_FUNCTIONS */
 
 #else /* !RSC_STATIC_FILE */
-int rs_numstrings = 86;
+int rs_numstrings = 91;
 int rs_numfrstr = 10;
 
 int rs_nuser = 0;
@@ -707,7 +717,7 @@ int rs_numfrimg = 0;
 int rs_numib = 0;
 int rs_numcib = 0;
 int rs_numti = 13;
-int rs_numobs = 60;
+int rs_numobs = 65;
 int rs_numtree = 4;
 
 char rs_name[] = "fontdisp.rsc";

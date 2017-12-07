@@ -5,7 +5,7 @@
  */
 
 /*
- * Number of Strings:        86
+ * Number of Strings:        91
  * Number of Bitblks:        0
  * Number of Iconblks:       0
  * Number of Color Iconblks: 0
@@ -13,11 +13,11 @@
  * Number of Tedinfos:       13
  * Number of Free Strings:   10
  * Number of Free Images:    0
- * Number of Objects:        60
+ * Number of Objects:        65
  * Number of Trees:          4
  * Number of Userblks:       0
  * Number of Images:         0
- * Total file size:          3368
+ * Total file size:          3550
  */
 
 #undef RSC_NAME
@@ -35,7 +35,7 @@
 # define RSC_STATIC_FILE 0
 #endif
 #if !RSC_STATIC_FILE
-#define NUM_STRINGS 86
+#define NUM_STRINGS 91
 #define NUM_FRSTR 10
 #define NUM_UD 0
 #define NUM_IMAGES 0
@@ -44,7 +44,7 @@
 #define NUM_IB 0
 #define NUM_CIB 0
 #define NUM_TI 13
-#define NUM_OBS 60
+#define NUM_OBS 65
 #define NUM_TREE 4
 #endif
 
@@ -62,16 +62,21 @@
 #define FONT_NAME                          2 /* FTEXT in tree FONT_PARAMS */ /* max len 32 */
 #define FONT_ID                            3 /* FTEXT in tree FONT_PARAMS */ /* max len 5 */
 #define FONT_POINT                         4 /* FTEXT in tree FONT_PARAMS */ /* max len 5 */
-#define FONT_TOP                           5 /* FTEXT in tree FONT_PARAMS */ /* max len 3 */
-#define FONT_WIDTH                         6 /* FTEXT in tree FONT_PARAMS */ /* max len 3 */
-#define FONT_ASCENT                        7 /* FTEXT in tree FONT_PARAMS */ /* max len 3 */
-#define FONT_HEIGHT                        8 /* FTEXT in tree FONT_PARAMS */ /* max len 3 */
-#define FONT_HALF                          9 /* FTEXT in tree FONT_PARAMS */ /* max len 3 */
-#define FONT_DESCENT                      10 /* FTEXT in tree FONT_PARAMS */ /* max len 3 */
-#define FONT_BOTTOM                       11 /* FTEXT in tree FONT_PARAMS */ /* max len 3 */
-#define FONT_FIRST_ADE                    12 /* FTEXT in tree FONT_PARAMS */ /* max len 3 */
-#define FONT_LAST_ADE                     13 /* FTEXT in tree FONT_PARAMS */ /* max len 3 */
-#define FONT_OK                           14 /* BUTTON in tree FONT_PARAMS */
+#define FONT_WIDTH                         5 /* FTEXT in tree FONT_PARAMS */ /* max len 3 */
+#define FONT_HEIGHT                        6 /* FTEXT in tree FONT_PARAMS */ /* max len 3 */
+#define FONT_TOP                           7 /* FTEXT in tree FONT_PARAMS */ /* max len 3 */
+#define FONT_ASCENT                        8 /* FTEXT in tree FONT_PARAMS */ /* max len 3 */
+#define FONT_SYSTEM                        9 /* BUTTON in tree FONT_PARAMS */
+#define FONT_HALF                         10 /* FTEXT in tree FONT_PARAMS */ /* max len 3 */
+#define FONT_HORTABLE                     11 /* BUTTON in tree FONT_PARAMS */
+#define FONT_DESCENT                      12 /* FTEXT in tree FONT_PARAMS */ /* max len 3 */
+#define FONT_BIGENDIAN                    13 /* BUTTON in tree FONT_PARAMS */
+#define FONT_BOTTOM                       14 /* FTEXT in tree FONT_PARAMS */ /* max len 3 */
+#define FONT_MONOSPACED                   15 /* BUTTON in tree FONT_PARAMS */
+#define FONT_COMPRESSED                   16 /* BUTTON in tree FONT_PARAMS */
+#define FONT_FIRST_ADE                    17 /* FTEXT in tree FONT_PARAMS */ /* max len 3 */
+#define FONT_LAST_ADE                     18 /* FTEXT in tree FONT_PARAMS */ /* max len 3 */
+#define FONT_OK                           19 /* BUTTON in tree FONT_PARAMS */
 
 #define PANEL                              2 /* unknown form */
 
