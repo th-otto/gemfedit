@@ -5,7 +5,7 @@
  */
 
 /*
- * Number of Strings:        131
+ * Number of Strings:        136
  * Number of Bitblks:        0
  * Number of Iconblks:       0
  * Number of Color Iconblks: 0
@@ -13,11 +13,11 @@
  * Number of Tedinfos:       13
  * Number of Free Strings:   23
  * Number of Free Images:    0
- * Number of Objects:        94
+ * Number of Objects:        100
  * Number of Trees:          6
  * Number of Userblks:       0
  * Number of Images:         0
- * Total file size:          5800
+ * Total file size:          6010
  */
 
 #undef RSC_NAME
@@ -35,7 +35,7 @@
 # define RSC_STATIC_FILE 0
 #endif
 #if !RSC_STATIC_FILE
-#define NUM_STRINGS 131
+#define NUM_STRINGS 136
 #define NUM_FRSTR 23
 #define NUM_UD 0
 #define NUM_IMAGES 0
@@ -44,7 +44,7 @@
 #define NUM_IB 0
 #define NUM_CIB 0
 #define NUM_TI 13
-#define NUM_OBS 94
+#define NUM_OBS 100
 #define NUM_TREE 6
 #endif
 
@@ -53,18 +53,22 @@
 #define MAINMENU                           0 /* menu */
 #define TDESK                              3 /* TITLE in tree MAINMENU */
 #define TFILE                              4 /* TITLE in tree MAINMENU */
-#define ABOUT                              7 /* STRING in tree MAINMENU */
-#define FOPEN                             16 /* STRING in tree MAINMENU */
-#define FSAVE                             17 /* STRING in tree MAINMENU */
-#define FINFO                             18 /* STRING in tree MAINMENU */
-#define FEXPORTC                          20 /* STRING in tree MAINMENU */
-#define FEXPORTTXT                        21 /* STRING in tree MAINMENU */
-#define FIMPORTTXT                        22 /* STRING in tree MAINMENU */
-#define FSYS_6X6                          24 /* STRING in tree MAINMENU */
-#define FSYS_8X8                          25 /* STRING in tree MAINMENU */
-#define FSYS_8X16                         26 /* STRING in tree MAINMENU */
-#define FSYS_16X32                        27 /* STRING in tree MAINMENU */
-#define FQUIT                             29 /* STRING in tree MAINMENU */
+#define ABOUT                              8 /* STRING in tree MAINMENU */
+#define FOPEN                             17 /* STRING in tree MAINMENU */
+#define FSAVE                             18 /* STRING in tree MAINMENU */
+#define FINFO                             19 /* STRING in tree MAINMENU */
+#define FEXPORTC                          21 /* STRING in tree MAINMENU */
+#define FEXPORTTXT                        22 /* STRING in tree MAINMENU */
+#define FIMPORTTXT                        23 /* STRING in tree MAINMENU */
+#define FSYS_6X6                          25 /* STRING in tree MAINMENU */
+#define FSYS_8X8                          26 /* STRING in tree MAINMENU */
+#define FSYS_8X16                         27 /* STRING in tree MAINMENU */
+#define FSYS_16X32                        28 /* STRING in tree MAINMENU */
+#define FQUIT                             30 /* STRING in tree MAINMENU */
+#define CHAR_NEXT                         32 /* STRING in tree MAINMENU */
+#define CHAR_PREV                         33 /* STRING in tree MAINMENU */
+#define CHAR_FIRST                        34 /* STRING in tree MAINMENU */
+#define CHAR_LAST                         35 /* STRING in tree MAINMENU */
 
 /* Zeichensatz */
 #define CHARSET                            1 /* free form */

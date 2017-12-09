@@ -809,7 +809,7 @@ static _WORD _CDECL draw_font(PARMBLK *pb)
 	colors[1] = G_WHITE;
 	/* we can only use vro_cpyfm if form_width is even number of bytes */
 	can_use_vrocpy = (src.fd_wdwidth << 1) == fonthdr.form_width;
-
+	
 	if (!can_use_vrocpy)
 	{
 		pxy[0] = pb->pb_x;
@@ -2666,6 +2666,48 @@ static void msg_mn_select(_WORD title, _WORD entry)
 
 /* -------------------------------------------------------------------------- */
 
+static void char_prev(void)
+{
+	if (cur_char <= fonthdr.first_ade)
+		cur_char = fonthdr.last_ade;
+	else
+		cur_char = (cur_char - fonthdr.first_ade - 1u) % numoffs + fonthdr.first_ade;
+	maybe_resize_window();
+	redraw_win(mainwin);
+}
+
+/* -------------------------------------------------------------------------- */
+
+static void char_next(void)
+{
+	if (cur_char >= fonthdr.last_ade)
+		cur_char = fonthdr.first_ade;
+	else
+		cur_char = (cur_char - fonthdr.first_ade + 1u) % numoffs + fonthdr.first_ade;
+	maybe_resize_window();
+	redraw_win(mainwin);
+}
+
+/* -------------------------------------------------------------------------- */
+
+static void char_first(void)
+{
+	cur_char = fonthdr.first_ade;
+	maybe_resize_window();
+	redraw_win(mainwin);
+}
+
+/* -------------------------------------------------------------------------- */
+
+static void char_last(void)
+{
+	cur_char = fonthdr.last_ade;
+	maybe_resize_window();
+	redraw_win(mainwin);
+}
+
+/* -------------------------------------------------------------------------- */
+
 static void handle_message(_WORD *message, _WORD mox, _WORD moy)
 {
 	wind_update(BEG_UPDATE);
@@ -2752,6 +2794,18 @@ static void handle_message(_WORD *message, _WORD mox, _WORD moy)
 		case FQUIT:
 			quit_app = TRUE;
 			break;
+		case CHAR_NEXT:
+			char_next();
+			break;
+		case CHAR_PREV:
+			char_prev();
+			break;
+		case CHAR_FIRST:
+			char_first();
+			break;
+		case CHAR_LAST:
+			char_last();
+			break;
 		}
 		menu_tnormal(menu, message[3], TRUE);
 		break;
@@ -2778,6 +2832,10 @@ static void mainloop(void)
 		menu_ienable(menu, FSAVE, is_font_loaded());
 		menu_ienable(menu, FEXPORTC, is_font_loaded());
 		menu_ienable(menu, FEXPORTTXT, is_font_loaded());
+		menu_ienable(menu, CHAR_NEXT, is_font_loaded());
+		menu_ienable(menu, CHAR_PREV, is_font_loaded());
+		menu_ienable(menu, CHAR_LAST, is_font_loaded());
+		menu_ienable(menu, CHAR_FIRST, is_font_loaded());
 		
 		event = evnt_multi(MU_KEYBD | MU_MESAG | MU_BUTTON,
 			256|2, 3, 0,
@@ -2806,6 +2864,12 @@ static void mainloop(void)
 			case 0x11: /* Ctrl-Q */
 				quit_app = TRUE;
 				break;
+			case 0x0e: /* Ctrl-N */
+				char_next();
+				break;
+			case 0x10: /* Ctrl-P */
+				char_prev();
+				break;
 			default:
 				switch ((k >> 8) & 0xff)
 				{
@@ -2825,27 +2889,17 @@ static void mainloop(void)
 					}
 					break;
 				case 0x4b: /* cursor left */
-					if (cur_char <= fonthdr.first_ade)
-						cur_char = fonthdr.last_ade;
-					else
-						cur_char = (cur_char - fonthdr.first_ade - 1u) % numoffs + fonthdr.first_ade;
-					maybe_resize_window();
-					redraw_win(mainwin);
+					char_prev();
 					break;
 				case 0x4d: /* cursor right */
-					if (cur_char >= fonthdr.last_ade)
-						cur_char = fonthdr.first_ade;
-					else
-						cur_char = (cur_char - fonthdr.first_ade + 1u) % numoffs + fonthdr.first_ade;
-					maybe_resize_window();
-					redraw_win(mainwin);
+					char_next();
 					break;
 				case 0x62: /* Help */
 					do_help();
 					break;
 				default:
 					k &= 0xff;
-					if (k >= fonthdr.first_ade && k <= fonthdr.last_ade)
+					if (!(kstate & (K_CTRL|K_ALT)) && k >= fonthdr.first_ade && k <= fonthdr.last_ade)
 					{
 						cur_char = k;
 						maybe_resize_window();
