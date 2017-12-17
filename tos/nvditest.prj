@@ -1,0 +1,23 @@
+nvditest.prg
+.C[-A-]		; no ANSI, because we need to use cdecl keyword
+.C[-P-]		; use short calls
+.C[-M]		; no string merging
+.C[-K]		; default char unsigned
+.C[-G]		; size optimization
+.C[-Z-]		; register optimization
+.C[-J-]		; jump optimization
+.C[-C-]		; no nested comments please
+.C[-2-]		; no 68020 code
+.C[-8-]		; no 68881 fpu instructions
+.C[-L64]	; maximum identifier length
+
+.C[-I../include]
+
+.L[-S=12000]
+=
+cstartv.o
+nvditest.c
+
+pcgemlib.lib
+pcstdlib.lib
+pctoslib.lib

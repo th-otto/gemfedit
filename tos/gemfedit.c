@@ -50,6 +50,8 @@ static OBJECT *menu;
 static _WORD scalex = 16;
 static _WORD scaley = 16;
 static const int scaled_margin = 1;
+static _WORD workout[57];
+static _WORD xworkout[57];
 
 #define F_NO_CHAR 0xffffu
 typedef unsigned short fchar_t;
@@ -60,8 +62,8 @@ static _WORD last_display_cw;
 static FONT_HDR fonthdr;
 static unsigned char *fontmem;
 static unsigned char *dat_table;
-static unsigned short *off_table;
-static unsigned char *hor_table;
+static uint16_t *off_table;
+static int8_t *hor_table;
 static char fontname[VDI_FONTNAMESIZE + 1];
 static const char *fontfilename;
 static const char *fontbasename;
@@ -644,17 +646,16 @@ static void mainwin_click(_WORD x, _WORD y)
 static _BOOL open_screen(void)
 {
 	_WORD work_in[] = { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2 };
-	_WORD work_out[57];
 	_WORD dummy;
 	
 	vdihandle = aeshandle;
-	(void) v_opnvwk(work_in, &vdihandle, work_out);	/* VDI workstation needed */
+	(void) v_opnvwk(work_in, &vdihandle, workout);	/* VDI workstation needed */
 	screen_fdb.fd_addr = 0;
-	screen_fdb.fd_w = work_out[0] + 1;
-	screen_fdb.fd_h = work_out[1] + 1;
+	screen_fdb.fd_w = workout[0] + 1;
+	screen_fdb.fd_h = workout[1] + 1;
 	screen_fdb.fd_wdwidth = screen_fdb.fd_w >> 4;
-	vq_extnd(vdihandle, 1, work_out);
-	screen_fdb.fd_nplanes = work_out[4];
+	vq_extnd(vdihandle, 1, xworkout);
+	screen_fdb.fd_nplanes = xworkout[4];
 	screen_fdb.fd_stand = FALSE;
 	screen_fdb.fd_r1 = 0;
 	screen_fdb.fd_r2 = 0;
@@ -1070,13 +1071,13 @@ static _BOOL check_gemfnt_header(FONT_HDR *h, unsigned long l)
 static _BOOL font_get_tables(unsigned char **m, const char *filename, unsigned long l)
 {
 	FONT_HDR *hdr = &fonthdr;
-	unsigned short *u;
-	_BOOL hor_table_valid;
+	uint16_t *u;
 	unsigned char *h = *m;
 	uint32_t dat_offset, off_offset, hor_offset;
 	int decode_ok = TRUE;
 	uint16_t last_offset;
 	char buf[256];
+	int hortable_bytes;
 	
 	numoffs = hdr->last_ade - hdr->first_ade + 1;
 
@@ -1136,14 +1137,31 @@ static _BOOL font_get_tables(unsigned char **m, const char *filename, unsigned l
 		}
 	}
 	
+	hor_table = (int8_t *)h + hor_offset;
 	off_table = (uint16_t *)(h + off_offset);
 	dat_table = h + dat_offset;
 
+	hortable_bytes = 0;
+	if ((hdr->flags & FONTF_HORTABLE) && hor_offset != 0 && hor_offset < off_offset)
+	{
+		if ((off_offset - hor_offset) >= (numoffs * 2))
+			hortable_bytes = 2;
+		else
+			hortable_bytes = 1;
+	}
+		
 	if (FONT_BIG != HOST_BIG)
 	{
 		for (u = off_table; u <= off_table + numoffs; u++)
 		{
 			SWAP_W(*u);
+		}
+		if (hortable_bytes == 2)
+		{
+			for (u = (uint16_t *)hor_table; u < (uint16_t *)hor_table + numoffs; u++)
+			{
+				SWAP_W(*u);
+			}
 		}
 	}
 	
@@ -1151,17 +1169,16 @@ static _BOOL font_get_tables(unsigned char **m, const char *filename, unsigned l
 	if ((((last_offset + 15) >> 4) << 1) != hdr->form_width)
 		nf_debugprintf("%s: warning: %s: offset of last character %u does not match form_width %u\n", program_name, filename, last_offset, hdr->form_width);
 
-	hor_table_valid = hor_offset != 0 && hor_offset < off_offset && (off_offset - hor_offset) >= (numoffs * 2);
-	if ((hdr->flags & FONTF_HORTABLE) && hor_table_valid)
+	if ((hdr->flags & FONTF_HORTABLE) && hortable_bytes != 0)
 	{
-		hor_table = h + hdr->hor_table;
+		hor_table = (int8_t *)h + hdr->hor_table;
 	} else
 	{
 		if (hdr->flags & FONTF_HORTABLE)
 		{
 			form_alert(1, rs_str(AL_MISSING_HOR_TABLE));
 			hdr->flags &= ~FONTF_HORTABLE;
-		} else if (hor_table_valid)
+		} else if (hortable_bytes != 0)
 		{
 			form_alert(1, rs_str(AL_MISSING_HOR_TABLE_FLAG));
 		}
@@ -1447,7 +1464,7 @@ static _BOOL font_load_sysfont(int fontnum)
 	memcpy(m + SIZEOF_FONT_HDR, off_table, offtable_size);
 	memcpy(m + SIZEOF_FONT_HDR + offtable_size, dat_table, form_size);
 	
-	off_table = (unsigned short *)(m + SIZEOF_FONT_HDR);
+	off_table = (uint16_t *)(m + SIZEOF_FONT_HDR);
 	dat_table = m + SIZEOF_FONT_HDR + offtable_size;
 	
 	font_loaded(m, filename);
@@ -1514,7 +1531,7 @@ static _BOOL font_save_gemfont(const char *filename)
 	size_t offtable_size;
 	size_t form_size;
 	unsigned char h[SIZEOF_FONT_HDR];
-	unsigned short *u;
+	uint16_t *u;
 	_BOOL swapped;
 	
 	fp = fopen(filename, "rb");
@@ -1668,7 +1685,7 @@ static _BOOL font_export_as_c(const char *filename)
 	fprintf(fp, "static UWORD const dat_table[] =\n{\n");
 	{
 		size_t j, h;
-		unsigned short a;
+		uint16_t a;
 		
 		h = ((size_t)hdr->form_height * hdr->form_width) / 2;
 		for (j = 0; j < h; j++)
@@ -1828,7 +1845,7 @@ static _BOOL font_export_as_txt(const char *filename)
 	/* then, output char bitmaps */
 	for (i = 0; i < numoffs; i++)
 	{
-		unsigned short y, x, w, off;
+		uint16_t y, x, w, off;
 		fchar_t c;
 		
 		c = i + hdr->first_ade;
@@ -2278,7 +2295,7 @@ static _BOOL font_import_from_txt(const char *filename)
 	unsigned char *h = NULL;
 	fchar_t i;
 	fchar_t ch;
-	unsigned short *off_tab = NULL;
+	uint16_t *off_tab = NULL;
 	unsigned char *b;
 	unsigned char *bms;
 	unsigned short w, width;
@@ -2464,7 +2481,7 @@ static _BOOL font_import_from_txt(const char *filename)
 	}
 	memset(h, 0, l);
 
-	off_table = (unsigned short *)(h + SIZEOF_FONT_HDR);
+	off_table = (uint16_t *)(h + SIZEOF_FONT_HDR);
 	dat_table = h + SIZEOF_FONT_HDR + offtable_size;
 	
 	/* now, pack the bitmaps in the destination form */
