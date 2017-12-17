@@ -107,51 +107,6 @@ WITH THE SPEEDO SOFTWARE OR THE BITSTREAM CHARTER OUTLINE FONT.
  *
  *****************************************************************************/
 
-#define GDECL
-
-#define get_char_id(char_index) sp_get_char_id(char_index)
-#define get_char_width(char_index) sp_get_char_width(char_index)
-#define get_track_kern(track,point_size) sp_get_track_kern(track,point_size)
-#define get_pair_kern(char_index1,char_index2) sp_get_pair_kern(char_index1,char_index2)
-#define get_char_bbox(char_index,bbox) sp_get_char_bbox(char_index,bbox)
-#define make_char(char_index) sp_make_char(char_index)
-#if INCL_ISW
-#define compute_isw_scale() sp_compute_isw_scale()
-#define do_make_char(char_index) sp_do_make_char(char_index)
-#define make_char_isw(char_index,imported_width) sp_make_char_isw(char_index,imported_width)
-#define reset_xmax(xmax) sp_reset_xmax(xmax)
-#endif
-#define make_simp_char(pointer,format) sp_make_simp_char(pointer,format)
-#define make_comp_char(pointer) sp_make_comp_char(pointer)
-#define get_char_org(char_index,top_level) sp_get_char_org(char_index,top_level)
-#define get_posn_arg(ppointer,format) sp_get_posn_arg(ppointer,format)
-#define get_scale_arg(ppointer,format) sp_get_scale_arg(ppointer,format)
-#define read_bbox(ppointer,pPmin,pPmax,set_flag) sp_read_bbox(ppointer,pPmin,pPmax,set_flag)
-#define proc_outl_data(pointer) sp_proc_outl_data(pointer)
-#define split_curve(P1,P2,P3,depth) sp_split_curve(P1,P2,P3,depth)
-#define get_args(ppointer,format,pP) sp_get_args(ppointer,format,pP)
-
-#define reset() sp_reset()
-#define get_cust_no(font_buff) sp_get_cust_no(font_buff)
-#define set_specs(specsarg) sp_set_specs(specsarg)
-#define setup_consts(xmin,xmax,ymin,ymax) sp_setup_consts(xmin,xmax,ymin,ymax)
-#define setup_tcb(ptcb) sp_setup_tcb(ptcb)
-#define setup_mult(input_mult) sp_setup_mult(input_mult)
-#define setup_offset(input_offset) sp_setup_offset(input_offset)
-#define type_tcb(ptcb) sp_type_tcb(ptcb)
-#define read_long(pointer) sp_read_long(pointer)
-#define read_word_u(pointer) sp_read_word_u(pointer)
-#define init_tcb() sp_init_tcb()
-#define scale_tcb(ptcb,x_pos,y_pos,x_scale,y_scale) sp_scale_tcb(ptcb,x_pos,y_pos,x_scale,y_scale)
-#define plaid_tcb(ppointer,format) sp_plaid_tcb(ppointer,format)
-#define skip_orus(ppointer,short_form,no_ctrl_zones) sp_skip_orus(ppointer,short_form,no_ctrl_zones)
-#define skip_interpolation_table(ppointer,format) sp_skip_interpolation_table(ppointer,format)
-#define skip_control_zone(ppointer,format) sp_skip_control_zone(ppointer,format)
-#define constr_update() sp_constr_update()
-#define read_oru_table(ppointer) sp_read_oru_table(ppointer)
-#define setup_pix_table(ppointer,short_form,no_X_ctrl_zones,no_Y_ctrl_zones) sp_setup_pix_table(ppointer,short_form,no_X_ctrl_zones,no_Y_ctrl_zones)
-#define setup_int_table(ppointer,no_X_int_zones, no_Y_int_zones) sp_setup_int_table(ppointer,no_X_int_zones, no_Y_int_zones)
-
 #define fn_init_out(specsarg) (*sp_globals.init_out)(specsarg)  
 #define fn_begin_char(Psw,Pmin,Pmax) (*sp_globals.begin_char)(Psw,Pmin,Pmax)
 #define fn_begin_sub_char(Psw,Pmin,Pmax) (*sp_globals.begin_sub_char)(Psw,Pmin,Pmax)
@@ -162,13 +117,7 @@ WITH THE SPEEDO SOFTWARE OR THE BITSTREAM CHARTER OUTLINE FONT.
 #define fn_begin_contour(P0,fmt) (*sp_globals.begin_contour)(P0,fmt)
 #define fn_curve(P1,P2,P3,depth) (*sp_globals.curve)(P1,P2,P3,depth)
 
-#define load_char_data(offset, no_bytes, buff_off) sp_load_char_data(offset, no_bytes, buff_off)
-#define report_error(n) sp_report_error(n)
-
 #if INCL_MULTIDEV
-
-#define set_bitmap_device(bfuncs,size) sp_set_bitmap_device(bfuncs,size)
-#define set_outline_device(ofuncs,size) sp_set_outline_device(ofuncs,size)
 
 #define open_bitmap(x_set_width, y_set_width, xmin, xmax, ymin, ymax) (*sp_globals.bitmap_device.p_open_bitmap)(x_set_width, y_set_width, xmin, xmax, ymin, ymax)
 #define set_bitmap_bits(y, xbit1, xbit2) (*sp_globals.bitmap_device.p_set_bits)(y, xbit1, xbit2)
@@ -197,4 +146,3 @@ WITH THE SPEEDO SOFTWARE OR THE BITSTREAM CHARTER OUTLINE FONT.
 #define close_outline() sp_close_outline()
 
 #endif
-

@@ -83,8 +83,8 @@ static buff_t font;
 
 static buff_t char_data;
 
-static ufix8 *f_buffer,
-*c_buffer;
+static ufix8 *f_buffer;
+static ufix8 *c_buffer;
 
 static ufix16 mincharsize;
 
@@ -120,8 +120,6 @@ static int y_res = 72;
 static int quality = 0;
 
 static int iso_encoding = 0;
-
-static int num_props = 7;
 
 static int stretch = 120;
 
@@ -246,7 +244,9 @@ static void dump_header(ufix32 num_chars)
 	fix15 xmin, ymin, xmax, ymax;
 	fix15 ascent, descent;
 	fix15 pixel_size;
-
+	const char *weight;
+	const char *width;
+	
 	xmin = read_2b(f_buffer + FH_FXMIN);
 	ymin = read_2b(f_buffer + FH_FYMIN);
 	xmax = read_2b(f_buffer + FH_FXMAX);
@@ -260,14 +260,44 @@ static void dump_header(ufix32 num_chars)
 	printf("FONT %s\n", fontname);
 	printf("SIZE %d %d %d\n", pixel_size, x_res, y_res);
 	printf("FONTBOUNDINGBOX %d %d %d %d\n", xmin, ymin, xmax, ymax);
-	printf("STARTPROPERTIES %d\n", num_props);
+	printf("STARTPROPERTIES %d\n", 10);
 
 	printf("RESOLUTION_X %d\n", x_res);
 	printf("RESOLUTION_Y %d\n", y_res);
 	printf("POINT_SIZE %d\n", point_size);
 	printf("PIXEL_SIZE %d\n", pixel_size);
 	printf("COPYRIGHT \"%s\"\n", f_buffer + FH_CPYRT);
-
+	printf("FACE_NAME \"%.16s\"\n", f_buffer + FH_SFACN);
+	switch (f_buffer[FH_FRMCL] & 0x0f)
+	{
+		case 4: width = "condensed"; break;
+		case 6: width = "semi-condensed"; break;
+		case 8: width = "normal"; break;
+		case 10: width = "semi-expanded"; break;
+		case 12: width = "expanded"; break;
+		default: width = ""; break;
+	}
+	switch ((f_buffer[FH_FRMCL] >> 4) & 0x0f)
+	{
+		case 1: weight = "thin"; break;
+		case 2: weight = "ultralight"; break;
+		case 3: weight = "extralight"; break;
+		case 4: weight = "light"; break;
+		case 5: weight = "book"; break;
+		case 6: weight = "normal"; break;
+		case 7: weight = "medium"; break;
+		case 8: weight = "semibold"; break;
+		case 9: weight = "demibold"; break;
+		case 10: weight = "bold"; break;
+		case 11: weight = "extrabold"; break;
+		case 12: weight = "ultrabold"; break;
+		case 13: weight = "heavy"; break;
+		case 143: weight = "black"; break;
+		default: weight = ""; break;
+	}
+	printf("WIDTH_NAME \"%s\"\n", width);
+	printf("WEIGHT_NAME \"%s\"\n", weight);
+	
 	/* do some stretching here so that its isn't too tight */
 	pixel_size = pixel_size * stretch / 100;
 	ascent = pixel_size * 764 / 1000;	/* 764 == EM_TOP */

@@ -65,16 +65,16 @@ int main(int argc, char *argv[]);
 
 /***** STATIC FUNCTIONS *****/
 
-fix31 read_4b(ufix8 FONTFAR * ptr);
+fix31 read_4b(ufix8 * ptr);
 
-fix15 read_2b(ufix8 FONTFAR * ptr);
+fix15 read_2b(ufix8 * ptr);
 
 /***** STATIC VARIABLES *****/
 static char pathname[100];				/* Name of font file to be output */
 
-static ufix8 FONTFAR *font_buffer;		/* Pointer to allocated Font buffer */
+static ufix8 *font_buffer;		/* Pointer to allocated Font buffer */
 
-static ufix8 FONTFAR *char_buffer;		/* Pointer to allocate Character buffer */
+static ufix8 *char_buffer;		/* Pointer to allocate Character buffer */
 
 static buff_t font;						/* Buffer descriptor for font data */
 
@@ -287,13 +287,10 @@ int main(int argc, char **argv)
  * Returns a pointer to a buffer descriptor.
  */
 #if INCL_LCD
-FUNCTION buff_t *sp_load_char_data(file_offset, no_bytes, cb_offset)
-fix31 file_offset;						/* Offset in bytes from the start of the font file */
-
-fix15 no_bytes;							/* Number of bytes to be loaded */
-
-fix15 cb_offset;						/* Offset in bytes from start of char buffer */
-
+FUNCTION buff_t *sp_load_char_data(
+	fix31 file_offset,						/* Offset in bytes from the start of the font file */
+	fix15 no_bytes,							/* Number of bytes to be loaded */
+	fix15 cb_offset)						/* Offset in bytes from start of char buffer */
 {
 	int bytes_read;
 
@@ -325,7 +322,7 @@ fix15 cb_offset;						/* Offset in bytes from start of char buffer */
 	printf("Character data loaded\n");
 #endif
 
-	char_data.org = (ufix8 FONTFAR *) char_buffer + cb_offset;
+	char_data.org = (ufix8 *) char_buffer + cb_offset;
 	char_data.no_bytes = no_bytes;
 	return &char_data;
 }
@@ -395,13 +392,13 @@ FUNCTION void sp_report_error(fix15 n)
  * Called by Speedo character generator to initialize a buffer prior
  * to receiving bitmap data.
  */
-void sp_open_bitmap(x_set_width, y_set_width, xorg, yorg, xsize, ysize)
-fix31 x_set_width;
-fix31 y_set_width;						/* Set width vector */
-fix31 xorg;								/* Pixel boundary at left extent of bitmap character */
-fix31 yorg;								/* Pixel boundary at right extent of bitmap character */
-fix15 xsize;							/* Pixel boundary of bottom extent of bitmap character */
-fix15 ysize;							/* Pixel boundary of top extent of bitmap character */
+void sp_open_bitmap(
+	fix31 x_set_width,						/* Set width vector */
+	fix31 y_set_width,
+	fix31 xorg,								/* Pixel boundary at left extent of bitmap character */
+	fix31 yorg,								/* Pixel boundary at right extent of bitmap character */
+	fix15 xsize,							/* Pixel boundary of bottom extent of bitmap character */
+	fix15 ysize)							/* Pixel boundary of top extent of bitmap character */
 {
 	fix15 i;
 
@@ -431,14 +428,15 @@ fix15 ysize;							/* Pixel boundary of top extent of bitmap character */
 	y_cur = 0;
 }
 
+
 /* 
  * Called by Speedo character generator to write one row of pixels 
  * into the generated bitmap character.                               
  */
-FUNCTION void sp_set_bitmap_bits(y, xbit1, xbit2)
-fix15 y;								/* Scan line (0 = first row above baseline) */
-fix15 xbit1;							/* Pixel boundary where run starts */
-fix15 xbit2;							/* Pixel boundary where run ends */
+FUNCTION void sp_set_bitmap_bits(
+	fix15 y,								/* Scan line (0 = first row above baseline) */
+	fix15 xbit1,							/* Pixel boundary where run starts */
+	fix15 xbit2)							/* Pixel boundary where run ends */
 {
 	fix15 i;
 
@@ -488,18 +486,13 @@ FUNCTION void sp_close_bitmap(void)
  * outputting scaled outline data.
  */
 #if INCL_OUTLINE
-FUNCTION void sp_open_outline(x_set_width, y_set_width, xmin, xmax, ymin, ymax)
-fix31 x_set_width;
-
-fix31 y_set_width;						/* Transformed escapement vector */
-
-fix31 xmin;								/* Minimum X value in outline */
-
-fix31 xmax;								/* Maximum X value in outline */
-
-fix31 ymin;								/* Minimum Y value in outline */
-
-fix31 ymax;								/* Maximum Y value in outline */
+FUNCTION void sp_open_outline(
+	fix31 x_set_width,						/* Transformed escapement vector */
+	fix31 y_set_width,
+	fix31 xmin,								/* Minimum X value in outline */
+	fix31 xmax,								/* Maximum X value in outline */
+	fix31 ymin,								/* Minimum Y value in outline */
+	fix31 ymax)								/* Maximum Y value in outline */
 {
 	printf("\nopen_outline(%3.1f, %3.1f, %3.1f, %3.1f, %3.1f, %3.1f)\n",
 		   (real) x_set_width / 65536.0, (real) y_set_width / 65536.0,
@@ -512,7 +505,7 @@ fix31 ymax;								/* Maximum Y value in outline */
  * outputting scaled outline data for a sub-character in a compound
  * character.
  */
-FUNCTION void sp_start_new_char()
+FUNCTION void sp_start_new_char(void)
 {
 	printf("start_new_char()\n");
 }
@@ -521,12 +514,10 @@ FUNCTION void sp_start_new_char()
  * Called by Speedo character generator at the start of each contour
  * in the outline data of the character.
  */
-FUNCTION void sp_start_contour(x, y, outside)
-fix31 x;								/* X coordinate of start point in 1/65536 pixels */
-
-fix31 y;								/* Y coordinate of start point in 1/65536 pixels */
-
-boolean outside;						/* TRUE if curve encloses ink (Counter-clockwise) */
+FUNCTION void sp_start_contour(
+	fix31 x,								/* X coordinate of start point in 1/65536 pixels */
+	fix31 y,								/* Y coordinate of start point in 1/65536 pixels */
+	boolean outside)						/* TRUE if curve encloses ink (Counter-clockwise) */
 {
 	printf("start_contour(%3.1f, %3.1f, %s)\n", (real) x / 65536.0, (real) y / 65536.0, outside ? "outside" : "inside");
 }
@@ -534,20 +525,15 @@ boolean outside;						/* TRUE if curve encloses ink (Counter-clockwise) */
 /*
  * Called by Speedo character generator onece for each curve in the
  * scaled outline data of the character. This function is only called if curve
- * output is enabled in the set_specs() call.
+ * output is enabled in the sp_set_specs() call.
  */
-FUNCTION void sp_curve_to(x1, y1, x2, y2, x3, y3)
-fix31 x1;								/* X coordinate of first control point in 1/65536 pixels */
-
-fix31 y1;								/* Y coordinate of first control  point in 1/65536 pixels */
-
-fix31 x2;								/* X coordinate of second control point in 1/65536 pixels */
-
-fix31 y2;								/* Y coordinate of second control point in 1/65536 pixels */
-
-fix31 x3;								/* X coordinate of curve end point in 1/65536 pixels */
-
-fix31 y3;								/* Y coordinate of curve end point in 1/65536 pixels */
+FUNCTION void sp_curve_to(
+	fix31 x1,								/* X coordinate of first control point in 1/65536 pixels */
+	fix31 y1,								/* Y coordinate of first control  point in 1/65536 pixels */
+	fix31 x2,								/* X coordinate of second control point in 1/65536 pixels */
+	fix31 y2,								/* Y coordinate of second control point in 1/65536 pixels */
+	fix31 x3,								/* X coordinate of curve end point in 1/65536 pixels */
+	fix31 y3)								/* Y coordinate of curve end point in 1/65536 pixels */
 {
 	printf("curve_to(%3.1f, %3.1f, %3.1f, %3.1f, %3.1f, %3.1f)\n",
 		   (real) x1 / 65536.0, (real) y1 / 65536.0,
@@ -559,12 +545,9 @@ fix31 y3;								/* Y coordinate of curve end point in 1/65536 pixels */
  * Called by Speedo character generator onece for each vector in the
  * scaled outline data for the character. This include curve data that has
  * been sub-divided into vectors if curve output has not been enabled
- * in the set_specs() call.
+ * in the sp_set_specs() call.
  */
-FUNCTION void sp_line_to(x, y)
-fix31 x;								/* X coordinate of vector end point in 1/65536 pixels */
-
-fix31 y;								/* Y coordinate of vector end point in 1/65536 pixels */
+FUNCTION void sp_line_to(fix31 x, fix31 y)
 {
 	printf("line_to(%3.1f, %3.1f)\n", (real) x / 65536.0, (real) y / 65536.0);
 }
@@ -574,7 +557,7 @@ fix31 y;								/* Y coordinate of vector end point in 1/65536 pixels */
  * Called by Speedo character generator at the end of each contour
  * in the outline data of the character.
  */
-FUNCTION void sp_close_contour()
+FUNCTION void sp_close_contour(void)
 {
 	printf("close_contour()\n");
 }
@@ -583,7 +566,7 @@ FUNCTION void sp_close_contour()
  * Called by Speedo character generator at the end of output of the
  * scaled outline of the character.
  */
-FUNCTION void sp_close_outline()
+FUNCTION void sp_close_outline(void)
 {
 	printf("close_outline()\n");
 }
@@ -593,8 +576,7 @@ FUNCTION void sp_close_outline()
 /*
  * Reads 2-byte field from font buffer 
  */
-FUNCTION fix15 read_2b(pointer)
-ufix8 FONTFAR *pointer;
+FUNCTION fix15 read_2b(ufix8 *pointer)
 {
 	fix15 temp;
 
@@ -607,8 +589,7 @@ ufix8 FONTFAR *pointer;
 /*
  * Reads 4-byte field from font buffer 
  */
-FUNCTION fix31 read_4b(pointer)
-ufix8 FONTFAR *pointer;
+FUNCTION fix31 read_4b(ufix8 *pointer)
 {
 	fix31 temp;
 

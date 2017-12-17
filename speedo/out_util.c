@@ -36,7 +36,7 @@ WITH THE SPEEDO SOFTWARE OR THE BITSTREAM CHARTER OUTLINE FONT.
 
 #if INCL_BLACK || INCL_2D || INCL_SCREEN
 
-FUNCTION void sp_init_char_out(GDECL point_t Psw, point_t Pmin, point_t Pmax)
+FUNCTION void sp_init_char_out(point_t Psw, point_t Pmin, point_t Pmax)
 {
 	sp_globals.set_width.x = (fix31) Psw.x << sp_globals.poshift;
 	sp_globals.set_width.y = (fix31) Psw.y << sp_globals.poshift;
@@ -62,7 +62,7 @@ FUNCTION void sp_init_char_out(GDECL point_t Psw, point_t Pmin, point_t Pmax)
 
 /* Called at the start of each sub-character in a composite character
  */
-FUNCTION void sp_begin_sub_char_out(GDECL point_t Psw, point_t Pmin, point_t Pmax)
+FUNCTION void sp_begin_sub_char_out(point_t Psw, point_t Pmin, point_t Pmax)
 {
 #if DEBUG
 	printf("BEGIN_SUB_CHAR_out(%3.1f, %3.1f, %3.1f, %3.1f, %3.1f, %3.1f\n",
@@ -83,7 +83,7 @@ FUNCTION void sp_begin_sub_char_out(GDECL point_t Psw, point_t Pmin, point_t Pma
 
 /* Called for each curve in the transformed character if curves out enabled
  */
-FUNCTION void sp_curve_out(GDECL point_t P1, point_t P2, point_t P3, fix15 depth)
+FUNCTION void sp_curve_out(point_t P1, point_t P2, point_t P3, fix15 depth)
 {
 #if DEBUG
 	printf("CURVE_OUT(%3.1f, %3.1f, %3.1f, %3.1f, %3.1f, %3.1f)\n",
@@ -198,7 +198,7 @@ FUNCTION void sp_restart_intercepts_out(void)
 
 
 
-FUNCTION void sp_set_first_band_out(GDECL point_t Pmin, point_t Pmax)
+FUNCTION void sp_set_first_band_out(point_t Pmin, point_t Pmax)
 {
 	sp_globals.ymin = Pmin.y;
 	sp_globals.ymax = Pmax.y;

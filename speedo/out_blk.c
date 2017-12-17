@@ -66,7 +66,7 @@ static void sp_proc_intercepts_black(void);
  * Returns TRUE if output module can accept requested specifications.
  * Returns FALSE otherwise.
  */
-FUNCTION boolean sp_init_black(specs_t GLOBALFAR * specsarg)
+FUNCTION boolean sp_init_black(specs_t * specsarg)
 {
 #if DEBUG
 	printf("INIT_BLK()\n");

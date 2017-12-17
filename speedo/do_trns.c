@@ -53,11 +53,11 @@ WITH THE SPEEDO SOFTWARE OR THE BITSTREAM CHARTER OUTLINE FONT.
 
 static void sp_split_curve(point_t P1, point_t P2, point_t P3, fix15 depth);
 
-static ufix8 FONTFAR *sp_get_args(ufix8 FONTFAR * pointer, ufix8 format, point_t STACKFAR * pP);
+static ufix8 *sp_get_args(ufix8 * pointer, ufix8 format, point_t * pP);
 
 
 /*
- * Called by make_simp_char() and make_comp_char() to read the 
+ * Called by sp_make_simp_char() and sp_make_comp_char() to read the 
  * bounding box data from the font.
  * Sets Pmin and Pmax to the bottom left and top right corners
  * of the bounding box after transformation into device space.
@@ -65,9 +65,9 @@ static ufix8 FONTFAR *sp_get_args(ufix8 FONTFAR * pointer, ufix8 format, point_t
  * Updates *ppointer to point to the byte following the
  * bounding box data.
  */
-FUNCTION ufix8 FONTFAR *sp_read_bbox(ufix8 FONTFAR * pointer,	/* Pointer to next byte in char data */
-								  point_t STACKFAR * pPmin,	/* Lower left corner of bounding box */
-								  point_t STACKFAR * pPmax,	/* Upper right corner of bounding box */
+FUNCTION ufix8 *sp_read_bbox(ufix8 * pointer,	/* Pointer to next byte in char data */
+								  point_t * pPmin,	/* Lower left corner of bounding box */
+								  point_t * pPmax,	/* Upper right corner of bounding box */
 								  boolean set_flag)	/* flag to indicate whether global oru bbox should be saved */
 {
 	ufix8 format1;
@@ -147,14 +147,14 @@ FUNCTION ufix8 FONTFAR *sp_read_bbox(ufix8 FONTFAR * pointer,	/* Pointer to next
 
 
 /*
- * Called by make_simp_char() and make_comp_char() to read the 
+ * Called by sp_make_simp_char() and sp_make_comp_char() to read the 
  * outline data from the font.
  * The outline data is parsed, transformed into device coordinates
  * and passed to an output module for further processing.
  * Note that pointer is not updated to facilitate repeated
  * processing of the outline data when banding mode is in effect.
  */
-FUNCTION void sp_proc_outl_data(ufix8 FONTFAR * pointer)	/* Pointer to next byte in char data */
+FUNCTION void sp_proc_outl_data(ufix8 * pointer)	/* Pointer to next byte in char data */
 {
 	ufix8 format1, format2;
 	point_t P0, P1, P2, P3;
@@ -300,7 +300,7 @@ FUNCTION void sp_proc_outl_data(ufix8 FONTFAR * pointer)	/* Pointer to next byte
 }
 
 /*
- * Called by proc_outl_data() to subdivide Bezier curves into an
+ * Called by sp_proc_outl_data() to subdivide Bezier curves into an
  * appropriate number of vectors, whenever curves are not enabled
  * for output to the currently selected output module.
  * sp_split_curve() calls itself recursively to the depth specified
@@ -356,7 +356,7 @@ FUNCTION static void sp_split_curve(point_t P1,	/* First control point of Bezier
 }
 
 /*
- * Called by read_bbox() and proc_outl_data() to read an X Y argument
+ * Called by sp_read_bbox() and sp_proc_outl_data() to read an X Y argument
  * pair from the font.
  * The format is specified as follows:
  *     Bits 0-1: Type of X argument.
@@ -374,9 +374,9 @@ FUNCTION static void sp_split_curve(point_t P1,	/* First control point of Bezier
  * Updates *ppointer to point to the byte following the
  * argument pair.
  */
-FUNCTION static ufix8 FONTFAR *sp_get_args(ufix8 FONTFAR * pointer,	/* Pointer to next byte in char data */
+FUNCTION static ufix8 *sp_get_args(ufix8 * pointer,	/* Pointer to next byte in char data */
 										   ufix8 format,	/* Format specifiaction of argument pair */
-										   point_t STACKFAR * pP)	/* Resulting transformed point */
+										   point_t * pP)	/* Resulting transformed point */
 {
 	ufix8 edge;
 

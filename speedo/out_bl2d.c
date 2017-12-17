@@ -52,7 +52,7 @@ WITH THE SPEEDO SOFTWARE OR THE BITSTREAM CHARTER OUTLINE FONT.
 /***** STATIC FUNCTIONS *****/
 
 #if INCL_2D
-static void sp_draw_vector_to_2d(fix15 x0, fix15 y0, fix15 x1, fix15 y1, band_t GLOBALFAR * band);
+static void sp_draw_vector_to_2d(fix15 x0, fix15 y0, fix15 x1, fix15 y1, band_t * band);
 
 static void sp_add_intercept_2d(fix15 y, fix15 x);
 
@@ -65,7 +65,7 @@ static void sp_proc_intercepts_2d(void);
  * Returns TRUE if output module can accept requested specifications.
  * Returns FALSE otherwise.
  */
-FUNCTION boolean sp_init_2d(specs_t GLOBALFAR * specsarg)
+FUNCTION boolean sp_init_2d(specs_t * specsarg)
 {
 
 	if (specsarg->flags & CURVES_OUT)
@@ -156,7 +156,7 @@ FUNCTION void sp_line_2d(point_t P1)
 
 FUNCTION static void sp_draw_vector_to_2d(fix15 x0,	/* X coordinate */
 										  fix15 y0,	/* Y coordinate */
-										  fix15 x1, fix15 y1, band_t GLOBALFAR * band)
+										  fix15 x1, fix15 y1, band_t * band)
 {
 	fix15 how_many_y;			/* # of intercepts at y = n + 1/2  */
 	fix15 yc;					/* Current scan-line */

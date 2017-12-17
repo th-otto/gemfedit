@@ -101,25 +101,6 @@ bool fw_make_char(ufix16 char_index);					/* Fontware 2.X make character call   
 /***** EXTERNAL VARIABLES *****/
 
 /***** EXTERNAL FUNCTIONS *****/
-void _open_bitmap();
-
-void _close_bitmap();
-
-void _set_bitmap_bits();
-
-void _open_outline();
-
-void _open_outline();
-
-void _start_new_char();
-
-void _start_curve();
-
-void _line_to();
-
-void _close_curve();
-
-void _close_outline();
 
 /***** STATIC VARIABLES *****/
 static buff_t *pfont;
@@ -390,7 +371,7 @@ FUNCTION bool fw_make_char(ufix16 char_index)
 FUNCTION buff_t *sp_load_char_data(fix31 file_offset, fix15 no_bytes, fix15 cb_offset)
 {
 #if DEBUG
-	printf("load_char_data(%d, %d, %d)\n", file_offset, no_bytes, char_offset);
+	printf("fw_load_char_data(%d, %d, %d)\n", file_offset, no_bytes, char_offset);
 #endif
 	char_data.org = pfont->org + file_offset;
 	char_data.no_bytes = no_bytes;
@@ -573,7 +554,7 @@ FUNCTION void sp_start_contour(
 /*
  * Called by Speedo character generator once for each curve in the
  * scaled outline data of the character. This function is only called if curve
- * output is enabled in the set_specs() call.
+ * output is enabled in the sp_set_specs() call.
  */
 FUNCTION void sp_curve_to(
 	fix31 x1,								/* X coordinate of first control point in 1/65536 pixels */
@@ -596,7 +577,7 @@ FUNCTION void sp_curve_to(
  * Called by Speedo character generator onece for each vector in the
  * scaled outline data for the character. This include curve data that has
  * been sub-divided into vectors if curve output has not been enabled
- * in the set_specs() call.
+ * in the sp_set_specs() call.
  */
 FUNCTION void sp_line_to(
 	fix31 x,								/* X coordinate of vector end point in 1/65536 pixels */

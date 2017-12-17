@@ -38,7 +38,7 @@ WITH THE SPEEDO SOFTWARE OR THE BITSTREAM CHARTER OUTLINE FONT.
 #define SHOW(X)
 #endif
 
-SPEEDO_GLOBALS GLOBALFAR sp_globals;
+SPEEDO_GLOBALS sp_globals;
 
 /***** GLOBAL VARIABLES *****/
 
@@ -53,7 +53,7 @@ SPEEDO_GLOBALS GLOBALFAR sp_globals;
 
 static boolean sp_setup_consts(fix15 xmin, fix15 xmax, fix15 ymin, fix15 ymax);
 
-static void sp_setup_tcb(tcb_t GLOBALFAR * ptcb);
+static void sp_setup_tcb(tcb_t * ptcb);
 
 static fix15 sp_setup_mult(fix31 input_mult);
 
@@ -64,26 +64,17 @@ static fix31 sp_setup_offset(fix31 input_offset);
 /* 
  * Called by host software to set character generation specifications
  */
-boolean set_specs(specs_t STACKFAR * specsarg)	/* Bundle of conversion specifications */
+boolean sp_set_specs(specs_t *specsarg)	/* Bundle of conversion specifications */
 {
 	fix31 offcd;						/* Offset to start of character directory */
-
 	fix31 ofcns;						/* Offset to start of constraint data */
-
 	fix31 cd_size;						/* Size of character directory */
-
 	fix31 no_bytes_min;					/* Min number of bytes in font buffer */
-
 	ufix16 font_id;						/* Font ID */
-
 	ufix16 private_off;					/* offset to private header */
-
 	fix15 xmin;							/* Minimum X ORU value in font */
-
 	fix15 xmax;							/* Maximum X ORU value in font */
-
 	fix15 ymin;							/* Minimum Y ORU value in font */
-
 	fix15 ymax;							/* Maximum Y ORU value in font */
 
 	sp_globals.specs_valid = FALSE;		/* Flag specs not valid */
@@ -94,18 +85,18 @@ boolean set_specs(specs_t STACKFAR * specsarg)	/* Bundle of conversion specifica
 	sp_globals.pfont = &sp_globals.font;
 	sp_globals.font_org = sp_globals.font.org;
 
-	if (read_word_u(sp_globals.font_org + FH_FMVER + 4) != 0x0d0a)
+	if (sp_read_word_u(sp_globals.font_org + FH_FMVER + 4) != 0x0d0a)
 	{
-		report_error(4);				/* Font format error */
+		sp_report_error(4);				/* Font format error */
 		return FALSE;
 	}
-	if (read_word_u(sp_globals.font_org + FH_FMVER + 6) != 0x0000)
+	if (sp_read_word_u(sp_globals.font_org + FH_FMVER + 6) != 0x0000)
 	{
-		report_error(4);				/* Font format error */
+		sp_report_error(4);				/* Font format error */
 		return FALSE;
 	}
 
-	if (get_cust_no(*specsarg->pfont) == 0)
+	if (sp_get_cust_no(*specsarg->pfont) == 0)
 	{
 		sp_globals.key32 = 0;
 		sp_globals.key4 = 0;
@@ -122,62 +113,62 @@ boolean set_specs(specs_t STACKFAR * specsarg)	/* Bundle of conversion specifica
 	}
 
 
-	sp_globals.no_chars_avail = read_word_u(sp_globals.font_org + FH_NCHRF);
+	sp_globals.no_chars_avail = sp_read_word_u(sp_globals.font_org + FH_NCHRF);
 
 /* Read sp_globals.orus per em from font header */
-	sp_globals.orus_per_em = read_word_u(sp_globals.font_org + FH_ORUPM);
+	sp_globals.orus_per_em = sp_read_word_u(sp_globals.font_org + FH_ORUPM);
 
 /* compute address of private header */
-	private_off = read_word_u(sp_globals.font_org + FH_HEDSZ);
+	private_off = sp_read_word_u(sp_globals.font_org + FH_HEDSZ);
 	sp_globals.hdr2_org = sp_globals.font_org + private_off;
 
 /* set metric resolution if specified, default to outline res otherwise */
 	if (private_off > EXP_FH_METRES)
 	{
-		sp_globals.metric_resolution = read_word_u(sp_globals.font_org + EXP_FH_METRES);
+		sp_globals.metric_resolution = sp_read_word_u(sp_globals.font_org + EXP_FH_METRES);
 	} else
 	{
 		sp_globals.metric_resolution = sp_globals.orus_per_em;
 	}
 
 #if INCL_METRICS
-	sp_globals.kern.tkorg = sp_globals.font_org + read_long(sp_globals.hdr2_org + FH_OFFTK);
-	sp_globals.kern.pkorg = sp_globals.font_org + read_long(sp_globals.hdr2_org + FH_OFFPK);
-	sp_globals.kern.no_tracks = read_word_u(sp_globals.font_org + FH_NKTKS);
-	sp_globals.kern.no_pairs = read_word_u(sp_globals.font_org + FH_NKPRS);
+	sp_globals.kern.tkorg = sp_globals.font_org + sp_read_long(sp_globals.hdr2_org + FH_OFFTK);
+	sp_globals.kern.pkorg = sp_globals.font_org + sp_read_long(sp_globals.hdr2_org + FH_OFFPK);
+	sp_globals.kern.no_tracks = sp_read_word_u(sp_globals.font_org + FH_NKTKS);
+	sp_globals.kern.no_pairs = sp_read_word_u(sp_globals.font_org + FH_NKPRS);
 #endif
 
-	offcd = read_long(sp_globals.hdr2_org + FH_OFFCD);	/* Read offset to character directory */
-	ofcns = read_long(sp_globals.hdr2_org + FH_OFCNS);	/* Read offset to constraint data */
+	offcd = sp_read_long(sp_globals.hdr2_org + FH_OFFCD);	/* Read offset to character directory */
+	ofcns = sp_read_long(sp_globals.hdr2_org + FH_OFCNS);	/* Read offset to constraint data */
 	cd_size = ofcns - offcd;
 	if ((((sp_globals.no_chars_avail << 1) + 3) != cd_size) && (((sp_globals.no_chars_avail * 3) + 4) != cd_size))
 	{
-		report_error(4);				/* Font format error */
+		sp_report_error(4);				/* Font format error */
 		return FALSE;
 	}
 #if INCL_LCD							/* Dynamic character data load suppoorted? */
 #if INCL_METRICS
-	no_bytes_min = read_long(sp_globals.hdr2_org + FH_OCHRD);	/* Offset to character data */
+	no_bytes_min = sp_read_long(sp_globals.hdr2_org + FH_OCHRD);	/* Offset to character data */
 #else /* Dynamic character data load not supported? */
-	no_bytes_min = read_long(sp_globals.hdr2_org + FH_OFFTK);	/* Offset to track kerning data */
+	no_bytes_min = sp_read_long(sp_globals.hdr2_org + FH_OFFTK);	/* Offset to track kerning data */
 #endif
 #else /* Dynamic character data load not supported? */
-	no_bytes_min = read_long(sp_globals.hdr2_org + FH_NBYTE);	/* Offset to EOF + 1 */
+	no_bytes_min = sp_read_long(sp_globals.hdr2_org + FH_NBYTE);	/* Offset to EOF + 1 */
 #endif
 
 	sp_globals.font_buff_size = sp_globals.pfont->no_bytes;
 	if (sp_globals.font_buff_size < no_bytes_min)	/* Minimum data not loaded? */
 	{
-		report_error(1);				/* Insufficient font data loaded */
+		sp_report_error(1);				/* Insufficient font data loaded */
 		return FALSE;
 	}
 
 	sp_globals.pchar_dir = sp_globals.font_org + offcd;
-	sp_globals.first_char_idx = read_word_u(sp_globals.font_org + FH_FCHRF);
+	sp_globals.first_char_idx = sp_read_word_u(sp_globals.font_org + FH_FCHRF);
 
 /* Register font name with sp_globals.constraint mechanism */
 #if INCL_RULES
-	font_id = read_word_u(sp_globals.font_org + FH_FNTID);
+	font_id = sp_read_word_u(sp_globals.font_org + FH_FNTID);
 	if (!(sp_globals.constr.font_id_valid) || (sp_globals.constr.font_id != font_id))
 	{
 		sp_globals.constr.font_id = font_id;
@@ -190,14 +181,14 @@ boolean set_specs(specs_t STACKFAR * specsarg)	/* Bundle of conversion specifica
 
 /* Set up sliding point constants */
 /* Set pixel shift to accomodate largest transformed pixel value */
-	xmin = read_word_u(sp_globals.font_org + FH_FXMIN);
-	xmax = read_word_u(sp_globals.font_org + FH_FXMAX);
-	ymin = read_word_u(sp_globals.font_org + FH_FYMIN);
-	ymax = read_word_u(sp_globals.font_org + FH_FYMAX);
+	xmin = sp_read_word_u(sp_globals.font_org + FH_FXMIN);
+	xmax = sp_read_word_u(sp_globals.font_org + FH_FXMAX);
+	ymin = sp_read_word_u(sp_globals.font_org + FH_FYMIN);
+	ymax = sp_read_word_u(sp_globals.font_org + FH_FYMAX);
 
 	if (!sp_setup_consts(xmin, xmax, ymin, ymax))
 	{
-		report_error(3);				/* Requested specs out of range */
+		sp_report_error(3);				/* Requested specs out of range */
 		return FALSE;
 	}
 #if INCL_ISW
@@ -275,13 +266,13 @@ boolean set_specs(specs_t STACKFAR * specsarg)	/* Bundle of conversion specifica
 #endif
 
 		default:
-			report_error(8);			/* Unsupported mode requested */
+			sp_report_error(8);			/* Unsupported mode requested */
 			return FALSE;
 		}
 
 	if (!fn_init_out(sp_globals.pspecs))
 	{
-		report_error(5);
+		sp_report_error(5);
 		return FALSE;
 	}
 
@@ -295,7 +286,7 @@ boolean set_specs(specs_t STACKFAR * specsarg)	/* Bundle of conversion specifica
 	{
 #if INCL_RULES
 #else
-		report_error(7);				/* Rules requested; not supported */
+		sp_report_error(7);				/* Rules requested; not supported */
 		return FALSE;
 #endif
 	}
@@ -306,7 +297,7 @@ boolean set_specs(specs_t STACKFAR * specsarg)	/* Bundle of conversion specifica
 	{
 #if (INCL_SQUEEZING)
 #else
-		report_error(11);
+		sp_report_error(11);
 		return FALSE;
 #endif
 	}
@@ -317,7 +308,7 @@ boolean set_specs(specs_t STACKFAR * specsarg)	/* Bundle of conversion specifica
 	{
 #if (INCL_CLIPPING)
 #else
-		report_error(11);
+		sp_report_error(11);
 		return FALSE;
 #endif
 	}
@@ -330,7 +321,7 @@ boolean set_specs(specs_t STACKFAR * specsarg)	/* Bundle of conversion specifica
 
 #if INCL_MULTIDEV
 #if INCL_BLACK || INCL_SCREEN || INCL_2D
-boolean set_bitmap_device(bitmap_t * bfuncs, ufix16 size)
+boolean sp_set_bitmap_device(bitmap_t * bfuncs, ufix16 size)
 {
 
 	if (size != sizeof(sp_globals.bitmap_device))
@@ -467,7 +458,7 @@ static FUNCTION boolean sp_setup_consts(fix15 xmin,	/* Minimum X ORU value in fo
 	SHOW(sp_globals.multshift);
 
 
-	pix_max = (ufix32) (0xffff & read_word_u(sp_globals.hdr2_org + FH_PIXMX));
+	pix_max = (ufix32) (0xffff & sp_read_word_u(sp_globals.hdr2_org + FH_PIXMX));
 
 	num = 0;
 	xmult = ((sp_globals.pspecs->xxmult >> 16) + 1) >> 1;
@@ -532,7 +523,7 @@ static FUNCTION boolean sp_setup_consts(fix15 xmin,	/* Minimum X ORU value in fo
 /* 
  * Convert transformation coeffs to internal form 
  */
-static FUNCTION void sp_setup_tcb(tcb_t GLOBALFAR * ptcb)	/* Pointer to transformation control bloxk */
+static FUNCTION void sp_setup_tcb(tcb_t * ptcb)	/* Pointer to transformation control bloxk */
 {
 
 	ptcb->xxmult = sp_setup_mult(sp_globals.pspecs->xxmult);
@@ -549,7 +540,7 @@ static FUNCTION void sp_setup_tcb(tcb_t GLOBALFAR * ptcb)	/* Pointer to transfor
 	SHOW(ptcb->yymult);
 	SHOW(ptcb->yoffset);
 
-	type_tcb(ptcb);						/* Classify transformation type */
+	sp_type_tcb(ptcb);						/* Classify transformation type */
 }
 
 /*
@@ -591,7 +582,7 @@ FUNCTION static fix31 sp_setup_offset(fix31 input_offset)	/* Multiplier in input
 	return (((input_offset >> 1) + imrnd) >> imshift) + sp_globals.mprnd;
 }
 
-FUNCTION void type_tcb(tcb_t GLOBALFAR * ptcb)	/* Pointer to transformation control bloxk */
+FUNCTION void sp_type_tcb(tcb_t * ptcb)	/* Pointer to transformation control bloxk */
 {
 	fix15 x_trans_type;
 	fix15 y_trans_type;
@@ -721,7 +712,7 @@ FUNCTION void type_tcb(tcb_t GLOBALFAR * ptcb)	/* Pointer to transformation cont
  * the specified point.
  * Returns the decrypted value read as a signed integer.
  */
-FUNCTION fix31 read_long(ufix8 FONTFAR * pointer)	/* Pointer to first byte of encrypted 3-byte integer */
+FUNCTION fix31 sp_read_long(ufix8 * pointer)	/* Pointer to first byte of encrypted 3-byte integer */
 {
 	fix31 tmpfix31;
 
@@ -736,7 +727,7 @@ FUNCTION fix31 read_long(ufix8 FONTFAR * pointer)	/* Pointer to first byte of en
  * the specified point.
  * Returns the decrypted value read as a signed integer.
  */
-FUNCTION fix15 read_word_u(ufix8 FONTFAR * pointer)	/* Pointer to first byte of unencrypted 2-byte integer */
+FUNCTION fix15 sp_read_word_u(ufix8 * pointer)	/* Pointer to first byte of unencrypted 2-byte integer */
 {
 	fix15 tmpfix15;
 

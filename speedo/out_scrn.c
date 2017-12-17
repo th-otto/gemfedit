@@ -64,7 +64,7 @@ static void sp_proc_intercepts_screen(void);
  * Returns TRUE if output module can accept requested specifications.
  * Returns FALSE otherwise.
  */
-FUNCTION boolean sp_init_screen(specs_t FONTFAR * specsarg)
+FUNCTION boolean sp_init_screen(specs_t * specsarg)
 {
 #if DEBUG
 	printf("INIT_SCREEN()\n");

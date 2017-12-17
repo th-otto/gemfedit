@@ -78,7 +78,7 @@ FUNCTION boolean sp_init_outline(specs_t *specsarg)
  * If two or more output modules are included in the configuration, begin_char2()
  * is called by begin_char() to signal the start of character output data.
  * If only one output module is included in the configuration, begin_char() is 
- * called by make_simp_char() and make_comp_char().
+ * called by sp_make_simp_char() and sp_make_comp_char().
  */
 FUNCTION boolean sp_begin_char_outline(
 	point_t Psw,	/* End of escapement vector (sub-pixels) */
@@ -120,7 +120,7 @@ FUNCTION boolean sp_begin_char_outline(
  * If two or more output modules are included in the configuration, begin_sub_char2()
  * is called by begin_sub_char() to signal the start of sub-character output data.
  * If only one output module is included in the configuration, begin_sub_char() is 
- * called by make_comp_char().
+ * called by sp_make_comp_char().
  */
 FUNCTION void sp_begin_sub_char_outline(
 	point_t Psw,	/* End of sub-char escapement vector */
@@ -144,7 +144,7 @@ FUNCTION void sp_begin_sub_char_outline(
  * and to indicate whether it is an outside (counter-clockwise) contour
  * or an inside (clockwise) contour.
  * If only one output module is included in the configuration, begin_sub_char() is 
- * called by proc_outl_data().
+ * called by sp_proc_outl_data().
  */
 #if INCL_OUTLINE
 FUNCTION void sp_begin_contour_outline(
@@ -169,7 +169,7 @@ FUNCTION void sp_begin_contour_outline(
  * If two or more output modules are included in the configuration, curve2()
  * is called by curve() to output one curve segment.
  * If only one output module is included in the configuration, curve() is 
- * called by proc_outl_data().
+ * called by sp_proc_outl_data().
  * This function is only called when curve output is enabled.
  */
 FUNCTION void sp_curve_outline(
@@ -207,8 +207,8 @@ FUNCTION void sp_curve_outline(
  * If two or more output modules are included in the configuration, line2()
  * is called by line() to output one vector.
  * If only one output module is included in the configuration, line() is 
- * called by proc_outl_data(). If curve output is enabled, line() is also
- * called by split_curve().
+ * called by sp_proc_outl_data(). If curve output is enabled, line() is also
+ * called by sp_split_curve().
  */
 FUNCTION void sp_line_outline(point_t P1)	/* End point of vector */
 {
@@ -229,7 +229,7 @@ FUNCTION void sp_line_outline(point_t P1)	/* End point of vector */
  * If two or more output modules are included in the configuration, end_contour2()
  * is called by end_contour() to signal the end of a contour.
  * If only one output module is included in the configuration, end_contour() is 
- * called by proc_outl_data().
+ * called by sp_proc_outl_data().
  */
 FUNCTION void sp_end_contour_outline(void)
 {
@@ -246,7 +246,7 @@ FUNCTION void sp_end_contour_outline(void)
  * If two or more output modules are included in the configuration, end_sub_char2()
  * is called by end_sub_char() to signal the end of sub-character data.
  * If only one output module is included in the configuration, end_sub_char() is 
- * called by make_comp_char().
+ * called by sp_make_comp_char().
  */
 FUNCTION void sp_end_sub_char_outline(void)
 {
@@ -262,7 +262,7 @@ FUNCTION void sp_end_sub_char_outline(void)
  * If two or more output modules are included in the configuration, end_char2()
  * is called by end_char() to signal the end of the character data.
  * If only one output module is included in the configuration, end_char() is 
- * called by make_simp_char() and make_comp_char().
+ * called by sp_make_simp_char() and sp_make_comp_char().
  * Returns TRUE if output process is complete
  * Returns FALSE to repeat output of the transformed data beginning
  * with the first contour (of the first sub-char if compound).

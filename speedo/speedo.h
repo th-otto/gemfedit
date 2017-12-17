@@ -96,18 +96,6 @@ WITH THE SPEEDO SOFTWARE OR THE BITSTREAM CHARTER OUTLINE FONT.
 #define  INCL_PLAID_OUT 0          /* 1 to include plaid data monitoring */
 #endif                             /* 0 to omit plaid data monitoring */
 
-#ifndef FONTFAR						/* if Intel mixed memory model implementation */
-#define FONTFAR						/* pointer type modifier for font buffer */
-#endif
-
-#ifndef STACKFAR					/* if Intel mixed memory model implementation */
-#define STACKFAR					/* pointer type modifier for font buffer */
-#endif
-
-#ifndef GLOBALFAR
-#define GLOBALFAR
-#endif
- 
 #define MODE_BLACK 0
 #define MODE_SCREEN (MODE_BLACK + INCL_BLACK)
 #define MODE_OUTLINE (MODE_SCREEN + INCL_SCREEN)
@@ -193,14 +181,14 @@ typedef   uint32_t   ufix32;
 typedef
 struct buff_tag
     {
-    ufix8 FONTFAR *org;                   /* Pointer to start of buffer */
+    ufix8 *org;                   /* Pointer to start of buffer */
     ufix32  no_bytes;              /* Size of buffer in bytes */
     } 
 buff_t;                            /* Buffer descriptor */
 
 typedef  struct constr_tag
     {
-    ufix8 FONTFAR *org;                   /* Pointer to first byte in constr data  */
+    ufix8 *org;                   /* Pointer to first byte in constr data  */
     ufix16  font_id;               /* Font id for calculated data           */
     fix15   xppo;                  /* X pixels per oru for calculated data  */
     fix15   yppo;                  /* Y pixels per oru for calculated data  */
@@ -212,8 +200,8 @@ constr_t;                          /* Constraint data state                 */
 
 typedef  struct kern_tag
     {
-    ufix8 FONTFAR *tkorg;                 /* First byte of track kerning data      */
-    ufix8 FONTFAR *pkorg;                 /* First byte of pair kerning data       */
+    ufix8 *tkorg;                 /* First byte of track kerning data      */
+    ufix8 *pkorg;                 /* First byte of pair kerning data       */
     fix15   no_tracks;             /* Number of kerning tracks              */
     fix15   no_pairs;              /* Number of kerning pairs               */
     }                  
@@ -221,7 +209,7 @@ kern_t;                            /* Kerning control block                 */
 
 typedef struct specs_tag
     {
-    buff_t STACKFAR *pfont;                 /* Pointer to font data                  */
+    buff_t *pfont;                 /* Pointer to font data                  */
     fix31   xxmult;                /* Coeff of X orus to compute X pix      */
     fix31   xymult;                /* Coeff of Y orus to compute X pix      */
     fix31   xoffset;               /* Constant to compute X pix             */
@@ -405,9 +393,9 @@ typedef struct speedo_global_data
 
 /* set_spcs.c data definitions */
          buff_t   font;
-         buff_t GLOBALFAR *pfont; /* Pointer to font buffer structure */
+         buff_t *pfont; /* Pointer to font buffer structure */
          fix31    font_buff_size; /* Number of bytes loaded in font buffer */
-         ufix8 FONTFAR *pchar_dir; /* Pointer to character directory */
+         ufix8 *pchar_dir; /* Pointer to character directory */
          fix15    first_char_idx; /* Index to first character in font */
          fix15    no_chars_avail; /* Total characters in font layout */
          fix15    orus_per_em;    /* Outline resolution */
@@ -433,7 +421,7 @@ typedef struct speedo_global_data
          fix15    pixfix;         /* Mask to remove fractional pixels */
          fix15    onepix;         /* 1.0 pixels in sub-pixel units */
 
-         boolean (*init_out)(specs_t GLOBALFAR *specsarg);
+         boolean (*init_out)(specs_t *specsarg);
          boolean (*begin_char)(point_t Psw,point_t Pmin,point_t Pmax); 
          void    (*begin_sub_char)(point_t Psw,point_t Pmin,point_t Pmax);
          void    (*begin_contour)(point_t P1,boolean outside); 
@@ -442,10 +430,10 @@ typedef struct speedo_global_data
          void    (*end_contour)(void); 
          void    (*end_sub_char)(void);
          boolean (*end_char)(void);    
-         specs_t GLOBALFAR *pspecs;    /* Pointer to specifications bundle */
+         specs_t *pspecs;    /* Pointer to specifications bundle */
          specs_t specs;                /* copy specs onto stack */
-         ufix8 FONTFAR  *font_org;     /* Pointer to start of font data */
-         ufix8 FONTFAR  *hdr2_org;     /* Pointer to start of private header data */
+         ufix8 *font_org;     /* Pointer to start of font data */
+         ufix8 *hdr2_org;     /* Pointer to start of private header data */
 
 /* set_trns.c data definitions */
          tcb_t    tcb;                 /* Current transformation control block */
@@ -500,7 +488,7 @@ typedef struct speedo_global_data
  *
  ***********************************************************************************/
 
-extern SPEEDO_GLOBALS GLOBALFAR sp_globals;
+extern SPEEDO_GLOBALS sp_globals;
 #define sp_intercepts sp_globals
 #define sp_plaid sp_globals
 
@@ -652,12 +640,12 @@ boolean sp_get_char_bbox(ufix16 char_index, bbox_t *bbox);
 #endif
 
 /* do_trns.c functions */
-ufix8 FONTFAR *sp_read_bbox(ufix8 FONTFAR *pointer,point_t STACKFAR *pPmin,point_t STACKFAR *pPmax,boolean set_flag);
-void sp_proc_outl_data(ufix8 FONTFAR *pointer);
+ufix8 *sp_read_bbox(ufix8 *pointer,point_t *pPmin,point_t *pPmax,boolean set_flag);
+void sp_proc_outl_data(ufix8 *pointer);
 
 /* out_blk.c functions */
 #if INCL_BLACK
-boolean sp_init_black(specs_t GLOBALFAR *specsarg);
+boolean sp_init_black(specs_t *specsarg);
 boolean sp_begin_char_black(point_t Psw,point_t Pmin,point_t Pmax);
 void sp_begin_contour_black(point_t P1,boolean outside);
 void sp_line_black(point_t P1);
@@ -666,7 +654,7 @@ boolean sp_end_char_black(void);
 
 /* out_scrn.c functions */
 #if INCL_SCREEN
-boolean sp_init_screen(specs_t GLOBALFAR *specsarg);
+boolean sp_init_screen(specs_t *specsarg);
 boolean sp_begin_char_screen(point_t Psw,point_t Pmin,point_t Pmax);
 void sp_begin_contour_screen(point_t P1,boolean outside);
 void sp_curve_screen(point_t P1,point_t P2,point_t P3, fix15 depth);
@@ -682,7 +670,7 @@ boolean sp_set_outline_device(outline_t *ofuncs, ufix16 size);
 #endif
 
 
-boolean sp_init_outline(specs_t GLOBALFAR *specsarg);
+boolean sp_init_outline(specs_t *specsarg);
 boolean sp_begin_char_outline(point_t Psw,point_t Pmin,point_t Pmax);
 void sp_begin_sub_char_outline(point_t Psw,point_t Pmin,point_t Pmax);
 void sp_begin_contour_outline(point_t P1,boolean outside);
@@ -695,7 +683,7 @@ boolean sp_end_char_outline(void);
 
 /* out_bl2d.c functions */
 #if INCL_2D
-boolean sp_init_2d(specs_t GLOBALFAR *specsarg);
+boolean sp_init_2d(specs_t *specsarg);
 boolean sp_begin_char_2d(point_t Psw,point_t Pmin,point_t Pmax);
 void sp_begin_contour_2d(point_t P1,boolean outside);
 void sp_line_2d(point_t P1);
@@ -734,20 +722,20 @@ void sp_set_key(ufix8 key[]);
 ufix16 sp_get_cust_no(buff_t font_buff);
 
 /* set_spcs.c functions */
-boolean sp_set_specs(specs_t STACKFAR *specsarg);
-void sp_type_tcb(tcb_t GLOBALFAR *ptcb);
+boolean sp_set_specs(specs_t *specsarg);
+void sp_type_tcb(tcb_t *ptcb);
 
-fix31 sp_read_long(ufix8 FONTFAR *pointer);
-fix15 sp_read_word_u(ufix8 FONTFAR *pointer);
+fix31 sp_read_long(ufix8 *pointer);
+fix15 sp_read_word_u(ufix8 *pointer);
 
 /* set_trns.c functions */
 void sp_init_tcb(void);
-void sp_scale_tcb(tcb_t GLOBALFAR *ptcb,fix15 x_pos,fix15 y_pos,fix15 x_scale,fix15 y_scale);
-ufix8 FONTFAR *sp_plaid_tcb(ufix8 FONTFAR *pointer,ufix8 format);
-ufix8 FONTFAR *sp_skip_interpolation_table(ufix8 FONTFAR *pointer, ufix8 format);
-ufix8 FONTFAR *sp_skip_control_zone(ufix8 FONTFAR *pointer, ufix8 format);
+void sp_scale_tcb(tcb_t *ptcb,fix15 x_pos,fix15 y_pos,fix15 x_scale,fix15 y_scale);
+ufix8 *sp_plaid_tcb(ufix8 *pointer,ufix8 format);
+ufix8 *sp_skip_interpolation_table(ufix8 *pointer, ufix8 format);
+ufix8 *sp_skip_control_zone(ufix8 *pointer, ufix8 format);
 
-ufix8 FONTFAR *sp_read_oru_table(ufix8 FONTFAR *pointer);
+ufix8 *sp_read_oru_table(ufix8 *pointer);
 #if INCL_SQUEEZING || INCL_ISW
 static void sp_calculate_x_pix(ufix8 start_edge,ufix8 end_edge,ufix16 constr_nr,fix31 x_scale,fix31 x_offset,fix31 ppo,fix15 setwidth_pix);
 #endif

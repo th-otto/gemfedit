@@ -92,9 +92,7 @@ static fix31 read_4b(ufix8 *pointer)
 int main(int argc, char **argv)
 {
 	int bytes_read;						/* Number of bytes read from font file */
-
 	ufix8 tmpufix8;						/* Temporary workspace */
-
 	ufix32 tmpufix32;					/* Temporary workspace */
 
 	if (argc != 2)

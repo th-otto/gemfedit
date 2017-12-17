@@ -50,15 +50,15 @@ WITH THE SPEEDO SOFTWARE OR THE BITSTREAM CHARTER OUTLINE FONT.
 
 /***** STATIC FUNCTIONS *****/
 
-static boolean sp_make_simp_char(ufix8 FONTFAR * pointer, ufix8 format);
+static boolean sp_make_simp_char(ufix8 * pointer, ufix8 format);
 
-static boolean sp_make_comp_char(ufix8 FONTFAR * pointer);
+static boolean sp_make_comp_char(ufix8 * pointer);
 
-static ufix8 FONTFAR *sp_get_char_org(ufix16 char_index, boolean top_level);
+static ufix8 *sp_get_char_org(ufix16 char_index, boolean top_level);
 
-static fix15 sp_get_posn_arg(ufix8 FONTFAR * STACKFAR * ppointer, ufix8 format);
+static fix15 sp_get_posn_arg(ufix8 * * ppointer, ufix8 format);
 
-static fix15 sp_get_scale_arg(ufix8 FONTFAR * STACKFAR * ppointer, ufix8 format);
+static fix15 sp_get_scale_arg(ufix8 * * ppointer, ufix8 format);
 
 
 /*
@@ -69,18 +69,18 @@ static fix15 sp_get_scale_arg(ufix8 FONTFAR * STACKFAR * ppointer, ufix8 format)
  */
 FUNCTION ufix16 sp_get_char_id(ufix16 char_index)	/* Index to character in char directory */
 {
-	ufix8 FONTFAR *pointer;				/* Pointer to character data */
+	ufix8 *pointer;				/* Pointer to character data */
 
 	if (!sp_globals.specs_valid)		/* Font specs not defined? */
 	{
-		report_error(10);				/* Report font not specified */
+		sp_report_error(10);			/* Report font not specified */
 		return (ufix16) 0;				/* Return zero character id */
 	}
 
 	pointer = sp_get_char_org(char_index, TRUE);	/* Get pointer to character data */
 	if (pointer == NULL)				/* Character data not available? */
 	{
-		report_error(12);				/* Report character data not avail */
+		sp_report_error(12);			/* Report character data not avail */
 		return (ufix16) 0;				/* Return zero character id */
 	}
 
@@ -97,20 +97,20 @@ FUNCTION ufix16 sp_get_char_id(ufix16 char_index)	/* Index to character in char 
  */
 FUNCTION fix31 sp_get_char_width(ufix16 char_index)	/* Index to character in char directory */
 {
-	ufix8 FONTFAR *pointer;				/* Pointer to character data */
+	ufix8 *pointer;				/* Pointer to character data */
 
 	fix31 set_width;					/* Set width of character */
 
 	if (!sp_globals.specs_valid)		/* Font specs not defined? */
 	{
-		report_error(10);				/* Report font not specified */
+		sp_report_error(10);			/* Report font not specified */
 		return (fix31) 0;				/* Return zero character width */
 	}
 
 	pointer = sp_get_char_org(char_index, TRUE);	/* Get pointer to character data */
 	if (pointer == NULL)				/* Character data not available? */
 	{
-		report_error(12);				/* Report character data not avail */
+		sp_report_error(12);			/* Report character data not avail */
 		return (fix31) 0;				/* Return zero character width */
 	}
 
@@ -141,7 +141,7 @@ FUNCTION fix31 sp_get_char_width(ufix16 char_index)	/* Index to character in cha
 FUNCTION fix15 sp_get_track_kern(fix15 track,	/* Track required (0 - 3) */
 							  fix15 point_size)	/* Point size (units of whole points) */
 {
-	ufix8 FONTFAR *pointer;				/* Pointer to character data */
+	ufix8 *pointer;				/* Pointer to character data */
 	fix15 no_tracks;					/* Number of kerning tracks in font */
 	ufix8 format;						/* Track kerning format byte */
 	fix15 i;							/* Track counter */
@@ -160,14 +160,14 @@ FUNCTION fix15 sp_get_track_kern(fix15 track,	/* Track required (0 - 3) */
 
 	if (!sp_globals.specs_valid)		/* Font specs not defined? */
 	{
-		report_error(10);				/* Report font not specified */
+		sp_report_error(10);			/* Report font not specified */
 		return adj;						/* Return zero track kerning adjustment */
 	}
 
 	no_tracks = sp_globals.kern.no_tracks;	/* Number of kerning tracks */
 	if (track > no_tracks)				/* Required track not available? */
 	{
-		report_error(13);				/* Report track kerning data not avail */
+		sp_report_error(13);			/* Report track kerning data not avail */
 		return adj;						/* Return zero track kerning adjustment */
 	}
 
@@ -208,8 +208,8 @@ FUNCTION fix15 sp_get_track_kern(fix15 track,	/* Track required (0 - 3) */
 FUNCTION fix31 sp_get_pair_kern(ufix16 char_index1,	/* Index to first character in char directory */
 							 ufix16 char_index2)	/* Index to second character in char directory */
 {
-	ufix8 FONTFAR *origin;				/* Pointer to first kerning pair record */
-	ufix8 FONTFAR *pointer;				/* Pointer to character data */
+	ufix8 *origin;				/* Pointer to first kerning pair record */
+	ufix8 *pointer;				/* Pointer to character data */
 	ufix16 tmpufix16;					/* Temporary workspace */
 	fix15 no_pairs;						/* Number of kerning pairs in font */
 	ufix8 format;						/* Track kerning format byte */
@@ -224,14 +224,14 @@ FUNCTION fix31 sp_get_pair_kern(ufix16 char_index1,	/* Index to first character 
 
 	if (!sp_globals.specs_valid)		/* Font specs not defined? */
 	{
-		report_error(10);				/* Report font not specified */
+		sp_report_error(10);			/* Report font not specified */
 		return adj;						/* Return zero pair kerning adjustment */
 	}
 
 	no_pairs = sp_globals.kern.no_pairs;	/* Number of kerning pairs */
 	if (no_pairs == 0)					/* Pair kerning data not available? */
 	{
-		report_error(14);				/* Report pair kerning data not avail */
+		sp_report_error(14);			/* Report pair kerning data not avail */
 		return adj;						/* Return zero pair kerning adjustment */
 	}
 
@@ -293,7 +293,7 @@ FUNCTION fix31 sp_get_pair_kern(ufix16 char_index1,	/* Index to first character 
  */
 FUNCTION boolean sp_get_char_bbox(ufix16 char_index, bbox_t * bbox)
 {
-	ufix8 FONTFAR *pointer;
+	ufix8 *pointer;
 	fix15 tmp;
 	fix15 format;
 	ufix16 pix_adj;
@@ -301,16 +301,16 @@ FUNCTION boolean sp_get_char_bbox(ufix16 char_index, bbox_t * bbox)
 
 	if (!sp_globals.specs_valid)		/* Font specs not defined? */
 	{
-		report_error(10);				/* Report font not specified */
+		sp_report_error(10);			/* Report font not specified */
 		return FALSE;					/* Error return */
 	}
 
-	init_tcb();							/* Initialize transformation control block */
+	sp_init_tcb();						/* Initialize transformation control block */
 
 	pointer = sp_get_char_org(char_index, TRUE);	/* Point to start of character data */
 	if (pointer == NULL)				/* Character data not available? */
 	{
-		report_error(12);				/* Report character data not avail */
+		sp_report_error(12);			/* Report character data not avail */
 		return FALSE;					/* Error return */
 	}
 
@@ -332,8 +332,8 @@ FUNCTION boolean sp_get_char_bbox(ufix16 char_index, bbox_t * bbox)
 		pix_adj = 0;
 	}
 
-	pointer = plaid_tcb(pointer, format);	/* Process plaid data */
-	pointer = read_bbox(pointer, &Pmin, &Pmax, (boolean) FALSE);	/* Read bounding box */
+	pointer = sp_plaid_tcb(pointer, format);	/* Process plaid data */
+	pointer = sp_read_bbox(pointer, &Pmin, &Pmax, (boolean) FALSE);	/* Read bounding box */
 
 	Pmin.x -= pix_adj;					/* ... of components of ... */
 	Pmin.y -= pix_adj;					/* ... compound ... */
@@ -363,32 +363,32 @@ FUNCTION boolean sp_make_char_isw(ufix16 char_index, ufix32 imported_setwidth)
 	sp_globals.import_setwidth_act = TRUE;
 	/* convert imported width to orus */
 	sp_globals.imported_width = (sp_globals.metric_resolution * imported_setwidth) >> 16;
-	return_value = do_make_char(char_index);
+	return_value = sp_do_make_char(char_index);
 
 	if (sp_globals.isw_modified_constants)
 	{
 		/* reset fixed point constants */
-		xmin = read_word_u(sp_globals.font_org + FH_FXMIN);
-		ymin = read_word_u(sp_globals.font_org + FH_FYMIN);
-		ymax = read_word_u(sp_globals.font_org + FH_FYMAX);
+		xmin = sp_read_word_u(sp_globals.font_org + FH_FXMIN);
+		ymin = sp_read_word_u(sp_globals.font_org + FH_FYMIN);
+		ymax = sp_read_word_u(sp_globals.font_org + FH_FYMAX);
 		sp_globals.constr.data_valid = FALSE;
-		xmax = read_word_u(sp_globals.font_org + FH_FXMAX);
-		if (!setup_consts(xmin, xmax, ymin, ymax))
+		xmax = sp_read_word_u(sp_globals.font_org + FH_FXMAX);
+		if (!sp_setup_consts(xmin, xmax, ymin, ymax))
 		{
-			report_error(3);			/* Requested specs out of range */
+			sp_report_error(3);		/* Requested specs out of range */
 			return FALSE;
 		}
 	}
-	return (return_value);
+	return return_value;
 }
 
 FUNCTION boolean sp_make_char(ufix16 char_index)	/* Index to character in char directory */
 {
 	sp_globals.import_setwidth_act = FALSE;
-	return do_make_char(char_index);
+	return sp_do_make_char(char_index);
 }
 
-FUNCTION static boolean do_make_char(ufix16 char_index)
+FUNCTION static boolean sp_do_make_char(ufix16 char_index)
 #else
 /*
  * Outputs specified character using the currently selected font and
@@ -400,7 +400,7 @@ FUNCTION static boolean do_make_char(ufix16 char_index)
 FUNCTION boolean sp_make_char(ufix16 char_index)
 #endif
 {
-	ufix8 FONTFAR *pointer;				/* Pointer to character data */
+	ufix8 *pointer;				/* Pointer to character data */
 	fix15 x_orus;
 	fix15 tmpfix15;
 	ufix8 format;
@@ -411,32 +411,32 @@ FUNCTION boolean sp_make_char(ufix16 char_index)
 
 	if (!sp_globals.specs_valid)		/* Font specs not defined? */
 	{
-		report_error(10);				/* Report font not specified */
+		sp_report_error(10);				/* Report font not specified */
 		return FALSE;					/* Error return */
 	}
 #if INCL_MULTIDEV
 #if INCL_OUTLINE
 	if (sp_globals.output_mode == MODE_OUTLINE && !sp_globals.outline_device_set)
 	{
-		report_error(2);
+		sp_report_error(2);
 		return FALSE;
 	} else
 #endif
 	if (!sp_globals.bitmap_device_set)
 	{
-		report_error(2);
+		sp_report_error(2);
 		return FALSE;
 	}
 #endif
 
 
-	init_tcb();							/* Initialize transformation control block */
+	sp_init_tcb();						/* Initialize transformation control block */
 
 	pointer = sp_get_char_org(char_index, TRUE);	/* Point to start of character data */
 	SHOW(pointer);
 	if (pointer == NULL)				/* Character data not available? */
 	{
-		report_error(12);				/* Report character data not avail */
+		sp_report_error(12);				/* Report character data not avail */
 		return FALSE;					/* Error return */
 	}
 
@@ -478,23 +478,23 @@ FUNCTION boolean sp_make_char(ufix16 char_index)
 
 
 #if INCL_ISW || INCL_SQUEEZING
-static void sp_preview_bounding_box(ufix8 FONTFAR * pointer,	/* Pointer to first byte of position argument */
+static void sp_preview_bounding_box(ufix8 * pointer,	/* Pointer to first byte of position argument */
 										  ufix8 format)	/* Character format byte */
 {
 	point_t Pmin, Pmax;						/* Transformed corners of bounding box */
 
 	sp_globals.no_X_orus = (format & BIT2) ? (fix15) NEXT_BYTE(pointer) : 0;
 	sp_globals.no_Y_orus = (format & BIT3) ? (fix15) NEXT_BYTE(pointer) : 0;
-	pointer = read_oru_table(pointer);
+	pointer = sp_read_oru_table(pointer);
 
 	/* Skip over control zone table */
-	pointer = skip_control_zone(pointer, format);
+	pointer = sp_skip_control_zone(pointer, format);
 
 	/* Skip over interpolation table */
-	pointer = skip_interpolation_table(pointer, format);
-	/* get_args has a pathological need for this value to be set */
+	pointer = sp_skip_interpolation_table(pointer, format);
+	/* sp_get_args has a pathological need for this value to be set */
 	sp_globals.Y_edge_org = sp_globals.no_X_orus;
-	pointer = read_bbox(pointer, &Pmin, &Pmax, TRUE);	/* Read bounding bo
+	pointer = sp_read_bbox(pointer, &Pmin, &Pmax, TRUE);	/* Read bounding bo
 														   x */
 
 }
@@ -505,12 +505,12 @@ static void sp_preview_bounding_box(ufix8 FONTFAR * pointer,	/* Pointer to first
  * Called by sp_make_char() to output a simple (non-compound) character.
  * Returns TRUE on completion.
  */
-FUNCTION static boolean sp_make_simp_char(ufix8 FONTFAR * pointer,	/* Pointer to first byte of position argument */
+FUNCTION static boolean sp_make_simp_char(ufix8 * pointer,	/* Pointer to first byte of position argument */
 										  ufix8 format)	/* Character format byte */
 {
 	point_t Pmin, Pmax;								/* Transformed corners of bounding box */
 #if INCL_SQUEEZING || INCL_ISW
-	ufix8 FONTFAR *save_pointer;
+	ufix8 *save_pointer;
 #endif
 #if INCL_ISW
 	fix31 char_width;
@@ -530,30 +530,30 @@ FUNCTION static boolean sp_make_simp_char(ufix8 FONTFAR * pointer,	/* Pointer to
 		pointer = save_pointer;
 	}
 #endif
-#if (INCL_ISW)
+#if INCL_ISW
 	if (sp_globals.import_setwidth_act)
 	{
 		save_pointer = pointer;
 		sp_preview_bounding_box(pointer, format);
 		pointer = save_pointer;
 		/* make sure I'm not going to get fixed point overflow */
-		isw_scale = compute_isw_scale();
+		isw_scale = sp_compute_isw_scale();
 		if (sp_globals.bbox_xmin_orus < 0)
 			char_width = SQUEEZE_MULT((sp_globals.bbox_xmax_orus - sp_globals.bbox_xmin_orus), isw_scale);
 		else
 			char_width = SQUEEZE_MULT(sp_globals.bbox_xmax_orus, isw_scale);
 		if (char_width >= sp_globals.isw_xmax)
-			if (!reset_xmax(char_width))
+			if (!sp_reset_xmax(char_width))
 				return FALSE;
 	}
 #endif
-	pointer = plaid_tcb(pointer, format);	/* Process plaid data */
-	pointer = read_bbox(pointer, &Pmin, &Pmax, FALSE);	/* Read bounding box */
+	pointer = sp_plaid_tcb(pointer, format);	/* Process plaid data */
+	pointer = sp_read_bbox(pointer, &Pmin, &Pmax, FALSE);	/* Read bounding box */
 	if (fn_begin_char(sp_globals.Psw, Pmin, Pmax))	/* Signal start of character output */
 	{
 		do
 		{
-			proc_outl_data(pointer);	/* Process outline data */
+			sp_proc_outl_data(pointer);	/* Process outline data */
 		} while (!fn_end_char());		/* Repeat if not done */
 	}
 	return TRUE;
@@ -564,12 +564,12 @@ FUNCTION static boolean sp_make_simp_char(ufix8 FONTFAR * pointer,	/* Pointer to
  * Returns FALSE if data for any sub-character is not available.
  * Returns TRUE if output completed with no error.
  */
-FUNCTION static boolean sp_make_comp_char(ufix8 FONTFAR * pointer)	/* Pointer to first byte of position argument */
+FUNCTION static boolean sp_make_comp_char(ufix8 * pointer)	/* Pointer to first byte of position argument */
 {
 	point_t Pmin, Pmax;					/* Transformed corners of bounding box */
 	point_t Pssw;						/* Transformed escapement vector */
-	ufix8 FONTFAR *pointer_sav;			/* Saved pointer to compound character data */
-	ufix8 FONTFAR *sub_pointer;			/* Pointer to sub-character data */
+	ufix8 *pointer_sav;			/* Saved pointer to compound character data */
+	ufix8 *sub_pointer;			/* Pointer to sub-character data */
 	ufix8 format;						/* Format of DOCH instruction */
 	ufix16 sub_char_index;				/* Index to sub-character in character directory */
 	fix15 x_posn;						/* X position of sub-character (outline res units) */
@@ -596,7 +596,7 @@ FUNCTION static boolean sp_make_comp_char(ufix8 FONTFAR * pointer)	/* Pointer to
 #if INCL_SQUEEZING
 	sp_globals.squeezing_compound = TRUE;
 #endif
-	pointer = read_bbox(pointer, &Pmin, &Pmax, TRUE);	/* Read bounding box data */
+	pointer = sp_read_bbox(pointer, &Pmin, &Pmax, TRUE);	/* Read bounding box data */
 	pix_adj = sp_globals.onepix << 1;	/* Allow 2 pixel expansion ... */
 	Pmin.x -= pix_adj;					/* ... of components of ... */
 	Pmin.y -= pix_adj;					/* ... compound ... */
@@ -628,14 +628,14 @@ FUNCTION static boolean sp_make_comp_char(ufix8 FONTFAR * pointer)	/* Pointer to
 			Pmax.y = SQUEEZE_MULT(top_scale, Pmax.y) + pix_adj;
 	}
 #endif
-#if (INCL_ISW)
+#if INCL_ISW
 	if (sp_globals.import_setwidth_act)
 	{
 		/* make sure I'm not going to get fixed point overflow */
 		isw_scale = ((fix31) sp_globals.imported_width << 16) / (fix31) sp_globals.setwidth_orus;
 		char_width = SQUEEZE_MULT((sp_globals.bbox_xmax_orus - sp_globals.bbox_xmin_orus), isw_scale);
 		if (char_width >= sp_globals.isw_xmax)
-			if (!reset_xmax(char_width))
+			if (!sp_reset_xmax(char_width))
 				return FALSE;
 	}
 #endif
@@ -648,12 +648,12 @@ FUNCTION static boolean sp_make_comp_char(ufix8 FONTFAR * pointer)	/* Pointer to
 			pointer = pointer_sav;		/* Point to next DOCH or END instruction */
 			while ((format = NEXT_BYTE(pointer)))	/* DOCH instruction? */
 			{
-				init_tcb();				/* Initialize transformation control block */
+				sp_init_tcb();			/* Initialize transformation control block */
 				x_posn = sp_get_posn_arg(&pointer, format);
 				y_posn = sp_get_posn_arg(&pointer, (ufix8) (format >> 2));
 				x_scale = sp_get_scale_arg(&pointer, (ufix8) (format & BIT4));
 				y_scale = sp_get_scale_arg(&pointer, (ufix8) (format & BIT5));
-				scale_tcb(&sp_globals.tcb, x_posn, y_posn, x_scale, y_scale);	/* Scale for sub-char */
+				sp_scale_tcb(&sp_globals.tcb, x_posn, y_posn, x_scale, y_scale);	/* Scale for sub-char */
 				sub_char_index = (format & BIT6) ?	/* Read sub-char index */
 					0xffff & NEXT_WORD(pointer) : 0xffff & NEXT_BYTE(pointer);
 				sub_pointer = sp_get_char_org(sub_char_index, FALSE);	/* Point to start of sub-char */
@@ -680,10 +680,10 @@ FUNCTION static boolean sp_make_comp_char(ufix8 FONTFAR * pointer)	/* Pointer to
 					tmpfix15 = (ufix8) NEXT_BYTE(sub_pointer);	/* Read size of optional data */
 					sub_pointer += tmpfix15;	/* Skip optional data */
 				}
-				sub_pointer = plaid_tcb(sub_pointer, format);	/* Process sub-character plaid data */
-				sub_pointer = read_bbox(sub_pointer, &Pmin, &Pmax, FALSE);	/* Read bounding box */
+				sub_pointer = sp_plaid_tcb(sub_pointer, format);	/* Process sub-character plaid data */
+				sub_pointer = sp_read_bbox(sub_pointer, &Pmin, &Pmax, FALSE);	/* Read bounding box */
 				fn_begin_sub_char(Pssw, Pmin, Pmax);	/* Signal start of sub-character data */
-				proc_outl_data(sub_pointer);	/* Process sub-character data */
+				sp_proc_outl_data(sub_pointer);	/* Process sub-character data */
 				fn_end_sub_char();		/* Signal end of sub-character data */
 			}
 		} while (!fn_end_char());		/* Signal end of character; repeat if required */
@@ -697,15 +697,15 @@ FUNCTION static boolean sp_make_comp_char(ufix8 FONTFAR * pointer)	/* Pointer to
  * sp_make_comp_char() to get a pointer to the start of the character data
  * for the specified character index.
  * Version for configuration supporting dynamic character data loading.
- * Calls load_char_data() to load character data if not already loaded
+ * Calls sp_load_char_data() to load character data if not already loaded
  * as part of the original font buffer.
  * Returns NULL if character data not available
  */
-FUNCTION static ufix8 FONTFAR *sp_get_char_org(ufix16 char_index,	/* Index of character to be accessed */
+FUNCTION static ufix8 *sp_get_char_org(ufix16 char_index,	/* Index of character to be accessed */
 											   boolean top_level)	/* Not a compound character element */
 {
 	buff_t *pchar_data;					/* Buffer descriptor requested */
-	ufix8 FONTFAR *pointer;				/* Pointer into character directory */
+	ufix8 *pointer;				/* Pointer into character directory */
 	ufix8 format;						/* Character directory format byte */
 	fix31 char_offset;					/* Offset of char data from start of font file */
 	fix31 next_char_offset;				/* Offset of char data from start of font file */
@@ -727,8 +727,8 @@ FUNCTION static ufix8 FONTFAR *sp_get_char_org(ufix16 char_index,	/* Index of ch
 	if (format)							/* 3-byte entries in char directory? */
 	{
 		pointer += char_index;			/* Adjust for 3-byte entries */
-		char_offset = read_long(pointer);	/* Read file offset to char data */
-		next_char_offset = read_long(pointer + 3);	/* Read offset to next char */
+		char_offset = sp_read_long(pointer);	/* Read file offset to char data */
+		next_char_offset = sp_read_long(pointer + 3);	/* Read offset to next char */
 	} else
 	{
 		char_offset = (fix31) (0xffff & NEXT_WORD(pointer));	/* Read file offset to char data */
@@ -742,7 +742,7 @@ FUNCTION static ufix8 FONTFAR *sp_get_char_org(ufix16 char_index,	/* Index of ch
 	if (next_char_offset <= sp_globals.font_buff_size)	/* Character data already in font buffer? */
 		return sp_globals.pfont->org + char_offset;	/* Return pointer into font buffer */
 
-	pchar_data = load_char_data(char_offset, no_bytes, sp_globals.cb_offset);	/* Request char data load */
+	pchar_data = sp_load_char_data(char_offset, no_bytes, sp_globals.cb_offset);	/* Request char data load */
 	if (pchar_data->no_bytes < no_bytes)	/* Correct number of bytes loaded? */
 		return NULL;
 
@@ -764,10 +764,10 @@ FUNCTION static ufix8 FONTFAR *sp_get_char_org(ufix16 char_index,	/* Index of ch
  * Version for configuration not supporting dynamic character data loading.
  * Returns NULL if character data not available
  */
-FUNCTION static ufix8 FONTFAR *sp_get_char_org(ufix16 char_index,	/* Index of character to be accessed */
+FUNCTION static ufix8 *sp_get_char_org(ufix16 char_index,	/* Index of character to be accessed */
 											   boolean top_level)	/* Not a compound character element */
 {
-	ufix8 FONTFAR *pointer;				/* Pointer into character directory */
+	ufix8 *pointer;				/* Pointer into character directory */
 	ufix8 format;						/* Character directory format byte */
 	fix31 char_offset;					/* Offset of char data from start of font file */
 	fix31 next_char_offset;				/* Offset of char data from start of font file */
@@ -788,8 +788,8 @@ FUNCTION static ufix8 FONTFAR *sp_get_char_org(ufix16 char_index,	/* Index of ch
 	if (format)							/* 3-byte entries in char directory? */
 	{
 		pointer += char_index;			/* Adjust for 3-byte entries */
-		char_offset = read_long(pointer);	/* Read file offset to char data */
-		next_char_offset = read_long(pointer + 3);	/* Read offset to next char */
+		char_offset = sp_read_long(pointer);	/* Read file offset to char data */
+		next_char_offset = sp_read_long(pointer + 3);	/* Read offset to next char */
 	} else
 	{
 		char_offset = (fix31) (0xffff & NEXT_WORD(pointer));	/* Read file offset to char data */
@@ -811,7 +811,7 @@ FUNCTION static ufix8 FONTFAR *sp_get_char_org(ufix16 char_index,	/* Index of ch
  * Updates pointer to byte following position argument.
  * Returns value of position argument in outline resolution units
  */
-FUNCTION static fix15 sp_get_posn_arg(ufix8 FONTFAR * STACKFAR * ppointer,	/* Pointer to first byte of position argument */
+FUNCTION static fix15 sp_get_posn_arg(ufix8 * * ppointer,	/* Pointer to first byte of position argument */
 									  ufix8 format)	/* Format of DOCH arguments */
 {
 	switch (format & 0x03)
@@ -833,7 +833,7 @@ FUNCTION static fix15 sp_get_posn_arg(ufix8 FONTFAR * STACKFAR * ppointer,	/* Po
  * Updates pointer to byte following scale argument.
  * Returns value of scale argument in scale units (normally 1/4096)
  */
-FUNCTION static fix15 sp_get_scale_arg(ufix8 FONTFAR * STACKFAR * ppointer,	/* Pointer to first byte of position argument */
+FUNCTION static fix15 sp_get_scale_arg(ufix8 * * ppointer,	/* Pointer to first byte of position argument */
 									   ufix8 format)	/* Format of DOCH arguments */
 {
 	if (format)
@@ -851,13 +851,13 @@ FUNCTION static boolean sp_reset_xmax(fix31 xmax)
 
 
 	sp_globals.isw_modified_constants = TRUE;
-	xmin = read_word_u(sp_globals.font_org + FH_FXMIN);
-	ymin = read_word_u(sp_globals.font_org + FH_FYMIN);
-	ymax = read_word_u(sp_globals.font_org + FH_FYMAX);
+	xmin = sp_read_word_u(sp_globals.font_org + FH_FXMIN);
+	ymin = sp_read_word_u(sp_globals.font_org + FH_FYMIN);
+	ymax = sp_read_word_u(sp_globals.font_org + FH_FYMAX);
 
-	if (!setup_consts(xmin, xmax, ymin, ymax))
+	if (!sp_setup_consts(xmin, xmax, ymin, ymax))
 	{
-		report_error(3);				/* Requested specs out of range */
+		sp_report_error(3);				/* Requested specs out of range */
 		return FALSE;
 	}
 	sp_globals.constr.data_valid = FALSE;

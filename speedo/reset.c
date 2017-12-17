@@ -101,17 +101,17 @@ void sp_set_key(ufix8 key[])	/* Specified decryption key */
 */
 ufix16 sp_get_cust_no(buff_t font_buff)
 {
-	ufix8 FONTFAR *hdr2_org;
+	ufix8 *hdr2_org;
 	ufix16 private_off;
 
-	private_off = read_word_u(font_buff.org + FH_HEDSZ);
+	private_off = sp_read_word_u(font_buff.org + FH_HEDSZ);
 	if (private_off + FH_CUSNR > font_buff.no_bytes)
 	{
-		report_error(1);				/* Insufficient font data loaded */
+		sp_report_error(1);				/* Insufficient font data loaded */
 		return FALSE;
 	}
 
 	hdr2_org = font_buff.org + private_off;
 
-	return (read_word_u(hdr2_org + FH_CUSNR));
+	return sp_read_word_u(hdr2_org + FH_CUSNR);
 }
