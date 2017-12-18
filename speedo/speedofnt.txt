@@ -1,0 +1,146 @@
+font0419.spd: Courier 10 Pitch
+font0582.spd: Courier 10 Pitch Italic
+font0583.spd: Courier 10 Pitch Bold
+font0611.spd: Courier 10 Pitch Bold Italic
+font0648.spd: Transitional 801 Bitstream Charter
+font0649.spd: Transitional 801 Bitstream Charter Italic
+font0709.spd: Transitional 801 Bitstream Charter Black
+font0710.spd: Transitional 801 Bitstream Charter Black Italic
+
+
+
+bx000003.spd: Swiss 721
+bx000004.spd: Swiss 721 Italic
+bx000005.spd: Swiss 721 Bold
+bx000006.spd: Swiss 721 Bold Italic
+bx000011.spd: Dutch 801 Roman
+bx000012.spd: Dutch 801 Italic
+bx000013.spd: Dutch 801 Bold
+bx000014.spd: Dutch 801 Bold Italic
+bx000031.spd: Baskerville
+bx000032.spd: Baskerville Italic
+bx000033.spd: Baskerville Bold
+bx000034.spd: Baskerville Bold Italic
+bx000043.spd: American Garamond
+bx000044.spd: American Garamond Italic
+bx000045.spd: American Garamond Bold
+bx000046.spd: American Garamond Bold Italic
+bx000083.spd: Century Schoolbook
+bx000084.spd: Century Schoolbook Italic
+bx000085.spd: Century Schoolbook Bold
+bx000086.spd: Century Schoolbook Bold Italic
+bx000104.spd: Swiss 911 Compressed
+bx000105.spd: Swiss 911 Extra Compressed
+bx000138.spd: Futura Light
+bx000139.spd: Futura Light Italic
+bx000148.spd: Futura Extra Black
+bx000167.spd: Shotgun
+bx000191.spd: Stencil
+bx000195.spd: Davida Bold
+bx000201.spd: Futura Medium Condensed
+bx000209.spd: Impress
+bx000213.spd: Orbit-B
+bx000215.spd: Vineta
+bx000234.spd: Shotgun Blanks
+bx000244.spd: Franklin Gothic
+bx000245.spd: Franklin Gothic Extra Condensed
+bx000265.spd: Humanist 970 Bold
+bx000277.spd: Classical Garamond
+bx000278.spd: Classical Garamond Italic
+bx000279.spd: Classical Garamond Bold
+bx000283.spd: Clarendon
+bx000284.spd: Clarendon Bold
+bx000290.spd: Humanist 521
+bx000291.spd: Humanist 521 Italic
+bx000292.spd: Humanist 521 Bold
+bx000293.spd: Humanist 521 Bold Italic
+bx000325.spd: Franklin Gothic Condensed
+bx000362.spd: Park Avenue (532 glyphs)
+bx000418.spd: Freehand 471
+bx000448.spd: ITC Zapf Chancery Medium Italic
+bx000485.spd: Geometric Slabserif 712 Medium
+bx000486.spd: Geometric Slabserif 712 Medium Italic
+bx000487.spd: Geometric Slabserif 712 Bold
+bx000488.spd: Geometric Slabserif 712 Extra Bold
+bx000510.spd: Amelia
+bx000512.spd: Franklin Gothic Italic
+bx000594.spd: Shelley Allegro
+bx000596.spd: Monospace 821
+bx000606.spd: Thunderbird
+bx000610.spd: Staccato 222
+bx000627.spd: Exotic 350 Demi-Bold
+bx000628.spd: Exotic 350 Bold
+bx000630.spd: Bitstream Cooper Black
+bx000643.spd: Bitstream Amerigo
+bx000644.spd: Bitstream Amerigo Italic
+bx000645.spd: Bitstream Amerigo Bold
+bx000648.spd: Bitstream Charter
+bx000649.spd: Bitstream Charter Italic
+bx000709.spd: Bitstream Charter Black
+bx000710.spd: Bitstream Charter Black Italic
+bx000714.spd: Freeform 710
+bx000756.spd: VAG Rounded
+bx000772.spd: Bitstream Amerigo Bold Italic
+bx000793.spd: Modern 735
+bx000807.spd: Gothic 821 Condensed
+bx000953.spd: Cataneo Bold
+bx000972.spd: Classical Garamond Bold Italic
+bx000981.spd: Nuptial
+bx000982.spd: Monterey
+bx000983.spd: Fraktur
+bx001001.spd: Freeform 721 Black
+bx001002.spd: Freeform 721 Black Italic
+bx001011.spd: Normande
+bx001012.spd: Normande Italic
+bx001018.spd: Freehand 521 (532 glyphs)
+bx001043.spd: Freehand 591
+bx001046.spd: Freehand 575
+bx001049.spd: Goudy Heavyface
+bx001074.spd: Umbra
+bx001115.spd: Informal 011
+bx001138.spd: Allegro
+bx001139.spd: Calligraphic 421
+bx001149.spd: Bitstream Arrus Black
+bx001151.spd: Tango
+bx001153.spd: Staccato 555
+bx001154.spd: Ad Lib
+bx001177.spd: Huxley Vertical
+bx001221.spd: Mister Earl
+bx001232.spd: Bremen Black
+bx019831.spd: Symbol Monospaced (434 glyphs)
+bx019859.spd: Interleaf - Math Roman
+bx027011.spd: Dutch 801 Greek Interleaf Roman
+bx027012.spd: Dutch 801 Greek Interleaf Inclined
+bx027013.spd: Dutch 801 Greek Interleaf Bold
+bx027014.spd: Dutch 801 Greek Interleaf Bold Inclined
+bx143219.spd: More Wingbats SWC (282 glyphs)
+bx990003.spd: Swiss 721
+bx990004.spd: Swiss 721 Italic
+bx990005.spd: Swiss 721 Bold
+bx990006.spd: Swiss 721 Bold Italic
+bx990011.spd: Dutch 801 Roman
+bx990012.spd: Dutch 801 Italic
+bx990013.spd: Dutch 801 Bold
+bx990014.spd: Dutch 801 Bold Italic
+
+ilmtha.spd: Mathafont
+ilmthb.spd: Interleaf TestFont
+ilmthex.spd: Interleaf TestFont
+ilsymb.spd: FatSymbols
+ilsystem.spd: Sysfont3
+
+bt223000.spd: Dutch 801 Roman - SWA
+bt223001.spd: Dutch 801 Italic - SWA
+bt223002.spd: Dutch 801 Bold - SWA
+bt223003.spd: Dutch 801 Bold Italic - SWA
+bt223004.spd: Swiss 721 - SWA
+bt223005.spd: Swiss 721 Oblique - SWA
+bt223006.spd: Swiss 721 Bold - SWA
+bt223007.spd: Swiss 721 Bold Oblique - SWA
+bt223008.spd: Fixed Pitch 810 Courier 10 Pitch/Text - SWA
+bt223009.spd: Fixed Pitch 810 Courier Italic 10 pitch/text - SWA
+bt223010.spd: Fixed Pitch 810 Courier Bold 10 Pitch/Text - SWA
+bt223011.spd: Fixed Pitch 810 Courier Bold Italic 10 Pitch/Text - SWA
+bt223012.spd: Symbol - SWA
+bt223013.spd: Zapf Calligraphic 801 - SWA
+bt223014.spd: Zapf Calligraphic 801 Italic - SWA

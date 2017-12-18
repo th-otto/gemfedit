@@ -190,9 +190,11 @@ int main(int argc, char **argv)
 		fprintf(stderr, "Non-standard encryption for \"%s\"\n", fontfile);
 		return 1;
 #endif
+	} else
+	{
+		sp_set_key(key);
 	}
-	sp_set_key(key);
-
+	
 	first_char_index = read_2b(f_buffer + FH_FCHRF);
 	num_chars = read_2b(f_buffer + FH_NCHRL);
 
