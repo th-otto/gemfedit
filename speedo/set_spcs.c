@@ -276,7 +276,7 @@ boolean sp_set_specs(specs_t *specsarg)	/* Bundle of conversion specifications *
 
 	if (!fn_init_out(sp_globals.pspecs))
 	{
-		sp_report_error(5);
+		sp_report_error(5);				/* Requested specs not compatible with output module */
 		return FALSE;
 	}
 
@@ -302,7 +302,7 @@ boolean sp_set_specs(specs_t *specsarg)	/* Bundle of conversion specifications *
 	{
 #if (INCL_SQUEEZING)
 #else
-		sp_report_error(11);
+		sp_report_error(11);			/* Squeezing/Clipping requested but not supported */
 		return FALSE;
 #endif
 	}

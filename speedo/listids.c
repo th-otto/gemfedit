@@ -59,6 +59,7 @@ from The Open Group.
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdarg.h>
 #include "speedo.h"
 
 #ifdef EXTRAFONTS
@@ -260,52 +261,13 @@ buff_t *sp_load_char_data(fix31 file_offset, fix15 num, fix15 cb_offset)
 }
 
 
-/*
- * Called by Speedo character generator to report an error.
- *
- *  Since character data not available is one of those errors
- *  that happens many times, don't report it to user
- */
-void sp_report_error(fix15 n)
+void sp_write_error(const char *str, ...)
 {
-	switch (n)
-	{
-	case 1:
-		fprintf(stderr, "Insufficient font data loaded\n");
-		break;
-	case 3:
-		fprintf(stderr, "Transformation matrix out of range\n");
-		break;
-	case 4:
-		fprintf(stderr, "Font format error\n");
-		break;
-	case 5:
-		fprintf(stderr, "Requested specs not compatible with output module\n");
-		break;
-	case 7:
-		fprintf(stderr, "Intelligent transformation requested but not supported\n");
-		break;
-	case 8:
-		fprintf(stderr, "Unsupported output mode requested\n");
-		break;
-	case 9:
-		fprintf(stderr, "Extended font loaded but only compact fonts supported\n");
-		break;
-	case 10:
-		fprintf(stderr, "Font specs not set prior to use of font\n");
-		break;
-	case 12:
-		break;
-	case 13:
-		fprintf(stderr, "Track kerning data not available()\n");
-		break;
-	case 14:
-		fprintf(stderr, "Pair kerning data not available()\n");
-		break;
-	default:
-		fprintf(stderr, "report_error(%d)\n", n);
-		break;
-	}
+	va_list v;
+
+	va_start(v, str);
+	vfprintf(stderr, str, v);
+	va_end(v);
 }
 
 

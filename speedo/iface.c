@@ -379,64 +379,6 @@ buff_t *sp_load_char_data(fix31 file_offset, fix15 no_bytes, fix15 cb_offset)
 
 
 
-/*
- * Called by Speedo character generator to report an error.
- */
-void sp_report_error(fix15 n)
-{
-	switch (n)
-	{
-	case 1:
-		printf("Insufficient font data loaded\n");
-		break;
-
-	case 3:
-		printf("Transformation matrix out of range\n");
-		break;
-
-	case 4:
-		printf("Font format error\n");
-		break;
-
-	case 5:
-		printf("Requested specs not compatible with output module\n");
-		break;
-
-	case 7:
-		printf("Intelligent transformation requested but not supported\n");
-		break;
-
-	case 8:
-		printf("Unsupported output mode requested\n");
-		break;
-
-	case 9:
-		printf("Extended font loaded but only compact fonts supported\n");
-		break;
-
-	case 10:
-		printf("Font specs not set prior to use of font\n");
-		break;
-
-	case 12:
-		printf("Character data not available()\n");
-		break;
-
-	case 13:
-		printf("Track kerning data not available()\n");
-		break;
-
-	case 14:
-		printf("Pair kerning data not available()\n");
-		break;
-
-	default:
-		printf("report_error(%d)\n", n);
-		break;
-	}
-}
-
-
 /* 
  * Called by Speedo character generator to initialize a buffer prior
  * to receiving bitmap data.

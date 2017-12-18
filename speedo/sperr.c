@@ -56,65 +56,17 @@ from The Open Group.
 
 #include <stdarg.h>
 
-extern void ErrorF(const char *f, ...);
-
-void SpeedoErr(char *str, ...)
+void sp_write_error(const char *str, ...)
 {
 	va_list v;
-	int a1;
+	void *a1;
+	void *a2;
 
 	va_start(v, str);
 	ErrorF("Speedo: ");
-	a1 = va_arg(v, int);
+	a1 = va_arg(v, void *);
+	a2 = va_arg(v, void *);
 
-	ErrorF(str, a1);
+	ErrorF(str, a1, a2);
 	va_end(v);
-}
-
-/*
- * Called by Speedo character generator to report an error.
- *
- *  Since character data not available is one of those errors
- *  that happens many times, don't report it to user
- */
-void sp_report_error(fix15 n)
-{
-	switch (n)
-	{
-	case 1:
-		SpeedoErr("Insufficient font data loaded\n");
-		break;
-	case 3:
-		SpeedoErr("Transformation matrix out of range\n");
-		break;
-	case 4:
-		SpeedoErr("Font format error\n");
-		break;
-	case 5:
-		SpeedoErr("Requested specs not compatible with output module\n");
-		break;
-	case 7:
-		SpeedoErr("Intelligent transformation requested but not supported\n");
-		break;
-	case 8:
-		SpeedoErr("Unsupported output mode requested\n");
-		break;
-	case 9:
-		SpeedoErr("Extended font loaded but only compact fonts supported\n");
-		break;
-	case 10:
-		SpeedoErr("Font specs not set prior to use of font\n");
-		break;
-	case 12:
-		break;
-	case 13:
-		SpeedoErr("Track kerning data not available()\n");
-		break;
-	case 14:
-		SpeedoErr("Pair kerning data not available()\n");
-		break;
-	default:
-		SpeedoErr("report_error(%d)\n", n);
-		break;
-	}
 }

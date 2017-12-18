@@ -418,13 +418,13 @@ boolean sp_make_char(ufix16 char_index)
 #if INCL_OUTLINE
 	if (sp_globals.output_mode == MODE_OUTLINE && !sp_globals.outline_device_set)
 	{
-		sp_report_error(2);
+		sp_report_error(2);				/* Transformation matrix out of range */
 		return FALSE;
 	} else
 #endif
 	if (!sp_globals.bitmap_device_set)
 	{
-		sp_report_error(2);
+		sp_report_error(2);				/* Transformation matrix out of range */
 		return FALSE;
 	}
 #endif
@@ -436,7 +436,7 @@ boolean sp_make_char(ufix16 char_index)
 	SHOW(pointer);
 	if (pointer == NULL)				/* Character data not available? */
 	{
-		sp_report_error(12);				/* Report character data not avail */
+		sp_report_error(12);			/* Character data not available */
 		return FALSE;					/* Error return */
 	}
 

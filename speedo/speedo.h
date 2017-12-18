@@ -741,6 +741,7 @@ boolean sp_calculate_y_scale(fix31 *top_scale,fix31 *bottom_scale,fix15 first_y_
 /* user defined functions */
 
 void sp_report_error(fix15 n);
+void sp_write_error(const char *fmt, ...);
 
 #if INCL_BLACK || INCL_SCREEN || INCL_2D
 void sp_open_bitmap(fix31 x_set_width, fix31 y_set_width, fix31 xorg, fix31 yorg, fix15 xsize, fix15 ysize);

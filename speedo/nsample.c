@@ -43,6 +43,7 @@ WITH THE SPEEDO SOFTWARE OR THE BITSTREAM CHARTER OUTLINE FONT.
 #include <stddef.h>
 #include <malloc.h>
 #include <stdlib.h>
+#include <stdarg.h>
 
 int main(int argc, char *argv[]);
 
@@ -319,62 +320,16 @@ buff_t *sp_load_char_data(
 
 /*
  * Called by Speedo character generator to report an error.
- *
- *  Since character data not available is one of those errors
- *  that happens many times, don't report it to user
  */
-void sp_report_error(fix15 n)
+void sp_write_error(const char *str, ...)
 {
-	switch (n)
-	{
-	case 1:
-		printf("Insufficient font data loaded\n");
-		break;
+	va_list v;
 
-	case 3:
-		printf("Transformation matrix out of range\n");
-		break;
-
-	case 4:
-		printf("Font format error\n");
-		break;
-
-	case 5:
-		printf("Requested specs not compatible with output module\n");
-		break;
-
-	case 7:
-		printf("Intelligent transformation requested but not supported\n");
-		break;
-
-	case 8:
-		printf("Unsupported output mode requested\n");
-		break;
-
-	case 9:
-		printf("Extended font loaded but only compact fonts supported\n");
-		break;
-
-	case 10:
-		printf("Font specs not set prior to use of font\n");
-		break;
-
-	case 12:
-		break;
-
-	case 13:
-		printf("Track kerning data not available()\n");
-		break;
-
-	case 14:
-		printf("Pair kerning data not available()\n");
-		break;
-
-	default:
-		printf("report_error(%d)\n", n);
-		break;
-	}
+	va_start(v, str);
+	vfprintf(stderr, str, v);
+	va_end(v);
 }
+
 
 /* 
  * Called by Speedo character generator to initialize a buffer prior

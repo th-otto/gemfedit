@@ -150,7 +150,6 @@ extern void sp_close_font(SpeedoFontPtr);
 extern void sp_close_master_font(SpeedoMasterFontPtr);
 extern void sp_close_master_file(SpeedoMasterFontPtr);
 extern void sp_reset_master(SpeedoMasterFontPtr);
-extern void SpeedoErr(char *fmt, ...);
 
 extern void sp_make_standard_props(void);
 extern void sp_make_header(SpeedoFontPtr, FontInfoPtr);
