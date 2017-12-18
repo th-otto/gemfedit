@@ -76,8 +76,7 @@ static char line_of_bits[MAX_BITS][MAX_BITS + 1];
 
 static FILE *fp;
 
-static ufix16 char_index,
- char_id;
+static ufix16 char_index, char_id;
 
 static buff_t font;
 
@@ -419,7 +418,7 @@ int main(int argc, char **argv)
 				char_id = iso_map[i];
 				if (!sp_make_char(char_index))
 				{
-					fprintf(stderr, "can't make char %x\n", char_index);
+					fprintf(stderr, "can't make char %d (%x)\n", char_index, char_id);
 				}
 			}
 		} else
@@ -432,7 +431,7 @@ int main(int argc, char **argv)
 				{
 					if (!sp_make_char(char_index))
 					{
-						fprintf(stderr, "can't make char %x\n", char_index);
+						fprintf(stderr, "can't make char %d (%x)\n", char_index, char_id);
 					}
 				}
 			}
@@ -538,11 +537,7 @@ void sp_open_bitmap(fix31 x_set_width, fix31 y_set_width, fix31 xorg, fix31 yorg
 
 	if (bit_width > MAX_BITS)
 	{
-
-#ifdef DEBUG
-		fprintf(stderr, "char wider than max bits -- truncated\n");
-#endif
-
+		fprintf(stderr, "char 0x%x (0x%x) wider than max bits (%d vs %d)\n", char_index, char_id, bit_width, MAX_BITS);
 		bit_width = MAX_BITS;
 	}
 	width = sp_get_char_width(char_index);
@@ -559,15 +554,15 @@ void sp_open_bitmap(fix31 x_set_width, fix31 y_set_width, fix31 xorg, fix31 yorg
 
 #ifdef DEBUG
 	if ((bb.xmax - bb.xmin) != bit_width)
-		fprintf(stderr, "bbox & width mismatch 0x%x (%d) (%d vs %d)\n",
+		fprintf(stderr, "bbox & width mismatch 0x%x (0x%x) (%d vs %d)\n",
 				char_index, char_id, (bb.xmax - bb.xmin), bit_width);
 	if ((bb.ymax - bb.ymin) != bit_height)
-		fprintf(stderr, "bbox & height mismatch 0x%x (%d) (%d vs %d)\n",
+		fprintf(stderr, "bbox & height mismatch 0x%x (0x%x) (%d vs %d)\n",
 				char_index, char_id, (bb.ymax - bb.ymin), bit_height);
 	if (bb.xmin != off_horz)
-		fprintf(stderr, "x min mismatch 0x%x (%d) (%d vs %d)\n", char_index, char_id, bb.xmin, off_horz);
+		fprintf(stderr, "x min mismatch 0x%x (0x%x) (%d vs %d)\n", char_index, char_id, bb.xmin, off_horz);
 	if (bb.ymin != off_vert)
-		fprintf(stderr, "y min mismatch 0x%x (%d) (%d vs %d)\n", char_index, char_id, bb.ymin, off_vert);
+		fprintf(stderr, "y min mismatch 0x%x (0x%x) (%d vs %d)\n", char_index, char_id, bb.ymin, off_vert);
 #endif
 
 #ifdef BBOX_CLIP
@@ -583,7 +578,7 @@ void sp_open_bitmap(fix31 x_set_width, fix31 y_set_width, fix31 xorg, fix31 yorg
 		bit_width = 1;
 		bit_height = 1;
 	}
-	printf("STARTCHAR %d\n", char_id);
+	printf("STARTCHAR %d\n", char_index);
 	printf("ENCODING %d\n", char_id);
 	printf("SWIDTH %d 0\n", width);
 	printf("DWIDTH %d 0\n", pix_width);
@@ -592,13 +587,13 @@ void sp_open_bitmap(fix31 x_set_width, fix31 y_set_width, fix31 xorg, fix31 yorg
 
 	if (bit_width > MAX_BITS)
 	{
-		fprintf(stderr, "width too large 0x%x (%d) (%d vs %d)\n", char_index, char_id, bit_width, MAX_BITS);
+		fprintf(stderr, "width too large 0x%x (0x%x) (%d vs %d)\n", char_index, char_id, bit_width, MAX_BITS);
 		bit_width = MAX_BITS;
 	}
 	
 	if (bit_height > MAX_BITS)
 	{
-		fprintf(stderr, "height too large 0x%x (%d) (%d vs %d)\n", char_index, char_id, bit_width, MAX_BITS);
+		fprintf(stderr, "height too large 0x%x (0x%x) (%d vs %d)\n", char_index, char_id, bit_width, MAX_BITS);
 		bit_height = MAX_BITS;
 	}
 	
@@ -672,7 +667,7 @@ void sp_set_bitmap_bits(fix15 y, fix15 xbit1, fix15 xbit2)
 	if (y >= bit_height)
 	{
 #ifdef DEBUG
-		fprintf(stderr, "y value is larger than height 0x%x (%d) -- truncated\n", char_index, char_id);
+		fprintf(stderr, "y value is larger than height 0x%x (0x%x) -- truncated\n", char_index, char_id);
 #endif
 
 		trunc = 1;
@@ -698,7 +693,7 @@ void sp_close_bitmap(void)
 	while (last_y < bit_height)
 	{
 #ifdef DEBUG
-		fprintf(stderr, "padding out height for 0x%x (%d)\n", char_index, char_id);
+		fprintf(stderr, "padding out height for 0x%x (0x%x)\n", char_index, char_id);
 #endif
 		last_y++;
 	}

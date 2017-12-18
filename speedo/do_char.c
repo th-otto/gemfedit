@@ -67,7 +67,7 @@ static fix15 sp_get_scale_arg(ufix8 * * ppointer, ufix8 format);
  * Reports Error 10 and returns 0 if no font selected.
  * Reports Error 12 and returns 0 if character data not available.
  */
-FUNCTION ufix16 sp_get_char_id(ufix16 char_index)	/* Index to character in char directory */
+ufix16 sp_get_char_id(ufix16 char_index)	/* Index to character in char directory */
 {
 	ufix8 *pointer;				/* Pointer to character data */
 
@@ -95,7 +95,7 @@ FUNCTION ufix16 sp_get_char_id(ufix16 char_index)	/* Index to character in char 
  * Reports Error 10 and returns 0 if no font selected.
  * Reports Error 12 and returns 0 if character data not available.
  */
-FUNCTION fix31 sp_get_char_width(ufix16 char_index)	/* Index to character in char directory */
+fix31 sp_get_char_width(ufix16 char_index)	/* Index to character in char directory */
 {
 	ufix8 *pointer;				/* Pointer to character data */
 
@@ -138,7 +138,7 @@ FUNCTION fix31 sp_get_char_width(ufix16 char_index)	/* Index to character in cha
  * Reports Error 10 and returns 0 if no font selected.
  * Reports Error 13 and returns 0 if track kerning data not in font.
  */
-FUNCTION fix15 sp_get_track_kern(fix15 track,	/* Track required (0 - 3) */
+fix15 sp_get_track_kern(fix15 track,	/* Track required (0 - 3) */
 							  fix15 point_size)	/* Point size (units of whole points) */
 {
 	ufix8 *pointer;				/* Pointer to character data */
@@ -205,7 +205,7 @@ FUNCTION fix15 sp_get_track_kern(fix15 track,	/* Track required (0 - 3) */
  * Reports Error 10 and returns 0 if no font selected.
  * Reports Error 14 and returns 0 if pair kerning data not in font.
  */
-FUNCTION fix31 sp_get_pair_kern(ufix16 char_index1,	/* Index to first character in char directory */
+fix31 sp_get_pair_kern(ufix16 char_index1,	/* Index to first character in char directory */
 							 ufix16 char_index2)	/* Index to second character in char directory */
 {
 	ufix8 *origin;				/* Pointer to first kerning pair record */
@@ -291,7 +291,7 @@ FUNCTION fix31 sp_get_pair_kern(ufix16 char_index1,	/* Index to first character 
  *	conservative in the event that the transformation is not
  *	normal or the character is compound.
  */
-FUNCTION boolean sp_get_char_bbox(ufix16 char_index, bbox_t * bbox)
+boolean sp_get_char_bbox(ufix16 char_index, bbox_t * bbox)
 {
 	ufix8 *pointer;
 	fix15 tmp;
@@ -352,7 +352,7 @@ FUNCTION boolean sp_get_char_bbox(ufix16 char_index, bbox_t * bbox)
 
 
 #if INCL_ISW
-FUNCTION boolean sp_make_char_isw(ufix16 char_index, ufix32 imported_setwidth)
+boolean sp_make_char_isw(ufix16 char_index, ufix32 imported_setwidth)
 {
 	fix15 xmin;							/* Minimum X ORU value in font */
 	fix15 xmax;							/* Maximum X ORU value in font */
@@ -382,13 +382,13 @@ FUNCTION boolean sp_make_char_isw(ufix16 char_index, ufix32 imported_setwidth)
 	return return_value;
 }
 
-FUNCTION boolean sp_make_char(ufix16 char_index)	/* Index to character in char directory */
+boolean sp_make_char(ufix16 char_index)	/* Index to character in char directory */
 {
 	sp_globals.import_setwidth_act = FALSE;
 	return sp_do_make_char(char_index);
 }
 
-FUNCTION static boolean sp_do_make_char(ufix16 char_index)
+static boolean sp_do_make_char(ufix16 char_index)
 #else
 /*
  * Outputs specified character using the currently selected font and
@@ -397,7 +397,7 @@ FUNCTION static boolean sp_do_make_char(ufix16 char_index)
  * previously set.
  * Reports Error 12 and returns FALSE if character data not available.
  */
-FUNCTION boolean sp_make_char(ufix16 char_index)
+boolean sp_make_char(ufix16 char_index)
 #endif
 {
 	ufix8 *pointer;				/* Pointer to character data */
@@ -505,7 +505,7 @@ static void sp_preview_bounding_box(ufix8 * pointer,	/* Pointer to first byte of
  * Called by sp_make_char() to output a simple (non-compound) character.
  * Returns TRUE on completion.
  */
-FUNCTION static boolean sp_make_simp_char(ufix8 * pointer,	/* Pointer to first byte of position argument */
+static boolean sp_make_simp_char(ufix8 * pointer,	/* Pointer to first byte of position argument */
 										  ufix8 format)	/* Character format byte */
 {
 	point_t Pmin, Pmax;								/* Transformed corners of bounding box */
@@ -564,7 +564,7 @@ FUNCTION static boolean sp_make_simp_char(ufix8 * pointer,	/* Pointer to first b
  * Returns FALSE if data for any sub-character is not available.
  * Returns TRUE if output completed with no error.
  */
-FUNCTION static boolean sp_make_comp_char(ufix8 * pointer)	/* Pointer to first byte of position argument */
+static boolean sp_make_comp_char(ufix8 * pointer)	/* Pointer to first byte of position argument */
 {
 	point_t Pmin, Pmax;					/* Transformed corners of bounding box */
 	point_t Pssw;						/* Transformed escapement vector */
@@ -701,7 +701,7 @@ FUNCTION static boolean sp_make_comp_char(ufix8 * pointer)	/* Pointer to first b
  * as part of the original font buffer.
  * Returns NULL if character data not available
  */
-FUNCTION static ufix8 *sp_get_char_org(ufix16 char_index,	/* Index of character to be accessed */
+static ufix8 *sp_get_char_org(ufix16 char_index,	/* Index of character to be accessed */
 											   boolean top_level)	/* Not a compound character element */
 {
 	buff_t *pchar_data;					/* Buffer descriptor requested */
@@ -764,7 +764,7 @@ FUNCTION static ufix8 *sp_get_char_org(ufix16 char_index,	/* Index of character 
  * Version for configuration not supporting dynamic character data loading.
  * Returns NULL if character data not available
  */
-FUNCTION static ufix8 *sp_get_char_org(ufix16 char_index,	/* Index of character to be accessed */
+static ufix8 *sp_get_char_org(ufix16 char_index,	/* Index of character to be accessed */
 											   boolean top_level)	/* Not a compound character element */
 {
 	ufix8 *pointer;				/* Pointer into character directory */
@@ -811,7 +811,7 @@ FUNCTION static ufix8 *sp_get_char_org(ufix16 char_index,	/* Index of character 
  * Updates pointer to byte following position argument.
  * Returns value of position argument in outline resolution units
  */
-FUNCTION static fix15 sp_get_posn_arg(ufix8 * * ppointer,	/* Pointer to first byte of position argument */
+static fix15 sp_get_posn_arg(ufix8 * * ppointer,	/* Pointer to first byte of position argument */
 									  ufix8 format)	/* Format of DOCH arguments */
 {
 	switch (format & 0x03)
@@ -833,7 +833,7 @@ FUNCTION static fix15 sp_get_posn_arg(ufix8 * * ppointer,	/* Pointer to first by
  * Updates pointer to byte following scale argument.
  * Returns value of scale argument in scale units (normally 1/4096)
  */
-FUNCTION static fix15 sp_get_scale_arg(ufix8 * * ppointer,	/* Pointer to first byte of position argument */
+static fix15 sp_get_scale_arg(ufix8 * * ppointer,	/* Pointer to first byte of position argument */
 									   ufix8 format)	/* Format of DOCH arguments */
 {
 	if (format)
@@ -843,7 +843,7 @@ FUNCTION static fix15 sp_get_scale_arg(ufix8 * * ppointer,	/* Pointer to first b
 }
 
 #if INCL_ISW
-FUNCTION static boolean sp_reset_xmax(fix31 xmax)
+static boolean sp_reset_xmax(fix31 xmax)
 {
 	fix15 xmin;							/* Minimum X ORU value in font */
 	fix15 ymin;							/* Minimum Y ORU value in font */
@@ -861,7 +861,7 @@ FUNCTION static boolean sp_reset_xmax(fix31 xmax)
 		return FALSE;
 	}
 	sp_globals.constr.data_valid = FALSE;
-/* recompute setwidth */
+	/* recompute setwidth */
 	sp_globals.Psw.x = (fix15) ((fix31) (((fix31) sp_globals.imported_width * (sp_globals.specs.xxmult >> 16) +
 										  (((fix31) sp_globals.imported_width *
 											(sp_globals.specs.xxmult & 0xffffL)) >> 16)) << sp_globals.pixshift) /

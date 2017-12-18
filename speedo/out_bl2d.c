@@ -65,7 +65,7 @@ static void sp_proc_intercepts_2d(void);
  * Returns TRUE if output module can accept requested specifications.
  * Returns FALSE otherwise.
  */
-FUNCTION boolean sp_init_2d(specs_t * specsarg)
+boolean sp_init_2d(specs_t * specsarg)
 {
 
 	if (specsarg->flags & CURVES_OUT)
@@ -84,7 +84,7 @@ FUNCTION boolean sp_init_2d(specs_t * specsarg)
  * Initializes intercept table, either calculates pixel maxima or
  * decides that they need to be collected
  */
-FUNCTION boolean sp_begin_char_2d(point_t Psw, point_t Pmin, point_t Pmax)
+boolean sp_begin_char_2d(point_t Psw, point_t Pmin, point_t Pmax)
 {
 #if DEBUG
 	printf("BEGIN_CHAR__2d(%3.1f, %3.1f, %3.1f, %3.1f, %3.1f, %3.1f\n",
@@ -104,7 +104,7 @@ FUNCTION boolean sp_begin_char_2d(point_t Psw, point_t Pmin, point_t Pmax)
 #if INCL_2D
 /* Called at the start of each contour
  */
-FUNCTION void sp_begin_contour_2d(point_t P1, boolean outside)
+void sp_begin_contour_2d(point_t P1, boolean outside)
 {
 #if DEBUG
 	printf("BEGIN_CONTOUR__2d(%3.4f, %3.4f, %s)\n",
@@ -122,7 +122,7 @@ FUNCTION void sp_begin_contour_2d(point_t P1, boolean outside)
  * Called for each vector in the transformed character
  *     "draws" vector into intercept table
  */
-FUNCTION void sp_line_2d(point_t P1)
+void sp_line_2d(point_t P1)
 {
 #if DEBUG
 	printf("LINE_0(%3.4f, %3.4f)\n", (real) P1.x / (real) sp_globals.onepix, (real) P1.y / (real) sp_globals.onepix);
@@ -154,7 +154,7 @@ FUNCTION void sp_line_2d(point_t P1)
 
 
 
-FUNCTION static void sp_draw_vector_to_2d(fix15 x0,	/* X coordinate */
+static void sp_draw_vector_to_2d(fix15 x0,	/* X coordinate */
 										  fix15 y0,	/* Y coordinate */
 										  fix15 x1, fix15 y1, band_t * band)
 {
@@ -268,7 +268,7 @@ FUNCTION static void sp_draw_vector_to_2d(fix15 x0,	/* X coordinate */
  * Return FALSE to repeat output of the transformed data beginning
  * with the first contour
  */
-FUNCTION boolean sp_end_char_2d(void)
+boolean sp_end_char_2d(void)
 {
 	fix31 xorg;
 	fix31 yorg;
@@ -503,7 +503,7 @@ FUNCTION boolean sp_end_char_2d(void)
 #if INCL_2D
 /*  Called by line() to add an intercept to the intercept list structure
  */
-FUNCTION static void sp_add_intercept_2d(fix15 y,	/* Y coordinate in relative pixel units */
+static void sp_add_intercept_2d(fix15 y,	/* Y coordinate in relative pixel units */
 										 /* (0 is lowest sample in band) */
 										 fix15 x)	/* X coordinate of intercept in subpixel units */
 {
@@ -576,7 +576,7 @@ FUNCTION static void sp_add_intercept_2d(fix15 y,	/* Y coordinate in relative pi
 /*  Called by sp_make_char to output accumulated intercept lists
  *  Clips output to xmin, xmax, sp_globals.ymin, ymax boundaries
  */
-FUNCTION static void sp_proc_intercepts_2d(void)
+static void sp_proc_intercepts_2d(void)
 {
 	fix15 i;
 	fix15 from, to;						/* Start and end of run in pixel units   
@@ -662,7 +662,7 @@ FUNCTION static void sp_proc_intercepts_2d(void)
 	local_bmap_xmax = (sp_globals.xmax << sp_globals.pixshift) + sp_globals.pixrnd;
 
 #if DEBUG
-/* Print out all of the intercept info */
+	/* Print out all of the intercept info */
 	scan_line = sp_globals.ymax - first_y - 1;
 
 	for (y = first_y - sp_globals.y_band.band_min; y >= last_y; y--, scan_line++)
@@ -689,7 +689,7 @@ FUNCTION static void sp_proc_intercepts_2d(void)
 	}
 #endif
 
-/* Draw the image */
+	/* Draw the image */
 	scan_line = sp_globals.ymax - first_y - 1;
 
 	for (y = first_y - sp_globals.y_band.band_min; y >= last_y; y--, scan_line++)

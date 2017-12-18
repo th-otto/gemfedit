@@ -65,7 +65,7 @@ static ufix8 *sp_get_args(ufix8 * pointer, ufix8 format, point_t * pP);
  * Updates *ppointer to point to the byte following the
  * bounding box data.
  */
-FUNCTION ufix8 *sp_read_bbox(ufix8 * pointer,	/* Pointer to next byte in char data */
+ufix8 *sp_read_bbox(ufix8 * pointer,	/* Pointer to next byte in char data */
 								  point_t * pPmin,	/* Lower left corner of bounding box */
 								  point_t * pPmax,	/* Upper right corner of bounding box */
 								  boolean set_flag)	/* flag to indicate whether global oru bbox should be saved */
@@ -154,7 +154,7 @@ FUNCTION ufix8 *sp_read_bbox(ufix8 * pointer,	/* Pointer to next byte in char da
  * Note that pointer is not updated to facilitate repeated
  * processing of the outline data when banding mode is in effect.
  */
-FUNCTION void sp_proc_outl_data(ufix8 * pointer)	/* Pointer to next byte in char data */
+void sp_proc_outl_data(ufix8 * pointer)	/* Pointer to next byte in char data */
 {
 	ufix8 format1, format2;
 	point_t P0, P1, P2, P3;
@@ -307,7 +307,7 @@ FUNCTION void sp_proc_outl_data(ufix8 * pointer)	/* Pointer to next byte in char
  * at which point it calls line() to deliver each vector resulting
  * from the spliting process.
  */
-FUNCTION static void sp_split_curve(point_t P1,	/* First control point of Bezier curve */
+static void sp_split_curve(point_t P1,	/* First control point of Bezier curve */
 									point_t P2,	/* Second  control point of Bezier curve */
 									point_t P3,	/* End point of Bezier curve */
 									fix15 depth)	/* Levels of recursive subdivision required */
@@ -374,7 +374,7 @@ FUNCTION static void sp_split_curve(point_t P1,	/* First control point of Bezier
  * Updates *ppointer to point to the byte following the
  * argument pair.
  */
-FUNCTION static ufix8 *sp_get_args(ufix8 * pointer,	/* Pointer to next byte in char data */
+static ufix8 *sp_get_args(ufix8 * pointer,	/* Pointer to next byte in char data */
 										   ufix8 format,	/* Format specifiaction of argument pair */
 										   point_t * pP)	/* Resulting transformed point */
 {
@@ -409,7 +409,7 @@ FUNCTION static ufix8 *sp_get_args(ufix8 * pointer,	/* Pointer to next byte in c
 		break;
 	}
 
-/* Read Y argument */
+	/* Read Y argument */
 	switch ((format >> 2) & 0x03)
 	{
 	case 0:							/* Index to controlled oru */

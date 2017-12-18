@@ -122,10 +122,9 @@ static fontProp extraProps[] = {
 
 #define	NPROPS	(NNAMEPROPS + NEXTRAPROPS)
 
-void sp_make_standard_props()
+void sp_make_standard_props(void)
 {
 	int i;
-
 	fontProp *t;
 
 	i = sizeof(fontNamePropTable) / sizeof(fontProp);
@@ -139,7 +138,6 @@ void sp_make_standard_props()
 void sp_make_header(SpeedoFontPtr spf, FontInfoPtr pinfo)
 {
 	int pixel_size;
-
 	SpeedoMasterFontPtr spmf = spf->master;
 
 	pinfo->firstCol = spmf->first_char_id & 0xff;
@@ -149,13 +147,13 @@ void sp_make_header(SpeedoFontPtr spf, FontInfoPtr pinfo)
 
 	/* XXX -- hackery here */
 	pinfo->defaultCh = 0;
-/* computed by FontComputeInfoAccelerators:
- *  noOverlap
- *  constantMetrics
- *  terminalFont
- *  constantWidth
- *  inkInside
- */
+	/* computed by FontComputeInfoAccelerators:
+	 *  noOverlap
+	 *  constantMetrics
+	 *  terminalFont
+	 *  constantWidth
+	 *  inkInside
+	 */
 	pinfo->inkMetrics = 0;
 	pinfo->allExist = 0;
 	pinfo->drawDirection = LeftToRight;
@@ -164,17 +162,18 @@ void sp_make_header(SpeedoFontPtr spf, FontInfoPtr pinfo)
 		pinfo->anamorphic = TRUE;
 	else
 		pinfo->anamorphic = FALSE;
-/* computed by sp_compute_bounds:
- *  maxOverlap
- *  maxbounds
- *  minbounds
- *  ink_maxbounds
- *  ink_minbounds
- */
+	/* computed by sp_compute_bounds:
+	 *  maxOverlap
+	 *  maxbounds
+	 *  minbounds
+	 *  ink_maxbounds
+	 *  ink_minbounds
+	 */
 	pixel_size = spf->vals.pixel_matrix[3] * STRETCH_FACTOR / 100;
 	pinfo->fontAscent = pixel_size * 764 / 1000;	/* 764 == EM_TOP */
 	pinfo->fontDescent = pixel_size - pinfo->fontAscent;
 }
+
 
 static void adjust_min_max(xCharInfo * minc, xCharInfo * maxc, xCharInfo * tmp)
 {

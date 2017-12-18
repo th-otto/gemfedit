@@ -3,7 +3,7 @@ CFLAGS = -O2 -Wall -Wstrict-prototypes -Wmissing-prototypes -I../include
 LDFLAGS = -s
 LIBS= -lX11
 
-PROGRAMS = htest nsample sptobdf
+PROGRAMS = htest nsample sptobdf listids
 
 all: $(PROGRAMS)
 
@@ -23,6 +23,9 @@ nsample: nsample.o $(SPDLIB)
 	$(CC) $(CFLAGS) $(LDFLAGS) $^ -o $@ -lm
 	
 sptobdf: sptobdf.o $(SPDLIB)
+	$(CC) $(CFLAGS) $(LDFLAGS) $^ -o $@ -lm
+	
+listids: listids.o $(SPDLIB)
 	$(CC) $(CFLAGS) $(LDFLAGS) $^ -o $@ -lm
 	
 

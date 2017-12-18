@@ -146,7 +146,7 @@ int main(int argc, char **argv)
 
 	sprintf(pathname, argv[1]);
 
-/* Load Speedo outline file */
+	/* Load Speedo outline file */
 	fdescr = fopen(pathname, "rb");
 	if (fdescr == NULL)
 	{
@@ -154,7 +154,7 @@ int main(int argc, char **argv)
 		return 1;
 	}
 
-/* get minimum font buffer size - read first 16 bytes to get the minimum
+	/* get minimum font buffer size - read first 16 bytes to get the minimum
    size field from the header, then allocate buffer dynamically  */
 
 	bytes_read = fread(temp, sizeof(ufix8), 16, fdescr);
@@ -199,7 +199,7 @@ int main(int argc, char **argv)
 	}
 
 #if INCL_LCD
-/* now allocate minimum character buffer */
+	/* now allocate minimum character buffer */
 
 	minchrsz = read_2b(font_buffer + FH_CBFSZ);
 	char_buffer = (ufix8 *) malloc(minchrsz);
@@ -241,7 +241,7 @@ int main(int argc, char **argv)
 	first_char_index = read_2b(font_buffer + FH_FCHRF);
 	no_layout_chars = read_2b(font_buffer + FH_NCHRL);
 
-/* Set specifications for character to be generated */
+	/* Set specifications for character to be generated */
 	specs.pfont = &font;				/* Pointer to Speedo outline structure */
 	specs.xxmult = 25L << 16;			/* Coeff of X to calculate X pixels */
 	specs.xymult = 0L << 16;			/* Coeff of Y to calculate X pixels */
@@ -287,7 +287,7 @@ int main(int argc, char **argv)
  * Returns a pointer to a buffer descriptor.
  */
 #if INCL_LCD
-FUNCTION buff_t *sp_load_char_data(
+buff_t *sp_load_char_data(
 	fix31 file_offset,						/* Offset in bytes from the start of the font file */
 	fix15 no_bytes,							/* Number of bytes to be loaded */
 	fix15 cb_offset)						/* Offset in bytes from start of char buffer */
@@ -335,7 +335,7 @@ FUNCTION buff_t *sp_load_char_data(
  *  Since character data not available is one of those errors
  *  that happens many times, don't report it to user
  */
-FUNCTION void sp_report_error(fix15 n)
+void sp_report_error(fix15 n)
 {
 	switch (n)
 	{
@@ -433,7 +433,7 @@ void sp_open_bitmap(
  * Called by Speedo character generator to write one row of pixels 
  * into the generated bitmap character.                               
  */
-FUNCTION void sp_set_bitmap_bits(
+void sp_set_bitmap_bits(
 	fix15 y,								/* Scan line (0 = first row above baseline) */
 	fix15 xbit1,							/* Pixel boundary where run starts */
 	fix15 xbit2)							/* Pixel boundary where run ends */
@@ -443,14 +443,14 @@ FUNCTION void sp_set_bitmap_bits(
 #if DEBUG
 	printf("set_bitmap_bits(%d, %d, %d)\n", (int) y, (int) xbit1, (int) xbit2);
 #endif
-/* Clip runs beyond end of buffer */
+	/* Clip runs beyond end of buffer */
 	if (xbit1 > MAX_BITS)
 		xbit1 = MAX_BITS;
 
 	if (xbit2 > MAX_BITS)
 		xbit2 = MAX_BITS;
 
-/* Output backlog lines if any */
+	/* Output backlog lines if any */
 	while (y_cur != y)
 	{
 		printf("    %s\n", line_of_bits);
@@ -461,7 +461,7 @@ FUNCTION void sp_set_bitmap_bits(
 		y_cur++;
 	}
 
-/* Add bits to current line */
+	/* Add bits to current line */
 	for (i = xbit1; i < xbit2; i++)
 	{
 		line_of_bits[i << 1] = 'X';
@@ -472,7 +472,7 @@ FUNCTION void sp_set_bitmap_bits(
  * Called by Speedo character generator to indicate all bitmap data
  * has been generated.
  */
-FUNCTION void sp_close_bitmap(void)
+void sp_close_bitmap(void)
 {
 #if DEBUG
 	printf("close_bitmap()\n");
@@ -486,7 +486,7 @@ FUNCTION void sp_close_bitmap(void)
  * outputting scaled outline data.
  */
 #if INCL_OUTLINE
-FUNCTION void sp_open_outline(
+void sp_open_outline(
 	fix31 x_set_width,						/* Transformed escapement vector */
 	fix31 y_set_width,
 	fix31 xmin,								/* Minimum X value in outline */
@@ -505,7 +505,7 @@ FUNCTION void sp_open_outline(
  * outputting scaled outline data for a sub-character in a compound
  * character.
  */
-FUNCTION void sp_start_new_char(void)
+void sp_start_new_char(void)
 {
 	printf("start_new_char()\n");
 }
@@ -514,7 +514,7 @@ FUNCTION void sp_start_new_char(void)
  * Called by Speedo character generator at the start of each contour
  * in the outline data of the character.
  */
-FUNCTION void sp_start_contour(
+void sp_start_contour(
 	fix31 x,								/* X coordinate of start point in 1/65536 pixels */
 	fix31 y,								/* Y coordinate of start point in 1/65536 pixels */
 	boolean outside)						/* TRUE if curve encloses ink (Counter-clockwise) */
@@ -527,7 +527,7 @@ FUNCTION void sp_start_contour(
  * scaled outline data of the character. This function is only called if curve
  * output is enabled in the sp_set_specs() call.
  */
-FUNCTION void sp_curve_to(
+void sp_curve_to(
 	fix31 x1,								/* X coordinate of first control point in 1/65536 pixels */
 	fix31 y1,								/* Y coordinate of first control  point in 1/65536 pixels */
 	fix31 x2,								/* X coordinate of second control point in 1/65536 pixels */
@@ -547,7 +547,7 @@ FUNCTION void sp_curve_to(
  * been sub-divided into vectors if curve output has not been enabled
  * in the sp_set_specs() call.
  */
-FUNCTION void sp_line_to(fix31 x, fix31 y)
+void sp_line_to(fix31 x, fix31 y)
 {
 	printf("line_to(%3.1f, %3.1f)\n", (real) x / 65536.0, (real) y / 65536.0);
 }
@@ -557,7 +557,7 @@ FUNCTION void sp_line_to(fix31 x, fix31 y)
  * Called by Speedo character generator at the end of each contour
  * in the outline data of the character.
  */
-FUNCTION void sp_close_contour(void)
+void sp_close_contour(void)
 {
 	printf("close_contour()\n");
 }
@@ -566,7 +566,7 @@ FUNCTION void sp_close_contour(void)
  * Called by Speedo character generator at the end of output of the
  * scaled outline of the character.
  */
-FUNCTION void sp_close_outline(void)
+void sp_close_outline(void)
 {
 	printf("close_outline()\n");
 }
@@ -576,7 +576,7 @@ FUNCTION void sp_close_outline(void)
 /*
  * Reads 2-byte field from font buffer 
  */
-FUNCTION fix15 read_2b(ufix8 *pointer)
+fix15 read_2b(ufix8 *pointer)
 {
 	fix15 temp;
 
@@ -589,7 +589,7 @@ FUNCTION fix15 read_2b(ufix8 *pointer)
 /*
  * Reads 4-byte field from font buffer 
  */
-FUNCTION fix31 read_4b(ufix8 *pointer)
+fix31 read_4b(ufix8 *pointer)
 {
 	fix31 temp;
 

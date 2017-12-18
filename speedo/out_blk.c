@@ -66,7 +66,7 @@ static void sp_proc_intercepts_black(void);
  * Returns TRUE if output module can accept requested specifications.
  * Returns FALSE otherwise.
  */
-FUNCTION boolean sp_init_black(specs_t * specsarg)
+boolean sp_init_black(specs_t * specsarg)
 {
 #if DEBUG
 	printf("INIT_BLK()\n");
@@ -81,7 +81,7 @@ FUNCTION boolean sp_init_black(specs_t * specsarg)
 #if INCL_BLACK
 /* Called once at the start of the character generation process
  */
-FUNCTION boolean sp_begin_char_black(point_t Psw, point_t Pmin, point_t Pmax)
+boolean sp_begin_char_black(point_t Psw, point_t Pmin, point_t Pmax)
 {
 #if DEBUG
 	printf("BEGIN_CHAR_BLACK(%3.1f, %3.1f, %3.1f, %3.1f, %3.1f, %3.1f\n",
@@ -98,7 +98,7 @@ FUNCTION boolean sp_begin_char_black(point_t Psw, point_t Pmin, point_t Pmax)
 #if INCL_BLACK
 /* Called at the start of each contour
  */
-FUNCTION void sp_begin_contour_black(point_t P1, boolean outside)
+void sp_begin_contour_black(point_t P1, boolean outside)
 {
 #if DEBUG
 	printf("BEGIN_CONTOUR_BLACK(%3.1f, %3.1f, %s)\n",
@@ -114,7 +114,7 @@ FUNCTION void sp_begin_contour_black(point_t P1, boolean outside)
 #if INCL_BLACK
 /* Called for each vector in the transformed character
  */
-FUNCTION void sp_line_black(point_t P1)
+void sp_line_black(point_t P1)
 {
 	fix15 how_many_y;					/* # of intercepts at y = n + 1/2  */
 	fix15 yc, i;						/* Current scan-line */
@@ -198,19 +198,19 @@ FUNCTION void sp_line_black(point_t P1)
 		return;
 	}
 
-/* calculate dx_dy at 16.16 fixed point */
+	/* calculate dx_dy at 16.16 fixed point */
 
 	dx_dy = ((fix31) temp1 << 16) / (fix31) (y1 - y0);
 
-/* We have to check for a @#$%@# possible multiply overflow  */
-/* by doing another @#$*& multiply.  In assembly language,   */
-/* the program could just check the OVerflow flag or whatever*/
-/* works on the particular processor.  This C code is meant  */
-/* to be processor independant.                              */
+	/* We have to check for a @#$%@# possible multiply overflow  */
+	/* by doing another @#$*& multiply.  In assembly language,   */
+	/* the program could just check the OVerflow flag or whatever*/
+	/* works on the particular processor.  This C code is meant  */
+	/* to be processor independant.                              */
 
 	temp1 = (yc << sp_globals.pixshift) - y0 + sp_globals.pixrnd;
-/* This sees if the sign bits start at bit 15 */
-/* if they do, no overflow has occurred       */
+	/* This sees if the sign bits start at bit 15 */
+	/* if they do, no overflow has occurred       */
 
 	temp2 = (fix15) (MULT16(temp1, (fix15) (dx_dy >> 16)) >> 15);
 
@@ -221,11 +221,11 @@ FUNCTION void sp_line_black(point_t P1)
 		xc = (fix31) (x1 + sp_globals.pixrnd) << (16 - sp_globals.pixshift);
 	} else
 	{
-/* calculate new xc at the center of the *current* scan line */
-/* due to banding, yc may be several lines away from y0      */
-/*  xc += (yc + .5 - y0) * dx_dy */
-/* This multiply generates a subpixel delta. */
-/* So we shift it to be a 16.16 delta */
+		/* calculate new xc at the center of the *current* scan line */
+		/* due to banding, yc may be several lines away from y0      */
+		/*  xc += (yc + .5 - y0) * dx_dy */
+		/* This multiply generates a subpixel delta. */
+		/* So we shift it to be a 16.16 delta */
 
 		xc += ((fix31) temp1 * dx_dy) >> sp_globals.pixshift;
 	}
@@ -274,7 +274,7 @@ FUNCTION void sp_line_black(point_t P1)
  * Return FALSE to repeat output of the transformed data beginning
  * with the first contour
  */
-FUNCTION boolean sp_end_char_black(void)
+boolean sp_end_char_black(void)
 {
 	fix31 xorg;
 	fix31 yorg;
@@ -513,7 +513,7 @@ static void sp_add_intercept_black(fix15 y,	/* Y coordinate in relative pixel un
 #if DEBUG
 	printf("    Add intercept(%2d, %d)\n", y + sp_globals.y_band.band_min, x);
 
-/* Bounds checking IS done in debug mode */
+	/* Bounds checking IS done in debug mode */
 	if (y < 0)							/* Y value below bottom of current band? */
 	{
 		printf(" Intecerpt less than 0!!!\007\n");
@@ -527,11 +527,11 @@ static void sp_add_intercept_black(fix15 y,	/* Y coordinate in relative pixel un
 	}
 #endif
 
-/* Store new values */
+	/* Store new values */
 
 	sp_intercepts.car[sp_globals.next_offset] = x;
 
-/* Find slot to insert new element (between from and to) */
+	/* Find slot to insert new element (between from and to) */
 
 	from = y;							/* Start at list head */
 
@@ -551,9 +551,9 @@ static void sp_add_intercept_black(fix15 y,	/* Y coordinate in relative pixel un
 	if (++sp_globals.next_offset >= MAX_INTERCEPTS)	/* Intercept buffer full? */
 	{
 		sp_globals.intercept_oflo = TRUE;
-/* There may be a few more calls to "add_intercept" from the current line */
-/* To avoid problems, we set next_offset to a safe value. We don't care   */
-/* if the intercept table gets trashed at this point                      */
+		/* There may be a few more calls to "add_intercept" from the current line */
+		/* To avoid problems, we set next_offset to a safe value. We don't care   */
+		/* if the intercept table gets trashed at this point                      */
 		sp_globals.next_offset = sp_globals.first_offset;
 	}
 }
@@ -604,7 +604,7 @@ static void sp_proc_intercepts_black(void)
 
 	last_y -= sp_globals.y_band.band_min;
 #if DEBUG
-/* Print out all of the intercept info */
+	/* Print out all of the intercept info */
 	scan_line = sp_globals.ymax - first_y - 1;
 
 	for (y = first_y - sp_globals.y_band.band_min; y >= last_y; y--, scan_line++)
@@ -629,7 +629,7 @@ static void sp_proc_intercepts_black(void)
 	}
 #endif
 
-/* Draw the image */
+	/* Draw the image */
 	scan_line = sp_globals.ymax - first_y - 1;
 
 	for (y = first_y - sp_globals.y_band.band_min; y >= last_y; y--, scan_line++)

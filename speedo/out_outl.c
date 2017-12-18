@@ -54,7 +54,7 @@ WITH THE SPEEDO SOFTWARE OR THE BITSTREAM CHARTER OUTLINE FONT.
 /***** STATIC VARIABLES *****/
 
 /***** STATIC FUNCTIONS *****/
-
+
 
 #if INCL_OUTLINE
 /*
@@ -62,7 +62,7 @@ WITH THE SPEEDO SOFTWARE OR THE BITSTREAM CHARTER OUTLINE FONT.
  * Returns TRUE if output module can accept requested specifications.
  * Returns FALSE otherwise.
  */
-FUNCTION boolean sp_init_outline(specs_t *specsarg)
+boolean sp_init_outline(specs_t *specsarg)
 {
 #if DEBUG
 	printf("INIT_OUT_2()\n");
@@ -72,7 +72,7 @@ FUNCTION boolean sp_init_outline(specs_t *specsarg)
 	return (TRUE);
 }
 #endif
-
+
 #if INCL_OUTLINE
 /*
  * If two or more output modules are included in the configuration, begin_char2()
@@ -80,7 +80,7 @@ FUNCTION boolean sp_init_outline(specs_t *specsarg)
  * If only one output module is included in the configuration, begin_char() is 
  * called by sp_make_simp_char() and sp_make_comp_char().
  */
-FUNCTION boolean sp_begin_char_outline(
+boolean sp_begin_char_outline(
 	point_t Psw,	/* End of escapement vector (sub-pixels) */
 	point_t Pmin,	/* Bottom left corner of bounding box */
 	Pmax)							/* Top right corner of bounding box */
@@ -122,7 +122,7 @@ FUNCTION boolean sp_begin_char_outline(
  * If only one output module is included in the configuration, begin_sub_char() is 
  * called by sp_make_comp_char().
  */
-FUNCTION void sp_begin_sub_char_outline(
+void sp_begin_sub_char_outline(
 	point_t Psw,	/* End of sub-char escapement vector */
 	point_t Pmin,							/* Bottom left corner of sub-char bounding box */
 	point_t Pmax)							/* Top right corner of sub-char bounding box */
@@ -136,7 +136,7 @@ FUNCTION void sp_begin_sub_char_outline(
 	start_new_char();
 }
 #endif
-
+
 
 /*
  * If two or more output modules are included in the configuration, begin_contour2()
@@ -147,7 +147,7 @@ FUNCTION void sp_begin_sub_char_outline(
  * called by sp_proc_outl_data().
  */
 #if INCL_OUTLINE
-FUNCTION void sp_begin_contour_outline(
+void sp_begin_contour_outline(
 	point_t P1,	/* Start point of contour */
 	boolean outside)						/* TRUE if outside (counter-clockwise) contour */
 {
@@ -172,7 +172,7 @@ FUNCTION void sp_begin_contour_outline(
  * called by sp_proc_outl_data().
  * This function is only called when curve output is enabled.
  */
-FUNCTION void sp_curve_outline(
+void sp_curve_outline(
 	point_t P1,	/* First control point of Bezier curve */
 	point_t P2,								/* Second control point of Bezier curve */
 	point_t P3,								/* End point of Bezier curve */
@@ -210,7 +210,7 @@ FUNCTION void sp_curve_outline(
  * called by sp_proc_outl_data(). If curve output is enabled, line() is also
  * called by sp_split_curve().
  */
-FUNCTION void sp_line_outline(point_t P1)	/* End point of vector */
+void sp_line_outline(point_t P1)	/* End point of vector */
 {
 	fix15 x1, y1;
 
@@ -231,7 +231,7 @@ FUNCTION void sp_line_outline(point_t P1)	/* End point of vector */
  * If only one output module is included in the configuration, end_contour() is 
  * called by sp_proc_outl_data().
  */
-FUNCTION void sp_end_contour_outline(void)
+void sp_end_contour_outline(void)
 {
 #if DEBUG
 	printf("END_CONTOUR_2()\n");
@@ -239,7 +239,7 @@ FUNCTION void sp_end_contour_outline(void)
 	close_contour();
 }
 #endif
-
+
 
 #if INCL_OUTLINE
 /*
@@ -248,14 +248,14 @@ FUNCTION void sp_end_contour_outline(void)
  * If only one output module is included in the configuration, end_sub_char() is 
  * called by sp_make_comp_char().
  */
-FUNCTION void sp_end_sub_char_outline(void)
+void sp_end_sub_char_outline(void)
 {
 #if DEBUG
 	printf("END_SUB_CHAR_2()\n");
 #endif
 }
 #endif
-
+
 
 #if INCL_OUTLINE
 /*
@@ -267,7 +267,7 @@ FUNCTION void sp_end_sub_char_outline(void)
  * Returns FALSE to repeat output of the transformed data beginning
  * with the first contour (of the first sub-char if compound).
  */
-FUNCTION boolean sp_end_char_outline(void)
+boolean sp_end_char_outline(void)
 {
 #if DEBUG
 	printf("END_CHAR_2()\n");

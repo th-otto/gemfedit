@@ -369,7 +369,7 @@ sp_load_font(char *fontname,
 
 	pfont->fontPrivate = (pointer) spf;
 
-/* XXX */
+	/* XXX */
 	flags |= FontLoadBitmaps;
 
 	if (flags & FontLoadBitmaps)

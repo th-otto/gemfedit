@@ -56,7 +56,7 @@ WITH THE SPEEDO SOFTWARE OR THE BITSTREAM CHARTER OUTLINE FONT.
 static void sp_add_intercept_screen(fix15 y, fix31 x);
 
 static void sp_proc_intercepts_screen(void);
-
+
 
 #if INCL_SCREEN
 /*
@@ -64,7 +64,7 @@ static void sp_proc_intercepts_screen(void);
  * Returns TRUE if output module can accept requested specifications.
  * Returns FALSE otherwise.
  */
-FUNCTION boolean sp_init_screen(specs_t * specsarg)
+boolean sp_init_screen(specs_t * specsarg)
 {
 #if DEBUG
 	printf("INIT_SCREEN()\n");
@@ -77,7 +77,7 @@ FUNCTION boolean sp_init_screen(specs_t * specsarg)
 #if INCL_SCREEN
 /* Called once at the start of the character generation process
  */
-FUNCTION boolean sp_begin_char_screen(point_t Psw, point_t Pmin, point_t Pmax)
+boolean sp_begin_char_screen(point_t Psw, point_t Pmin, point_t Pmax)
 {
 #if DEBUG
 	printf("BEGIN_CHAR_SCREEN(%3.1f, %3.1f, %3.1f, %3.1f, %3.1f, %3.1f\n",
@@ -95,7 +95,7 @@ FUNCTION boolean sp_begin_char_screen(point_t Psw, point_t Pmin, point_t Pmax)
 	return TRUE;
 }
 #endif
-
+
 
 #if INCL_SCREEN
 
@@ -192,7 +192,7 @@ static void sp_scan_curve_screen(fix31 X0, fix31 Y0, fix31 X1, fix31 Y1, fix31 X
 
 /* Called at the start of each contour
  */
-FUNCTION void sp_begin_contour_screen(point_t P1, boolean outside)
+void sp_begin_contour_screen(point_t P1, boolean outside)
 {
 #if DEBUG
 	printf("BEGIN_CONTOUR_SCREEN(%3.1f, %3.1f, %s)\n",
@@ -207,7 +207,7 @@ FUNCTION void sp_begin_contour_screen(point_t P1, boolean outside)
 
 
 #if INCL_SCREEN
-FUNCTION void sp_curve_screen(point_t P1, point_t P2, point_t P3, fix15 depth)
+void sp_curve_screen(point_t P1, point_t P2, point_t P3, fix15 depth)
 {
 	fix31 X0;
 	fix31 Y0;
@@ -268,7 +268,7 @@ FUNCTION void sp_curve_screen(point_t P1, point_t P2, point_t P3, fix15 depth)
 #if INCL_SCREEN
 /* Called for each vector in the transformed character
  */
-FUNCTION void sp_line_screen(point_t P1)
+void sp_line_screen(point_t P1)
 {
 	fix15 how_many_y;			/* # of intercepts at y = n + 1/2  */
 	fix15 yc;					/* Current scan-line */
@@ -346,19 +346,19 @@ FUNCTION void sp_line_screen(point_t P1)
 		goto skip_calc;
 	}
 
-/* calculate dx_dy at 16.16 fixed point */
+	/* calculate dx_dy at 16.16 fixed point */
 
 	dx_dy = ((fix31) temp1 << 16) / (fix31) (y1 - y0);
 
-/* We have to check for a @#$%@# possible multiply overflow  */
-/* by doing another @#$*& multiply.  In assembly language,   */
-/* the program could just check the OVerflow flag or whatever*/
-/* works on the particular processor.  This C code is meant  */
-/* to be processor independant.                              */
-
+	/* We have to check for a @#$%@# possible multiply overflow  */
+	/* by doing another @#$*& multiply.  In assembly language,   */
+	/* the program could just check the OVerflow flag or whatever*/
+	/* works on the particular processor.  This C code is meant  */
+	/* to be processor independant.                              */
 	temp1 = (yc << sp_globals.pixshift) - y0 + sp_globals.pixrnd;
-/* This sees if the sign bits start at bit 15 */
-/* if they do, no overflow has occurred       */
+
+	/* This sees if the sign bits start at bit 15 */
+	/* if they do, no overflow has occurred       */
 
 	temp2 = (fix15) (MULT16(temp1, (fix15) (dx_dy >> 16)) >> 15);
 
@@ -370,11 +370,12 @@ FUNCTION void sp_line_screen(point_t P1)
 		}
 		goto skip_calc;
 	}
-/* calculate new xc at the center of the *current* scan line */
-/* due to banding, yc may be several lines away from y0      */
-/*  xc += (yc + .5 - y0) * dx_dy */
-/* This multiply generates a subpixel delta. */
-/* So we shift it to be a 16.16 delta */
+
+	/* calculate new xc at the center of the *current* scan line */
+	/* due to banding, yc may be several lines away from y0      */
+	/*  xc += (yc + .5 - y0) * dx_dy */
+	/* This multiply generates a subpixel delta. */
+	/* So we shift it to be a 16.16 delta */
 
 	xc += ((fix31) temp1 * dx_dy) >> sp_globals.pixshift;
 
@@ -408,7 +409,7 @@ FUNCTION void sp_line_screen(point_t P1)
 #if INCL_SCREEN
 /* Called after the last vector in each contour
  */
-FUNCTION void sp_end_contour_screen(void)
+void sp_end_contour_screen(void)
 {
 #if DEBUG
 	printf("END_CONTOUR_SCREEN()\n");
@@ -416,7 +417,7 @@ FUNCTION void sp_end_contour_screen(void)
 	sp_intercepts.inttype[sp_globals.next_offset - 1] |= END_INT;
 }
 #endif
-
+
 
 
 #if INCL_SCREEN
@@ -425,7 +426,7 @@ FUNCTION void sp_end_contour_screen(void)
  * Return FALSE to repeat output of the transformed data beginning
  * with the first contour
  */
-FUNCTION boolean sp_end_char_screen(void)
+boolean sp_end_char_screen(void)
 {
 	fix31 xorg;
 	fix31 yorg;
@@ -716,7 +717,8 @@ static void sp_add_intercept_screen(fix15 y,	/* Y coordinate in relative pixel u
 }
 
 #endif
-
+
+
 #if INCL_SCREEN
 /*  Called by sp_make_char to output accumulated intercept lists
  *  Clips output to sp_globals.xmin, sp_globals.xmax, sp_globals.ymin, sp_globals.ymax boundaries
@@ -766,7 +768,7 @@ static void sp_proc_intercepts_screen(void)
 	last_y -= sp_globals.y_band.band_min;
 
 #if DEBUG
-/* Print out all of the intercept info */
+	/* Print out all of the intercept info */
 	scan_line = sp_globals.ymax - first_y - 1;
 
 	for (y = first_y - sp_globals.y_band.band_min; y >= last_y; y--, scan_line++)
@@ -791,7 +793,7 @@ static void sp_proc_intercepts_screen(void)
 	}
 #endif
 
-/* CHECK INTERCEPT LIST FOR DROPOUT AND WINDING, FIX IF NECESSARY  */
+	/* CHECK INTERCEPT LIST FOR DROPOUT AND WINDING, FIX IF NECESSARY  */
 
 	for (y = first_y - sp_globals.y_band.band_min; y >= last_y; y--)
 	{

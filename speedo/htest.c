@@ -49,9 +49,7 @@ static char pathname[100];				/* Name of font file to be output */
 static ufix8 font_buffer[FONT_BUFFER_SIZE];	/* Font buffer */
 
 static FILE *fdescr;					/* Speedo outline file descriptor */
-
 
-
 
 
 /*
@@ -103,10 +101,10 @@ int main(int argc, char **argv)
 
 	sprintf(pathname, argv[1]);
 
-/* Initialization */
+	/* Initialization */
 	printf("\n      SPEEDO FONT FILE HEADER DATA\n");
 	printf("      -------------------------\n\n");
-/* Load Speedo outline file */
+	/* Load Speedo outline file */
 	fdescr = fopen(pathname, "rb");
 	if (fdescr == NULL)
 	{

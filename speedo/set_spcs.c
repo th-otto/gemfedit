@@ -115,14 +115,14 @@ boolean sp_set_specs(specs_t *specsarg)	/* Bundle of conversion specifications *
 
 	sp_globals.no_chars_avail = sp_read_word_u(sp_globals.font_org + FH_NCHRF);
 
-/* Read sp_globals.orus per em from font header */
+	/* Read sp_globals.orus per em from font header */
 	sp_globals.orus_per_em = sp_read_word_u(sp_globals.font_org + FH_ORUPM);
 
-/* compute address of private header */
+	/* compute address of private header */
 	private_off = sp_read_word_u(sp_globals.font_org + FH_HEDSZ);
 	sp_globals.hdr2_org = sp_globals.font_org + private_off;
 
-/* set metric resolution if specified, default to outline res otherwise */
+	/* set metric resolution if specified, default to outline res otherwise */
 	if (private_off > EXP_FH_METRES)
 	{
 		sp_globals.metric_resolution = sp_read_word_u(sp_globals.font_org + EXP_FH_METRES);
@@ -166,7 +166,7 @@ boolean sp_set_specs(specs_t *specsarg)	/* Bundle of conversion specifications *
 	sp_globals.pchar_dir = sp_globals.font_org + offcd;
 	sp_globals.first_char_idx = sp_read_word_u(sp_globals.font_org + FH_FCHRF);
 
-/* Register font name with sp_globals.constraint mechanism */
+	/* Register font name with sp_globals.constraint mechanism */
 #if INCL_RULES
 	font_id = sp_read_word_u(sp_globals.font_org + FH_FNTID);
 	if (!(sp_globals.constr.font_id_valid) || (sp_globals.constr.font_id != font_id))
@@ -179,8 +179,8 @@ boolean sp_set_specs(specs_t *specsarg)	/* Bundle of conversion specifications *
 	sp_globals.constr.active = ((sp_globals.pspecs->flags & CONSTR_OFF) == 0);
 #endif
 
-/* Set up sliding point constants */
-/* Set pixel shift to accomodate largest transformed pixel value */
+	/* Set up sliding point constants */
+	/* Set pixel shift to accomodate largest transformed pixel value */
 	xmin = sp_read_word_u(sp_globals.font_org + FH_FXMIN);
 	xmax = sp_read_word_u(sp_globals.font_org + FH_FXMAX);
 	ymin = sp_read_word_u(sp_globals.font_org + FH_FYMIN);
@@ -192,15 +192,15 @@ boolean sp_set_specs(specs_t *specsarg)	/* Bundle of conversion specifications *
 		return FALSE;
 	}
 #if INCL_ISW
-/* save the value of the max x oru that the fixed point constants are based on*/
+	/* save the value of the max x oru that the fixed point constants are based on*/
 	sp_globals.isw_xmax = xmax;
 #endif
 
-/* Setup transformation control block */
+	/* Setup transformation control block */
 	sp_setup_tcb(&sp_globals.tcb0);
 
 
-/* Select output module */
+	/* Select output module */
 	sp_globals.output_mode = sp_globals.pspecs->flags & 0x0007;
 
 #if INCL_USEROUT
@@ -293,7 +293,8 @@ boolean sp_set_specs(specs_t *specsarg)	/* Bundle of conversion specifications *
 
 	if ((sp_globals.pspecs->flags & SQUEEZE_LEFT) ||
 		(sp_globals.pspecs->flags & SQUEEZE_RIGHT) ||
-		(sp_globals.pspecs->flags & SQUEEZE_TOP) || (sp_globals.pspecs->flags & SQUEEZE_BOTTOM))
+		(sp_globals.pspecs->flags & SQUEEZE_TOP) ||
+		(sp_globals.pspecs->flags & SQUEEZE_BOTTOM))
 	{
 #if (INCL_SQUEEZING)
 #else
@@ -334,7 +335,7 @@ boolean sp_set_bitmap_device(bitmap_t * bfuncs, ufix16 size)
 #endif
 
 #if INCL_OUTLINE
-FUNCTION boolean sp_set_outline_device(outline_t * ofuncs, ufix16 size)
+boolean sp_set_outline_device(outline_t * ofuncs, ufix16 size)
 {
 
 	if (size != sizeof(sp_globals.outline_device))
@@ -361,7 +362,7 @@ FUNCTION boolean sp_set_outline_device(outline_t * ofuncs, ufix16 size)
  *      sp_globals.depth_adj    curve splitting depth adjustment
  * Returns FALSE if specs are out of range
  */
-static FUNCTION boolean sp_setup_consts(fix15 xmin,	/* Minimum X ORU value in font */
+static boolean sp_setup_consts(fix15 xmin,	/* Minimum X ORU value in font */
 										fix15 xmax,	/* Maximum X ORU value in font */
 										fix15 ymin,	/* Minimum Y ORU value in font */
 										fix15 ymax)	/* Maximum Y ORU value in font */
@@ -394,7 +395,7 @@ static FUNCTION boolean sp_setup_consts(fix15 xmin,	/* Minimum X ORU value in fo
 	fix15 xx = 0,
 		yy = 0;							/* Bounding box corner that produces max pixel value */
 
-/* Determine numerator and denominator of largest multiplier value */
+	/* Determine numerator and denominator of largest multiplier value */
 	mult = sp_globals.pspecs->xxmult >> 16;
 	if (mult < 0)
 		mult = -mult;
@@ -420,10 +421,10 @@ static FUNCTION boolean sp_setup_consts(fix15 xmin,	/* Minimum X ORU value in fo
 	num++;								/* Max absolute pixels per em (rounded up) */
 	denom = (ufix32) sp_globals.orus_per_em;
 
-/* Set curve splitting depth adjustment to accomodate largest multiplier value */
+	/* Set curve splitting depth adjustment to accomodate largest multiplier value */
 	sp_globals.depth_adj = 0;			/* 0 = 0.5 pel, 1 = 0.13 pel, 2 = 0.04 pel accuracy */
 	denomcopy = denom;
-/*  The following two occurances of a strange method of shifting twice by 1 
+	/*  The following two occurances of a strange method of shifting twice by 1 
     are intentional and should not be changed to a single shift by 2.  
     It prevents MicroSoft C 5.1 from generating functions calls to do the shift.  
     Worse, in conjunction with the /AC compiler 
@@ -445,7 +446,7 @@ static FUNCTION boolean sp_setup_consts(fix15 xmin,	/* Minimum X ORU value in fo
 	}
 	SHOW(sp_globals.depth_adj);
 
-/* Set multiplier shift to accomodate largest multiplier value */
+	/* Set multiplier shift to accomodate largest multiplier value */
 	sp_globals.multshift = 14;
 	numcopy = num;
 	while (numcopy >= denom)			/* More than 1, 2, 4, ... pix per oru? */
@@ -523,7 +524,7 @@ static FUNCTION boolean sp_setup_consts(fix15 xmin,	/* Minimum X ORU value in fo
 /* 
  * Convert transformation coeffs to internal form 
  */
-static FUNCTION void sp_setup_tcb(tcb_t * ptcb)	/* Pointer to transformation control bloxk */
+static void sp_setup_tcb(tcb_t * ptcb)	/* Pointer to transformation control bloxk */
 {
 
 	ptcb->xxmult = sp_setup_mult(sp_globals.pspecs->xxmult);
@@ -547,7 +548,7 @@ static FUNCTION void sp_setup_tcb(tcb_t * ptcb)	/* Pointer to transformation con
  * Called by sp_setup_tcb() to convert multiplier in transformation
  * matrix from external to internal form.
  */
-FUNCTION static fix15 sp_setup_mult(fix31 input_mult)	/* Multiplier in input format */
+static fix15 sp_setup_mult(fix31 input_mult)	/* Multiplier in input format */
 {
 	fix15 imshift;						/* Right shift to internal format */
 
@@ -570,7 +571,7 @@ FUNCTION static fix15 sp_setup_mult(fix31 input_mult)	/* Multiplier in input for
  * Called by sp_setup_tcb() to convert offset in transformation
  * matrix from external to internal form.
  */
-FUNCTION static fix31 sp_setup_offset(fix31 input_offset)	/* Multiplier in input format */
+static fix31 sp_setup_offset(fix31 input_offset)	/* Multiplier in input format */
 {
 	fix15 imshift;						/* Right shift to internal format */
 
@@ -582,7 +583,7 @@ FUNCTION static fix31 sp_setup_offset(fix31 input_offset)	/* Multiplier in input
 	return (((input_offset >> 1) + imrnd) >> imshift) + sp_globals.mprnd;
 }
 
-FUNCTION void sp_type_tcb(tcb_t * ptcb)	/* Pointer to transformation control bloxk */
+void sp_type_tcb(tcb_t * ptcb)	/* Pointer to transformation control bloxk */
 {
 	fix15 x_trans_type;
 	fix15 y_trans_type;
@@ -712,7 +713,7 @@ FUNCTION void sp_type_tcb(tcb_t * ptcb)	/* Pointer to transformation control blo
  * the specified point.
  * Returns the decrypted value read as a signed integer.
  */
-FUNCTION fix31 sp_read_long(ufix8 * pointer)	/* Pointer to first byte of encrypted 3-byte integer */
+fix31 sp_read_long(ufix8 * pointer)	/* Pointer to first byte of encrypted 3-byte integer */
 {
 	fix31 tmpfix31;
 
@@ -727,7 +728,7 @@ FUNCTION fix31 sp_read_long(ufix8 * pointer)	/* Pointer to first byte of encrypt
  * the specified point.
  * Returns the decrypted value read as a signed integer.
  */
-FUNCTION fix15 sp_read_word_u(ufix8 * pointer)	/* Pointer to first byte of unencrypted 2-byte integer */
+fix15 sp_read_word_u(ufix8 * pointer)	/* Pointer to first byte of unencrypted 2-byte integer */
 {
 	fix15 tmpfix15;
 

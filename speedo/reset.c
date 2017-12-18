@@ -51,7 +51,7 @@ WITH THE SPEEDO SOFTWARE OR THE BITSTREAM CHARTER OUTLINE FONT.
 /***** STATIC VARIABLES *****/
 
 /***** STATIC FUNCTIONS *****/
-
+
 
 /*
  * Called by the host software to intialize the Speedo mechanism

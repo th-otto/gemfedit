@@ -54,16 +54,13 @@ from The Open Group.
 
 #include	"spint.h"
 
-#ifndef FONTMODULE
 #include <stdarg.h>
-#endif
 
 extern void ErrorF(const char *f, ...);
 
 void SpeedoErr(char *str, ...)
 {
 	va_list v;
-
 	int a1;
 
 	va_start(v, str);
