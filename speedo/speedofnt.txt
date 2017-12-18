@@ -108,26 +108,26 @@ bx001177.spd: Huxley Vertical
 bx001221.spd: Mister Earl
 bx001232.spd: Bremen Black
 bx019831.spd: Symbol Monospaced (434 glyphs)
-bx019859.spd: Interleaf - Math Roman
-bx027011.spd: Dutch 801 Greek Interleaf Roman
-bx027012.spd: Dutch 801 Greek Interleaf Inclined
-bx027013.spd: Dutch 801 Greek Interleaf Bold
-bx027014.spd: Dutch 801 Greek Interleaf Bold Inclined
+bx019859.spd: Interleaf - Math Roman (497 glyphs)
+bx027011.spd: Dutch 801 Greek Interleaf Roman (142 glyphs)
+bx027012.spd: Dutch 801 Greek Interleaf Inclined (142 glyphs)
+bx027013.spd: Dutch 801 Greek Interleaf Bold (142 glyphs)
+bx027014.spd: Dutch 801 Greek Interleaf Bold Inclined (142 glyphs)
 bx143219.spd: More Wingbats SWC (282 glyphs)
-bx990003.spd: Swiss 721
-bx990004.spd: Swiss 721 Italic
-bx990005.spd: Swiss 721 Bold
-bx990006.spd: Swiss 721 Bold Italic
-bx990011.spd: Dutch 801 Roman
-bx990012.spd: Dutch 801 Italic
-bx990013.spd: Dutch 801 Bold
-bx990014.spd: Dutch 801 Bold Italic
+bx990003.spd: Swiss 721 (614 glyphs)
+bx990004.spd: Swiss 721 Italic (614 glyphs)
+bx990005.spd: Swiss 721 Bold (614 glyphs)
+bx990006.spd: Swiss 721 Bold Italic (614 glyphs)
+bx990011.spd: Dutch 801 Roman (614 glyphs)
+bx990012.spd: Dutch 801 Italic (614 glyphs)
+bx990013.spd: Dutch 801 Bold (614 glyphs)
+bx990014.spd: Dutch 801 Bold Italic (614 glyphs)
 
-ilmtha.spd: Mathafont
-ilmthb.spd: Interleaf TestFont
-ilmthex.spd: Interleaf TestFont
-ilsymb.spd: FatSymbols
-ilsystem.spd: Sysfont3
+ilmtha.spd: Mathafont (124 glyphs)
+ilmthb.spd: Interleaf TestFont (123 glyphs)
+ilmthex.spd: Interleaf TestFont (128 glyphs)
+ilsymb.spd: FatSymbols (128 glyphs)
+ilsystem.spd: Sysfont3 (80 glyphs)
 
 bt223000.spd: Dutch 801 Roman - SWA
 bt223001.spd: Dutch 801 Italic - SWA
@@ -144,3 +144,13 @@ bt223011.spd: Fixed Pitch 810 Courier Bold Italic 10 Pitch/Text - SWA
 bt223012.spd: Symbol - SWA
 bt223013.spd: Zapf Calligraphic 801 - SWA
 bt223014.spd: Zapf Calligraphic 801 Italic - SWA
+bt223015.spd: Zapf Calligraphic 801 Bold - SWA
+bt223016.spd: Zapf Calligraphic 801 Bold Italic - SWA
+bt223025.spd: Swiss 721 Narrow - SWA
+bt223026.spd: Swiss 721 Narrow Oblique - SWA
+bt223027.spd: Swiss 721 Narrow Bold - SWA
+bt223028.spd: Swiss 721 Narrow Bold Oblique - SWA
+bt223031.spd: Century 702 Century Schoolbook - SWA
+bt223032.spd: Century 702 Century Schoolbook Italic - SWA
+bt223033.spd: Century 702 Century Schoolbook Bold - SWA
+bt223034.spd: Century 702 Century Schoolbook Bold Italic - SWA
