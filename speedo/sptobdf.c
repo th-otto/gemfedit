@@ -60,6 +60,7 @@ from The Open Group.
 #include <stdlib.h>
 #include <string.h>
 #include "speedo.h"
+#include "keys.h"
 #include "iso8859.h"
 
 #ifdef EXTRAFONTS
@@ -82,7 +83,7 @@ static buff_t font;
 
 static buff_t char_data;
 
-static ufix8 *f_buffer;
+static ufix8 *font_buffer;
 static ufix8 *c_buffer;
 
 static ufix16 mincharsize;
@@ -90,19 +91,6 @@ static ufix16 mincharsize;
 static fix15 cur_y;
 
 static fix15 bit_width, bit_height;
-
-static ufix8 key[] = {
-	KEY0,
-	KEY1,
-	KEY2,
-	KEY3,
-	KEY4,
-	KEY5,
-	KEY6,
-	KEY7,
-	KEY8
-};										/* Font decryption key */
-
 
 static char *progname;
 
@@ -138,6 +126,16 @@ static void usage(void)
 	fprintf(stderr, "\n");
 	exit(0);
 }
+
+
+/*
+ * Reads 1-byte field from font buffer 
+ */
+static ufix8 read_1b(ufix8 *pointer)
+{
+	return *pointer;
+}
+
 
 static fix15 read_2b(ufix8 *ptr)
 {
@@ -246,15 +244,81 @@ static void dump_header(ufix32 num_chars)
 	const char *weight;
 	const char *width;
 	
-	xmin = read_2b(f_buffer + FH_FXMIN);
-	ymin = read_2b(f_buffer + FH_FYMIN);
-	xmax = read_2b(f_buffer + FH_FXMAX);
-	ymax = read_2b(f_buffer + FH_FYMAX);
+	xmin = read_2b(font_buffer + FH_FXMIN);
+	ymin = read_2b(font_buffer + FH_FYMIN);
+	xmax = read_2b(font_buffer + FH_FXMAX);
+	ymax = read_2b(font_buffer + FH_FYMAX);
 	pixel_size = point_size * x_res / 720;
 
 	printf("STARTFONT 2.1\n");
 	printf("COMMENT\n");
 	printf("COMMENT Generated from Bitstream Speedo outlines via sptobdf\n");
+	printf("COMMENT\n");
+	printf("COMMENT Font size: %ld\n", (long)read_4b(font_buffer + FH_FNTSZ));
+	printf("COMMENT Minimum font buffer size: %ld\n", (long)read_4b(font_buffer + FH_FBFSZ));
+	printf("COMMENT Minimum character buffer size: %u\n", read_2b(font_buffer + FH_CBFSZ));
+	printf("COMMENT Header size: %u\n", read_2b(font_buffer + FH_HEDSZ));
+	printf("COMMENT Font ID: %u\n", read_2b(font_buffer + FH_FNTID));
+	printf("COMMENT Font version number: %u\n", read_2b(font_buffer + FH_SFVNR));
+	printf("COMMENT Font full name: %.70s\n", font_buffer + FH_FNTNM);
+	printf("COMMENT Short font name: %.32s\n", font_buffer + FH_SFNTN);
+	printf("COMMENT Short face name: %.16s\n", font_buffer + FH_SFACN);
+	printf("COMMENT Font form: %.14s\n", font_buffer + FH_FNTFM);
+	printf("COMMENT Manufacturing date: %.10s\n", font_buffer + FH_MDATE);
+	printf("COMMENT Layout name: %.70s\n", font_buffer + FH_LAYNM);
+	printf("COMMENT Number of chars in layout: %u\n", read_2b(font_buffer + FH_NCHRL));
+	printf("COMMENT Total Number of chars in layout: %u\n", read_2b(font_buffer + FH_NCHRF));
+	printf("COMMENT Index of first character: %u\n", read_2b(font_buffer + FH_FCHRF));
+	printf("COMMENT Number of Kerning Tracks: %u\n", read_2b(font_buffer + FH_NKTKS));
+	printf("COMMENT Number of Kerning Pairs: %u\n", read_2b(font_buffer + FH_NKPRS));
+	printf("COMMENT Flags: 0x%x\n", read_1b(font_buffer + FH_FLAGS));
+	printf("COMMENT Classification Flags: 0x%x\n", read_1b(font_buffer + FH_CLFGS));
+	printf("COMMENT Family Classification: 0x%x\n", read_1b(font_buffer + FH_FAMCL));
+	printf("COMMENT Font form classification: 0x%x\n", read_1b(font_buffer + FH_FRMCL));
+	printf("COMMENT Italic angle: %d\n", read_2b(font_buffer + FH_ITANG));
+	printf("COMMENT Number of ORUs per em: %d\n", read_2b(font_buffer + FH_ORUPM));
+	printf("COMMENT Width of Wordspace: %d\n", read_2b(font_buffer + FH_WDWTH));
+	printf("COMMENT Width of Emspace: %d\n", read_2b(font_buffer + FH_EMWTH));
+	printf("COMMENT Width of Enspace: %d\n", read_2b(font_buffer + FH_ENWTH));
+	printf("COMMENT Width of Thinspace: %d\n", read_2b(font_buffer + FH_TNWTH));
+	printf("COMMENT Width of Figspace: %d\n", read_2b(font_buffer + FH_FGWTH));
+	printf("COMMENT Font-wide min X value: %d\n", read_2b(font_buffer + FH_FXMIN));
+	printf("COMMENT Font-wide min Y value: %d\n", read_2b(font_buffer + FH_FYMIN));
+	printf("COMMENT Font-wide max X value: %d\n", read_2b(font_buffer + FH_FXMAX));
+	printf("COMMENT Font-wide max Y value: %d\n", read_2b(font_buffer + FH_FYMAX));
+	printf("COMMENT Underline position: %d\n", read_2b(font_buffer + FH_ULPOS));
+	printf("COMMENT Underline thickness: %d\n", read_2b(font_buffer + FH_ULTHK));
+	printf("COMMENT Small caps: %d\n", read_2b(font_buffer + FH_SMCTR));
+	printf("COMMENT Display Superiors Y position: %d\n", read_2b(font_buffer + FH_DPSTR));
+	printf("COMMENT Display Superiors X scale: %7.2f\n", (real) read_2b(font_buffer + FH_DPSTR + 2) / 4096.0);
+	printf("COMMENT Display Superiors Y scale: %7.2f\n", (real) read_2b(font_buffer + FH_DPSTR + 4) / 4096.0);
+	printf("COMMENT Footnote Superiors Y position: %d\n", read_2b(font_buffer + FH_FNSTR));
+	printf("COMMENT Footnote Superiors X scale: %7.2f\n", (real) read_2b(font_buffer + FH_FNSTR + 2) / 4096.0);
+	printf("COMMENT Footnote Superiors Y scale: %7.2f\n", (real) read_2b(font_buffer + FH_FNSTR + 4) / 4096.0);
+	printf("COMMENT Alpha Superiors Y position: %d\n", read_2b(font_buffer + FH_ALSTR));
+	printf("COMMENT Alpha Superiors X scale: %7.2f\n", (real) read_2b(font_buffer + FH_ALSTR + 2) / 4096.0);
+	printf("COMMENT Alpha Superiors Y scale: %7.2f\n", (real) read_2b(font_buffer + FH_ALSTR + 4) / 4096.0);
+	printf("COMMENT Chemical Inferiors Y position: %d\n", read_2b(font_buffer + FH_CMITR));
+	printf("COMMENT Chemical Inferiors X scale: %7.2f\n", (real) read_2b(font_buffer + FH_CMITR + 2) / 4096.0);
+	printf("COMMENT Chemical Inferiors Y scale: %7.2f\n", (real) read_2b(font_buffer + FH_CMITR + 4) / 4096.0);
+	printf("COMMENT Small Numerators Y position: %d\n", read_2b(font_buffer + FH_SNMTR));
+	printf("COMMENT Small Numerators X scale: %7.2f\n", (real) read_2b(font_buffer + FH_SNMTR + 2) / 4096.0);
+	printf("COMMENT Small Numerators Y scale: %7.2f\n", (real) read_2b(font_buffer + FH_SNMTR + 4) / 4096.0);
+	printf("COMMENT Small Denominators Y position: %d\n", read_2b(font_buffer + FH_SDNTR));
+	printf("COMMENT Small Denominators X scale: %7.2f\n", (real) read_2b(font_buffer + FH_SDNTR + 2) / 4096.0);
+	printf("COMMENT Small Denominators Y scale: %7.2f\n", (real) read_2b(font_buffer + FH_SDNTR + 4) / 4096.0);
+	printf("COMMENT Medium Numerators Y position: %d\n", read_2b(font_buffer + FH_MNMTR));
+	printf("COMMENT Medium Numerators X scale: %7.2f\n", (real) read_2b(font_buffer + FH_MNMTR + 2) / 4096.0);
+	printf("COMMENT Medium Numerators Y scale: %7.2f\n", (real) read_2b(font_buffer + FH_MNMTR + 4) / 4096.0);
+	printf("COMMENT Medium Denominators Y position: %d\n", read_2b(font_buffer + FH_MDNTR));
+	printf("COMMENT Medium Denominators X scale: %7.2f\n", (real) read_2b(font_buffer + FH_MDNTR + 2) / 4096.0);
+	printf("COMMENT Medium Denominators Y scale: %7.2f\n", (real) read_2b(font_buffer + FH_MDNTR + 4) / 4096.0);
+	printf("COMMENT Large Numerators Y position: %d\n", read_2b(font_buffer + FH_LNMTR));
+	printf("COMMENT Large Numerators X scale: %7.2f\n", (real) read_2b(font_buffer + FH_LNMTR + 2) / 4096.0);
+	printf("COMMENT Large Numerators Y scale: %7.2f\n", (real) read_2b(font_buffer + FH_LNMTR + 4) / 4096.0);
+	printf("COMMENT Large Denominators Y position: %d\n", read_2b(font_buffer + FH_LDNTR));
+	printf("COMMENT Large Denominators X scale: %7.2f\n", (real) read_2b(font_buffer + FH_LDNTR + 2) / 4096.0);
+	printf("COMMENT Large Denominators Y scale: %7.2f\n", (real) read_2b(font_buffer + FH_LDNTR + 4) / 4096.0);
 	printf("COMMENT\n");
 	printf("FONT %s\n", fontname);
 	printf("SIZE %d %d %d\n", pixel_size, x_res, y_res);
@@ -265,9 +329,9 @@ static void dump_header(ufix32 num_chars)
 	printf("RESOLUTION_Y %d\n", y_res);
 	printf("POINT_SIZE %d\n", point_size);
 	printf("PIXEL_SIZE %d\n", pixel_size);
-	printf("COPYRIGHT \"%s\"\n", f_buffer + FH_CPYRT);
-	printf("FACE_NAME \"%.16s\"\n", f_buffer + FH_SFACN);
-	switch (f_buffer[FH_FRMCL] & 0x0f)
+	printf("COPYRIGHT \"%.78s\"\n", font_buffer + FH_CPYRT);
+	printf("FACE_NAME \"%.16s\"\n", font_buffer + FH_SFACN);
+	switch (font_buffer[FH_FRMCL] & 0x0f)
 	{
 		case 4: width = "condensed"; break;
 		case 6: width = "semi-condensed"; break;
@@ -276,7 +340,7 @@ static void dump_header(ufix32 num_chars)
 		case 12: width = "expanded"; break;
 		default: width = ""; break;
 	}
-	switch ((f_buffer[FH_FRMCL] >> 4) & 0x0f)
+	switch ((font_buffer[FH_FRMCL] >> 4) & 0x0f)
 	{
 		case 1: weight = "thin"; break;
 		case 2: weight = "ultralight"; break;
@@ -314,9 +378,9 @@ int main(int argc, char **argv)
 	ufix32 i;
 	ufix8 tmp[16];
 	ufix32 minbufsize;
-	ufix16 cust_no;
 	int first_char_index, num_chars;
-
+	const ufix8 *key;
+	
 	progname = argv[0];
 	process_args(argc, argv);
 	fp = fopen(fontfile, "r");
@@ -331,20 +395,20 @@ int main(int argc, char **argv)
 		return 1;
 	}
 	minbufsize = (ufix32) read_4b(tmp + FH_FBFSZ);
-	f_buffer = (ufix8 *) malloc(minbufsize);
-	if (!f_buffer)
+	font_buffer = (ufix8 *) malloc(minbufsize);
+	if (font_buffer == NULL)
 	{
 		fprintf(stderr, "can't get %x bytes of memory\n", minbufsize);
 		return 1;
 	}
 	fseek(fp, (ufix32) 0, 0);
 
-	if (fread(f_buffer, sizeof(ufix8), (ufix16) minbufsize, fp) != minbufsize)
+	if (fread(font_buffer, sizeof(ufix8), (ufix16) minbufsize, fp) != minbufsize)
 	{
 		fprintf(stderr, "error reading file \"%s\"\n", fontfile);
 		return 1;
 	}
-	mincharsize = read_2b(f_buffer + FH_CBFSZ);
+	mincharsize = read_2b(font_buffer + FH_CBFSZ);
 
 	c_buffer = (ufix8 *) malloc(mincharsize);
 	if (!c_buffer)
@@ -355,20 +419,23 @@ int main(int argc, char **argv)
 	/* init */
 	sp_reset();
 
-	font.org = f_buffer;
+	font.org = font_buffer;
 	font.no_bytes = minbufsize;
 
-	if ((cust_no = sp_get_cust_no(font)) != CUS0)
+	key = sp_get_key(font);
+	if (key == NULL)
 	{
 #if 0
 		fprintf(stderr, "Non-standard encryption for \"%s\"\n", fontfile);
 		return 1;
 #endif
+	} else
+	{
+		sp_set_key(key);
 	}
-	sp_set_key(key);
-
-	first_char_index = read_2b(f_buffer + FH_FCHRF);
-	num_chars = read_2b(f_buffer + FH_NCHRL);
+	
+	first_char_index = read_2b(font_buffer + FH_FCHRF);
+	num_chars = read_2b(font_buffer + FH_NCHRL);
 
 	/* set up specs */
 	/* Note that point size is in decipoints */
@@ -399,7 +466,7 @@ int main(int argc, char **argv)
 
 	if (!fontname)
 	{
-		fontname = (char *) (f_buffer + FH_FNTNM);
+		fontname = (char *) (font_buffer + FH_FNTNM);
 	}
 	if (iso_encoding)
 		num_chars = num_iso_chars;

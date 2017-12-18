@@ -31,8 +31,8 @@ WITH THE SPEEDO SOFTWARE OR THE BITSTREAM CHARTER OUTLINE FONT.
 
 #define   DEBUG      0
 
-#if DEBUG
 #include <stdio.h>
+#if DEBUG
 #define SHOW(X) printf("X = %d\n", X)
 #else
 #define SHOW(X)
@@ -123,7 +123,7 @@ boolean sp_set_specs(specs_t *specsarg)	/* Bundle of conversion specifications *
 	sp_globals.hdr2_org = sp_globals.font_org + private_off;
 
 	/* set metric resolution if specified, default to outline res otherwise */
-	if (private_off > EXP_FH_METRES)
+	if (private_off >= EXP_FH_METRES)
 	{
 		sp_globals.metric_resolution = sp_read_word_u(sp_globals.font_org + EXP_FH_METRES);
 	} else
@@ -143,6 +143,10 @@ boolean sp_set_specs(specs_t *specsarg)	/* Bundle of conversion specifications *
 	cd_size = ofcns - offcd;
 	if ((((sp_globals.no_chars_avail << 1) + 3) != cd_size) && (((sp_globals.no_chars_avail * 3) + 4) != cd_size))
 	{
+		fprintf(stderr, "chars avail=%d offcd=%u ofcns=%u cd_size=%u val1=%u val2=%u\n",
+			sp_globals.no_chars_avail, offcd, ofcns, cd_size,
+			((sp_globals.no_chars_avail << 1) + 3),
+			((sp_globals.no_chars_avail * 3) + 4));
 		sp_report_error(4);				/* Font format error */
 		return FALSE;
 	}
@@ -305,7 +309,8 @@ boolean sp_set_specs(specs_t *specsarg)	/* Bundle of conversion specifications *
 
 	if ((sp_globals.pspecs->flags & CLIP_LEFT) ||
 		(sp_globals.pspecs->flags & CLIP_RIGHT) ||
-		(sp_globals.pspecs->flags & CLIP_TOP) || (sp_globals.pspecs->flags & CLIP_BOTTOM))
+		(sp_globals.pspecs->flags & CLIP_TOP) ||
+		(sp_globals.pspecs->flags & CLIP_BOTTOM))
 	{
 #if (INCL_CLIPPING)
 #else

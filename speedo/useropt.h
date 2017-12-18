@@ -35,5 +35,3 @@ from The Open Group.
 
 #define	INCL_RULES	1
 #define	INCL_METRICS	1
-
-#define	INCL_KEYS	1

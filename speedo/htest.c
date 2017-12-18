@@ -60,6 +60,7 @@ static ufix8 read_1b(ufix8 *pointer)
 	return *pointer;
 }
 
+
 /*
  * Reads 2-byte field from font buffer 
  */
@@ -136,7 +137,7 @@ int main(int argc, char **argv)
 
 	printf("Font ID ................................ %4.4d\n", (ufix16) read_2b(font_buffer + FH_FNTID));
 
-	printf("Font Version Number .................... %4d\n", (ufix16) read_1b(font_buffer + FH_SFVNR));
+	printf("Font Version Number .................... %4d\n", (ufix16) read_2b(font_buffer + FH_SFVNR));
 
 	printf("Font Full Name:\n    %.70s\n", font_buffer + FH_FNTNM);
 
@@ -290,60 +291,59 @@ int main(int argc, char **argv)
 
 	printf("Width of Figure Space .................. %4d\n", (ufix16) read_2b(font_buffer + FH_FGWTH));
 
-	printf("Min X coordinate in font ............... %4d\n", (fix15) read_2b(font_buffer + FH_FXMIN));
+	printf("Min X coordinate in font ............... %4d\n", read_2b(font_buffer + FH_FXMIN));
 
-	printf("Min Y coordinate in font ............... %4d\n", (fix15) read_2b(font_buffer + FH_FYMIN));
+	printf("Min Y coordinate in font ............... %4d\n", read_2b(font_buffer + FH_FYMIN));
 
-	printf("Max X coordinate in font ............... %4d\n", (fix15) read_2b(font_buffer + FH_FXMAX));
+	printf("Max X coordinate in font ............... %4d\n", read_2b(font_buffer + FH_FXMAX));
 
-	printf("Max Y coordinate in font ............... %4d\n", (fix15) read_2b(font_buffer + FH_FYMAX));
+	printf("Max Y coordinate in font ............... %4d\n", read_2b(font_buffer + FH_FYMAX));
 
-	printf("Underline Position ..................... %4d\n", (fix15) read_2b(font_buffer + FH_ULPOS));
+	printf("Underline Position ..................... %4d\n", read_2b(font_buffer + FH_ULPOS));
 
-	printf("Underline Thickness .................... %4d\n", (fix15) read_2b(font_buffer + FH_ULTHK));
+	printf("Underline Thickness .................... %4d\n", read_2b(font_buffer + FH_ULTHK));
 
-	printf("Small Caps Y position .................. %4d\n", (fix15) read_2b(font_buffer + FH_SMCTR));
+	printf("Small Caps Y position .................. %4d\n", read_2b(font_buffer + FH_SMCTR));
 	printf("Small Caps X scale ..................... %7.2f\n", ((real) read_2b(font_buffer + FH_SMCTR + 2) / 4096.0));
-	printf("Small Caps Y scale ..................... %7.2f\n",
-		   ((real) (fix15) read_2b(font_buffer + FH_SMCTR + 4) / 4096.0));
+	printf("Small Caps Y scale ..................... %7.2f\n", ((real) read_2b(font_buffer + FH_SMCTR + 4) / 4096.0));
 
-	printf("Display Superiors Y position ........... %4d\n", (fix15) read_2b(font_buffer + FH_SMCTR));
-	printf("Display Superiors X scale .............. %7.2f\n", ((real) read_2b(font_buffer + FH_SMCTR + 2) / 4096.0));
-	printf("Display Superiors Y scale .............. %7.2f\n", ((real) read_2b(font_buffer + FH_SMCTR + 4) / 4096.0));
+	printf("Display Superiors Y position ........... %4d\n", read_2b(font_buffer + FH_DPSTR));
+	printf("Display Superiors X scale .............. %7.2f\n", ((real) read_2b(font_buffer + FH_DPSTR + 2) / 4096.0));
+	printf("Display Superiors Y scale .............. %7.2f\n", ((real) read_2b(font_buffer + FH_DPSTR + 4) / 4096.0));
 
-	printf("Footnote Superiors Y position .......... %4d\n", (fix15) read_2b(font_buffer + FH_FNSTR));
+	printf("Footnote Superiors Y position .......... %4d\n", read_2b(font_buffer + FH_FNSTR));
 	printf("Footnote Superiors X scale ............. %7.2f\n", ((real) read_2b(font_buffer + FH_FNSTR + 2) / 4096.0));
 	printf("Footnote Superiors Y scale ............. %7.2f\n", ((real) read_2b(font_buffer + FH_FNSTR + 4) / 4096.0));
 
-	printf("Alpha Superiors Y position ............. %4d\n", (fix15) read_2b(font_buffer + FH_ALSTR));
+	printf("Alpha Superiors Y position ............. %4d\n", read_2b(font_buffer + FH_ALSTR));
 	printf("Alpha Superiors X scale ................ %7.2f\n", ((real) read_2b(font_buffer + FH_ALSTR + 2) / 4096.0));
 	printf("Alpha Superiors Y scale ................ %7.2f\n", ((real) read_2b(font_buffer + FH_ALSTR + 4) / 4096.0));
 
-	printf("Chemical Inferiors Y position .......... %4d\n", (fix15) read_2b(font_buffer + FH_CMITR));
+	printf("Chemical Inferiors Y position .......... %4d\n", read_2b(font_buffer + FH_CMITR));
 	printf("Chemical Inferiors X scale ............. %7.2f\n", ((real) read_2b(font_buffer + FH_CMITR + 2) / 4096.0));
 	printf("Chemical Inferiors Y scale ............. %7.2f\n", ((real) read_2b(font_buffer + FH_CMITR + 4) / 4096.0));
 
-	printf("Small Numerators Y position ............ %4d\n", (fix15) read_2b(font_buffer + FH_SNMTR));
+	printf("Small Numerators Y position ............ %4d\n", read_2b(font_buffer + FH_SNMTR));
 	printf("Small Numerators X scale ............... %7.2f\n", ((real) read_2b(font_buffer + FH_SNMTR + 2) / 4096.0));
 	printf("Small Numerators Y scale ............... %7.2f\n", ((real) read_2b(font_buffer + FH_SNMTR + 4) / 4096.0));
 
-	printf("Small Denominators Y position .......... %4d\n", (fix15) read_2b(font_buffer + FH_SDNTR));
+	printf("Small Denominators Y position .......... %4d\n", read_2b(font_buffer + FH_SDNTR));
 	printf("Small Denominators X scale ............. %7.2f\n", ((real) read_2b(font_buffer + FH_SDNTR + 2) / 4096.0));
 	printf("Small Denominators Y scale ............. %7.2f\n", ((real) read_2b(font_buffer + FH_SDNTR + 4) / 4096.0));
 
-	printf("Medium Numerators Y position ........... %4d\n", (fix15) read_2b(font_buffer + FH_MNMTR));
+	printf("Medium Numerators Y position ........... %4d\n", read_2b(font_buffer + FH_MNMTR));
 	printf("Medium Numerators X scale .............. %7.2f\n", ((real) read_2b(font_buffer + FH_MNMTR + 2) / 4096.0));
 	printf("Medium Numerators Y scale .............. %7.2f\n", ((real) read_2b(font_buffer + FH_MNMTR + 4) / 4096.0));
 
-	printf("Medium Denominators Y position ......... %4d\n", (fix15) read_2b(font_buffer + FH_MDNTR));
+	printf("Medium Denominators Y position ......... %4d\n", read_2b(font_buffer + FH_MDNTR));
 	printf("Medium Denominators X scale ............ %7.2f\n", ((real) read_2b(font_buffer + FH_MDNTR + 2) / 4096.0));
 	printf("Medium Denominators Y scale ............ %7.2f\n", ((real) read_2b(font_buffer + FH_MDNTR + 4) / 4096.0));
 
-	printf("Large Numerators Y position ............ %4d\n", (fix15) read_2b(font_buffer + FH_LNMTR));
+	printf("Large Numerators Y position ............ %4d\n", read_2b(font_buffer + FH_LNMTR));
 	printf("Large Numerators X scale ............... %7.2f\n", ((real) read_2b(font_buffer + FH_LNMTR + 2) / 4096.0));
 	printf("Large Numerators Y scale ............... %7.2f\n", ((real) read_2b(font_buffer + FH_LNMTR + 4) / 4096.0));
 
-	printf("Large Denominators Y position .......... %4d\n", (fix15) read_2b(font_buffer + FH_LDNTR));
+	printf("Large Denominators Y position .......... %4d\n", read_2b(font_buffer + FH_LDNTR));
 	printf("Large Denominators X scale ............. %7.2f\n", ((real) read_2b(font_buffer + FH_LDNTR + 2) / 4096.0));
 	printf("Large Denominators Y scale ............. %7.2f\n", ((real) read_2b(font_buffer + FH_LDNTR + 4) / 4096.0));
 

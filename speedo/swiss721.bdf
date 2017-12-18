@@ -2,6 +2,11 @@ STARTFONT 2.1
 COMMENT
 COMMENT Generated from Bitstream Speedo outlines via sptobdf
 COMMENT
+COMMENT Font size: 52115
+COMMENT Minimum font buffer size: 5404
+COMMENT Minimum character buffer size: 737
+COMMENT Header size: 420
+COMMENT
 FONT Swiss 721
 SIZE 24 72 72
 FONTBOUNDINGBOX -167 -256 1228 1009

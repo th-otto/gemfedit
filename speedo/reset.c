@@ -84,8 +84,7 @@ void sp_reset(void)
 /*
  * Dynamically sets font decryption key.
  */
-#if INCL_KEYS
-void sp_set_key(ufix8 key[])	/* Specified decryption key */
+void sp_set_key(const ufix8 *key)	/* Specified decryption key */
 {
 	sp_globals.key32 = ((ufix16) key[3] << 8) | key[2];
 	sp_globals.key4 = key[4];
@@ -93,7 +92,6 @@ void sp_set_key(ufix8 key[])	/* Specified decryption key */
 	sp_globals.key7 = key[7];
 	sp_globals.key8 = key[8];
 }
-#endif
 
 
 /*

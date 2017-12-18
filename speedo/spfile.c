@@ -66,63 +66,8 @@ SpeedoFontPtr sp_fp_cur = (SpeedoFontPtr) 0;
 #include "ncdkeys.h"
 #endif
 
-#include "keys.h"
 
-#ifdef EXTRAFONTS
-static ufix8 skey[] = {
-	SKEY0,
-	SKEY1,
-	SKEY2,
-	SKEY3,
-	SKEY4,
-	SKEY5,
-	SKEY6,
-	SKEY7,
-	SKEY8
-};										/* Sample Font decryption key */
-
-static ufix8 rkey[] = {
-	RKEY0,
-	RKEY1,
-	RKEY2,
-	RKEY3,
-	RKEY4,
-	RKEY5,
-	RKEY6,
-	RKEY7,
-	RKEY8
-};										/* Retail Font decryption key */
-
-#endif /* EXTRAFONTS */
-
-#ifdef XSAMPLEFONTS
-static ufix8 xkey[] = {
-	XKEY0,
-	XKEY1,
-	XKEY2,
-	XKEY3,
-	XKEY4,
-	XKEY5,
-	XKEY6,
-	XKEY7,
-	XKEY8
-};										/* Sample Font decryption key */
-#endif
-
-static ufix8 mkey[] = {
-	KEY0,
-	KEY1,
-	KEY2,
-	KEY3,
-	KEY4,
-	KEY5,
-	KEY6,
-	KEY7,
-	KEY8
-};										/* Font decryption key */
-
-
-static fix15 read_2b(ufix8 * ptr)
+static fix15 read_2b(ufix8 *ptr)
 {
 	fix15 tmp;
 
@@ -131,7 +76,7 @@ static fix15 read_2b(ufix8 * ptr)
 	return tmp;
 }
 
-static fix31 read_4b(ufix8 * ptr)
+static fix31 read_4b(ufix8 *ptr)
 {
 	fix31 tmp;
 
@@ -290,14 +235,13 @@ int sp_open_master(const char *fontname, const char *filename, SpeedoMasterFontP
 {
 	SpeedoMasterFontPtr spmf;
 	ufix8 tmp[16];
-	ufix16 cust_no;
 	FILE *fp;
 	ufix32 minbufsize;
 	ufix16 mincharsize;
 	ufix8 *f_buffer;
 	ufix8 *c_buffer;
 	int ret;
-	ufix8 *key;
+	const ufix8 *key;
 
 	spmf = (SpeedoMasterFontPtr) xalloc(sizeof(SpeedoMasterFontRec));
 	if (!spmf)
@@ -357,31 +301,10 @@ int sp_open_master(const char *fontname, const char *filename, SpeedoMasterFontP
 	spmf->font.org = spmf->f_buffer;
 	spmf->font.no_bytes = minbufsize;
 
-	cust_no = sp_get_cust_no(spmf->font);
-
 	/* XXX add custom encryption stuff here */
 
-#ifdef EXTRAFONTS
-	if (cust_no == SCUS0)
-	{
-		key = skey;
-	} else if (cust_no == RCUS0)
-	{
-		key = rkey;
-	} else
-#endif
-
-#ifdef XSAMPLEFONTS
-	if (cust_no == XCUS0)
-	{
-		key = xkey;
-	} else
-#endif
-
-	if (cust_no == CUS0)
-	{
-		key = mkey;
-	} else
+	key = sp_get_key(spmf->font);
+	if (key == NULL)
 	{
 		SpeedoErr("Non - standard encryption for \"%s\"\n", filename);
 		ret = BadFontName;

@@ -80,10 +80,6 @@ WITH THE SPEEDO SOFTWARE OR THE BITSTREAM CHARTER OUTLINE FONT.
 #define  INCL_METRICS   1          /* 1 to include metrics support */
 #endif                             /* 0 to omit metrics support */
 
-#ifndef INCL_KEYS
-#define  INCL_KEYS      0          /* 1 to include multi key support */
-#endif                             /* 0 to omit multi key support */
-
 #ifndef INCL_MULTIDEV
 #define  INCL_MULTIDEV  0          /* 1 to include multiple output device support */
 #endif                             /* 0 to omit multi device support */
@@ -595,7 +591,7 @@ extern SPEEDO_GLOBALS sp_globals;
                             /*       Y position 2 bytes                     */
                             /*       X scale 2 bytes (1/4096ths)            */
                             /*       Y scale 2 bytes (1/4096ths)            */
-#define  SIZE_FW FH_LDNTR + 6  /* size of nominal font header */
+#define  SIZE_FW (FH_LDNTR + 6)  /* size of nominal font header */
 #define  EXP_FH_METRES SIZE_FW /* offset to expansion field metric resolution (optional) */
 
 
@@ -714,10 +710,8 @@ boolean sp_init_userout(specs_t *specsarg);
 
 /* reset.c functions */
 void sp_reset(void);
-#if INCL_KEYS
-void sp_set_key(ufix8 key[]);
-#endif
-ufix16 sp_get_cust_no(buff_t font_buff);
+void sp_set_key(const ufix8 *key);
+const ufix8 *sp_get_key(buff_t font_buff);ufix16 sp_get_cust_no(buff_t font_buff);
 
 /* set_spcs.c functions */
 boolean sp_set_specs(specs_t *specsarg);

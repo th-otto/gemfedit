@@ -80,19 +80,6 @@ static ufix8 *c_buffer;
 
 static ufix16 mincharsize;
 
-static ufix8 key[] = {
-	KEY0,
-	KEY1,
-	KEY2,
-	KEY3,
-	KEY4,
-	KEY5,
-	KEY6,
-	KEY7,
-	KEY8
-};										/* Font decryption key */
-
-
 static char *progname;
 
 static char *fontfile = NULL;
@@ -151,7 +138,7 @@ int main(int argc, char **argv)
 	ufix32 i;
 	ufix8 tmp[16];
 	ufix32 minbufsize;
-	ufix16 cust_no;
+	const ufix8 *key;
 	int first_char_index, num_chars;
 
 	progname = argv[0];
@@ -195,7 +182,8 @@ int main(int argc, char **argv)
 	font.org = f_buffer;
 	font.no_bytes = minbufsize;
 
-	if ((cust_no = sp_get_cust_no(font)) != CUS0)
+	key = sp_get_key(font);
+	if (key == NULL)
 	{
 #if 0
 		fprintf(stderr, "Non-standard encryption for \"%s\"\n", fontfile);

@@ -83,7 +83,7 @@ typedef struct _sp_master {
     ufix8      *f_buffer;
     ufix8      *c_buffer;
     char       *copyright;
-    ufix8      *key;
+    const ufix8 *key;
     buff_t      font;
     buff_t      char_data;
     ufix16      mincharsize;

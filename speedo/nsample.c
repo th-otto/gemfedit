@@ -89,18 +89,6 @@ static ufix16 char_id;					/* Character ID */
 
 static ufix16 minchrsz;					/* minimum character buffer size */
 
-static ufix8 key[] = {
-	KEY0,
-	KEY1,
-	KEY2,
-	KEY3,
-	KEY4,
-	KEY5,
-	KEY6,
-	KEY7,
-	KEY8
-};										/* Font decryption key */
-
 static fix15 raswid;					/* raster width  */
 
 static fix15 rashgt;					/* raster height */
@@ -136,8 +124,8 @@ int main(int argc, char **argv)
 	int no_layout_chars;				/* number of characters in layout */
 	ufix32 i;
 	ufix32 minbufsz;					/* minimum font buffer size to allocate */
-	ufix16 cust_no;
-
+	const ufix8 *key;
+	
 	if (argc != 2)
 	{
 		fprintf(stderr, "Usage: nsample {fontfile}\n\n");
@@ -218,16 +206,16 @@ int main(int argc, char **argv)
 	font.org = font_buffer;
 	font.no_bytes = bytes_read;
 
-	if ((cust_no = sp_get_cust_no(font)) != CUS0 &&	/* NOT STANDARD ENCRYPTION */
-		cust_no != 0)
+	key = sp_get_key(font);
+	if (key == NULL)
 	{
 		printf("Unable to use fonts for customer number %d\n", sp_get_cust_no(font));
 		fclose(fdescr);
 		return 1;
+	} else
+	{
+		sp_set_key(key);					/* Set decryption key */
 	}
-#if INCL_KEYS
-	sp_set_key(key);					/* Set decryption key */
-#endif
 
 #if INCL_MULTIDEV
 #if INCL_BLACK || INCL_SCREEN || INCL_2D
