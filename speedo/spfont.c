@@ -237,17 +237,10 @@ sp_open_font(char *fontname,
 			 FontScalablePtr vals, fsBitmapFormat format, fsBitmapFormatMask fmask, Mask flags, SpeedoFontPtr * spfont)
 {
 	SpeedoFontPtr spf;
-
 	SpeedoMasterFontPtr spmf;
-
 	int ret;
-
 	specs_t specs;
-
-	int xx8,
-	 xy8,
-	 yx8,
-	 yy8;
+	int xx8, xy8, yx8, yy8;
 
 	/* find a master (create it if necessary) */
 	spmf = (SpeedoMasterFontPtr) entry->u.scalable.extra->private;

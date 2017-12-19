@@ -711,7 +711,9 @@ boolean sp_init_userout(specs_t *specsarg);
 /* reset.c functions */
 void sp_reset(void);
 void sp_set_key(const ufix8 *key);
-const ufix8 *sp_get_key(buff_t font_buff);ufix16 sp_get_cust_no(buff_t font_buff);
+void sp_reset_key(void);
+const ufix8 *sp_get_key(buff_t font_buff);
+ufix16 sp_get_cust_no(buff_t font_buff);
 
 /* set_spcs.c functions */
 boolean sp_set_specs(specs_t *specsarg);

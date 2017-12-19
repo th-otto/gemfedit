@@ -61,12 +61,7 @@ from The Open Group.
 #include <string.h>
 #include <stdarg.h>
 #include "speedo.h"
-
-#ifdef EXTRAFONTS
-#include	"ncdkeys.h"
-#else
-#include	"keys.h"
-#endif
+#include "keys.h"
 
 static FILE *fp;
 

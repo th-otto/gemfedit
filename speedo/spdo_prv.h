@@ -65,12 +65,12 @@ WITH THE SPEEDO SOFTWARE OR THE BITSTREAM CHARTER OUTLINE FONT.
 #define NEXT_WORD(A) \
     ((fix15)(sp_globals.key32 ^ ((A) += 2, \
 				 ((fix15)((A)[-1]) << 8) | (fix15)((A)[-2]) | \
-				 ((A)[-1] & 0x80? ~0xFFFF : 0))))
+				 ((A)[-1] & 0x80 ? ~0xFFFF : 0))))
 
 #if INCL_EXT                       /* Extended fonts supported? */
 
 #define NEXT_BYTES(A, B) \
-    (((B = (ufix16)(*(A)++) ^ sp_globals.key7) >= 248)? \
+    (((B = (ufix16)(*(A)++) ^ sp_globals.key7) >= 248) ? \
      ((ufix16)(B & 0x07) << 8) + ((*(A)++) ^ sp_globals.key8) + 248: \
      B)
 

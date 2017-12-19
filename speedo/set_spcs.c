@@ -40,28 +40,229 @@ WITH THE SPEEDO SOFTWARE OR THE BITSTREAM CHARTER OUTLINE FONT.
 
 SPEEDO_GLOBALS sp_globals;
 
-/***** GLOBAL VARIABLES *****/
 
-/***** GLOBAL FUNCTIONS *****/
+/*
+ * Sets the following constants used for fixed point arithmetic:
+ *      sp_globals.multshift    multipliers and products; range is 14 to 8
+ *      sp_globals.pixshift     pixels: range is 0 to 8
+ *      sp_globals.mpshift      shift from product to sub-pixels (sp_globals.multshift - sp_globals.pixshift)
+ *      sp_globals.multrnd      rounding for products
+ *      sp_globals.pixrnd       rounding for pixels
+ *      sp_globals.mprnd        rounding for sub-pixels
+ *      sp_globals.onepix       1 pixel in shifted pixel units
+ *      sp_globals.pixfix       mask to eliminate fractional bits of shifted pixels
+ *      sp_globals.depth_adj    curve splitting depth adjustment
+ * Returns FALSE if specs are out of range
+ */
+static boolean sp_setup_consts(fix15 xmin,	/* Minimum X ORU value in font */
+										fix15 xmax,	/* Maximum X ORU value in font */
+										fix15 ymin,	/* Minimum Y ORU value in font */
+										fix15 ymax)	/* Maximum Y ORU value in font */
+{
+	fix31 mult;							/* Successive multiplier values */
+	ufix32 num;							/* Numerator of largest multiplier value */
+	ufix32 numcopy;						/* Copy of numerator */
+	ufix32 denom;						/* Denominator of largest multiplier value */
+	ufix32 denomcopy;					/* Copy of denominator */
+	ufix32 pix_max;						/* Maximum pixel rounding error */
+	fix31 xmult;						/* Coefficient of X oru value in transformation */
+	fix31 ymult;						/* Coefficient of Y oru value in transformation */
+	fix31 offset;						/* Constant in transformation */
+	fix15 i;							/* Loop counter */
+	fix15 x, y;							/* Successive corners of bounding box in ORUs */
+	fix31 pixval;						/* Successive pixel values multiplied by orus per em */
+	fix15 xx = 0, yy = 0;				/* Bounding box corner that produces max pixel value */
 
-/****** EXTERNAL VARIABLES *****/
+	/* Determine numerator and denominator of largest multiplier value */
+	mult = sp_globals.pspecs->xxmult >> 16;
+	if (mult < 0)
+		mult = -mult;
+	num = mult;
 
-/***** STATIC VARIABLES *****/
+	mult = sp_globals.pspecs->xymult >> 16;
+	if (mult < 0)
+		mult = -mult;
+	if (mult > num)
+		num = mult;
+
+	mult = sp_globals.pspecs->yxmult >> 16;
+	if (mult < 0)
+		mult = -mult;
+	if (mult > num)
+		num = mult;
+
+	mult = sp_globals.pspecs->yymult >> 16;
+	if (mult < 0)
+		mult = -mult;
+	if (mult > num)
+		num = mult;
+	num++;								/* Max absolute pixels per em (rounded up) */
+	denom = (ufix32) sp_globals.orus_per_em;
+
+	/* Set curve splitting depth adjustment to accomodate largest multiplier value */
+	sp_globals.depth_adj = 0;			/* 0 = 0.5 pel, 1 = 0.13 pel, 2 = 0.04 pel accuracy */
+	denomcopy = denom;
+	/*  The following two occurances of a strange method of shifting twice by 1 
+    are intentional and should not be changed to a single shift by 2.  
+    It prevents MicroSoft C 5.1 from generating functions calls to do the shift.  
+    Worse, in conjunction with the /AC compiler 
+    option, the function appears to be called incorrectly, causing depth_adj to always
+	be set to -7, causing very angular characters. */
+
+	while ((num > denomcopy) && (sp_globals.depth_adj < 5))	/* > 1, 4, 16, ...  pixels per oru? */
+	{
+		denomcopy <<= 1;
+		denomcopy <<= 1;
+		sp_globals.depth_adj++;			/* Add 1, 2, 3, ... to depth adjustment */
+	}
+	numcopy = num << 2;
+	while ((numcopy <= denom) && (sp_globals.depth_adj > -4))	/* <= 1/4, 1/16, 1/64 pix per oru? */
+	{
+		numcopy <<= 1;
+		numcopy <<= 1;
+		sp_globals.depth_adj--;			/* Subtract 1, 2, 3, ... from depth adjustment */
+	}
+	SHOW(sp_globals.depth_adj);
+
+	/* Set multiplier shift to accomodate largest multiplier value */
+	sp_globals.multshift = 14;
+	numcopy = num;
+	while (numcopy >= denom)			/* More than 1, 2, 4, ... pix per oru? */
+	{
+		numcopy >>= 1;
+		sp_globals.multshift--;			/* sp_globals.multshift is 13, 12, 11, ... */
+	}
+
+	sp_globals.multrnd = ((fix31) 1 << sp_globals.multshift) >> 1;
+	SHOW(sp_globals.multshift);
 
 
-/****** STATIC FUNCTIONS *****/
+	pix_max = (ufix32) (0xffff & sp_read_word_u(sp_globals.hdr2_org + FH_PIXMX));
 
-static boolean sp_setup_consts(fix15 xmin, fix15 xmax, fix15 ymin, fix15 ymax);
+	num = 0;
+	xmult = ((sp_globals.pspecs->xxmult >> 16) + 1) >> 1;
+	ymult = ((sp_globals.pspecs->xymult >> 16) + 1) >> 1;
+	offset = ((sp_globals.pspecs->xoffset >> 16) + 1) >> 1;
+	for (i = 0; i < 8; i++)
+	{
+		if (i == 4)
+		{
+			xmult = ((sp_globals.pspecs->yxmult >> 16) + 1) >> 1;
+			ymult = ((sp_globals.pspecs->yymult >> 16) + 1) >> 1;
+			offset = ((sp_globals.pspecs->yoffset >> 16) + 1) >> 1;
+		}
+		x = (i & BIT1) ? xmin : xmax;
+		y = (i & BIT0) ? ymin : ymax;
+		pixval = (fix31) x *xmult + (fix31) y *ymult + offset * denom;
 
-static void sp_setup_tcb(tcb_t * ptcb);
+		if (pixval < 0)
+			pixval = -pixval;
+		if (pixval > num)
+		{
+			num = pixval;
+			xx = x;
+			yy = y;
+		}
+	}
+	if (xx < 0)
+		xx = -xx;
+	if (yy < 0)
+		yy = -yy;
+	num += xx + yy + ((pix_max + 2) * denom);
+	/* Allow (with 2:1 safety margin) for 1 pixel rounding errors in */
+	/* xmult, ymult and offset values, pix_max pixel expansion */
+	/* due to intelligent scaling, and */
+	/* 1 pixel rounding of overall character position */
+	denom = denom << 14;				/* Note num is in units of half pixels times orus per em */
 
-static fix15 sp_setup_mult(fix31 input_mult);
+	sp_globals.pixshift = -1;
+	while ((num <= denom) && (sp_globals.pixshift < 8))	/* Max pixels <= 32768, 16384, 8192, ... pixels? */
+	{
+		num <<= 1;
+		sp_globals.pixshift++;			/* sp_globals.pixshift = 0, 1, 2, ... */
+	}
+	if (sp_globals.pixshift < 0)
+		return FALSE;
 
-static fix31 sp_setup_offset(fix31 input_offset);
+	SHOW(sp_globals.pixshift);
+	sp_globals.poshift = 16 - sp_globals.pixshift;
 
+	sp_globals.onepix = (fix15) 1 << sp_globals.pixshift;
+	sp_globals.pixrnd = sp_globals.onepix >> 1;
+	sp_globals.pixfix = ~0 << sp_globals.pixshift;
+
+	sp_globals.mpshift = sp_globals.multshift - sp_globals.pixshift;
+	if (sp_globals.mpshift < 0)
+		return FALSE;
+	sp_globals.mprnd = ((fix31) 1 << sp_globals.mpshift) >> 1;
+
+	return TRUE;
+}
+
+
+/*
+ * Called by sp_setup_tcb() to convert offset in transformation
+ * matrix from external to internal form.
+ */
+static fix31 sp_setup_offset(fix31 input_offset)	/* Multiplier in input format */
+{
+	fix15 imshift;						/* Right shift to internal format */
+	fix31 imrnd;						/* Rounding for right shift operation */
+
+	imshift = 15 - sp_globals.multshift;
+	imrnd = ((fix31) 1 << imshift) >> 1;
+
+	return (((input_offset >> 1) + imrnd) >> imshift) + sp_globals.mprnd;
+}
+
+
+/*
+ * Called by sp_setup_tcb() to convert multiplier in transformation
+ * matrix from external to internal form.
+ */
+static fix15 sp_setup_mult(fix31 input_mult)	/* Multiplier in input format */
+{
+	fix15 imshift;						/* Right shift to internal format */
+	fix31 imdenom;						/* Divisor to internal format */
+	fix31 imrnd;						/* Rounding for division operation */
+
+	imshift = 15 - sp_globals.multshift;
+	imdenom = (fix31) sp_globals.orus_per_em << imshift;
+	imrnd = imdenom >> 1;
+
+	input_mult >>= 1;
+	if (input_mult >= 0)
+		return (fix15) ((input_mult + imrnd) / imdenom);
+	else
+		return -(fix15) ((-input_mult + imrnd) / imdenom);
+}
 
 
 /* 
+ * Convert transformation coeffs to internal form 
+ */
+static void sp_setup_tcb(tcb_t * ptcb)	/* Pointer to transformation control bloxk */
+{
+
+	ptcb->xxmult = sp_setup_mult(sp_globals.pspecs->xxmult);
+	ptcb->xymult = sp_setup_mult(sp_globals.pspecs->xymult);
+	ptcb->xoffset = sp_setup_offset(sp_globals.pspecs->xoffset);
+	ptcb->yxmult = sp_setup_mult(sp_globals.pspecs->yxmult);
+	ptcb->yymult = sp_setup_mult(sp_globals.pspecs->yymult);
+	ptcb->yoffset = sp_setup_offset(sp_globals.pspecs->yoffset);
+
+	SHOW(ptcb->xxmult);
+	SHOW(ptcb->xymult);
+	SHOW(ptcb->xoffset);
+	SHOW(ptcb->yxmult);
+	SHOW(ptcb->yymult);
+	SHOW(ptcb->yoffset);
+
+	sp_type_tcb(ptcb);						/* Classify transformation type */
+}
+
+
+/*
  * Called by host software to set character generation specifications
  */
 boolean sp_set_specs(specs_t *specsarg)	/* Bundle of conversion specifications */
@@ -76,7 +277,8 @@ boolean sp_set_specs(specs_t *specsarg)	/* Bundle of conversion specifications *
 	fix15 xmax;							/* Maximum X ORU value in font */
 	fix15 ymin;							/* Minimum Y ORU value in font */
 	fix15 ymax;							/* Maximum Y ORU value in font */
-
+	const ufix8 *key;
+	
 	sp_globals.specs_valid = FALSE;		/* Flag specs not valid */
 
 	sp_globals.specs = *specsarg;		/* copy specs structure into sp_globals */
@@ -96,22 +298,8 @@ boolean sp_set_specs(specs_t *specsarg)	/* Bundle of conversion specifications *
 		return FALSE;
 	}
 
-	if (sp_get_cust_no(*specsarg->pfont) == 0)
-	{
-		sp_globals.key32 = 0;
-		sp_globals.key4 = 0;
-		sp_globals.key6 = 0;
-		sp_globals.key7 = 0;
-		sp_globals.key8 = 0;
-	} else
-	{
-		sp_globals.key32 = (KEY3 << 8) | KEY2;
-		sp_globals.key4 = KEY4;
-		sp_globals.key6 = KEY6;
-		sp_globals.key7 = KEY7;
-		sp_globals.key8 = KEY8;
-	}
-
+	if ((key = sp_get_key(*specsarg->pfont)) != NULL)
+		sp_set_key(key);
 
 	sp_globals.no_chars_avail = sp_read_word_u(sp_globals.font_org + FH_NCHRF);
 
@@ -143,10 +331,6 @@ boolean sp_set_specs(specs_t *specsarg)	/* Bundle of conversion specifications *
 	cd_size = ofcns - offcd;
 	if ((((sp_globals.no_chars_avail << 1) + 3) != cd_size) && (((sp_globals.no_chars_avail * 3) + 4) != cd_size))
 	{
-		fprintf(stderr, "chars avail=%d offcd=%u ofcns=%u cd_size=%u val1=%u val2=%u\n",
-			sp_globals.no_chars_avail, offcd, ofcns, cd_size,
-			((sp_globals.no_chars_avail << 1) + 3),
-			((sp_globals.no_chars_avail * 3) + 4));
 		sp_report_error(4);				/* Font format error */
 		return FALSE;
 	}
@@ -354,240 +538,6 @@ boolean sp_set_outline_device(outline_t * ofuncs, ufix16 size)
 #endif
 
 
-/*
- * Sets the following constants used for fixed point arithmetic:
- *      sp_globals.multshift    multipliers and products; range is 14 to 8
- *      sp_globals.pixshift     pixels: range is 0 to 8
- *      sp_globals.mpshift      shift from product to sub-pixels (sp_globals.multshift - sp_globals.pixshift)
- *      sp_globals.multrnd      rounding for products
- *      sp_globals.pixrnd       rounding for pixels
- *      sp_globals.mprnd        rounding for sub-pixels
- *      sp_globals.onepix       1 pixel in shifted pixel units
- *      sp_globals.pixfix       mask to eliminate fractional bits of shifted pixels
- *      sp_globals.depth_adj    curve splitting depth adjustment
- * Returns FALSE if specs are out of range
- */
-static boolean sp_setup_consts(fix15 xmin,	/* Minimum X ORU value in font */
-										fix15 xmax,	/* Maximum X ORU value in font */
-										fix15 ymin,	/* Minimum Y ORU value in font */
-										fix15 ymax)	/* Maximum Y ORU value in font */
-{
-	fix31 mult;							/* Successive multiplier values */
-
-	ufix32 num;							/* Numerator of largest multiplier value */
-
-	ufix32 numcopy;						/* Copy of numerator */
-
-	ufix32 denom;						/* Denominator of largest multiplier value */
-
-	ufix32 denomcopy;					/* Copy of denominator */
-
-	ufix32 pix_max;						/* Maximum pixel rounding error */
-
-	fix31 xmult;						/* Coefficient of X oru value in transformation */
-
-	fix31 ymult;						/* Coefficient of Y oru value in transformation */
-
-	fix31 offset;						/* Constant in transformation */
-
-	fix15 i;							/* Loop counter */
-
-	fix15 x,
-	 y;									/* Successive corners of bounding box in ORUs */
-
-	fix31 pixval;						/* Successive pixel values multiplied by orus per em */
-
-	fix15 xx = 0,
-		yy = 0;							/* Bounding box corner that produces max pixel value */
-
-	/* Determine numerator and denominator of largest multiplier value */
-	mult = sp_globals.pspecs->xxmult >> 16;
-	if (mult < 0)
-		mult = -mult;
-	num = mult;
-
-	mult = sp_globals.pspecs->xymult >> 16;
-	if (mult < 0)
-		mult = -mult;
-	if (mult > num)
-		num = mult;
-
-	mult = sp_globals.pspecs->yxmult >> 16;
-	if (mult < 0)
-		mult = -mult;
-	if (mult > num)
-		num = mult;
-
-	mult = sp_globals.pspecs->yymult >> 16;
-	if (mult < 0)
-		mult = -mult;
-	if (mult > num)
-		num = mult;
-	num++;								/* Max absolute pixels per em (rounded up) */
-	denom = (ufix32) sp_globals.orus_per_em;
-
-	/* Set curve splitting depth adjustment to accomodate largest multiplier value */
-	sp_globals.depth_adj = 0;			/* 0 = 0.5 pel, 1 = 0.13 pel, 2 = 0.04 pel accuracy */
-	denomcopy = denom;
-	/*  The following two occurances of a strange method of shifting twice by 1 
-    are intentional and should not be changed to a single shift by 2.  
-    It prevents MicroSoft C 5.1 from generating functions calls to do the shift.  
-    Worse, in conjunction with the /AC compiler 
-    option, the function appears to be called incorrectly, causing depth_adj to always
-	be set to -7, causing very angular characters. */
-
-	while ((num > denomcopy) && (sp_globals.depth_adj < 5))	/* > 1, 4, 16, ...  pixels per oru? */
-	{
-		denomcopy <<= 1;
-		denomcopy <<= 1;
-		sp_globals.depth_adj++;			/* Add 1, 2, 3, ... to depth adjustment */
-	}
-	numcopy = num << 2;
-	while ((numcopy <= denom) && (sp_globals.depth_adj > -4))	/* <= 1/4, 1/16, 1/64 pix per oru? */
-	{
-		numcopy <<= 1;
-		numcopy <<= 1;
-		sp_globals.depth_adj--;			/* Subtract 1, 2, 3, ... from depth adjustment */
-	}
-	SHOW(sp_globals.depth_adj);
-
-	/* Set multiplier shift to accomodate largest multiplier value */
-	sp_globals.multshift = 14;
-	numcopy = num;
-	while (numcopy >= denom)			/* More than 1, 2, 4, ... pix per oru? */
-	{
-		numcopy >>= 1;
-		sp_globals.multshift--;			/* sp_globals.multshift is 13, 12, 11, ... */
-	}
-
-	sp_globals.multrnd = ((fix31) 1 << sp_globals.multshift) >> 1;
-	SHOW(sp_globals.multshift);
-
-
-	pix_max = (ufix32) (0xffff & sp_read_word_u(sp_globals.hdr2_org + FH_PIXMX));
-
-	num = 0;
-	xmult = ((sp_globals.pspecs->xxmult >> 16) + 1) >> 1;
-	ymult = ((sp_globals.pspecs->xymult >> 16) + 1) >> 1;
-	offset = ((sp_globals.pspecs->xoffset >> 16) + 1) >> 1;
-	for (i = 0; i < 8; i++)
-	{
-		if (i == 4)
-		{
-			xmult = ((sp_globals.pspecs->yxmult >> 16) + 1) >> 1;
-			ymult = ((sp_globals.pspecs->yymult >> 16) + 1) >> 1;
-			offset = ((sp_globals.pspecs->yoffset >> 16) + 1) >> 1;
-		}
-		x = (i & BIT1) ? xmin : xmax;
-		y = (i & BIT0) ? ymin : ymax;
-		pixval = (fix31) x *xmult + (fix31) y *ymult + offset * denom;
-
-		if (pixval < 0)
-			pixval = -pixval;
-		if (pixval > num)
-		{
-			num = pixval;
-			xx = x;
-			yy = y;
-		}
-	}
-	if (xx < 0)
-		xx = -xx;
-	if (yy < 0)
-		yy = -yy;
-	num += xx + yy + ((pix_max + 2) * denom);
-	/* Allow (with 2:1 safety margin) for 1 pixel rounding errors in */
-	/* xmult, ymult and offset values, pix_max pixel expansion */
-	/* due to intelligent scaling, and */
-	/* 1 pixel rounding of overall character position */
-	denom = denom << 14;				/* Note num is in units of half pixels times orus per em */
-
-	sp_globals.pixshift = -1;
-	while ((num <= denom) && (sp_globals.pixshift < 8))	/* Max pixels <= 32768, 16384, 8192, ... pixels? */
-	{
-		num <<= 1;
-		sp_globals.pixshift++;			/* sp_globals.pixshift = 0, 1, 2, ... */
-	}
-	if (sp_globals.pixshift < 0)
-		return FALSE;
-
-	SHOW(sp_globals.pixshift);
-	sp_globals.poshift = 16 - sp_globals.pixshift;
-
-	sp_globals.onepix = (fix15) 1 << sp_globals.pixshift;
-	sp_globals.pixrnd = sp_globals.onepix >> 1;
-	sp_globals.pixfix = ~0 << sp_globals.pixshift;
-
-	sp_globals.mpshift = sp_globals.multshift - sp_globals.pixshift;
-	if (sp_globals.mpshift < 0)
-		return FALSE;
-	sp_globals.mprnd = ((fix31) 1 << sp_globals.mpshift) >> 1;
-
-	return TRUE;
-}
-
-/* 
- * Convert transformation coeffs to internal form 
- */
-static void sp_setup_tcb(tcb_t * ptcb)	/* Pointer to transformation control bloxk */
-{
-
-	ptcb->xxmult = sp_setup_mult(sp_globals.pspecs->xxmult);
-	ptcb->xymult = sp_setup_mult(sp_globals.pspecs->xymult);
-	ptcb->xoffset = sp_setup_offset(sp_globals.pspecs->xoffset);
-	ptcb->yxmult = sp_setup_mult(sp_globals.pspecs->yxmult);
-	ptcb->yymult = sp_setup_mult(sp_globals.pspecs->yymult);
-	ptcb->yoffset = sp_setup_offset(sp_globals.pspecs->yoffset);
-
-	SHOW(ptcb->xxmult);
-	SHOW(ptcb->xymult);
-	SHOW(ptcb->xoffset);
-	SHOW(ptcb->yxmult);
-	SHOW(ptcb->yymult);
-	SHOW(ptcb->yoffset);
-
-	sp_type_tcb(ptcb);						/* Classify transformation type */
-}
-
-/*
- * Called by sp_setup_tcb() to convert multiplier in transformation
- * matrix from external to internal form.
- */
-static fix15 sp_setup_mult(fix31 input_mult)	/* Multiplier in input format */
-{
-	fix15 imshift;						/* Right shift to internal format */
-
-	fix31 imdenom;						/* Divisor to internal format */
-
-	fix31 imrnd;						/* Rounding for division operation */
-
-	imshift = 15 - sp_globals.multshift;
-	imdenom = (fix31) sp_globals.orus_per_em << imshift;
-	imrnd = imdenom >> 1;
-
-	input_mult >>= 1;
-	if (input_mult >= 0)
-		return (fix15) ((input_mult + imrnd) / imdenom);
-	else
-		return -(fix15) ((-input_mult + imrnd) / imdenom);
-}
-
-/*
- * Called by sp_setup_tcb() to convert offset in transformation
- * matrix from external to internal form.
- */
-static fix31 sp_setup_offset(fix31 input_offset)	/* Multiplier in input format */
-{
-	fix15 imshift;						/* Right shift to internal format */
-
-	fix31 imrnd;						/* Rounding for right shift operation */
-
-	imshift = 15 - sp_globals.multshift;
-	imrnd = ((fix31) 1 << imshift) >> 1;
-
-	return (((input_offset >> 1) + imrnd) >> imshift) + sp_globals.mprnd;
-}
-
 void sp_type_tcb(tcb_t * ptcb)	/* Pointer to transformation control bloxk */
 {
 	fix15 x_trans_type;
@@ -646,9 +596,7 @@ void sp_type_tcb(tcb_t * ptcb)	/* Pointer to transformation control bloxk */
 				x_ppo = -xx_mult;
 				x_pos = -h_pos;
 			}
-		}
-
-		else if (xx_mult == 0)
+		} else if (xx_mult == 0)
 		{
 			if (xy_mult >= 0)
 			{
@@ -713,6 +661,7 @@ void sp_type_tcb(tcb_t * ptcb)	/* Pointer to transformation control bloxk */
 	SHOW(ptcb->ypos);
 }
 
+
 /*
  * Reads a 3-byte encrypted integer from the byte string starting at 
  * the specified point.
@@ -727,6 +676,7 @@ fix31 sp_read_long(ufix8 * pointer)	/* Pointer to first byte of encrypted 3-byte
 	tmpfix31 += (fix31) ((*pointer) ^ sp_globals.key6);	/* Read least significant byte */
 	return tmpfix31;
 }
+
 
 /*
  * Reads a 2-byte unencrypted integer from the byte string starting at 

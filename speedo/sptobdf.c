@@ -61,6 +61,7 @@ from The Open Group.
 #include <string.h>
 #include <stdarg.h>
 #include "speedo.h"
+#include "spdo_prv.h"
 #include "keys.h"
 #include "iso8859.h"
 
@@ -268,7 +269,7 @@ static void dump_header(ufix32 num_chars)
 	printf("COMMENT Manufacturing date: %.10s\n", font_buffer + FH_MDATE);
 	printf("COMMENT Layout name: %.70s\n", font_buffer + FH_LAYNM);
 	printf("COMMENT Number of chars in layout: %u\n", read_2b(font_buffer + FH_NCHRL));
-	printf("COMMENT Total Number of chars in layout: %u\n", read_2b(font_buffer + FH_NCHRF));
+	printf("COMMENT Total Number of chars in font: %u\n", read_2b(font_buffer + FH_NCHRF));
 	printf("COMMENT Index of first character: %u\n", read_2b(font_buffer + FH_FCHRF));
 	printf("COMMENT Number of Kerning Tracks: %u\n", read_2b(font_buffer + FH_NKTKS));
 	printf("COMMENT Number of Kerning Pairs: %u\n", read_2b(font_buffer + FH_NKPRS));
@@ -321,6 +322,32 @@ static void dump_header(ufix32 num_chars)
 	printf("COMMENT Large Denominators X scale: %7.2f\n", (real) read_2b(font_buffer + FH_LDNTR + 2) / 4096.0);
 	printf("COMMENT Large Denominators Y scale: %7.2f\n", (real) read_2b(font_buffer + FH_LDNTR + 4) / 4096.0);
 	printf("COMMENT\n");
+
+	{
+		ufix8 *hdr2_org;
+		ufix16 private_off;
+
+		private_off = sp_read_word_u(font.org + FH_HEDSZ);
+		if (private_off + FH_CUSNR > font.no_bytes)
+		{
+			sp_report_error(1);				/* Insufficient font data loaded */
+		} else
+		{
+			hdr2_org = font.org + private_off;
+
+			printf("COMMENT Max ORU value: %u\n", sp_read_word_u(hdr2_org + FH_ORUMX));
+			printf("COMMENT Max Pixel value: %u\n", sp_read_word_u(hdr2_org + FH_PIXMX));
+			printf("COMMENT Customer Number: %u\n", sp_read_word_u(hdr2_org + FH_CUSNR));
+			printf("COMMENT Offset to Char Directory: %lu\n", (unsigned long)sp_read_long(hdr2_org + FH_OFFCD));
+			printf("COMMENT Offset to Constraint Data: %lu\n", (unsigned long)sp_read_long(hdr2_org + FH_OFCNS));
+			printf("COMMENT Offset to Track Kerning: %lu\n", (unsigned long)sp_read_long(hdr2_org + FH_OFFTK));
+			printf("COMMENT Offset to Pair Kerning: %lu\n", (unsigned long)sp_read_long(hdr2_org + FH_OFFPK));
+			printf("COMMENT Offset to Character Data: %lu\n", (unsigned long)sp_read_long(hdr2_org + FH_OCHRD));
+			printf("COMMENT Number of Bytes in File: %lu\n", (unsigned long)sp_read_long(hdr2_org + FH_NBYTE));
+		}
+		printf("COMMENT\n");
+	}
+	
 	printf("FONT %s\n", fontname);
 	printf("SIZE %d %d %d\n", pixel_size, x_res, y_res);
 	printf("FONTBOUNDINGBOX %d %d %d %d\n", xmin, ymin, xmax, ymax);
@@ -426,8 +453,8 @@ int main(int argc, char **argv)
 	key = sp_get_key(font);
 	if (key == NULL)
 	{
-#if 0
 		fprintf(stderr, "Non-standard encryption for \"%s\"\n", fontfile);
+#if 0
 		return 1;
 #endif
 	} else

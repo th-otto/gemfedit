@@ -40,17 +40,6 @@ WITH THE SPEEDO SOFTWARE OR THE BITSTREAM CHARTER OUTLINE FONT.
 #define SHOW(X)
 #endif
 
-/***** GLOBAL VARIABLES *****/
-
-/*****  GLOBAL FUNCTIONS *****/
-
-/***** EXTERNAL VARIABLES *****/
-
-/***** EXTERNAL FUNCTIONS *****/
-
-/***** STATIC VARIABLES *****/
-
-/***** STATIC FUNCTIONS *****/
 
 
 /*
@@ -61,11 +50,7 @@ void sp_reset(void)
 	sp_globals.specs_valid = FALSE;		/* Flag specs not valid */
 
 	/* Reset decryption key */
-	sp_globals.key32 = (KEY3 << 8) | KEY2;
-	sp_globals.key4 = KEY4;
-	sp_globals.key6 = KEY6;
-	sp_globals.key7 = KEY7;
-	sp_globals.key8 = KEY8;
+	sp_reset_key();
 
 #if INCL_RULES
 	sp_globals.constr.font_id_valid = FALSE;
@@ -79,18 +64,6 @@ void sp_reset(void)
 	sp_globals.outline_device_set = FALSE;
 #endif
 #endif
-}
-
-/*
- * Dynamically sets font decryption key.
- */
-void sp_set_key(const ufix8 *key)	/* Specified decryption key */
-{
-	sp_globals.key32 = ((ufix16) key[3] << 8) | key[2];
-	sp_globals.key4 = key[4];
-	sp_globals.key6 = key[6];
-	sp_globals.key7 = key[7];
-	sp_globals.key8 = key[8];
 }
 
 

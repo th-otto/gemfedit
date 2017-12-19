@@ -62,9 +62,6 @@ from The Open Group.
 
 SpeedoFontPtr sp_fp_cur = (SpeedoFontPtr) 0;
 
-#ifdef EXTRAFONTS
-#include "ncdkeys.h"
-#endif
 
 
 static fix15 read_2b(ufix8 *ptr)
