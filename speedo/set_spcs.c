@@ -27,7 +27,6 @@ WITH THE SPEEDO SOFTWARE OR THE BITSTREAM CHARTER OUTLINE FONT.
  *                                                                           *
  ****************************************************************************/
 #include "spdo_prv.h"					/* General definitions for Speedo    */
-#include "keys.h"
 
 #define   DEBUG      0
 
@@ -298,7 +297,7 @@ boolean sp_set_specs(specs_t *specsarg)	/* Bundle of conversion specifications *
 		return FALSE;
 	}
 
-	if ((key = sp_get_key(*specsarg->pfont)) != NULL)
+	if ((key = sp_get_key(specsarg->pfont)) != NULL)
 		sp_set_key(key);
 
 	sp_globals.no_chars_avail = sp_read_word_u(sp_globals.font_org + FH_NCHRF);

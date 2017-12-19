@@ -253,4 +253,4 @@ static int iso_map[] = {
 	0x00FE, 272,
 	0x00FF, 221
 };
-static int num_iso_chars = (sizeof(iso_map) / (sizeof(iso_map[0]) * 2));
+static int num_iso_chars = (int)(sizeof(iso_map) / (sizeof(iso_map[0]) * 2));

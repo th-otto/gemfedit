@@ -309,7 +309,7 @@ static void sp_constr_update(void)
 					for (l = 2; l > 0; l--)	/* Skip 2 arguments */
 					{
 						format1 >>= 2;
-						if ((size = format1 & 0x03))
+						if ((size = format1 & 0x03) != 0)
 							pointer += size - 1;
 					}
 				} else					/* Constraint absent or inactive? */
@@ -334,7 +334,7 @@ static void sp_constr_update(void)
 				format1 = format;
 				for (l = 3; l > 0; l--)	/* Skip over 3 arguments */
 				{
-					if ((size = format1 & 0x03))
+					if ((size = format1 & 0x03) != 0)
 						pointer += size - 1;
 					format1 >>= 2;
 				}
@@ -1113,7 +1113,6 @@ static ufix8 *sp_setup_int_table(ufix8 * pointer,	/* Pointer to first byte in in
 				{
 					switch (format_copy & 0x7)	/* Decode start/end point format */
 					{
-
 					case 0:			/* Index to control edge */
 						edge = edge_org + NEXT_BYTE(pointer);
 						end_orus = sp_plaid.orus[edge];
@@ -1121,7 +1120,7 @@ static ufix8 *sp_setup_int_table(ufix8 * pointer,	/* Pointer to first byte in in
 						break;
 
 					case 1:			/* 1 byte fractional distance to next edge */
-						adj_factor = 0xffff & NEXT_BYTE(pointer) << 8;
+						adj_factor = 0xffff & (NEXT_BYTE(pointer) << 8);
 						goto L1;
 
 
@@ -1130,10 +1129,10 @@ static ufix8 *sp_setup_int_table(ufix8 * pointer,	/* Pointer to first byte in in
 					  L1:edge = edge_org + NEXT_BYTE(pointer);
 						end_orus = sp_plaid.orus[edge] +
 							((((fix31) sp_plaid.orus[edge + 1] - (fix31) sp_plaid.orus[edge]) *
-							  (ufix32) adj_factor + (fix31) 32768) >> 16);
+							  (ufix32) adj_factor + (fix31) 32768L) >> 16);
 						end_pix = sp_plaid.pix[edge] +
 							((((fix31) sp_plaid.pix[edge + 1] - (fix31) sp_plaid.pix[edge]) *
-							  (ufix32) adj_factor + (fix31) 32768) >> 16);
+							  (ufix32) adj_factor + (fix31) 32768L) >> 16);
 						break;
 
 					case 3:			/* 1 byte delta orus before first edge */

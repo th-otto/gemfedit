@@ -36,18 +36,18 @@ WITH THE SPEEDO SOFTWARE OR THE BITSTREAM CHARTER OUTLINE FONT.
 
 #if INCL_BLACK || INCL_2D || INCL_SCREEN
 
-void sp_init_char_out(point_t Psw, point_t Pmin, point_t Pmax)
+void sp_init_char_out(fix31 x, fix31 y, fix31 minx, fix31 miny, fix31 maxx, fix31 maxy)
 {
-	sp_globals.set_width.x = (fix31) Psw.x << sp_globals.poshift;
-	sp_globals.set_width.y = (fix31) Psw.y << sp_globals.poshift;
-	sp_set_first_band_out(Pmin, Pmax);
+	sp_globals.set_width.x = (fix31) x << sp_globals.poshift;
+	sp_globals.set_width.y = (fix31) y << sp_globals.poshift;
+	sp_set_first_band_out(minx, miny, maxx, maxy);
 	sp_init_intercepts_out();
 	if (sp_globals.normal)
 	{
-		sp_globals.bmap_xmin = Pmin.x;
-		sp_globals.bmap_xmax = Pmax.x;
-		sp_globals.bmap_ymin = Pmin.y;
-		sp_globals.bmap_ymax = Pmax.y;
+		sp_globals.bmap_xmin = minx;
+		sp_globals.bmap_xmax = maxx;
+		sp_globals.bmap_ymin = miny;
+		sp_globals.bmap_ymax = maxy;
 		sp_globals.extents_running = FALSE;
 	} else
 	{
@@ -62,14 +62,20 @@ void sp_init_char_out(point_t Psw, point_t Pmin, point_t Pmax)
 
 /* Called at the start of each sub-character in a composite character
  */
-void sp_begin_sub_char_out(point_t Psw, point_t Pmin, point_t Pmax)
+void sp_begin_sub_char_out(fix31 x, fix31 y, fix31 minx, fix31 miny, fix31 maxx, fix31 maxy)
 {
 #if DEBUG
 	printf("BEGIN_SUB_CHAR_out(%3.1f, %3.1f, %3.1f, %3.1f, %3.1f, %3.1f\n",
-		   (real) Psw.x / (real) sp_globals.onepix, (real) Psw.y / (real) sp_globals.onepix,
-		   (real) Pmin.x / (real) sp_globals.onepix, (real) Pmin.y / (real) sp_globals.onepix,
-		   (real) Pmax.x / (real) sp_globals.onepix, (real) Pmax.y / (real) sp_globals.onepix);
+		   (real) x / (real) sp_globals.onepix, (real) y / (real) sp_globals.onepix,
+		   (real) minx / (real) sp_globals.onepix, (real) miny / (real) sp_globals.onepix,
+		   (real) maxx / (real) sp_globals.onepix, (real) maxy / (real) sp_globals.onepix);
 #endif
+	UNUSED(x);
+	UNUSED(y);
+	UNUSED(minx);
+	UNUSED(miny);
+	UNUSED(maxx);
+	UNUSED(maxy);
 	sp_restart_intercepts_out();
 	if (!sp_globals.extents_running)
 	{
@@ -83,14 +89,18 @@ void sp_begin_sub_char_out(point_t Psw, point_t Pmin, point_t Pmax)
 
 /* Called for each curve in the transformed character if curves out enabled
  */
-void sp_curve_out(point_t P1, point_t P2, point_t P3, fix15 depth)
+void sp_curve_out(fix31 x1, fix31 y1, fix31 x2, fix31 y2, fix31 x3, fix31 y3, fix15 depth)
 {
 #if DEBUG
 	printf("CURVE_OUT(%3.1f, %3.1f, %3.1f, %3.1f, %3.1f, %3.1f)\n",
-		   (real) P1.x / (real) sp_globals.onepix, (real) P1.y / (real) sp_globals.onepix,
-		   (real) P2.x / (real) sp_globals.onepix, (real) P2.y / (real) sp_globals.onepix,
-		   (real) P3.x / (real) sp_globals.onepix, (real) P3.y / (real) sp_globals.onepix);
+		   (real) x1 / (real) sp_globals.onepix, (real) y1 / (real) sp_globals.onepix,
+		   (real) x2 / (real) sp_globals.onepix, (real) y2 / (real) sp_globals.onepix,
+		   (real) x3 / (real) sp_globals.onepix, (real) y3 / (real) sp_globals.onepix);
 #endif
+	UNUSED(x1); UNUSED(y1);
+	UNUSED(x2); UNUSED(y2);
+	UNUSED(x3); UNUSED(y3);
+	UNUSED(depth);
 }
 
 
@@ -198,10 +208,10 @@ void sp_restart_intercepts_out(void)
 
 
 
-void sp_set_first_band_out(point_t Pmin, point_t Pmax)
+void sp_set_first_band_out(fix31 minx, fix31 miny, fix31 maxx, fix31 maxy)
 {
-	sp_globals.ymin = Pmin.y;
-	sp_globals.ymax = Pmax.y;
+	sp_globals.ymin = miny;
+	sp_globals.ymax = maxy;
 
 	sp_globals.ymin = (sp_globals.ymin - sp_globals.onepix + 1) >> sp_globals.pixshift;
 	sp_globals.ymax = (sp_globals.ymax + sp_globals.onepix - 1) >> sp_globals.pixshift;
@@ -266,8 +276,8 @@ void sp_set_first_band_out(point_t Pmin, point_t Pmax)
 	sp_globals.y_band.band_min = sp_globals.ymin;
 	sp_globals.y_band.band_max = sp_globals.ymax - 1;
 
-	sp_globals.xmin = (Pmin.x + sp_globals.pixrnd) >> sp_globals.pixshift;
-	sp_globals.xmax = (Pmax.x + sp_globals.pixrnd) >> sp_globals.pixshift;
+	sp_globals.xmin = (minx + sp_globals.pixrnd) >> sp_globals.pixshift;
+	sp_globals.xmax = (maxx + sp_globals.pixrnd) >> sp_globals.pixshift;
 
 
 #if INCL_2D

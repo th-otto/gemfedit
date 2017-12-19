@@ -22,7 +22,6 @@ WITH THE SPEEDO SOFTWARE OR THE BITSTREAM CHARTER OUTLINE FONT.
 
 
 #include "speedo.h"
-#include "keys.h"
 
 /***** DECRYPTION KEY CONSTANTS (PC Platform) *****/
 
@@ -116,7 +115,7 @@ void sp_reset_key(void)
 }
 
 
-const ufix8 *sp_get_key(buff_t font_buff)
+const ufix8 *sp_get_key(const buff_t *font_buff)
 {
 	ufix16 cust_no;
 	const ufix8 *key;

@@ -62,22 +62,13 @@ from The Open Group.
 #include <stdarg.h>
 #include "speedo.h"
 #include "spdo_prv.h"
-#include "keys.h"
 #include "iso8859.h"
-
-#ifdef EXTRAFONTS
-#include	"ncdkeys.h"
-#else
-#include	"keys.h"
-#endif
 
 #define	MAX_BITS	1024
 
 #define	BBOX_CLIP
 
 static char line_of_bits[MAX_BITS][MAX_BITS + 1];
-
-static FILE *fp;
 
 static ufix16 char_index, char_id;
 
@@ -94,7 +85,7 @@ static fix15 cur_y;
 
 static fix15 bit_width, bit_height;
 
-static char *progname;
+static char const progname[] = "spdtobdf";
 
 static char *fontname = NULL;
 
@@ -250,7 +241,7 @@ static void dump_header(ufix32 num_chars)
 	ymin = read_2b(font_buffer + FH_FYMIN);
 	xmax = read_2b(font_buffer + FH_FXMAX);
 	ymax = read_2b(font_buffer + FH_FYMAX);
-	pixel_size = point_size * x_res / 720;
+	pixel_size = (long)point_size * x_res / 720;
 
 	printf("STARTFONT 2.1\n");
 	printf("COMMENT\n");
@@ -401,6 +392,8 @@ static void dump_header(ufix32 num_chars)
 }
 
 
+static FILE *fp;
+
 int main(int argc, char **argv)
 {
 	ufix32 i;
@@ -409,7 +402,6 @@ int main(int argc, char **argv)
 	int first_char_index, num_chars;
 	const ufix8 *key;
 	
-	progname = argv[0];
 	process_args(argc, argv);
 	fp = fopen(fontfile, "r");
 	if (!fp)
@@ -450,7 +442,7 @@ int main(int argc, char **argv)
 	font.org = font_buffer;
 	font.no_bytes = minbufsize;
 
-	key = sp_get_key(font);
+	key = sp_get_key(&font);
 	if (key == NULL)
 	{
 		fprintf(stderr, "Non-standard encryption for \"%s\"\n", fontfile);
@@ -469,11 +461,11 @@ int main(int argc, char **argv)
 	/* Note that point size is in decipoints */
 	specs.pfont = &font;
 	/* XXX beware of overflow */
-	specs.xxmult = point_size * x_res / 720 * (1 << 16);
+	specs.xxmult = (long)point_size * x_res / 720 * (1L << 16);
 	specs.xymult = 0L << 16;
 	specs.xoffset = 0L << 16;
 	specs.yxmult = 0L << 16;
-	specs.yymult = point_size * y_res / 720 * (1 << 16);
+	specs.yymult = (long)point_size * y_res / 720 * (1L << 16);
 	specs.yoffset = 0L << 16;
 	switch (quality)
 	{
@@ -588,6 +580,8 @@ void sp_open_bitmap(fix31 x_set_width, fix31 y_set_width, fix31 xorg, fix31 yorg
 	fix31 width, pix_width;
 	bbox_t bb;
 
+	UNUSED(x_set_width);
+	UNUSED(y_set_width);
 	bit_width = xsize;
 	bit_height = ysize;
 
@@ -605,7 +599,7 @@ void sp_open_bitmap(fix31 x_set_width, fix31 y_set_width, fix31 xorg, fix31 yorg
 
 	width = (pix_width * 7200L) / (point_size * y_res);
 
-	(void) sp_get_char_bbox(char_index, &bb);
+	sp_get_char_bbox(char_index, &bb);
 	bb.xmin >>= 16;
 	bb.ymin >>= 16;
 	bb.xmax >>= 16;
@@ -783,12 +777,12 @@ void sp_close_bitmap(void)
 #if INCL_OUTLINE
 void sp_open_outline(fix31 x_set_width, fix31 y_set_width, fix31 xmin, fix31 xmax, fix31 ymin, fix31 ymax)
 {
-	(void) x_set_width;
-	(void) y_set_width;
-	(void) xmin;
-	(void) xmax;
-	(void) ymin;
-	(void) ymax;
+	UNUSED(x_set_width);
+	UNUSED(y_set_width);
+	UNUSED(xmin);
+	UNUSED(xmax);
+	UNUSED(ymin);
+	UNUSED(ymax);
 }
 
 void sp_start_new_char(void)
@@ -797,25 +791,25 @@ void sp_start_new_char(void)
 
 void sp_start_contour(fix31 x, fix31 y, boolean outside)
 {
-	(void) x;
-	(void) y;
-	(void) outside;
+	UNUSED(x);
+	UNUSED(y);
+	UNUSED(outside);
 }
 
 void sp_curve_to(fix31 x1, fix31 y1, fix31 x2, fix31 y2, fix31 x3, fix31 y3)
 {
-	(void) x1;
-	(void) y1;
-	(void) x2;
-	(void) y2;
-	(void) x3;
-	(void) y3;
+	UNUSED(x1);
+	UNUSED(y1);
+	UNUSED(x2);
+	UNUSED(y2);
+	UNUSED(x3);
+	UNUSED(y3);
 }
 
-void sp_line_to(fix31 x, fix31 y)
+void sp_line_to(fix31 x1, fix31 y1)
 {
-	(void) x;
-	(void) y;
+	UNUSED(x1);
+	UNUSED(y1);
 }
 
 void sp_close_contour(void)

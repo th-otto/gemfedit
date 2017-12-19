@@ -29,7 +29,6 @@ WITH THE SPEEDO SOFTWARE OR THE BITSTREAM CHARTER OUTLINE FONT.
  ****************************************************************************/
 
 #include "spdo_prv.h"					/* General definitions for Speedo     */
-#include "keys.h"						/* Font decryption keys */
 
 #define   DEBUG      0
 
@@ -70,19 +69,19 @@ void sp_reset(void)
 /*
 	returns customer number from font 
 */
-ufix16 sp_get_cust_no(buff_t font_buff)
+ufix16 sp_get_cust_no(const buff_t *font_buff)
 {
 	ufix8 *hdr2_org;
 	ufix16 private_off;
 
-	private_off = sp_read_word_u(font_buff.org + FH_HEDSZ);
-	if (private_off + FH_CUSNR > font_buff.no_bytes)
+	private_off = sp_read_word_u(font_buff->org + FH_HEDSZ);
+	if (private_off + FH_CUSNR > font_buff->no_bytes)
 	{
 		sp_report_error(1);				/* Insufficient font data loaded */
 		return FALSE;
 	}
 
-	hdr2_org = font_buff.org + private_off;
+	hdr2_org = font_buff->org + private_off;
 
 	return sp_read_word_u(hdr2_org + FH_CUSNR);
 }

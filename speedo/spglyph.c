@@ -250,13 +250,13 @@ void sp_open_bitmap(fix31 x_set_width, fix31 y_set_width, fix31 xorg, fix31 yorg
 	int off_vert;
 
 	if (xorg < 0)
-		off_horz = (fix15) ((xorg - 32768L) / 65536);
+		off_horz = (fix15) ((xorg - 32768L) / 65536L);
 	else
-		off_horz = (fix15) ((xorg + 32768L) / 65536);
+		off_horz = (fix15) ((xorg + 32768L) / 65536L);
 	if (yorg < 0)
-		off_vert = (fix15) ((yorg - 32768L) / 65536);
+		off_vert = (fix15) ((yorg - 32768L) / 65536L);
 	else
-		off_vert = (fix15) ((yorg + 32768L) / 65536);
+		off_vert = (fix15) ((yorg + 32768L) / 65536L);
 	if (xsize != 0 || ysize != 0 || ci->metrics.characterWidth)
 	{
 		ci->metrics.leftSideBearing = off_horz;

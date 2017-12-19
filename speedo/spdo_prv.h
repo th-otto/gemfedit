@@ -96,7 +96,7 @@ WITH THE SPEEDO SOFTWARE OR THE BITSTREAM CHARTER OUTLINE FONT.
 /* Multiply (fix15)X by (fix15)MULT, add (fix31)OFFSET, 
  * shift right SHIFT bits to produce (fix15)result */
 #define TRANS(X, MULT, OFFSET, SHIFT) \
-    ((fix15)((((fix31)X * (fix31)MULT) + OFFSET) / (1 << SHIFT)))
+    ((fix15)((((fix31)X * (fix31)MULT) + OFFSET) / ((fix31)1 << SHIFT)))
 
 /******************************************************************************
  *
@@ -108,14 +108,14 @@ WITH THE SPEEDO SOFTWARE OR THE BITSTREAM CHARTER OUTLINE FONT.
  *****************************************************************************/
 
 #define fn_init_out(specsarg) (*sp_globals.init_out)(specsarg)  
-#define fn_begin_char(Psw,Pmin,Pmax) (*sp_globals.begin_char)(Psw,Pmin,Pmax)
-#define fn_begin_sub_char(Psw,Pmin,Pmax) (*sp_globals.begin_sub_char)(Psw,Pmin,Pmax)
+#define fn_begin_char(Psw,Pmin,Pmax) (*sp_globals.begin_char)(Psw.x, Psw.y, Pmin.x, Pmin.y, Pmax.x, Pmax.y)
+#define fn_begin_sub_char(Psw,Pmin,Pmax) (*sp_globals.begin_sub_char)(Psw.x, Psw.y, Pmin.x, Pmin.y, Pmax.x, Pmax.y)
 #define fn_end_sub_char() (*sp_globals.end_sub_char)()
 #define fn_end_char() (*sp_globals.end_char)()
-#define fn_line(P1) (*sp_globals.line)(P1)
+#define fn_line(P1) (*sp_globals.line)(P1.x, P1.y)
 #define fn_end_contour() (*sp_globals.end_contour)()
-#define fn_begin_contour(P0,fmt) (*sp_globals.begin_contour)(P0,fmt)
-#define fn_curve(P1,P2,P3,depth) (*sp_globals.curve)(P1,P2,P3,depth)
+#define fn_begin_contour(P0,fmt) (*sp_globals.begin_contour)(P0.x, P0.y, fmt)
+#define fn_curve(P1,P2,P3,depth) (*sp_globals.curve)(P1.x, P1.y, P2.x , P2.y, P3.x, P3.y, depth)
 
 #if INCL_MULTIDEV
 

@@ -48,7 +48,6 @@ WITH THE SPEEDO SOFTWARE OR THE BITSTREAM CHARTER OUTLINE FONT.
 int main(int argc, char *argv[]);
 
 #include "speedo.h"						/* General definition for make_bmap */
-#include "keys.h"						/* Font decryption keys */
 
 #define DEBUG  0
 
@@ -207,10 +206,10 @@ int main(int argc, char **argv)
 	font.org = font_buffer;
 	font.no_bytes = bytes_read;
 
-	key = sp_get_key(font);
+	key = sp_get_key(&font);
 	if (key == NULL)
 	{
-		printf("Unable to use fonts for customer number %d\n", sp_get_cust_no(font));
+		printf("Unable to use fonts for customer number %d\n", sp_get_cust_no(&font));
 		fclose(fdescr);
 		return 1;
 	} else

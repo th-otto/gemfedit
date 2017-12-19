@@ -140,15 +140,17 @@ static void mainwin_draw(const GRECT *area)
 			xoff = 18 * font_cw;
 
 #undef FONT_ID
-#define FONT_ID 15040 /* Arial fVDI */
-#undef FONT_ID
 #define FONT_ID 1 /* System font */
+#undef FONT_ID
+#define FONT_ID 5031 /* Baskerville */
+#undef FONT_ID
+#define FONT_ID 5043 /* American Garamond */
 #undef FONT_ID
 #define FONT_ID 9908 /* Arial */
 #undef FONT_ID
 #define FONT_ID 5003 /* Swiss 721 */
 #undef FONT_ID
-#define FONT_ID 5031 /* Baskerville */
+#define FONT_ID 15040 /* Arial fVDI */
 
 			vst_font(vdihandle, FONT_ID);
 			vst_point(vdihandle, 10, &dummy, &dummy, &dummy, &font_ch2);
@@ -201,11 +203,12 @@ static void mainwin_draw(const GRECT *area)
 				_WORD distances[5];
 				_WORD max_width[1];
 				_WORD effects[3];
+				_WORD mode;
 				
-				vst_map_mode(vdihandle, 1);
+				mode = vst_map_mode(vdihandle, 1);
 				minade = maxade = 0;
 				vqt_fontinfo(vdihandle, &minade, &maxade, distances, max_width, effects);
-				nf_debugprintf("mapping 1 -> 2 (%d-%d)\n", minade, maxade);
+				nf_debugprintf("mapping 1 -> 2 (%u-%u) ($%x-$%x), %d\n", minade, maxade, minade, maxade, mode);
 				for (i = minade, x = 0; i <= maxade; i++)
 				{
 					unicode = vqt_char_index(vdihandle, i, 1, 2);
@@ -233,7 +236,7 @@ static void mainwin_draw(const GRECT *area)
 				mode = vst_map_mode(vdihandle, 0);
 				minade = maxade = 0;
 				vqt_fontinfo(vdihandle, &minade, &maxade, distances, max_width, effects);
-				nf_debugprintf("mapping 0 -> 2 (%d-%d), %d\n", minade, maxade, mode);
+				nf_debugprintf("mapping 0 -> 2 (%u-%u) ($%x-$%x), %d\n", minade, maxade, minade, maxade, mode);
 				for (i = minade, x = 0; i <= maxade; i++)
 				{
 					unicode = vqt_char_index(vdihandle, i, 0, 2);
@@ -246,6 +249,20 @@ static void mainwin_draw(const GRECT *area)
 				}
 				if ((x % 8) != 0)
 					nf_debugprintf("\n");
+			}
+#endif
+#if 1
+			{
+				_WORD minade, maxade;
+				_WORD distances[5];
+				_WORD max_width[1];
+				_WORD effects[3];
+				_WORD mode;
+				
+				mode = vst_map_mode(vdihandle, 2);
+				minade = maxade = 0;
+				vqt_fontinfo(vdihandle, &minade, &maxade, distances, max_width, effects);
+				nf_debugprintf("mapping 0 -> 2 (%u-%u) ($%x-$%x), %d\n", minade, maxade, minade, maxade, mode);
 			}
 #endif
 			vst_map_mode(vdihandle, 1);

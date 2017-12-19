@@ -51,7 +51,7 @@ WITH THE SPEEDO SOFTWARE OR THE BITSTREAM CHARTER OUTLINE FONT.
 
 /***** STATIC FUNCTIONS *****/
 
-static void sp_split_curve(point_t P1, point_t P2, point_t P3, fix15 depth);
+static void sp_split_curve(fix31 x1, fix31 y1, fix31 x2, fix31 y2, fix31 x3, fix31 y3, fix15 depth);
 
 static ufix8 *sp_get_args(ufix8 * pointer, ufix8 format, point_t * pP);
 
@@ -75,6 +75,7 @@ ufix8 *sp_read_bbox(ufix8 * pointer,	/* Pointer to next byte in char data */
 	fix15 i;
 	point_t P;
 
+	UNUSED(set_flag);
 	sp_globals.x_int = 0;
 	sp_globals.y_int = sp_globals.Y_int_org;
 	sp_globals.x_orus = sp_globals.y_orus = 0;
@@ -293,7 +294,7 @@ void sp_proc_outl_data(ufix8 * pointer)	/* Pointer to next byte in char data */
 				sp_globals.P0 = P3;
 				continue;
 			}
-			sp_split_curve(P1, P2, P3, depth);
+			sp_split_curve(P1.x, P1.y, P2.x, P2.y, P3.x, P3.y, depth);
 			continue;
 		}
 	}
@@ -307,31 +308,30 @@ void sp_proc_outl_data(ufix8 * pointer)	/* Pointer to next byte in char data */
  * at which point it calls line() to deliver each vector resulting
  * from the spliting process.
  */
-static void sp_split_curve(point_t P1,	/* First control point of Bezier curve */
-									point_t P2,	/* Second  control point of Bezier curve */
-									point_t P3,	/* End point of Bezier curve */
-									fix15 depth)	/* Levels of recursive subdivision required */
+static void sp_split_curve(fix31 x1, fix31 y1, fix31 x2, fix31 y2, fix31 x3, fix31 y3, fix15 depth)
 {
 	fix31 X0 = (fix31) sp_globals.P0.x;
 	fix31 Y0 = (fix31) sp_globals.P0.y;
-	fix31 X1 = (fix31) P1.x;
-	fix31 Y1 = (fix31) P1.y;
-	fix31 X2 = (fix31) P2.x;
-	fix31 Y2 = (fix31) P2.y;
-	fix31 X3 = (fix31) P3.x;
-	fix31 Y3 = (fix31) P3.y;
-	point_t Pmid;
+	fix31 X1 = (fix31) x1;
+	fix31 Y1 = (fix31) y1;
+	fix31 X2 = (fix31) x2;
+	fix31 Y2 = (fix31) y2;
+	fix31 X3 = (fix31) x3;
+	fix31 Y3 = (fix31) y3;
+	point_t Pmid, P3;
 	point_t Pctrl1;
 	point_t Pctrl2;
 
 #if DEBUG
 	printf("CRVE(%3.1f, %3.1f, %3.1f, %3.1f, %3.1f, %3.1f)\n",
-		   (real) P1.x / (real) sp_globals.onepix, (real) P1.y / (real) sp_globals.onepix,
-		   (real) P2.x / (real) sp_globals.onepix, (real) P2.y / (real) sp_globals.onepix,
-		   (real) P3.x / (real) sp_globals.onepix, (real) P3.y / (real) sp_globals.onepix);
+		   (real) x1 / (real) sp_globals.onepix, (real) y1 / (real) sp_globals.onepix,
+		   (real) x2 / (real) sp_globals.onepix, (real) y2 / (real) sp_globals.onepix,
+		   (real) x3 / (real) sp_globals.onepix, (real) y3 / (real) sp_globals.onepix);
 #endif
 
 
+	P3.x = x3;
+	P3.y = y3;
 	Pmid.x = (X0 + (X1 + X2) * 3 + X3 + 4) >> 3;
 	Pmid.y = (Y0 + (Y1 + Y2) * 3 + Y3 + 4) >> 3;
 	if ((--depth) <= 0)
@@ -346,12 +346,12 @@ static void sp_split_curve(point_t P1,	/* First control point of Bezier curve */
 		Pctrl1.y = (Y0 + Y1 + 1) >> 1;
 		Pctrl2.x = (X0 + (X1 << 1) + X2 + 2) >> 2;
 		Pctrl2.y = (Y0 + (Y1 << 1) + Y2 + 2) >> 2;
-		sp_split_curve(Pctrl1, Pctrl2, Pmid, depth);
+		sp_split_curve(Pctrl1.x, Pctrl1.y, Pctrl2.x, Pctrl2.y, Pmid.x, Pmid.y, depth);
 		Pctrl1.x = (X1 + (X2 << 1) + X3 + 2) >> 2;
 		Pctrl1.y = (Y1 + (Y2 << 1) + Y3 + 2) >> 2;
 		Pctrl2.x = (X2 + X3 + 1) >> 1;
 		Pctrl2.y = (Y2 + Y3 + 1) >> 1;
-		sp_split_curve(Pctrl1, Pctrl2, P3, depth);
+		sp_split_curve(Pctrl1.x, Pctrl1.y, Pctrl2.x, Pctrl2.y, P3.x, P3.y, depth);
 	}
 }
 

@@ -61,7 +61,6 @@ from The Open Group.
 #include <string.h>
 #include <stdarg.h>
 #include "speedo.h"
-#include "keys.h"
 
 static FILE *fp;
 
@@ -178,7 +177,7 @@ int main(int argc, char **argv)
 	font.org = f_buffer;
 	font.no_bytes = minbufsize;
 
-	key = sp_get_key(font);
+	key = sp_get_key(&font);
 	if (key == NULL)
 	{
 #if 0

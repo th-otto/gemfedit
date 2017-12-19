@@ -64,12 +64,13 @@ static void sp_proc_intercepts_screen(void);
  * Returns TRUE if output module can accept requested specifications.
  * Returns FALSE otherwise.
  */
-boolean sp_init_screen(specs_t * specsarg)
+boolean sp_init_screen(specs_t *specsarg)
 {
 #if DEBUG
 	printf("INIT_SCREEN()\n");
 #endif
-	return (TRUE);
+	UNUSED(specsarg);
+	return TRUE;
 }
 #endif
 
@@ -77,20 +78,20 @@ boolean sp_init_screen(specs_t * specsarg)
 #if INCL_SCREEN
 /* Called once at the start of the character generation process
  */
-boolean sp_begin_char_screen(point_t Psw, point_t Pmin, point_t Pmax)
+boolean sp_begin_char_screen(fix31 x, fix31 y, fix31 minx, fix31 miny, fix31 maxx, fix31 maxy)
 {
 #if DEBUG
 	printf("BEGIN_CHAR_SCREEN(%3.1f, %3.1f, %3.1f, %3.1f, %3.1f, %3.1f\n",
-		   (real) Psw.x / (real) sp_globals.onepix, (real) Psw.y / (real) sp_globals.onepix,
-		   (real) Pmin.x / (real) sp_globals.onepix, (real) Pmin.y / (real) sp_globals.onepix,
-		   (real) Pmax.x / (real) sp_globals.onepix, (real) Pmax.y / (real) sp_globals.onepix);
+		   (real) x / (real) sp_globals.onepix, (real) y / (real) sp_globals.onepix,
+		   (real) minx / (real) sp_globals.onepix, (real) miny / (real) sp_globals.onepix,
+		   (real) maxx / (real) sp_globals.onepix, (real) maxy / (real) sp_globals.onepix);
 #endif
 	if (sp_globals.pixshift > 8)
 		sp_intercepts.fracpix = sp_globals.onepix << (8 - sp_globals.pixshift);
 	else
 		sp_intercepts.fracpix = sp_globals.onepix >> (sp_globals.pixshift - 8);
 
-	sp_init_char_out(Psw, Pmin, Pmax);
+	sp_init_char_out(x, y, minx, miny, maxx, maxy);
 
 	return TRUE;
 }
@@ -104,7 +105,7 @@ static void sp_vert_line_screen(fix31 x, fix15 y1, fix15 y2)
 
 #ifdef DBGCRV
 	printf("VERT_LINE_SCREEN(%6.4f, %6.4f, %6.4f)\n",
-		   (real) (x - 32768) / 65536.0, (real) (y1 - 32768) / 65536.0, (real) (y2 - 32768) / 65536.0);
+		   (real) (x - 32768L) / 65536.0, (real) (y1 - 32768L) / 65536.0, (real) (y2 - 32768L) / 65536.0);
 #endif
 
 	if (sp_globals.intercept_oflo)
@@ -157,10 +158,10 @@ static void sp_scan_curve_screen(fix31 X0, fix31 Y0, fix31 X1, fix31 Y1, fix31 X
 
 #ifdef DBGCRV
 	printf("SCAN_CURVE_SCREEN(%6.4f, %6.4f, %6.4f, %6.4f, %6.4f, %6.4f, %6.4f, %6.4f)\n",
-		   (real) (X0 - 32768) / 65536.0, (real) (Y0 - 32768) / 65536.0,
-		   (real) (X1 - 32768) / 65536.0, (real) (Y1 - 32768) / 65536.0,
-		   (real) (X2 - 32768) / 65536.0, (real) (Y2 - 32768) / 65536.0,
-		   (real) (X3 - 32768) / 65536.0, (real) (Y3 - 32768) / 65536.0);
+		   (real) (X0 - 32768L) / 65536.0, (real) (Y0 - 32768L) / 65536.0,
+		   (real) (X1 - 32768L) / 65536.0, (real) (Y1 - 32768L) / 65536.0,
+		   (real) (X2 - 32768L) / 65536.0, (real) (Y2 - 32768L) / 65536.0,
+		   (real) (X3 - 32768L) / 65536.0, (real) (Y3 - 32768L) / 65536.0);
 #endif
 
 	if (((Y3 >> 16)) == (Y0 >> 16) || (Y3 + 1) == Y0 || Y3 == (Y0 + 1))
@@ -192,22 +193,23 @@ static void sp_scan_curve_screen(fix31 X0, fix31 Y0, fix31 X1, fix31 Y1, fix31 X
 
 /* Called at the start of each contour
  */
-void sp_begin_contour_screen(point_t P1, boolean outside)
+void sp_begin_contour_screen(fix31 x1, fix31 y1, boolean outside)
 {
 #if DEBUG
 	printf("BEGIN_CONTOUR_SCREEN(%3.1f, %3.1f, %s)\n",
-		   (real) P1.x / (real) sp_globals.onepix, (real) P1.y / (real) sp_globals.onepix,
+		   (real) x1 / (real) sp_globals.onepix, (real) y1 / (real) sp_globals.onepix,
 		   outside ? "outside" : "inside");
 #endif
-	sp_globals.x0_spxl = P1.x;
-	sp_globals.y0_spxl = P1.y;
+	UNUSED(outside);
+	sp_globals.x0_spxl = x1;
+	sp_globals.y0_spxl = y1;
 	sp_globals.y_pxl = (sp_globals.y0_spxl + sp_globals.pixrnd) >> sp_globals.pixshift;
 }
 #endif
 
 
 #if INCL_SCREEN
-void sp_curve_screen(point_t P1, point_t P2, point_t P3, fix15 depth)
+void sp_curve_screen(fix31 x1, fix31 y1, fix31 x2, fix31 y2, fix31 x3, fix31 y3, fix15 depth)
 {
 	fix31 X0;
 	fix31 Y0;
@@ -220,32 +222,32 @@ void sp_curve_screen(point_t P1, point_t P2, point_t P3, fix15 depth)
 
 #if DEBUG
 	printf("CURVE_SCREEN(%6.4f, %6.4f, %6.4f, %6.4f, %6.4f, %6.4f)\n",
-		   (real) P1.x / (real) sp_globals.onepix, (real) P1.y / (real) sp_globals.onepix,
-		   (real) P2.x / (real) sp_globals.onepix, (real) P2.y / (real) sp_globals.onepix,
-		   (real) P3.x / (real) sp_globals.onepix, (real) P3.y / (real) sp_globals.onepix);
+		   (real) x1 / (real) sp_globals.onepix, (real) y1 / (real) sp_globals.onepix,
+		   (real) x2 / (real) sp_globals.onepix, (real) y2 / (real) sp_globals.onepix,
+		   (real) x3 / (real) sp_globals.onepix, (real) y3 / (real) sp_globals.onepix);
 #endif
-
+	UNUSED(depth);
 
 	if (sp_globals.extents_running)		/* Accumulate actual character extents if required */
 	{
-		if (P3.x > sp_globals.bmap_xmax)
-			sp_globals.bmap_xmax = P3.x;
-		if (P3.x < sp_globals.bmap_xmin)
-			sp_globals.bmap_xmin = P3.x;
-		if (P3.y > sp_globals.bmap_ymax)
-			sp_globals.bmap_ymax = P3.y;
-		if (P3.y < sp_globals.bmap_ymin)
-			sp_globals.bmap_ymin = P3.y;
+		if (x3 > sp_globals.bmap_xmax)
+			sp_globals.bmap_xmax = x3;
+		if (x3 < sp_globals.bmap_xmin)
+			sp_globals.bmap_xmin = x3;
+		if (y3 > sp_globals.bmap_ymax)
+			sp_globals.bmap_ymax = y3;
+		if (y3 < sp_globals.bmap_ymin)
+			sp_globals.bmap_ymin = y3;
 	}
 
-	X0 = ((fix31) sp_globals.x0_spxl << sp_globals.poshift) + (fix31) 32768;
-	Y0 = ((fix31) sp_globals.y0_spxl << sp_globals.poshift) + (fix31) 32768;
-	X1 = ((fix31) P1.x << sp_globals.poshift) + (fix31) 32768;
-	Y1 = ((fix31) P1.y << sp_globals.poshift) + (fix31) 32768;
-	X2 = ((fix31) P2.x << sp_globals.poshift) + (fix31) 32768;
-	Y2 = ((fix31) P2.y << sp_globals.poshift) + (fix31) 32768;
-	X3 = ((fix31) P3.x << sp_globals.poshift) + (fix31) 32768;
-	Y3 = ((fix31) P3.y << sp_globals.poshift) + (fix31) 32768;
+	X0 = ((fix31) sp_globals.x0_spxl << sp_globals.poshift) + (fix31) 32768L;
+	Y0 = ((fix31) sp_globals.y0_spxl << sp_globals.poshift) + (fix31) 32768L;
+	X1 = ((fix31) x1 << sp_globals.poshift) + (fix31) 32768L;
+	Y1 = ((fix31) y1 << sp_globals.poshift) + (fix31) 32768L;
+	X2 = ((fix31) x2 << sp_globals.poshift) + (fix31) 32768L;
+	Y2 = ((fix31) y2 << sp_globals.poshift) + (fix31) 32768L;
+	X3 = ((fix31) x3 << sp_globals.poshift) + (fix31) 32768L;
+	Y3 = ((fix31) y3 << sp_globals.poshift) + (fix31) 32768L;
 
 	if (((Y0 - Y3) * sp_globals.tcb.mirror) > 0)
 	{
@@ -256,9 +258,9 @@ void sp_curve_screen(point_t P1, point_t P2, point_t P3, fix15 depth)
 	}
 
 	sp_scan_curve_screen(X0, Y0, X1, Y1, X2, Y2, X3, Y3);
-	sp_globals.x0_spxl = P3.x;
-	sp_globals.y0_spxl = P3.y;
-	sp_globals.y_pxl = (P3.y + sp_globals.pixrnd) >> sp_globals.pixshift;	/* calculate new end-scan sp_globals.line */
+	sp_globals.x0_spxl = x3;
+	sp_globals.y0_spxl = y3;
+	sp_globals.y_pxl = (y3 + sp_globals.pixrnd) >> sp_globals.pixshift;	/* calculate new end-scan sp_globals.line */
 }
 
 
@@ -268,7 +270,7 @@ void sp_curve_screen(point_t P1, point_t P2, point_t P3, fix15 depth)
 #if INCL_SCREEN
 /* Called for each vector in the transformed character
  */
-void sp_line_screen(point_t P1)
+void sp_line_screen(fix31 x1, fix31 y1)
 {
 	fix15 how_many_y;			/* # of intercepts at y = n + 1/2  */
 	fix15 yc;					/* Current scan-line */
@@ -276,12 +278,12 @@ void sp_line_screen(point_t P1)
 	fix15 temp2;						/* various uses */
 	fix31 dx_dy;				/* slope of line in 16.16 form */
 	fix31 xc;					/* high-precision (16.16) x coordinate */
-	fix15 x0, y0, x1, y1;		/* PIX.FRAC start and endpoints */
+	fix15 x0, y0;				/* PIX.FRAC start and endpoints */
 
-	x0 = sp_globals.x0_spxl;			/* get start of line (== current point) */
+	x0 = sp_globals.x0_spxl;		/* get start of line (== current point) */
 	y0 = sp_globals.y0_spxl;
-	sp_globals.x0_spxl = x1 = P1.x;		/* end of line */
-	sp_globals.y0_spxl = y1 = P1.y;		/*  (also update current point to end of line) */
+	sp_globals.x0_spxl = x1;		/* end of line */
+	sp_globals.y0_spxl = y1;		/*  (also update current point to end of line) */
 
 	yc = sp_globals.y_pxl;				/* current scan line = end of last line */
 	sp_globals.y_pxl = (y1 + sp_globals.pixrnd) >> sp_globals.pixshift;	/* calculate new end-scan sp_globals.line */
@@ -289,7 +291,7 @@ void sp_line_screen(point_t P1)
 
 #if DEBUG
 	printf("LINE_SCREEN(%3.4f, %3.4f)\n",
-		   (real) P1.x / (real) sp_globals.onepix, (real) P1.y / (real) sp_globals.onepix);
+		   (real) x1 / (real) sp_globals.onepix, (real) y1 / (real) sp_globals.onepix);
 #endif
 
 	if (sp_globals.extents_running)

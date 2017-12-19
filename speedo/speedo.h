@@ -31,6 +31,10 @@ WITH THE SPEEDO SOFTWARE OR THE BITSTREAM CHARTER OUTLINE FONT.
 
 #include <stdint.h>
 
+#ifndef UNUSED
+#define UNUSED(x) ((void)(x))
+#endif
+
 /*****  CONFIGURATION DEFINITIONS *****/
 
 #ifndef INCL_CLIPPING
@@ -116,7 +120,9 @@ typedef   int16_t    fix15;
 
 typedef   uint16_t   ufix16;
 
+#ifndef __PORTVDI_H__
 typedef   int32_t    fix31;
+#endif
 
 typedef   uint32_t   ufix32;
 #endif
@@ -416,11 +422,11 @@ typedef struct speedo_global_data
          fix15    onepix;         /* 1.0 pixels in sub-pixel units */
 
          boolean (*init_out)(specs_t *specsarg);
-         boolean (*begin_char)(point_t Psw,point_t Pmin,point_t Pmax); 
-         void    (*begin_sub_char)(point_t Psw,point_t Pmin,point_t Pmax);
-         void    (*begin_contour)(point_t P1,boolean outside); 
-         void    (*curve)(point_t P1, point_t P2, point_t P3, fix15 depth);  
-         void    (*line)(point_t P1);               
+         boolean (*begin_char)(fix31 x, fix31 y, fix31 minx, fix31 miny, fix31 maxx, fix31 maxy);
+         void    (*begin_sub_char)(fix31 x, fix31 y, fix31 minx, fix31 miny, fix31 maxx, fix31 max);
+         void    (*begin_contour)(fix31 x1, fix31 y1, boolean outside); 
+         void    (*curve)(fix31 x1, fix31 y1, fix31 x2, fix31 y2, fix31 x3, fix31 y3, fix15 depth);  
+         void    (*line)(fix31 x1, fix31 y1);               
          void    (*end_contour)(void); 
          void    (*end_sub_char)(void);
          boolean (*end_char)(void);    
@@ -640,19 +646,19 @@ void sp_proc_outl_data(ufix8 *pointer);
 /* out_blk.c functions */
 #if INCL_BLACK
 boolean sp_init_black(specs_t *specsarg);
-boolean sp_begin_char_black(point_t Psw,point_t Pmin,point_t Pmax);
-void sp_begin_contour_black(point_t P1,boolean outside);
-void sp_line_black(point_t P1);
+boolean sp_begin_char_black(fix31 x, fix31 y, fix31 minx, fix31 miny, fix31 maxx, fix31 maxy);
+void sp_begin_contour_black(fix31 x1, fix31 y1, boolean outside);
+void sp_line_black(fix31 x, fix31 y);
 boolean sp_end_char_black(void);
 #endif
 
 /* out_scrn.c functions */
 #if INCL_SCREEN
 boolean sp_init_screen(specs_t *specsarg);
-boolean sp_begin_char_screen(point_t Psw,point_t Pmin,point_t Pmax);
-void sp_begin_contour_screen(point_t P1,boolean outside);
-void sp_curve_screen(point_t P1,point_t P2,point_t P3, fix15 depth);
-void sp_line_screen(point_t P1);
+boolean sp_begin_char_screen(fix31 x, fix31 y, fix31 minx, fix31 miny, fix31 maxx, fix31 maxy);
+void sp_begin_contour_screen(fix31 x1, fix31 y1, boolean outside);
+void sp_curve_screen(fix31 x1, fix31 y1, fix31 x2, fix31 y2, fix31 x3, fix31 y3, fix15 depth);
+void sp_line_screen(fix31 x, fix31 y);
 void sp_end_contour_screen(void);
 boolean sp_end_char_screen(void);
 #endif
@@ -665,11 +671,11 @@ boolean sp_set_outline_device(outline_t *ofuncs, ufix16 size);
 
 
 boolean sp_init_outline(specs_t *specsarg);
-boolean sp_begin_char_outline(point_t Psw,point_t Pmin,point_t Pmax);
-void sp_begin_sub_char_outline(point_t Psw,point_t Pmin,point_t Pmax);
-void sp_begin_contour_outline(point_t P1,boolean outside);
-void sp_curve_outline(point_t P1,point_t P2,point_t P3, fix15 depth);
-void sp_line_outline(point_t P1);
+boolean sp_begin_char_outline(fix31 x, fix31 y, fix31 minx, fix31 miny, fix31 maxx, fix31 maxy);
+void sp_begin_sub_char_outline(fix31 x, fix31 y, fix31 minx, fix31 miny, fix31 maxx, fix31 max);
+void sp_begin_contour_outline(fix31 x1, fix31 y1, boolean outside);
+void sp_curve_outline(fix31 x1, fix31 y1, fix31 x2, fix31 y2, fix31 x3, fix31 y3, fix15 depth);
+void sp_line_outline(fix31 x, fix31 y);
 void sp_end_contour_outline(void);
 void sp_end_sub_char_outline(void);
 boolean sp_end_char_outline(void);
@@ -678,9 +684,9 @@ boolean sp_end_char_outline(void);
 /* out_bl2d.c functions */
 #if INCL_2D
 boolean sp_init_2d(specs_t *specsarg);
-boolean sp_begin_char_2d(point_t Psw,point_t Pmin,point_t Pmax);
-void sp_begin_contour_2d(point_t P1,boolean outside);
-void sp_line_2d(point_t P1);
+boolean sp_begin_char_2d(fix31 x, fix31 y, fix31 minx, fix31 miny, fix31 maxx, fix31 maxy);
+void sp_begin_contour_2d(fix31 x1, fix31 y1, boolean outside);
+void sp_line_2d(fix31 x, fix31 y);
 boolean sp_end_char_2d(void);
 #endif
 
@@ -691,14 +697,14 @@ boolean sp_end_char_2d(void);
 boolean sp_set_bitmap_device(bitmap_t *bfuncs, ufix16 size);
 #endif
 
-void sp_init_char_out(point_t Psw, point_t Pmin, point_t Pmax);
-void sp_begin_sub_char_out(point_t Psw, point_t Pmin, point_t Pmax);
-void sp_curve_out(point_t P1, point_t P2, point_t P3, fix15 depth);
+void sp_init_char_out(fix31 x, fix31 y, fix31 minx, fix31 miny, fix31 maxx, fix31 maxy);
+void sp_begin_sub_char_out(fix31 x, fix31 y, fix31 minx, fix31 miny, fix31 maxx, fix31 maxy);
+void sp_curve_out(fix31 x1, fix31 y1, fix31 x2, fix31 y2, fix31 x3, fix31 y3, fix15 depth);
 void sp_end_contour_out(void);
 void sp_end_sub_char_out(void);
 void sp_init_intercepts_out(void);
 void sp_restart_intercepts_out(void);
-void sp_set_first_band_out(point_t Pmin, point_t Pmax);
+void sp_set_first_band_out(fix31 minx, fix31 miny, fix31 maxx, fix31 maxy);
 void sp_reduce_band_size_out(void);
 boolean sp_next_band_out(void);
 #endif
@@ -712,8 +718,8 @@ boolean sp_init_userout(specs_t *specsarg);
 void sp_reset(void);
 void sp_set_key(const ufix8 *key);
 void sp_reset_key(void);
-const ufix8 *sp_get_key(buff_t font_buff);
-ufix16 sp_get_cust_no(buff_t font_buff);
+const ufix8 *sp_get_key(const buff_t *font_buff);
+ufix16 sp_get_cust_no(const buff_t *font_buff);
 
 /* set_spcs.c functions */
 boolean sp_set_specs(specs_t *specsarg);

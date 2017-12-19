@@ -646,7 +646,7 @@ static boolean sp_make_comp_char(ufix8 * pointer)	/* Pointer to first byte of po
 		do
 		{
 			pointer = pointer_sav;		/* Point to next DOCH or END instruction */
-			while ((format = NEXT_BYTE(pointer)))	/* DOCH instruction? */
+			while ((format = NEXT_BYTE(pointer)) != 0)	/* DOCH instruction? */
 			{
 				sp_init_tcb();			/* Initialize transformation control block */
 				x_posn = sp_get_posn_arg(&pointer, format);

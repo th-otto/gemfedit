@@ -58,7 +58,7 @@ from The Open Group.
 #endif
 
 #include "spint.h"
-#include "bics-unicode.h"
+#include "bics2uni.h"
 
 SpeedoFontPtr sp_fp_cur = (SpeedoFontPtr) 0;
 
@@ -300,7 +300,7 @@ int sp_open_master(const char *fontname, const char *filename, SpeedoMasterFontP
 
 	/* XXX add custom encryption stuff here */
 
-	key = sp_get_key(spmf->font);
+	key = sp_get_key(&spmf->font);
 	if (key == NULL)
 	{
 		sp_write_error("Non - standard encryption for \"%s\"\n", filename);

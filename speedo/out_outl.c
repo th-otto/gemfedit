@@ -81,9 +81,9 @@ boolean sp_init_outline(specs_t *specsarg)
  * called by sp_make_simp_char() and sp_make_comp_char().
  */
 boolean sp_begin_char_outline(
-	point_t Psw,	/* End of escapement vector (sub-pixels) */
-	point_t Pmin,	/* Bottom left corner of bounding box */
-	Pmax)							/* Top right corner of bounding box */
+	fix31 x, fix31 y,	/* End of escapement vector (sub-pixels) */
+	fix31 minx, fix31 miny,	/* Bottom left corner of bounding box */
+	fix31 maxx, fix31 maxy)							/* Top right corner of bounding box */
 {
 	fix31 set_width_x;
 	fix31 set_width_y;
@@ -94,21 +94,21 @@ boolean sp_begin_char_outline(
 
 #if DEBUG
 	printf("BEGIN_CHAR_2(%3.1f, %3.1f, %3.1f, %3.1f, %3.1f, %3.1f\n",
-		   (real) Psw.x / (real) onepix, (real) Psw.y / (real) onepix,
-		   (real) Pmin.x / (real) onepix, (real) Pmin.y / (real) onepix,
-		   (real) Pmax.x / (real) onepix, (real) Pmax.y / (real) onepix);
+		   (real) x / (real) onepix, (real) y / (real) onepix,
+		   (real) minx / (real) onepix, (real) miny / (real) onepix,
+		   (real) maxx / (real) onepix, (real) maxy / (real) onepix);
 #endif
 	sp_globals.poshift = 16 - sp_globals.pixshift;
-	set_width_x = (fix31) Psw.x << sp_globals.poshift;
-	set_width_y = (fix31) Psw.y << sp_globals.poshift;
-	xmin = (fix31) Pmin.x << sp_globals.poshift;
-	xmax = (fix31) Pmax.x << sp_globals.poshift;
-	ymin = (fix31) Pmin.y << sp_globals.poshift;
-	ymax = (fix31) Pmax.y << sp_globals.poshift;
-	sp_globals.xmin = Pmin.x;
-	sp_globals.xmax = Pmax.x;
-	sp_globals.ymin = Pmin.y;
-	sp_globals.ymax = Pmax.y;
+	set_width_x = (fix31) x << sp_globals.poshift;
+	set_width_y = (fix31) y << sp_globals.poshift;
+	xmin = (fix31) minx << sp_globals.poshift;
+	xmax = (fix31) maxx << sp_globals.poshift;
+	ymin = (fix31) miny << sp_globals.poshift;
+	ymax = (fix31) maxy << sp_globals.poshift;
+	sp_globals.xmin = minx;
+	sp_globals.xmax = maxx;
+	sp_globals.ymin = miny;
+	sp_globals.ymax = maxy;
 	open_outline(set_width_x, set_width_y, xmin, xmax, ymin, ymax);
 	return TRUE;
 }
@@ -123,16 +123,22 @@ boolean sp_begin_char_outline(
  * called by sp_make_comp_char().
  */
 void sp_begin_sub_char_outline(
-	point_t Psw,	/* End of sub-char escapement vector */
-	point_t Pmin,							/* Bottom left corner of sub-char bounding box */
-	point_t Pmax)							/* Top right corner of sub-char bounding box */
+	fix31 x, fix31 y,	/* End of sub-char escapement vector */
+	fix31 minx, fix31 miny,							/* Bottom left corner of sub-char bounding box */
+	fix31 maxx, fix31 maxy)							/* Top right corner of sub-char bounding box */
 {
 #if DEBUG
 	printf("BEGIN_SUB_CHAR_2(%3.1f, %3.1f, %3.1f, %3.1f, %3.1f, %3.1f\n",
-		   (real) Psw.x / (real) onepix, (real) Psw.y / (real) onepix,
-		   (real) Pmin.x / (real) onepix, (real) Pmin.y / (real) onepix,
-		   (real) Pmax.x / (real) onepix, (real) Pmax.y / (real) onepix);
+		   (real) x / (real) onepix, (real) y / (real) onepix,
+		   (real) minx / (real) onepix, (real) miny / (real) onepix,
+		   (real) maxx / (real) onepix, (real) maxy / (real) onepix);
 #endif
+	UNUSED(x);
+	UNUSED(y);
+	UNUSED(minx);
+	UNUSED(miny);
+	UNUSED(maxx);
+	UNUSED(maxy);
 	start_new_char();
 }
 #endif
@@ -148,17 +154,17 @@ void sp_begin_sub_char_outline(
  */
 #if INCL_OUTLINE
 void sp_begin_contour_outline(
-	point_t P1,	/* Start point of contour */
+	fix31 x1, fix31 y1,	/* Start point of contour */
 	boolean outside)						/* TRUE if outside (counter-clockwise) contour */
 {
 	fix15 x, y;
 
 #if DEBUG
 	printf("BEGIN_CONTOUR_2(%3.1f, %3.1f, %s)\n",
-		   (real) P1.x / (real) onepix, (real) P1.y / (real) onepix, outside ? "outside" : "inside");
+		   (real) x1 / (real) onepix, (real) y1 / (real) onepix, outside ? "outside" : "inside");
 #endif
-	x = RANGECHECK(P1.x, sp_globals.xmin, sp_globals.xmax);
-	y = RANGECHECK(P1.y, sp_globals.ymin, sp_globals.ymax);
+	x = RANGECHECK(x1, sp_globals.xmin, sp_globals.xmax);
+	y = RANGECHECK(y1, sp_globals.ymin, sp_globals.ymax);
 
 	start_contour((fix31) x << sp_globals.poshift, (fix31) y << sp_globals.poshift, outside);
 }
@@ -173,31 +179,30 @@ void sp_begin_contour_outline(
  * This function is only called when curve output is enabled.
  */
 void sp_curve_outline(
-	point_t P1,	/* First control point of Bezier curve */
-	point_t P2,								/* Second control point of Bezier curve */
-	point_t P3,								/* End point of Bezier curve */
+	fix31 x1, fix31 y1,	/* First control point of Bezier curve */
+	fix31 x2, fix31 y2,								/* Second control point of Bezier curve */
+	fix31 x3, fix31 y3,								/* End point of Bezier curve */
 	fix15 depth)
 {
-	fix15 x1, y1, x2, y2, x3, y3;
-
 #if DEBUG
 	printf("CURVE_2(%3.1f, %3.1f, %3.1f, %3.1f, %3.1f, %3.1f)\n",
-		   (real) P1.x / (real) onepix, (real) P1.y / (real) onepix,
-		   (real) P2.x / (real) onepix, (real) P2.y / (real) onepix,
-		   (real) P3.x / (real) onepix, (real) P3.y / (real) onepix);
+		   (real) x1 / (real) onepix, (real) y1 / (real) onepix,
+		   (real) x2 / (real) onepix, (real) y2 / (real) onepix,
+		   (real) x3 / (real) onepix, (real) y3 / (real) onepix);
 #endif
-	x1 = RANGECHECK(P1.x, sp_globals.xmin, sp_globals.xmax);
-	y1 = RANGECHECK(P1.y, sp_globals.ymin, sp_globals.ymax);
+	UNUSED(depth);
+	x1 = RANGECHECK(x1, sp_globals.xmin, sp_globals.xmax);
+	y1 = RANGECHECK(y1, sp_globals.ymin, sp_globals.ymax);
 
-	x2 = RANGECHECK(P2.x, sp_globals.xmin, sp_globals.xmax);
-	y2 = RANGECHECK(P2.y, sp_globals.ymin, sp_globals.ymax);
+	x2 = RANGECHECK(x2, sp_globals.xmin, sp_globals.xmax);
+	y2 = RANGECHECK(y2, sp_globals.ymin, sp_globals.ymax);
 
-	x3 = RANGECHECK(P3.x, sp_globals.xmin, sp_globals.xmax);
-	y3 = RANGECHECK(P3.y, sp_globals.ymin, sp_globals.ymax);
+	x3 = RANGECHECK(x3, sp_globals.xmin, sp_globals.xmax);
+	y3 = RANGECHECK(y3, sp_globals.ymin, sp_globals.ymax);
 
-	curve_to((fix31) x1 << sp_globals.poshift, (fix31) y1 << sp_globals.poshift,
-			 (fix31) x2 << sp_globals.poshift, (fix31) y2 << sp_globals.poshift,
-			 (fix31) x3 << sp_globals.poshift, (fix31) y3 << sp_globals.poshift);
+	curve_to(x1 << sp_globals.poshift, y1 << sp_globals.poshift,
+			 x2 << sp_globals.poshift, y2 << sp_globals.poshift,
+			 x3 << sp_globals.poshift, y3 << sp_globals.poshift);
 }
 #endif
 
@@ -210,15 +215,13 @@ void sp_curve_outline(
  * called by sp_proc_outl_data(). If curve output is enabled, line() is also
  * called by sp_split_curve().
  */
-void sp_line_outline(point_t P1)	/* End point of vector */
+void sp_line_outline(fix31 x1, fix31 y1)	/* End point of vector */
 {
-	fix15 x1, y1;
-
 #if DEBUG
-	printf("LINE_2(%3.1f, %3.1f)\n", (real) P1.x / (real) onepix, (real) P1.y / (real) onepix);
+	printf("LINE_2(%3.1f, %3.1f)\n", (real) x1 / (real) onepix, (real) y1 / (real) onepix);
 #endif
-	x1 = RANGECHECK(P1.x, sp_globals.xmin, sp_globals.xmax);
-	y1 = RANGECHECK(P1.y, sp_globals.ymin, sp_globals.ymax);
+	x1 = RANGECHECK(x1, sp_globals.xmin, sp_globals.xmax);
+	y1 = RANGECHECK(y1, sp_globals.ymin, sp_globals.ymax);
 
 	line_to((fix31) x1 << sp_globals.poshift, (fix31) y1 << sp_globals.poshift);
 }

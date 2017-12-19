@@ -84,18 +84,18 @@ boolean sp_init_2d(specs_t * specsarg)
  * Initializes intercept table, either calculates pixel maxima or
  * decides that they need to be collected
  */
-boolean sp_begin_char_2d(point_t Psw, point_t Pmin, point_t Pmax)
+boolean sp_begin_char_2d(fix31 x, fix31 y, fix31 minx, fix31 miny, fix31 maxx, fix31 maxy)
 {
 #if DEBUG
 	printf("BEGIN_CHAR__2d(%3.1f, %3.1f, %3.1f, %3.1f, %3.1f, %3.1f\n",
-		   (real) Psw.x / (real) sp_globals.onepix, (real) Psw.y / (real) sp_globals.onepix,
-		   (real) Pmin.x / (real) sp_globals.onepix, (real) Pmin.y / (real) sp_globals.onepix,
-		   (real) Pmax.x / (real) sp_globals.onepix, (real) Pmax.y / (real) sp_globals.onepix);
+		   (real) x / (real) sp_globals.onepix, (real) y / (real) sp_globals.onepix,
+		   (real) minx / (real) sp_globals.onepix, (real) miny / (real) sp_globals.onepix,
+		   (real) maxx / (real) sp_globals.onepix, (real) maxy / (real) sp_globals.onepix);
 #endif
 /* Convert PIX.FRAC to 16.16 form */
 	sp_globals.x_scan_active = TRUE;	/* Assume x-scanning from the start */
 
-	sp_init_char_out(Psw, Pmin, Pmax);
+	sp_init_char_out(x, y, minx, miny, maxx, maxy);
 	return TRUE;
 }
 #endif
@@ -104,15 +104,16 @@ boolean sp_begin_char_2d(point_t Psw, point_t Pmin, point_t Pmax)
 #if INCL_2D
 /* Called at the start of each contour
  */
-void sp_begin_contour_2d(point_t P1, boolean outside)
+void sp_begin_contour_2d(fix31 x1, fix31 y1, boolean outside)
 {
 #if DEBUG
 	printf("BEGIN_CONTOUR__2d(%3.4f, %3.4f, %s)\n",
-		   (real) P1.x / (real) sp_globals.onepix,
-		   (real) P1.y / (real) sp_globals.onepix, outside ? "outside" : "inside");
+		   (real) x1 / (real) sp_globals.onepix,
+		   (real) y1 / (real) sp_globals.onepix, outside ? "outside" : "inside");
 #endif
-	sp_globals.x0_spxl = P1.x;
-	sp_globals.y0_spxl = P1.y;
+	UNUSED(outside);
+	sp_globals.x0_spxl = x1;
+	sp_globals.y0_spxl = y1;
 }
 #endif
 
@@ -122,10 +123,10 @@ void sp_begin_contour_2d(point_t P1, boolean outside)
  * Called for each vector in the transformed character
  *     "draws" vector into intercept table
  */
-void sp_line_2d(point_t P1)
+void sp_line_2d(fix31 x1, fix31 y1)
 {
 #if DEBUG
-	printf("LINE_0(%3.4f, %3.4f)\n", (real) P1.x / (real) sp_globals.onepix, (real) P1.y / (real) sp_globals.onepix);
+	printf("LINE_0(%3.4f, %3.4f)\n", (real) x1 / (real) sp_globals.onepix, (real) y1 / (real) sp_globals.onepix);
 #endif
 
 	if (sp_globals.extents_running)
@@ -142,14 +143,14 @@ void sp_line_2d(point_t P1)
 
 	if (!sp_globals.intercept_oflo)
 	{
-		sp_draw_vector_to_2d(sp_globals.x0_spxl, sp_globals.y0_spxl, P1.x, P1.y, &sp_globals.y_band);	/* y-scan */
+		sp_draw_vector_to_2d(sp_globals.x0_spxl, sp_globals.y0_spxl, x1, y1, &sp_globals.y_band);	/* y-scan */
 
 		if (sp_globals.x_scan_active)
-			sp_draw_vector_to_2d(sp_globals.y0_spxl, sp_globals.x0_spxl, P1.y, P1.x, &sp_globals.x_band);	/* x-scan if selected */
+			sp_draw_vector_to_2d(sp_globals.y0_spxl, sp_globals.x0_spxl, y1, x1, &sp_globals.x_band);	/* x-scan if selected */
 	}
 
-	sp_globals.x0_spxl = P1.x;
-	sp_globals.y0_spxl = P1.y;			/* update endpoint */
+	sp_globals.x0_spxl = x1;
+	sp_globals.y0_spxl = y1;			/* update endpoint */
 }
 
 

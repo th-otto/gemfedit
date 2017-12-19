@@ -81,15 +81,15 @@ boolean sp_init_black(specs_t * specsarg)
 #if INCL_BLACK
 /* Called once at the start of the character generation process
  */
-boolean sp_begin_char_black(point_t Psw, point_t Pmin, point_t Pmax)
+boolean sp_begin_char_black(fix31 x, fix31 y, fix31 minx, fix31 miny, fix31 maxx, fix31 maxy)
 {
 #if DEBUG
 	printf("BEGIN_CHAR_BLACK(%3.1f, %3.1f, %3.1f, %3.1f, %3.1f, %3.1f\n",
-		   (real) Psw.x / (real) sp_globals.onepix, (real) Psw.y / (real) sp_globals.onepix,
-		   (real) Pmin.x / (real) sp_globals.onepix, (real) Pmin.y / (real) sp_globals.onepix,
-		   (real) Pmax.x / (real) sp_globals.onepix, (real) Pmax.y / (real) sp_globals.onepix);
+		   (real) x / (real) sp_globals.onepix, (real) y / (real) sp_globals.onepix,
+		   (real) minx / (real) sp_globals.onepix, (real) miny / (real) sp_globals.onepix,
+		   (real) maxx / (real) sp_globals.onepix, (real) maxy / (real) sp_globals.onepix);
 #endif
-	sp_init_char_out(Psw, Pmin, Pmax);
+	sp_init_char_out(x, y, minx, miny, maxx, maxy);
 	return TRUE;
 }
 #endif
@@ -98,15 +98,16 @@ boolean sp_begin_char_black(point_t Psw, point_t Pmin, point_t Pmax)
 #if INCL_BLACK
 /* Called at the start of each contour
  */
-void sp_begin_contour_black(point_t P1, boolean outside)
+void sp_begin_contour_black(fix31 x1, fix31 y1, boolean outside)
 {
 #if DEBUG
 	printf("BEGIN_CONTOUR_BLACK(%3.1f, %3.1f, %s)\n",
-		   (real) P1.x / (real) sp_globals.onepix, (real) P1.y / (real) sp_globals.onepix,
+		   (real) x1 / (real) sp_globals.onepix, (real) y1 / (real) sp_globals.onepix,
 		   outside ? "outside" : "inside");
 #endif
-	sp_globals.x0_spxl = P1.x;
-	sp_globals.y0_spxl = P1.y;
+	UNUSED(outside);
+	sp_globals.x0_spxl = x1;
+	sp_globals.y0_spxl = y1;
 	sp_globals.y_pxl = (sp_globals.y0_spxl + sp_globals.pixrnd) >> sp_globals.pixshift;
 }
 #endif
@@ -114,7 +115,7 @@ void sp_begin_contour_black(point_t P1, boolean outside)
 #if INCL_BLACK
 /* Called for each vector in the transformed character
  */
-void sp_line_black(point_t P1)
+void sp_line_black(fix31 x1, fix31 y1)
 {
 	fix15 how_many_y;					/* # of intercepts at y = n + 1/2  */
 	fix15 yc, i;						/* Current scan-line */
@@ -122,12 +123,12 @@ void sp_line_black(point_t P1)
 	fix15 temp2;						/* various uses */
 	fix31 dx_dy;						/* slope of line in 16.16 form */
 	fix31 xc;							/* high-precision (16.16) x coordinate */
-	fix15 x0, y0, x1, y1;				/* PIX.FRAC start and endpoints */
+	fix15 x0, y0;						/* PIX.FRAC start and endpoints */
 
 	x0 = sp_globals.x0_spxl;			/* get start of line (== current point) */
 	y0 = sp_globals.y0_spxl;
-	sp_globals.x0_spxl = x1 = P1.x;		/* end of line */
-	sp_globals.y0_spxl = y1 = P1.y;		/*  (also update current point to end of line) */
+	sp_globals.x0_spxl = x1;			/* end of line */
+	sp_globals.y0_spxl = y1;			/*  (also update current point to end of line) */
 
 	yc = sp_globals.y_pxl;				/* current scan line = end of last line */
 	sp_globals.y_pxl = (y1 + sp_globals.pixrnd) >> sp_globals.pixshift;	/* calculate new end-scan sp_globals.line */
@@ -135,7 +136,7 @@ void sp_line_black(point_t P1)
 
 #if DEBUG
 	printf("LINE_BLACK(%3.4f, %3.4f)\n",
-		   (real) P1.x / (real) sp_globals.onepix, (real) P1.y / (real) sp_globals.onepix);
+		   (real) x1 / (real) sp_globals.onepix, (real) y1 / (real) sp_globals.onepix);
 #endif
 
 	if (sp_globals.extents_running)
@@ -235,8 +236,9 @@ void sp_line_black(point_t P1)
 	if (how_many_y < 0)
 	{									/* Vector down */
 		if (how_many_y == -1)
+		{
 			sp_add_intercept_black(yc, (fix15) (xc >> 16));
-		else
+		} else
 		{
 			if ((how_many_y += yc + 1) < 0)
 				how_many_y = 0;			/* can't go below 0 */
@@ -251,8 +253,9 @@ void sp_line_black(point_t P1)
 	{									/* Vector up */
 		/* check to see that line doesn't extend beyond top of band */
 		if (how_many_y == 1)
+		{
 			sp_add_intercept_black(yc, (fix15) (xc >> 16));
-		else
+		} else
 		{
 			if ((how_many_y += yc) > sp_globals.no_y_lists)
 				how_many_y = sp_globals.no_y_lists;
