@@ -93,15 +93,15 @@ buff_t *sp_load_char_data(fix31 file_offset, fix15 num, fix15 cb_offset)
 
 	if (fseek(master->fp, (long) file_offset, (int) 0))
 	{
-		sp_write_error("can't seek to char\n");
+		sp_write_error("can't seek to char");
 	}
 	if ((num + cb_offset) > master->mincharsize)
 	{
-		sp_write_error("char buf overflow\n");
+		sp_write_error("char buf overflow");
 	}
 	if (fread((master->c_buffer + cb_offset), sizeof(ufix8), num, master->fp) != num)
 	{
-		sp_write_error("can't get char data\n");
+		sp_write_error("can't get char data");
 	}
 	master->char_data.org = (ufix8 *) master->c_buffer + cb_offset;
 	master->char_data.no_bytes = num;
@@ -303,7 +303,7 @@ int sp_open_master(const char *fontname, const char *filename, SpeedoMasterFontP
 	key = sp_get_key(&spmf->font);
 	if (key == NULL)
 	{
-		sp_write_error("Non - standard encryption for \"%s\"\n", filename);
+		sp_write_error("Non - standard encryption for \"%s\"", filename);
 		ret = BadFontName;
 		goto cleanup;
 	}

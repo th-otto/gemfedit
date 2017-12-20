@@ -154,7 +154,7 @@ void sp_set_bitmap_bits(fix15 y, fix15 xbit1, fix15 xbit2)
 	{
 
 #ifdef CLIP_BBOX_NOISE
-		sp_write_error("Run wider than bitmap width -- truncated\n");
+		sp_write_error("Run wider than bitmap width -- truncated");
 #endif
 
 		xbit1 = cfv->bit_width;
@@ -163,7 +163,7 @@ void sp_set_bitmap_bits(fix15 y, fix15 xbit1, fix15 xbit2)
 	{
 
 #ifdef CLIP_BBOX_NOISE
-		sp_write_error("Run wider than bitmap width -- truncated\n");
+		sp_write_error("Run wider than bitmap width -- truncated");
 #endif
 
 		xbit2 = cfv->bit_width;
@@ -185,7 +185,7 @@ void sp_set_bitmap_bits(fix15 y, fix15 xbit1, fix15 xbit2)
 	{
 
 #ifdef CLIP_BBOX_NOISE
-		sp_write_error("Y larger than bitmap height -- truncated\n");
+		sp_write_error("Y larger than bitmap height -- truncated");
 #endif
 
 		cfv->trunc = 1;
@@ -401,7 +401,7 @@ int sp_build_all_bitmaps(FontPtr pfont, fsBitmapFormat format, fsBitmapFormatMas
 		{
 
 #ifdef DEBUG							/* can be very common with some encodings */
-			sp_write_error("Can't make char %d\n", cfv->char_index);
+			sp_write_error("Can't make char %d", cfv->char_index);
 #endif
 		}
 	}

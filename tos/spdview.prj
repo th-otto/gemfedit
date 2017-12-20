@@ -1,0 +1,37 @@
+spdview.prg
+.C[-A-]		; no ANSI, because we need to use cdecl keyword
+.C[-P]		; use long calls
+.C[-M]		; no string merging
+.C[-K]		; default char unsigned
+.C[-G]		; size optimization
+.C[-Z-]		; register optimization
+.C[-J-]		; jump optimization
+.C[-C-]		; no nested comments please
+.C[-2-]		; no 68020 code
+.C[-8-]		; no 68881 fpu instructions
+.C[-L64]	; maximum identifier length
+
+.C[-I../include]
+.C[-I../speedo]
+
+.L[-S=12000]
+=
+cstartv.o
+spdview.c
+
+..\speedo\do_char.c
+..\speedo\do_trns.c
+..\speedo\out_util.c
+..\speedo\out_scrn.c
+..\speedo\out_bl2d.c
+..\speedo\out_blk.c
+..\speedo\out_outl.c
+..\speedo\keys.c
+..\speedo\reset.c
+..\speedo\set_spcs.c
+..\speedo\set_trns.c
+..\speedo\sp_err.c
+
+pcgemlib.lib
+pcstdlib.lib
+pctoslib.lib

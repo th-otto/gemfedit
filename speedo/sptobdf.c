@@ -66,8 +66,6 @@ from The Open Group.
 
 #define	MAX_BITS	1024
 
-#define	BBOX_CLIP
-
 static char line_of_bits[MAX_BITS][MAX_BITS + 1];
 
 static ufix16 char_index, char_id;
@@ -80,8 +78,6 @@ static ufix8 *font_buffer;
 static ufix8 *c_buffer;
 
 static ufix16 mincharsize;
-
-static fix15 cur_y;
 
 static fix15 bit_width, bit_height;
 
@@ -423,7 +419,7 @@ int main(int argc, char **argv)
 	}
 	fseek(fp, (ufix32) 0, 0);
 
-	if (fread(font_buffer, sizeof(ufix8), (ufix16) minbufsize, fp) != minbufsize)
+	if (fread(font_buffer, sizeof(ufix8), minbufsize, fp) != minbufsize)
 	{
 		fprintf(stderr, "error reading file \"%s\"\n", fontfile);
 		return 1;
@@ -569,6 +565,7 @@ void sp_write_error(const char *str, ...)
 	va_start(v, str);
 	vfprintf(stderr, str, v);
 	va_end(v);
+	fputc('\n', stderr);
 }
 
 
@@ -618,12 +615,10 @@ void sp_open_bitmap(fix31 x_set_width, fix31 y_set_width, fix31 xorg, fix31 yorg
 		fprintf(stderr, "y min mismatch 0x%x (0x%x) (%d vs %d)\n", char_index, char_id, bb.ymin, off_vert);
 #endif
 
-#ifdef BBOX_CLIP
 	bit_width = bb.xmax - bb.xmin;
 	bit_height = bb.ymax - bb.ymin;
 	off_horz = bb.xmin;
 	off_vert = bb.ymin;
-#endif
 
 	/* XXX kludge to handle space */
 	if (bb.xmin == 0 && bb.ymin == 0 && bb.xmax == 0 && bb.ymax == 0 && width)
@@ -658,7 +653,6 @@ void sp_open_bitmap(fix31 x_set_width, fix31 y_set_width, fix31 xorg, fix31 yorg
 		}
 		line_of_bits[y][bit_width] = '\0';
 	}
-	cur_y = 0;
 }
 
 
@@ -683,12 +677,7 @@ static void dump_line(const char *line)
 	printf("\n");
 }
 
-#ifdef BBOX_CLIP
-static fix15 last_y;
-
 static int trunc = 0;
-
-#endif
 
 
 void sp_set_bitmap_bits(fix15 y, fix15 xbit1, fix15 xbit2)
@@ -713,10 +702,7 @@ void sp_set_bitmap_bits(fix15 y, fix15 xbit1, fix15 xbit2)
 
 		xbit2 = MAX_BITS;
 	}
-	cur_y = y;
 
-#ifdef BBOX_CLIP
-	last_y = y;
 	if (y >= bit_height)
 	{
 #ifdef DEBUG
@@ -726,7 +712,6 @@ void sp_set_bitmap_bits(fix15 y, fix15 xbit1, fix15 xbit2)
 		trunc = 1;
 		return;
 	}
-#endif /* BBOX_CLIP */
 
 	for (i = xbit1; i < xbit2; i++)
 	{
@@ -738,20 +723,8 @@ void sp_set_bitmap_bits(fix15 y, fix15 xbit1, fix15 xbit2)
 void sp_close_bitmap(void)
 {
 	int y, i;
-#ifdef BBOX_CLIP
 
 	trunc = 0;
-
-	last_y++;
-	while (last_y < bit_height)
-	{
-#ifdef DEBUG
-		fprintf(stderr, "padding out height for 0x%x (0x%x)\n", char_index, char_id);
-#endif
-		last_y++;
-	}
-
-#endif
 
 	for (y = 0; y < bit_height; y++)
 	{

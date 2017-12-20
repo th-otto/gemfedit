@@ -1,6 +1,6 @@
 VERSION = 1.0.0
 
-SUBDIRS = fonts include tools tos unix win32
+SUBDIRS = fonts include tools tos unix win32 speedo
 
 EXTRA_DIST = Makefile README COPYING
 

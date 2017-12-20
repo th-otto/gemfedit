@@ -264,6 +264,7 @@ void sp_write_error(const char *str, ...)
 	va_start(v, str);
 	vfprintf(stderr, str, v);
 	va_end(v);
+	fputc('\n', stderr);
 }
 
 

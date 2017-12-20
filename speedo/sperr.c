@@ -68,5 +68,6 @@ void sp_write_error(const char *str, ...)
 	a2 = va_arg(v, void *);
 
 	ErrorF(str, a1, a2);
+	ErrorF("\n");
 	va_end(v);
 }
