@@ -26,6 +26,7 @@ WITH THE SPEEDO SOFTWARE OR THE BITSTREAM CHARTER OUTLINE FONT.
  ****************************************************************************/
 
 
+#include "linux/libcwrap.h"
 #include "spdo_prv.h"					/* General definitions for speedo */
 
 #define   CLOCKWISE  1

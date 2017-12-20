@@ -22,6 +22,7 @@ THE SOFTWARE.
 
 /* These data are very dodgy. */
 
+#include "linux/libcwrap.h"
 #include "bics2uni.h"
 
 static short table_160[] = { 0, 128, 98, 97, 278, 274, 277, 110, 135, 503,

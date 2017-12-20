@@ -5,6 +5,7 @@
  *
  * Written by Thorsten Otto (June, 2013)
  */
+#include "linux/libcwrap.h"
 #include <stdio.h>
 #include <string.h>
 #include <ctype.h>
@@ -12,7 +13,7 @@
 #include <getopt.h>
 #include <stdint.h>
 #include <endian.h>
-#include "../include/fonthdr.h"
+#include "fonthdr.h"
 
 typedef int8_t B;
 typedef uint8_t UB;

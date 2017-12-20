@@ -27,24 +27,14 @@ WITH THE SPEEDO SOFTWARE OR THE BITSTREAM CHARTER OUTLINE FONT.
  ****************************************************************************/
 
 
+#include "linux/libcwrap.h"
 #include "speedo.h"						/* General definition for make_bmap */
 #include <stdio.h>
 #include <stdlib.h>
 
-#define DEBUG  0
-
-#if DEBUG
-#define SHOW(X) printf("X = %d\n", X)
-#else
-#define SHOW(X)
-#endif
-
 #define FONT_BUFFER_SIZE  1000
 
-/***** EXTERNAL FUNCTIONS *****/
-
-/***** STATIC VARIABLES *****/
-static char pathname[100];				/* Name of font file to be output */
+static const char *pathname;				/* Name of font file to be output */
 
 static ufix8 font_buffer[FONT_BUFFER_SIZE];	/* Font buffer */
 
@@ -96,11 +86,11 @@ int main(int argc, char **argv)
 
 	if (argc != 2)
 	{
-		fprintf(stderr, "Usage: htest {fontfile}\n\n");
-		exit(1);
+		fprintf(stderr, "Usage: htest {fontfile}\n");
+		return 1;
 	}
 
-	sprintf(pathname, argv[1]);
+	pathname = argv[1];
 
 	/* Initialization */
 	printf("\n      SPEEDO FONT FILE HEADER DATA\n");
@@ -109,14 +99,14 @@ int main(int argc, char **argv)
 	fdescr = fopen(pathname, "rb");
 	if (fdescr == NULL)
 	{
-		printf("****** Cannot open file %s\n", pathname);
+		fprintf(stderr, "****** Cannot open file %s\n", pathname);
 		return 1;
 	}
 
 	bytes_read = fread(font_buffer, sizeof(ufix8), sizeof(font_buffer), fdescr);
 	if (bytes_read == 0)
 	{
-		printf("****** Error on reading %s: %x\n", pathname, bytes_read);
+		fprintf(stderr, "****** Error on reading %s: %x\n", pathname, bytes_read);
 		fclose(fdescr);
 		return 1;
 	}
@@ -124,7 +114,7 @@ int main(int argc, char **argv)
 	printf("Format Identifier ...................... %.4s\n", font_buffer + FH_FMVER);
 
 	tmpufix32 = (ufix32) read_4b(font_buffer + FH_FMVER + 4);
-	printf("CR-LF-NULL-NULL data ............... %8.8lx %s\n", (unsigned long)tmpufix32,
+	printf("CR-LF-NULL-NULL data ................... %8.8lx %s\n", (unsigned long)tmpufix32,
 		   (tmpufix32 != 0x0d0a0000) ? "(incorrect)" : " ");
 
 	printf("Font Size .............................. %4ld\n", (long)(ufix32) read_4b(font_buffer + FH_FNTSZ));
@@ -141,7 +131,7 @@ int main(int argc, char **argv)
 
 	printf("Font Full Name:\n    %.70s\n", font_buffer + FH_FNTNM);
 
-	printf("Manufacturing Date ................ %10.10s\n", font_buffer + FH_MDATE);
+	printf("Manufacturing Date ..................... %10.10s\n", font_buffer + FH_MDATE);
 
 	printf("Character Set Name:\n    %s\n", font_buffer + FH_LAYNM);
 
@@ -348,4 +338,6 @@ int main(int argc, char **argv)
 	printf("Large Denominators Y scale ............. %7.2f\n", ((real) read_2b(font_buffer + FH_LDNTR + 4) / 4096.0));
 
 	fclose(fdescr);
+	
+	return 0;
 }

@@ -52,7 +52,8 @@ from The Open Group.
 
 */
 
-#include	"spint.h"
+#include "linux/libcwrap.h"
+#include "spint.h"
 
 #include <stdarg.h>
 

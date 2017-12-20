@@ -53,6 +53,7 @@ from The Open Group.
  * Speedo font loading
  */
 
+#include "linux/libcwrap.h"
 #include	"FSproto.h"
 #include	"spint.h"
 #include	"fonts/fontutil.h"

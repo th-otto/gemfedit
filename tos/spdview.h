@@ -5,19 +5,19 @@
  */
 
 /*
- * Number of Strings:        89
+ * Number of Strings:        90
  * Number of Bitblks:        0
  * Number of Iconblks:       0
  * Number of Color Iconblks: 0
  * Number of Color Icons:    0
  * Number of Tedinfos:       13
- * Number of Free Strings:   8
+ * Number of Free Strings:   9
  * Number of Free Images:    0
  * Number of Objects:        65
  * Number of Trees:          4
  * Number of Userblks:       0
  * Number of Images:         0
- * Total file size:          3422
+ * Total file size:          3458
  */
 
 #undef RSC_NAME
@@ -35,8 +35,8 @@
 # define RSC_STATIC_FILE 0
 #endif
 #if !RSC_STATIC_FILE
-#define NUM_STRINGS 89
-#define NUM_FRSTR 8
+#define NUM_STRINGS 90
+#define NUM_FRSTR 9
 #define NUM_UD 0
 #define NUM_IMAGES 0
 #define NUM_BB 0
@@ -107,6 +107,9 @@
 
 #define AL_MISSING_HOR_TABLE_FLAG          7 /* Alert string */
 /* [1][Warning:|Horizontal offset table present,|but flag not set.][Continue] */
+
+#define AL_READERROR                       8 /* Alert string */
+/* [3][Read error on file.][Abort] */
 
 
 

@@ -65,17 +65,25 @@ typedef struct {
 } charinfo;
 
 
+/*****************************************************************************/
+/* ------------------------------------------------------------------------- */
+/*****************************************************************************/
+
 static OBJECT *rs_tree(_WORD num)
 {
 	return rs_trindex[num];
 }
 
+/* ------------------------------------------------------------------------- */
 	
 static char *rs_str(_WORD num)
 {
 	return rs_frstr[num];
 }
 
+/*****************************************************************************/
+/* ------------------------------------------------------------------------- */
+/*****************************************************************************/
 	
 static void chomp(char *dst, const char *src, size_t maxlen)
 {
@@ -93,7 +101,6 @@ static void chomp(char *dst, const char *src, size_t maxlen)
 	}
 }
 
-
 /* -------------------------------------------------------------------------- */
 
 static char *xbasename(const char *path)
@@ -109,6 +116,8 @@ static char *xbasename(const char *path)
 	return p;
 }
 
+/* ------------------------------------------------------------------------- */
+
 static void cleanup(void)
 {
 	if (app_id >= 0)
@@ -119,6 +128,7 @@ static void cleanup(void)
 	}
 }
 
+/* ------------------------------------------------------------------------- */
 
 static void destroy_win(void)
 {
@@ -141,6 +151,7 @@ static void destroy_win(void)
 	}
 }
 
+/* ------------------------------------------------------------------------- */
 
 #define ror(x) (((x) >> 1) | ((x) & 1 ? 0x80 : 0))
 
@@ -154,6 +165,7 @@ static void draw_char(unsigned short c, _WORD x0, _WORD y0)
 	(void) y0;
 }
 
+/* ------------------------------------------------------------------------- */
 
 static void mainwin_draw(const GRECT *area)
 {
@@ -217,6 +229,7 @@ static void mainwin_draw(const GRECT *area)
 	v_show_c(vdihandle, 1);
 }
 
+/* ------------------------------------------------------------------------- */
 
 static void panelwin_draw(const GRECT *area)
 {
@@ -239,6 +252,7 @@ static void panelwin_draw(const GRECT *area)
 	v_show_c(vdihandle, 1);
 }
 
+/* ------------------------------------------------------------------------- */
 
 static _BOOL open_screen(void)
 {
@@ -251,6 +265,7 @@ static _BOOL open_screen(void)
 	return TRUE;
 }
 
+/* ------------------------------------------------------------------------- */
 
 static _BOOL create_panel_window(void)
 {
@@ -281,6 +296,7 @@ static _BOOL create_panel_window(void)
 	return TRUE;
 }
 
+/* ------------------------------------------------------------------------- */
 
 static _BOOL create_window(void)
 {
@@ -318,6 +334,7 @@ static _BOOL create_window(void)
 	return TRUE;
 }
 
+/* ------------------------------------------------------------------------- */
 
 static _BOOL resize_window(void)
 {
@@ -341,6 +358,7 @@ static _BOOL resize_window(void)
 	return TRUE;
 }
 
+/* ------------------------------------------------------------------------- */
 
 static void redraw_win(_WORD win)
 {
@@ -354,6 +372,9 @@ static void redraw_win(_WORD win)
 	appl_write(gl_apid, 16, message);
 }
 
+/*****************************************************************************/
+/* ------------------------------------------------------------------------- */
+/*****************************************************************************/
 
 static FILE *fp;
 static fix15 bit_width, bit_height;
@@ -363,6 +384,7 @@ static fix15 bit_width, bit_height;
  */
 #define read_1b(pointer) (*(pointer))
 
+/* ------------------------------------------------------------------------- */
 
 static fix15 read_2b(ufix8 *ptr)
 {
@@ -372,6 +394,8 @@ static fix15 read_2b(ufix8 *ptr)
 	tmp = (tmp << 8) + *ptr;
 	return tmp;
 }
+
+/* ------------------------------------------------------------------------- */
 
 static fix31 read_4b(ufix8 *ptr)
 {
@@ -383,6 +407,8 @@ static fix31 read_4b(ufix8 *ptr)
 	tmp = (tmp << 8) + *ptr;
 	return tmp;
 }
+
+/* ------------------------------------------------------------------------- */
 
 /*
  * Called by Speedo character generator to report an error.
@@ -400,7 +426,7 @@ void sp_write_error(const char *str, ...)
 	form_alert(1, msg);
 }
 
-
+/* ------------------------------------------------------------------------- */
 
 void sp_open_bitmap(fix31 x_set_width, fix31 y_set_width, fix31 xorg, fix31 yorg, fix15 xsize, fix15 ysize)
 {
@@ -480,9 +506,9 @@ void sp_open_bitmap(fix31 x_set_width, fix31 y_set_width, fix31 xorg, fix31 yorg
 	}
 }
 
+/* ------------------------------------------------------------------------- */
 
 static int trunc = 0;
-
 
 void sp_set_bitmap_bits(fix15 y, fix15 xbit1, fix15 xbit2)
 {
@@ -512,10 +538,11 @@ void sp_set_bitmap_bits(fix15 y, fix15 xbit1, fix15 xbit2)
 	}
 }
 
+/* ------------------------------------------------------------------------- */
 
 buff_t *sp_load_char_data(fix31 file_offset, fix15 num, fix15 cb_offset)
 {
-	if (fseek(fp, (long) file_offset, (int) 0))
+	if (fseek(fp, file_offset, SEEK_SET))
 	{
 		nf_debugprintf("can't seek to char\n");
 		char_data.org = c_buffer;
@@ -542,6 +569,7 @@ buff_t *sp_load_char_data(fix31 file_offset, fix15 num, fix15 cb_offset)
 	return &char_data;
 }
 
+/* ------------------------------------------------------------------------- */
 
 static void dump_line(const char *line)
 {
@@ -564,6 +592,7 @@ static void dump_line(const char *line)
 	printf("\n");
 }
 
+/* ------------------------------------------------------------------------- */
 
 void sp_close_bitmap(void)
 {
@@ -584,6 +613,7 @@ void sp_close_bitmap(void)
 	}
 }
 
+/* ------------------------------------------------------------------------- */
 
 /* outline stubs */
 #if INCL_OUTLINE
@@ -597,9 +627,13 @@ void sp_open_outline(fix31 x_set_width, fix31 y_set_width, fix31 xmin, fix31 xma
 	UNUSED(ymax);
 }
 
+/* ------------------------------------------------------------------------- */
+
 void sp_start_new_char(void)
 {
 }
+
+/* ------------------------------------------------------------------------- */
 
 void sp_start_contour(fix31 x, fix31 y, boolean outside)
 {
@@ -607,6 +641,8 @@ void sp_start_contour(fix31 x, fix31 y, boolean outside)
 	UNUSED(y);
 	UNUSED(outside);
 }
+
+/* ------------------------------------------------------------------------- */
 
 void sp_curve_to(fix31 x1, fix31 y1, fix31 x2, fix31 y2, fix31 x3, fix31 y3)
 {
@@ -618,21 +654,28 @@ void sp_curve_to(fix31 x1, fix31 y1, fix31 x2, fix31 y2, fix31 x3, fix31 y3)
 	UNUSED(y3);
 }
 
+/* ------------------------------------------------------------------------- */
+
 void sp_line_to(fix31 x1, fix31 y1)
 {
 	UNUSED(x1);
 	UNUSED(y1);
 }
 
+/* ------------------------------------------------------------------------- */
+
 void sp_close_contour(void)
 {
 }
+
+/* ------------------------------------------------------------------------- */
 
 void sp_close_outline(void)
 {
 }
 #endif
 
+/* ------------------------------------------------------------------------- */
 
 static _BOOL font_gen_speedo_font(void)
 {
@@ -706,6 +749,7 @@ static _BOOL font_gen_speedo_font(void)
 	return decode_ok;
 }
 
+/* ------------------------------------------------------------------------- */
 
 static _BOOL font_load_speedo_font(const char *filename)
 {
@@ -722,8 +766,15 @@ static _BOOL font_load_speedo_font(const char *filename)
 		form_alert(1, buf);
 		return FALSE;
 	}
+	if (fread(tmp, sizeof(ufix8), 16, fp) != 16)
+	{
+		fclose(fp);
+		form_alert(1, rs_str(AL_READERROR));
+		return FALSE;
+	}
 	free(font_buffer);
 	free(c_buffer);
+	c_buffer = NULL;
 	minbufsize = (ufix32) read_4b(tmp + FH_FBFSZ);
 	font_buffer = (ufix8 *) malloc(minbufsize);
 	if (font_buffer == NULL)
@@ -732,12 +783,13 @@ static _BOOL font_load_speedo_font(const char *filename)
 		form_alert(1, rs_str(AL_NOMEM));
 		return FALSE;
 	}
-	fseek(fp, (ufix32) 0, 0);
+	fseek(fp, 0, SEEK_SET);
 	if (fread(font_buffer, sizeof(ufix8), minbufsize, fp) != minbufsize)
 	{
 		fclose(fp);
 		free(font_buffer);
 		font_buffer = NULL;
+		form_alert(1, rs_str(AL_READERROR));
 		return FALSE;
 	}
 
@@ -750,7 +802,7 @@ static _BOOL font_load_speedo_font(const char *filename)
 		free(font_buffer);
 		font_buffer = NULL;
 		form_alert(1, rs_str(AL_NOMEM));
-		return 1;
+		return FALSE;
 	}
 
 	font.org = font_buffer;
@@ -776,8 +828,9 @@ static _BOOL font_load_speedo_font(const char *filename)
 	return ret;
 }
 
-
-/* -------------------------------------------------------------------------- */
+/*****************************************************************************/
+/* ------------------------------------------------------------------------- */
+/*****************************************************************************/
 
 static _BOOL do_fsel_input(char *path, char *filename, char *mask, const char *title)
 {
@@ -799,6 +852,8 @@ static _BOOL do_fsel_input(char *path, char *filename, char *mask, const char *t
 	return TRUE;
 }
 
+/* ------------------------------------------------------------------------- */
+
 static void select_font(void)
 {
 	char filename[128];
@@ -819,13 +874,13 @@ static void select_font(void)
 	font_load_speedo_font(path);
 }
 
-
-/* -------------------------------------------------------------------------- */
+/* ------------------------------------------------------------------------- */
 
 static void font_info(void)
 {
 }
 
+/* ------------------------------------------------------------------------- */
 
 static void do_about(void)
 {
@@ -842,6 +897,7 @@ static void do_about(void)
 	form_dial_grect(FMD_FINISH, &gr, &gr);
 }
 
+/* ------------------------------------------------------------------------- */
 
 static void msg_mn_select(_WORD title, _WORD entry)
 {
@@ -856,6 +912,7 @@ static void msg_mn_select(_WORD title, _WORD entry)
 	appl_write(gl_apid, 16, message);
 }
 
+/* ------------------------------------------------------------------------- */
 
 static void mainloop(void)
 {
@@ -978,6 +1035,7 @@ static void mainloop(void)
 	}
 }
 
+/* ------------------------------------------------------------------------- */
 
 int main(int argc, char **argv)
 {

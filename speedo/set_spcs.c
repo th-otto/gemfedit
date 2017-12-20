@@ -26,6 +26,7 @@ WITH THE SPEEDO SOFTWARE OR THE BITSTREAM CHARTER OUTLINE FONT.
  * This module implements all sp_set_specs() functionality.                  *
  *                                                                           *
  ****************************************************************************/
+#include "linux/libcwrap.h"
 #include "spdo_prv.h"					/* General definitions for Speedo    */
 
 #define   DEBUG      0

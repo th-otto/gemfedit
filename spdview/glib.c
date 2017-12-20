@@ -1,3 +1,4 @@
+#include "linux/libcwrap.h"
 #include "spddefs.h"
 #include <limits.h>
 
@@ -718,7 +719,7 @@ static int unescape_character(const char *scanner)
 
 /*** ---------------------------------------------------------------------- ***/
 
-char *hyp_uri_unescape_segment(const char *escaped_string, const char *escaped_string_end, const char *illegal_characters)
+char *spd_uri_unescape_segment(const char *escaped_string, const char *escaped_string_end, const char *illegal_characters)
 {
 	const char *in;
 	char *out, *result;
@@ -772,9 +773,9 @@ char *hyp_uri_unescape_segment(const char *escaped_string, const char *escaped_s
 
 /*** ---------------------------------------------------------------------- ***/
 
-char *hyp_uri_unescape_string(const char *escaped_string, const char *illegal_characters)
+char *spd_uri_unescape_string(const char *escaped_string, const char *illegal_characters)
 {
-	return hyp_uri_unescape_segment(escaped_string, NULL, illegal_characters);
+	return spd_uri_unescape_segment(escaped_string, NULL, illegal_characters);
 }
 
 /*** ---------------------------------------------------------------------- ***/
@@ -846,7 +847,7 @@ char *g_build_filename(const char *first, ...)
 
 /*** ---------------------------------------------------------------------- ***/
 
-char *hyp_path_get_dirname(const char *path)
+char *spd_path_get_dirname(const char *path)
 {
 	const char *base;
 	char *dir;

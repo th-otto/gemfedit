@@ -21,6 +21,7 @@ WITH THE SPEEDO SOFTWARE OR THE BITSTREAM CHARTER OUTLINE FONT.
 */
 
 
+#include "linux/libcwrap.h"
 #include "speedo.h"
 
 /***** DECRYPTION KEY CONSTANTS (PC Platform) *****/

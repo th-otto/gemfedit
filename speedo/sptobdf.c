@@ -56,6 +56,7 @@ from The Open Group.
  * Speedo outline to BFD format converter
  */
 
+#include "linux/libcwrap.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -64,39 +65,26 @@ from The Open Group.
 #include "spdo_prv.h"
 #include "iso8859.h"
 
+static char const progname[] = "spdtobdf";
+
 #define	MAX_BITS	1024
 
 static char line_of_bits[MAX_BITS][MAX_BITS + 1];
-
 static ufix16 char_index, char_id;
-
 static buff_t font;
-
 static buff_t char_data;
-
 static ufix8 *font_buffer;
 static ufix8 *c_buffer;
-
 static ufix16 mincharsize;
-
 static fix15 bit_width, bit_height;
-
-static char const progname[] = "spdtobdf";
-
 static char *fontname = NULL;
-
 static char *fontfile = NULL;
 
-static int point_size = 120;
-
+static long point_size = 120;
 static int x_res = 72;
-
 static int y_res = 72;
-
 static int quality = 0;
-
 static int iso_encoding = 0;
-
 static int stretch = 120;
 
 static specs_t specs;
@@ -174,7 +162,7 @@ static void process_args(int ac, char **av)
 		{
 			if (av[i + 1])
 			{
-				point_size = atoi(av[++i]);
+				point_size = strtol(av[++i], NULL, 10);
 			} else
 			{
 				usage();
@@ -229,7 +217,7 @@ static void dump_header(ufix32 num_chars)
 {
 	fix15 xmin, ymin, xmax, ymax;
 	fix15 ascent, descent;
-	fix15 pixel_size;
+	long pixel_size;
 	const char *weight;
 	const char *width;
 	
@@ -237,7 +225,7 @@ static void dump_header(ufix32 num_chars)
 	ymin = read_2b(font_buffer + FH_FYMIN);
 	xmax = read_2b(font_buffer + FH_FXMAX);
 	ymax = read_2b(font_buffer + FH_FYMAX);
-	pixel_size = (long)point_size * x_res / 720;
+	pixel_size = point_size * x_res / 720;
 
 	printf("STARTFONT 2.1\n");
 	printf("COMMENT\n");
@@ -336,14 +324,14 @@ static void dump_header(ufix32 num_chars)
 	}
 	
 	printf("FONT %s\n", fontname);
-	printf("SIZE %d %d %d\n", pixel_size, x_res, y_res);
+	printf("SIZE %ld %d %d\n", pixel_size, x_res, y_res);
 	printf("FONTBOUNDINGBOX %d %d %d %d\n", xmin, ymin, xmax, ymax);
 	printf("STARTPROPERTIES %d\n", 10);
 
 	printf("RESOLUTION_X %d\n", x_res);
 	printf("RESOLUTION_Y %d\n", y_res);
-	printf("POINT_SIZE %d\n", point_size);
-	printf("PIXEL_SIZE %d\n", pixel_size);
+	printf("POINT_SIZE %ld\n", point_size);
+	printf("PIXEL_SIZE %ld\n", pixel_size);
 	printf("COPYRIGHT \"%.78s\"\n", font_buffer + FH_CPYRT);
 	printf("FACE_NAME \"%.16s\"\n", font_buffer + FH_SFACN);
 	switch (font_buffer[FH_FRMCL] & 0x0f)
@@ -417,7 +405,7 @@ int main(int argc, char **argv)
 		fprintf(stderr, "can't get %x bytes of memory\n", minbufsize);
 		return 1;
 	}
-	fseek(fp, (ufix32) 0, 0);
+	fseek(fp, 0, SEEK_SET);
 
 	if (fread(font_buffer, sizeof(ufix8), minbufsize, fp) != minbufsize)
 	{
@@ -457,11 +445,11 @@ int main(int argc, char **argv)
 	/* Note that point size is in decipoints */
 	specs.pfont = &font;
 	/* XXX beware of overflow */
-	specs.xxmult = (long)point_size * x_res / 720 * (1L << 16);
+	specs.xxmult = point_size * x_res / 720 * (1L << 16);
 	specs.xymult = 0L << 16;
 	specs.xoffset = 0L << 16;
 	specs.yxmult = 0L << 16;
-	specs.yymult = (long)point_size * y_res / 720 * (1L << 16);
+	specs.yymult = point_size * y_res / 720 * (1L << 16);
 	specs.yoffset = 0L << 16;
 	switch (quality)
 	{
@@ -531,7 +519,7 @@ int main(int argc, char **argv)
 
 buff_t *sp_load_char_data(fix31 file_offset, fix15 num, fix15 cb_offset)
 {
-	if (fseek(fp, (long) file_offset, (int) 0))
+	if (fseek(fp, file_offset, SEEK_SET))
 	{
 		fprintf(stderr, "can't seek to char\n");
 		(void) fclose(fp);

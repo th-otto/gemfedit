@@ -21,8 +21,6 @@ WITH THE SPEEDO SOFTWARE OR THE BITSTREAM CHARTER OUTLINE FONT.
 */
 
 
-#define	DEBUG	0
-
 /*************************** O U T _ U T I L . C *****************************
  *                                                                           *
  * This is a utility module share by all bitmap output modules               *
@@ -30,7 +28,11 @@ WITH THE SPEEDO SOFTWARE OR THE BITSTREAM CHARTER OUTLINE FONT.
  *****************************************************************************/
 
 
+#include "linux/libcwrap.h"
 #include "spdo_prv.h"					/* General definitions for Speedo   */
+
+#define	DEBUG	0
+
 /* absolute value function */
 #define   ABS(X)     ( (X < 0) ? -X : X)
 

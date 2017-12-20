@@ -49,6 +49,7 @@ from The Open Group.
 
 */
 
+#include "linux/libcwrap.h"
 #include "fonts/fntfilst.h"
 #include "fonts/fontenc.h"
 #ifndef FONTMODULE

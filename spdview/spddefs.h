@@ -136,4 +136,6 @@ GString *g_string_set_size(GString *string, gsize len);
 #define empty(str) ((str) == NULL || *(str) == '\0')
 
 const char *xbasename(const char *path);
-char *hyp_path_get_dirname(const char *path);
+char *spd_path_get_dirname(const char *path);
+char *spd_uri_unescape_string(const char *escaped_string, const char *illegal_characters);
+char *spd_uri_unescape_segment(const char *escaped_string, const char *escaped_string_end, const char *illegal_characters);

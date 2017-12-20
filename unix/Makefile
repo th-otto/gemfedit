@@ -3,7 +3,9 @@ CFLAGS = -O2 -Wall -I../include
 LDFLAGS = -s
 LIBS= -lX11
 
-all: fontdisp
+PROGRAMS = fontdisp
+
+all: $(PROGRAMS)
 
 fontdisp: fontdisp.o decode.o
 	$(CC) $(CFLAGS) $(LDFLAGS) $^ $(LIBS) -o $@
@@ -15,4 +17,4 @@ deocde.o: decode.c
 	$(CC) $(CFLAGS) $< -c -o $@
 
 clean::
-	rm -f fontdisp *.o
+	rm -f $(PROGRAMS) *.o

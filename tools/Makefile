@@ -1,7 +1,14 @@
-all: fnt2bdf
+CC = gcc
+CFLAGS = -O2 -Wall -I../include
+LDFLAGS = -s
+LIBS=
+
+PROGRAMS = fnt2bdf
+
+all: $(PROGRAMS)
 
 fnt2bdf: fnt2bdf.c
-	gcc -O2 -Wall $< -s -o $@
+	$(CC) $(CFLAGS) $(LDFLAGS) $< $(LIBS) -o $@
 
 clean::
-	rm -f fnt2bdf
+	rm -f $(PROGRAMS)

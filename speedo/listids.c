@@ -56,6 +56,7 @@ from The Open Group.
  * Speedo outline to BFD format converter
  */
 
+#include "linux/libcwrap.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>

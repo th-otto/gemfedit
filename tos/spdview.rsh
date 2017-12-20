@@ -288,13 +288,13 @@ extern _VOID *hfix_objs(RSHDR *_hdr, OBJECT *_ob, _WORD _num_objs);
 #undef NUM_OBS
 #undef NUM_TREE
 #undef NUM_UD
-#define NUM_STRINGS 89
+#define NUM_STRINGS 90
 #define NUM_BB		0
 #define NUM_IB		0
 #define NUM_CIB     0
 #define NUM_CIC     0
 #define NUM_TI		13
-#define NUM_FRSTR	8
+#define NUM_FRSTR	9
 #define NUM_FRIMG	0
 #define NUM_OBS     65
 #define NUM_TREE	4
@@ -391,6 +391,7 @@ static char spdview_string_85[] = "Select Font";
 static char spdview_string_86[] = "[1][Warning:|File may be truncated.][Continue]";
 static char spdview_string_87[] = "[1][Warning:|Flag for horizontal table set,|but there is none.][Continue]";
 static char spdview_string_88[] = "[1][Warning:|Horizontal offset table present,|but flag not set.][Continue]";
+static char spdview_string_89[] = "[3][Read error on file.][Abort]";
 
 
 static char *rs_frstr[NUM_FRSTR] = {
@@ -401,7 +402,8 @@ static char *rs_frstr[NUM_FRSTR] = {
 	spdview_string_85,
 	spdview_string_86,
 	spdview_string_87,
-	spdview_string_88
+	spdview_string_88,
+	spdview_string_89
 };
 
 
@@ -703,8 +705,8 @@ _WORD spdview_rsc_free()
 #endif /* RSC_NAMED_FUNCTIONS */
 
 #else /* !RSC_STATIC_FILE */
-int rs_numstrings = 89;
-int rs_numfrstr = 8;
+int rs_numstrings = 90;
+int rs_numfrstr = 9;
 
 int rs_nuser = 0;
 int rs_numimages = 0;

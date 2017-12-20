@@ -1,3 +1,4 @@
+#include "linux/libcwrap.h"
 #include "speedo.h"
 
 /*

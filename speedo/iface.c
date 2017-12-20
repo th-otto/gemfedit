@@ -27,6 +27,7 @@ WITH THE SPEEDO SOFTWARE OR THE BITSTREAM CHARTER OUTLINE FONT.
  *                                                                           *
  ****************************************************************************/
 
+#include "linux/libcwrap.h"
 #include "speedo.h"						/* General definitions for Speedo */
 #include <stdio.h>
 #ifndef FONTMODULE

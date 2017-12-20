@@ -47,7 +47,8 @@ from The Open Group.
 
 */
 
-#include	"spint.h"
+#include "linux/libcwrap.h"
+#include "spint.h"
 
 /* No longer needed with new encoding code */
 /* #include	"bics-iso.h"

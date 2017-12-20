@@ -4,6 +4,7 @@
  * 2004, Thomas Boutell and Boutell.Com, Inc.
  */
 
+#include "linux/libcwrap.h"
 #include "spddefs.h"
 #include <time.h>
 #include "cgic.h"

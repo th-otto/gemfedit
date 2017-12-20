@@ -39,6 +39,7 @@ WITH THE SPEEDO SOFTWARE OR THE BITSTREAM CHARTER OUTLINE FONT.
  *                                                                           *
  ****************************************************************************/
 
+#include "linux/libcwrap.h"
 #include <stdio.h>
 #include <stddef.h>
 #include <malloc.h>
