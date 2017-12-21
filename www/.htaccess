@@ -1,0 +1,5 @@
+Order Allow,Deny
+Allow from all
+Options +Indexes +ExecCGI
+
+AddHandler cgi-script .cgi

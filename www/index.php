@@ -13,10 +13,12 @@ body {
 </style>
 <!-- BEGIN CONFIGURATION -->
 <?php
-$btfontdir = '/btfonts';
+error_reporting(E_ALL & ~E_WARNING);
+ini_set("display_errors", 1);
+$btfontdir = 'btfonts';
 ?>
 <script type="text/javascript">
-var btfontdir = '/btfonts';
+var btfontdir = 'btfonts';
 </script>
 <!-- END CONFIGURATION -->
 <script type="text/javascript">
@@ -70,7 +72,7 @@ Some features will not work without JavaScript enabled.
 <td>
 <fieldset>
 Type in URL of a SpeedoFont file (it must be remotely accessible from that URL<br />
-for example <a href="spdview.cgi?url=/btfonts/bx000003.spd">http://www.tho-otto.de/btfonts/bx000003.spd</a>):
+for example <a href="spdview.cgi?url=<?php echo dirname($_SERVER['SCRIPT_NAME']) . "/$btfontdir/" ?>bx000003.spd">http://www.tho-otto.de<?php echo dirname($_SERVER['SCRIPT_NAME']) . "/$btfontdir/" ?>bx000003.spd</a>):
 <br />
 <input type="text" id="url" name="url" size="60" tabindex="1" style="margin-top: 1ex;" />
 <input id="submiturl" style="background-color: #cccccc; font-weight: bold; visibility: hidden;" type="button" value="View" onclick="submitUrl(document.getElementById('url').value);" />
@@ -97,6 +99,46 @@ document.getElementById('uploadbox').style.display="block";
 </script>
 <br />
 
+<fieldset>
+<table>
+<tr>
+<td colspan="2">
+Quality:
+</td>
+<td>
+<select id="quality" name="quality">
+<option value="0">Normal</option>
+<option value="1" selected="selected">Screen</option>
+<option value="2">2D</option>
+</select>
+</td>
+</tr>
+
+<tr>
+<td colspan="2">
+Pointsize:
+</td>
+<td>
+<select id="points" name="points">
+<option value="60">6</option>
+<option value="80">8</option>
+<option value="90">9</option>
+<option value="100">10</option>
+<option value="120" selected="selected">12</option>
+<option value="140">14</option>
+<option value="160">16</option>
+<option value="180">18</option>
+<option value="240">24</option>
+<option value="360">36</option>
+<option value="480">48</option>
+<option value="640">64</option>
+<option value="720">72</option>
+</select>
+</td>
+</tr>
+
+</table>
+</fieldset>
 
 <br />
 </td>
@@ -141,7 +183,7 @@ class spd {
 
 }
 
-$localdir = $_SERVER['DOCUMENT_ROOT'] . $btfontdir;
+$localdir = $btfontdir;
 
 {
 	$filelist = '';
@@ -156,6 +198,16 @@ $localdir = $_SERVER['DOCUMENT_ROOT'] . $btfontdir;
 	
 			$spd->files[$entry] = array();
 			$spd->files[$entry]['name'] = $entry;
+			$info = fopen("$localdir/$entry", "rb");
+			if (is_resource($info))
+			{
+				fseek($info, 24);
+				$spd->files[$entry]['fontname'] = fread($info, 70);
+				fclose($info);
+			} else
+			{
+				$spd->files[$entry]['fontname'] = 'no such file';
+			}
 	    }
 	
 	    uksort($spd->files, array($spd, 'cmp_name'));
@@ -164,9 +216,9 @@ $localdir = $_SERVER['DOCUMENT_ROOT'] . $btfontdir;
 	    foreach ($spd->files as $name => $entry) {
 			$filelist .= "<tr>\n";
 			$filelist .= "<td>\n";
-	    	$filelist .= '<li><a href="javascript: submitUrl(&quot;' . "$btfontdir/" . js_escape($name) . '&quot;);">' . htmlspecialchars($name, ENT_QUOTES, 'UTF-8') . "</a></li>\n";
+	    	$filelist .= '<li><a href="javascript: submitUrl(&quot;' . dirname($_SERVER['SCRIPT_NAME']) . "/$btfontdir/" . js_escape($name) . '&quot;);">' . htmlspecialchars($name, ENT_QUOTES, 'UTF-8') . "</a></li>\n";
 			$filelist .= "</td>\n";
-			$filelist .= "<td width=\"300\">\n";
+			$filelist .= "<td>\n";
 			if (isset($entry['fontname']))
 				$filelist .= htmlspecialchars($entry['fontname']);
 			$filelist .= "</td>\n";

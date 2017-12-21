@@ -89,6 +89,8 @@ static int stretch = 120;
 
 static specs_t specs;
 
+#define DEBUG 0
+
 static void usage(void)
 {
 	fprintf(stderr,
@@ -590,7 +592,7 @@ void sp_open_bitmap(fix31 x_set_width, fix31 y_set_width, fix31 xorg, fix31 yorg
 	bb.xmax >>= 16;
 	bb.ymax >>= 16;
 
-#ifdef DEBUG
+#if DEBUG
 	if ((bb.xmax - bb.xmin) != bit_width)
 		fprintf(stderr, "bbox & width mismatch 0x%x (0x%x) (%d vs %d)\n",
 				char_index, char_id, (bb.xmax - bb.xmin), bit_width);
@@ -672,19 +674,18 @@ void sp_set_bitmap_bits(fix15 y, fix15 xbit1, fix15 xbit2)
 {
 	fix15 i;
 
-	if (xbit1 > MAX_BITS)
+	if (xbit1 >= MAX_BITS)
 	{
-
-#ifdef DEBUG
+#if DEBUG
 		fprintf(stderr, "run wider than max bits -- truncated\n");
 #endif
 
-		xbit1 = MAX_BITS;
+		xbit1 = MAX_BITS - 1;
 	}
 	if (xbit2 > MAX_BITS)
 	{
 
-#ifdef DEBUG
+#if DEBUG
 		fprintf(stderr, "run wider than max bits -- truncated\n");
 #endif
 
@@ -693,7 +694,7 @@ void sp_set_bitmap_bits(fix15 y, fix15 xbit1, fix15 xbit2)
 
 	if (y >= bit_height)
 	{
-#ifdef DEBUG
+#if DEBUG
 		fprintf(stderr, "y value is larger than height 0x%x (0x%x) -- truncated\n", char_index, char_id);
 #endif
 

@@ -3,7 +3,7 @@ CFLAGS = -O2 -Wall -Wstrict-prototypes -Wmissing-prototypes -I../include
 LDFLAGS = -s
 LIBS= -lX11
 
-PROGRAMS = htest nsample sptobdf listids
+PROGRAMS = htest nsample sptobdf listids spdinfo
 
 all: $(PROGRAMS)
 
@@ -12,6 +12,9 @@ all: $(PROGRAMS)
 	$(CC) $(CFLAGS) $< -c -o $@
 
 htest:	htest.o
+	$(CC) $(CFLAGS) $(LDFLAGS) $^ -o $@
+
+spdinfo:	spdinfo.o
 	$(CC) $(CFLAGS) $(LDFLAGS) $^ -o $@
 
 SPDLIB = reset.o do_char.o do_trns.o set_spcs.o set_trns.o \

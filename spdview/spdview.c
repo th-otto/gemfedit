@@ -8,6 +8,7 @@
 #include "cgic.h"
 #include "speedo.h"
 #include "writepng.h"
+#include "vdimaps.h"
 
 char const gl_program_name[] = "spdview.cgi";
 char const gl_program_version[] = "1.0";
@@ -39,9 +40,13 @@ static const char *html_closer = " />";
 static char *output_dir;
 static char *output_url;
 static char *html_referer_url;
+static GString *errorout;
 static FILE *errorfile;
+static size_t body_start;
 
 #define _(x) x
+
+#define DEBUG 0
 
 static int force_crlf = FALSE;
 
@@ -82,284 +87,6 @@ typedef struct {
 	int16_t off_vert;
 } charinfo;
 static charinfo *infos;
-
-static unsigned char const vdi_maptab256[256] = {
-    0, 255,   1,   2,   4,   6,   3,   5,   7,   8,   9,  10,  12,  14,  11,  13,
-   16,  17,  18,  19,  20,  21,  22,  23,  24,  25,  26,  27,  28,  29,  30,  31,
-   32 , 33 , 34 , 35,  36,  37,  38,  39,  40,  41,  42,  43,  44,  45,  46,  47,
-   48 , 49 , 50 , 51,  52,  53,  54,  55,  56,  57,  58,  59,  60,  61,  62,  63,
-   64 , 65 , 66 , 67,  68,  69,  70,  71,  72,  73,  74,  75,  76,  77,  78,  79,
-   80 , 81 , 82 , 83,  84,  85,  86,  87,  88,  89,  90,  91,  92,  93,  94,  95,
-   96,  97,  98,  99, 100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111,
-  112, 113, 114, 115, 116, 117, 118, 119, 120, 121, 122, 123, 124, 125, 126, 127,
-  128, 129, 130, 131, 132, 133, 134, 135, 136, 137, 138, 139, 140, 141, 142, 143,
-  144, 145, 146, 147, 148, 149, 150, 151, 152, 153, 154, 155, 156, 157, 158, 159,
-  160, 161, 162, 163, 164, 165, 166, 167, 168, 169, 170, 171, 172, 173, 174, 175,
-  176, 177, 178, 179, 180, 181, 182, 183, 184, 185, 186, 187, 188, 189, 190, 191,
-  192, 193, 194, 195, 196, 197, 198, 199, 200, 201, 202, 203, 204, 205, 206, 207,
-  208, 209, 210, 211, 212, 213, 214, 215, 216, 217, 218, 219, 220, 221, 222, 223,
-  224, 225, 226, 227, 228, 229, 230, 231, 232, 233, 234, 235, 236, 237, 238, 239,
-  240, 241, 242, 243, 244, 245, 246, 247, 248, 249, 250, 251, 252, 253, 254,  15
-};
-
-static short const palette[256][3] = {
-	{ 1000, 1000, 1000 }, /* 0: WHITE, hw 0 */
-	{ 0, 0, 0 },          /* 1: BLACK, hw 15/255 */
-	{ 1000, 0, 0 },       /* 2: RED, hw 1 */
-	{ 0, 1000, 0 },       /* 3: GREEN, hw 2 */
-	{ 0, 0, 1000 },       /* 4: BLUE, hw 4 */
-	{ 0, 1000, 1000 },    /* 5: CYAN, hw 6 */
-	{ 1000, 1000, 0 },    /* 6: YELLOW, hw 3 */
-	{ 1000, 0, 1000 },    /* 7: MAGENTA, hw 5 */
-	{ 800, 800, 800 },    /* 8: LWHITE, hw 7 */
-	{ 533, 533, 533 },    /* 9: LBLACK, hw 8 */
-	{ 533, 0, 0 },        /* 10: LRED, hw 9 */
-	{ 0, 533, 0 },        /* 11: LGREEN, hw 10 */
-	{ 0, 0, 533 },        /* 12: LBLUE, hw 12 */
-	{ 0, 533, 533 },      /* 13: LCYAN, hw 14 */
-	{ 533, 533, 0 },      /* 14: LYELLOW, hw 11 */
-	{ 533, 0, 533 },      /* 15: LMAGENTA, hw 13 */
-	{ 992, 992, 992 },
-	{ 925, 925, 925 },
-	{ 858, 858, 858 },
-	{ 792, 792, 792 },
-	{ 725, 725, 725 },
-	{ 658, 658, 658 },
-	{ 592, 592, 592 },
-	{ 529, 529, 529 },
-	{ 462, 462, 462 },
-	{ 396, 396, 396 },
-	{ 329, 329, 329 },
-	{ 262, 262, 262 },
-	{ 196, 196, 196 },
-	{ 129, 129, 129 },
-	{ 63, 63, 63 },
-	{ 0, 0, 0 },
-	{ 992, 0, 0 },
-	{ 992, 0, 63 },
-	{ 992, 0, 129 },
-	{ 992, 0, 196 },
-	{ 992, 0, 262 },
-	{ 992, 0, 329 },
-	{ 992, 0, 396 },
-	{ 992, 0, 462 },
-	{ 992, 0, 529 },
-	{ 992, 0, 592 },
-	{ 992, 0, 658 },
-	{ 992, 0, 725 },
-	{ 992, 0, 792 },
-	{ 992, 0, 858 },
-	{ 992, 0, 925 },
-	{ 992, 0, 992 },
-	{ 925, 0, 992 },
-	{ 858, 0, 992 },
-	{ 792, 0, 992 },
-	{ 725, 0, 992 },
-	{ 658, 0, 992 },
-	{ 592, 0, 992 },
-	{ 529, 0, 992 },
-	{ 462, 0, 992 },
-	{ 396, 0, 992 },
-	{ 329, 0, 992 },
-	{ 262, 0, 992 },
-	{ 196, 0, 992 },
-	{ 129, 0, 992 },
-	{ 63, 0, 992 },
-	{ 0, 0, 992 },
-	{ 0, 63, 992 },
-	{ 0, 129, 992 },
-	{ 0, 196, 992 },
-	{ 0, 262, 992 },
-	{ 0, 329, 992 },
-	{ 0, 396, 992 },
-	{ 0, 462, 992 },
-	{ 0, 529, 992 },
-	{ 0, 592, 992 },
-	{ 0, 658, 992 },
-	{ 0, 725, 992 },
-	{ 0, 792, 992 },
-	{ 0, 858, 992 },
-	{ 0, 925, 992 },
-	{ 0, 992, 992 },
-	{ 0, 992, 925 },
-	{ 0, 992, 858 },
-	{ 0, 992, 792 },
-	{ 0, 992, 725 },
-	{ 0, 992, 658 },
-	{ 0, 992, 592 },
-	{ 0, 992, 529 },
-	{ 0, 992, 462 },
-	{ 0, 992, 396 },
-	{ 0, 992, 329 },
-	{ 0, 992, 262 },
-	{ 0, 992, 196 },
-	{ 0, 992, 129 },
-	{ 0, 992, 63 },
-	{ 0, 992, 0 },
-	{ 63, 992, 0 },
-	{ 129, 992, 0 },
-	{ 196, 992, 0 },
-	{ 262, 992, 0 },
-	{ 329, 992, 0 },
-	{ 396, 992, 0 },
-	{ 462, 992, 0 },
-	{ 529, 992, 0 },
-	{ 592, 992, 0 },
-	{ 658, 992, 0 },
-	{ 725, 992, 0 },
-	{ 792, 992, 0 },
-	{ 858, 992, 0 },
-	{ 925, 992, 0 },
-	{ 992, 992, 0 },
-	{ 992, 925, 0 },
-	{ 992, 858, 0 },
-	{ 992, 792, 0 },
-	{ 992, 725, 0 },
-	{ 992, 658, 0 },
-	{ 992, 592, 0 },
-	{ 992, 529, 0 },
-	{ 992, 462, 0 },
-	{ 992, 396, 0 },
-	{ 992, 329, 0 },
-	{ 992, 262, 0 },
-	{ 992, 196, 0 },
-	{ 992, 129, 0 },
-	{ 992, 63, 0 },
-	{ 725, 0, 0 },
-	{ 725, 0, 63 },
-	{ 725, 0, 129 },
-	{ 725, 0, 196 },
-	{ 725, 0, 262 },
-	{ 725, 0, 329 },
-	{ 725, 0, 396 },
-	{ 725, 0, 462 },
-	{ 725, 0, 529 },
-	{ 725, 0, 592 },
-	{ 725, 0, 658 },
-	{ 725, 0, 725 },
-	{ 658, 0, 725 },
-	{ 592, 0, 725 },
-	{ 529, 0, 725 },
-	{ 462, 0, 725 },
-	{ 396, 0, 725 },
-	{ 329, 0, 725 },
-	{ 262, 0, 725 },
-	{ 196, 0, 725 },
-	{ 129, 0, 725 },
-	{ 63, 0, 725 },
-	{ 0, 0, 725 },
-	{ 0, 63, 725 },
-	{ 0, 129, 725 },
-	{ 0, 196, 725 },
-	{ 0, 262, 725 },
-	{ 0, 329, 725 },
-	{ 0, 396, 725 },
-	{ 0, 462, 725 },
-	{ 0, 529, 725 },
-	{ 0, 592, 725 },
-	{ 0, 658, 725 },
-	{ 0, 725, 725 },
-	{ 0, 725, 658 },
-	{ 0, 725, 592 },
-	{ 0, 725, 529 },
-	{ 0, 725, 462 },
-	{ 0, 725, 396 },
-	{ 0, 725, 329 },
-	{ 0, 725, 262 },
-	{ 0, 725, 196 },
-	{ 0, 725, 129 },
-	{ 0, 725, 63 },
-	{ 0, 725, 0 },
-	{ 63, 725, 0 },
-	{ 129, 725, 0 },
-	{ 196, 725, 0 },
-	{ 262, 725, 0 },
-	{ 329, 725, 0 },
-	{ 396, 725, 0 },
-	{ 462, 725, 0 },
-	{ 529, 725, 0 },
-	{ 592, 725, 0 },
-	{ 658, 725, 0 },
-	{ 725, 725, 0 },
-	{ 725, 658, 0 },
-	{ 725, 592, 0 },
-	{ 725, 529, 0 },
-	{ 725, 462, 0 },
-	{ 725, 396, 0 },
-	{ 725, 329, 0 },
-	{ 725, 262, 0 },
-	{ 725, 196, 0 },
-	{ 725, 129, 0 },
-	{ 725, 63, 0 },
-	{ 462, 0, 0 },
-	{ 462, 0, 63 },
-	{ 462, 0, 129 },
-	{ 462, 0, 196 },
-	{ 462, 0, 262 },
-	{ 462, 0, 329 },
-	{ 462, 0, 396 },
-	{ 462, 0, 462 },
-	{ 396, 0, 462 },
-	{ 329, 0, 462 },
-	{ 262, 0, 462 },
-	{ 196, 0, 462 },
-	{ 129, 0, 462 },
-	{ 63, 0, 462 },
-	{ 0, 0, 462 },
-	{ 0, 63, 462 },
-	{ 0, 129, 462 },
-	{ 0, 196, 462 },
-	{ 0, 262, 462 },
-	{ 0, 329, 462 },
-	{ 0, 396, 462 },
-	{ 0, 462, 462 },
-	{ 0, 462, 396 },
-	{ 0, 462, 329 },
-	{ 0, 462, 262 },
-	{ 0, 462, 196 },
-	{ 0, 462, 129 },
-	{ 0, 462, 63 },
-	{ 0, 462, 0 },
-	{ 63, 462, 0 },
-	{ 129, 462, 0 },
-	{ 196, 462, 0 },
-	{ 262, 462, 0 },
-	{ 329, 462, 0 },
-	{ 396, 462, 0 },
-	{ 462, 462, 0 },
-	{ 462, 396, 0 },
-	{ 462, 329, 0 },
-	{ 462, 262, 0 },
-	{ 462, 196, 0 },
-	{ 462, 129, 0 },
-	{ 462, 63, 0 },
-	{ 262, 0, 0 },
-	{ 262, 0, 63 },
-	{ 262, 0, 129 },
-	{ 262, 0, 196 },
-	{ 262, 0, 262 },
-	{ 196, 0, 262 },
-	{ 129, 0, 262 },
-	{ 63, 0, 262 },
-	{ 0, 0, 262 },
-	{ 0, 63, 262 },
-	{ 0, 129, 262 },
-	{ 0, 196, 262 },
-	{ 0, 262, 262 },
-	{ 0, 262, 196 },
-	{ 0, 262, 129 },
-	{ 0, 262, 63 },
-	{ 0, 262, 0 },
-	{ 63, 262, 0 },
-	{ 129, 262, 0 },
-	{ 196, 262, 0 },
-	{ 262, 262, 0 },
-	{ 262, 196, 0 },
-	{ 262, 129, 0 },
-	{ 262, 63, 0 },
-	{ 992, 992, 992 },
-	{ 0, 0, 0 }
-};
 
 /*****************************************************************************/
 /* ------------------------------------------------------------------------- */
@@ -448,6 +175,8 @@ static void html_out_header(GString *out, const char *title, gboolean for_error)
 	g_string_append(out, "</head>\n");
 	g_string_append(out, "<body>\n");
 
+	body_start = out->len;
+	
 	if (for_error)
 	{
 		g_string_append_printf(out, "<div class=\"%s\">\n", html_error_note_style);
@@ -469,6 +198,19 @@ static void html_out_trailer(GString *out, gboolean for_error)
 	} else
 	{
 		g_string_append(out, "</div>\n");
+	}
+	
+	if (errorout->len)
+	{
+		g_string_insert_len(errorout, 0, 
+			"<div class=\"spdview_error_note\">\n"
+			"<pre>\n",
+			-1);
+		g_string_append(errorout,
+			"</pre>\n"
+			"</div>\n");
+		g_string_insert_len(out, body_start, errorout->str, errorout->len);
+		g_string_truncate(errorout, 0);
 	}
 	
 	g_string_append(out, "</body>\n");
@@ -515,7 +257,8 @@ void sp_write_error(const char *str, ...)
 	va_list v;
 	
 	va_start(v, str);
-	vfprintf(errorfile, str, v);
+	g_string_append_vprintf(errorout, str, v);
+	g_string_append(errorout, "\n");
 	va_end(v);
 }
 
@@ -538,7 +281,7 @@ void sp_open_bitmap(fix31 x_set_width, fix31 y_set_width, fix31 xorg, fix31 yorg
 
 	if (bit_width > MAX_BITS)
 	{
-		fprintf(errorfile, "char 0x%x (0x%x) wider than max bits (%d vs %d)\n", char_index, char_id, bit_width, MAX_BITS);
+		g_string_append_printf(errorout, "char 0x%x (0x%x): wider than max bits (%d vs %d)\n", char_index, char_id, bit_width, MAX_BITS);
 		bit_width = MAX_BITS;
 	}
 	width = sp_get_char_width(char_index);
@@ -553,16 +296,18 @@ void sp_open_bitmap(fix31 x_set_width, fix31 y_set_width, fix31 xorg, fix31 yorg
 	bb.xmax >>= 16;
 	bb.ymax >>= 16;
 
+#if DEBUG
 	if ((bb.xmax - bb.xmin) != bit_width)
-		fprintf(errorfile, "bbox & width mismatch 0x%x (0x%x) (%d vs %d)\n",
+		g_string_append_printf(errorout, "char 0x%x (0x%x): bbox & width mismatch (%d vs %d)\n",
 				char_index, char_id, (bb.xmax - bb.xmin), bit_width);
 	if ((bb.ymax - bb.ymin) != bit_height)
-		fprintf(errorfile, "bbox & height mismatch 0x%x (0x%x) (%d vs %d)\n",
+		g_string_append_printf(errorout, "char 0x%x (0x%x): bbox & height mismatch (%d vs %d)\n",
 				char_index, char_id, (bb.ymax - bb.ymin), bit_height);
 	if (bb.xmin != off_horz)
-		fprintf(errorfile, "x min mismatch 0x%x (0x%x) (%d vs %d)\n", char_index, char_id, bb.xmin, off_horz);
+		g_string_append_printf(errorout, "char 0x%x (0x%x): x min mismatch (%d vs %d)\n", char_index, char_id, bb.xmin, off_horz);
 	if (bb.ymin != off_vert)
-		fprintf(errorfile, "y min mismatch 0x%x (0x%x) (%d vs %d)\n", char_index, char_id, bb.ymin, off_vert);
+		g_string_append_printf(errorout, "char 0x%x (0x%x): y min mismatch (%d vs %d)\n", char_index, char_id, bb.ymin, off_vert);
+#endif
 
 	bit_width = bb.xmax - bb.xmin;
 	bit_height = bb.ymax - bb.ymin;
@@ -578,20 +323,20 @@ void sp_open_bitmap(fix31 x_set_width, fix31 y_set_width, fix31 xorg, fix31 yorg
 
 	if (bit_width > MAX_BITS)
 	{
-		fprintf(errorfile, "width too large 0x%x (0x%x) (%d vs %d)\n", char_index, char_id, bit_width, MAX_BITS);
+		g_string_append_printf(errorout, "char 0x%x (0x%x): width too large (%d vs %d)\n", char_index, char_id, bit_width, MAX_BITS);
 		bit_width = MAX_BITS;
 	}
 	
 	if (bit_height > MAX_BITS)
 	{
-		fprintf(errorfile, "height too large 0x%x (0x%x) (%d vs %d)\n", char_index, char_id, bit_width, MAX_BITS);
+		g_string_append_printf(errorout, "char 0x%x (0x%x): height too large (%d vs %d)\n", char_index, char_id, bit_width, MAX_BITS);
 		bit_height = MAX_BITS;
 	}
 	
-	infos[char_index - first_char_index].width = bit_width;
-	infos[char_index - first_char_index].height = bit_height;
-	infos[char_index - first_char_index].off_horz = off_horz;
-	infos[char_index - first_char_index].off_vert = off_vert;
+	infos[char_id].width = bit_width;
+	infos[char_id].height = bit_height;
+	infos[char_id].off_horz = off_horz;
+	infos[char_id].off_vert = off_vert;
 	
 	memset(framebuffer, 0, sizeof(framebuffer));
 }
@@ -604,20 +349,22 @@ void sp_set_bitmap_bits(fix15 y, fix15 xbit1, fix15 xbit2)
 {
 	fix15 i;
 
-	if (xbit1 > MAX_BITS)
+	if (xbit1 >= MAX_BITS)
 	{
-		fprintf(errorfile, "run wider than max bits -- truncated\n");
-		xbit1 = MAX_BITS;
+		g_string_append_printf(errorout, "char 0x%x (0x%x): bit1 %d wider than max bits %u -- truncated\n", char_index, char_id, xbit1, MAX_BITS);
+		xbit1 = MAX_BITS - 1;
+		trunc = 1;
 	}
 	if (xbit2 > MAX_BITS)
 	{
-		fprintf(errorfile, "run wider than max bits -- truncated\n");
+		g_string_append_printf(errorout, "char 0x%x (0x%x): bit2 %d wider than max bits %u -- truncated\n", char_index, char_id, xbit2, MAX_BITS);
 		xbit2 = MAX_BITS;
+		trunc = 1;
 	}
 
 	if (y >= bit_height)
 	{
-		fprintf(errorfile, "y value is larger than height 0x%x (0x%x) -- truncated\n", char_index, char_id);
+		g_string_append_printf(errorout, "char 0x%x (0x%x): y value %d is larger than height %u -- truncated\n", char_index, char_id, y, bit_height);
 		trunc = 1;
 		return;
 	}
@@ -634,21 +381,21 @@ buff_t *sp_load_char_data(fix31 file_offset, fix15 num, fix15 cb_offset)
 {
 	if (fseek(fp, (long) file_offset, (int) 0))
 	{
-		fprintf(errorfile, "can't seek to char\n");
+		g_string_append_printf(errorout, "can't seek to char\n");
 		char_data.org = c_buffer;
 		char_data.no_bytes = 0;
 		return &char_data;
 	}
 	if ((num + cb_offset) > mincharsize)
 	{
-		fprintf(errorfile, "char buf overflow\n");
+		g_string_append_printf(errorout, "char buf overflow\n");
 		char_data.org = c_buffer;
 		char_data.no_bytes = 0;
 		return &char_data;
 	}
 	if (fread((c_buffer + cb_offset), sizeof(ufix8), num, fp) != num)
 	{
-		fprintf(errorfile, "can't get char data\n");
+		g_string_append_printf(errorout, "can't get char data\n");
 		char_data.org = c_buffer;
 		char_data.no_bytes = 0;
 		return &char_data;
@@ -663,7 +410,7 @@ buff_t *sp_load_char_data(fix31 file_offset, fix15 num, fix15 cb_offset)
 
 static gboolean write_png(void)
 {
-	const charinfo *cinfo = &infos[char_index - first_char_index];
+	const charinfo *cinfo = &infos[char_id];
 	int i;
 	writepng_info *info;
 	int rc;
@@ -785,21 +532,23 @@ void sp_close_outline(void)
 
 /* ------------------------------------------------------------------------- */
 
+#if 0
 static int cmp_info(const void *_a, const void *_b)
 {
 	const charinfo *a = (const charinfo *)_a;
 	const charinfo *b = (const charinfo *)_b;
 	return (int16_t)(a->char_id - b->char_id);
 }
+#endif
 
 /* ------------------------------------------------------------------------- */
 
-static void gen_hor_line(GString *body)
+static void gen_hor_line(GString *body, int columns)
 {
 	int i;
 	
 	g_string_append(body, "<tr>\n");
-	for (i = 0; i < (CHAR_COLUMNS * 2 + 1); i++)
+	for (i = 0; i < (columns * 2 + 1); i++)
 		g_string_append(body, "<td class=\"horizontal_line\"></td>\n");
 	g_string_append(body, "</tr>\n");
 }
@@ -813,8 +562,6 @@ static gboolean gen_speedo_font(const char *filename, GString *body)
 	uint16_t i, id, j;
 	uint16_t num_ids;
 	
-	html_out_header(body, NULL, FALSE);
-
 	/* init */
 	sp_reset();
 
@@ -834,9 +581,9 @@ static gboolean gen_speedo_font(const char *filename, GString *body)
 	num_chars = read_2b(font_buffer + FH_NCHRL);
 	if (num_chars == 0)
 	{
-		fprintf(errorfile, "no characters in font\n");
+		g_string_append(errorout, "no characters in font\n");
 		return FALSE;
-	}
+	} 
 	
 	/* set up specs */
 	/* Note that point size is in decipoints */
@@ -873,10 +620,7 @@ static gboolean gen_speedo_font(const char *filename, GString *body)
 		time_t t;
 		struct tm tm;
 		char *basename;
-		
-		infos = g_new(charinfo, num_chars);
-		if (infos == NULL)
-			return FALSE;
+		int columns = 0;
 		
 		t = time(NULL);
 		tm = *gmtime(&t);
@@ -889,55 +633,85 @@ static gboolean gen_speedo_font(const char *filename, GString *body)
 			tm.tm_min,
 			tm.tm_sec);
 		
+		num_ids = 0;
 		for (i = 0; i < num_chars; i++)
 		{
 			char_index = i + first_char_index;
 			char_id = sp_get_char_id(char_index);
-			infos[i].char_index = char_index;
-			infos[i].char_id = char_id;
-			infos[i].local_filename = g_strdup_printf("%s/%schr%04x.png", output_dir, basename, char_id);
-			infos[i].url = g_strdup_printf("%s/%schr%04x.png", output_url, basename, char_id);
-			if (char_id)
+			if (char_id != 0xffff && char_id >= num_ids)
+				num_ids = char_id + 1;
+		}
+		
+		num_ids = sp_get_char_id(num_chars + first_char_index - 1) + 1;
+		/* num_ids = ((num_ids + CHAR_COLUMNS - 1) / CHAR_COLUMNS) * CHAR_COLUMNS; */
+		
+		infos = g_new(charinfo, num_ids);
+		if (infos == NULL)
+			return FALSE;
+		
+		for (i = 0; i < num_ids; i++)
+		{
+			infos[i].char_index = 0;
+			infos[i].char_id = 0xffff;
+			infos[i].local_filename = NULL;
+			infos[i].url = NULL;
+		}
+		for (i = 0; i < num_chars; i++)
+		{
+			char_index = i + first_char_index;
+			char_id = sp_get_char_id(char_index);
+			if (char_id && char_id != 0xffff)
 			{
-				if (!sp_make_char(char_index))
+				if (infos[char_id].char_id != 0xffff)
 				{
-					fprintf(errorfile, "can't make char %d (%x)\n", char_index, char_id);
+					g_string_append_printf(errorout, "char 0x%x (0x%x) already defined\n", char_index, char_id);
+				} else
+				{
+					infos[char_id].char_index = char_index;
+					infos[char_id].char_id = char_id;
+					infos[char_id].local_filename = g_strdup_printf("%s/%schr%04x.png", output_dir, basename, char_id);
+					infos[char_id].url = g_strdup_printf("%s/%schr%04x.png", output_url, basename, char_id);
+					if (!sp_make_char(char_index))
+					{
+						g_string_append_printf(errorout, "can't make char 0x%x (0x%x)\n", char_index, char_id);
+					}
 				}
 			}
 		}
 		
+#if 0
 		qsort(infos, num_chars, sizeof(infos[0]), cmp_info);
-		
-		num_ids = infos[num_chars - 1].char_id + 1;
-		num_ids = ((num_ids + CHAR_COLUMNS - 1) / CHAR_COLUMNS) * CHAR_COLUMNS;
+#endif
 		
 		g_string_append(body, "<table cellspacing=\"0\" cellpadding=\"0\">\n");
-		i = 0;
 		for (id = 0; id < num_ids; id += CHAR_COLUMNS)
 		{
 			gboolean defined[CHAR_COLUMNS];
 			const char *klass;
 			const char *img[CHAR_COLUMNS];
 			int cell_width = 40;
-			static char const vert_line[] = "<td class=\"vertical_line\" width=\"1\"></td>\n";
+			static char const vert_line[] = "<td class=\"vertical_line\"></td>\n";
 			
 			if (id != 0 && (id % PAGE_SIZE) == 0)
 				g_string_append(body, "<tr><td width=\"1\" height=\"10\"></td></tr>\n");
 
+			columns = CHAR_COLUMNS;
+			if ((id + columns) > num_ids)
+				columns = num_ids - id;
+			
 			if ((id % PAGE_SIZE) == 0)
-				gen_hor_line(body);
+				gen_hor_line(body, columns);
 			
 			g_string_append(body, "<tr>\n");
-			for (j = 0; j < CHAR_COLUMNS; j++)
+			for (j = 0; j < columns; j++)
 			{
 				defined[j] = FALSE;
 				img[j] = NULL;
-				if (i < num_chars && (id + j) == infos[i].char_id)
+				if (infos[id + j].char_id != 0xffff)
 				{
 					defined[j] = TRUE;
-					if (infos[i].url != NULL)
-						img[j] = infos[i].url;
-					i++;
+					if (infos[id + j].url != NULL)
+						img[j] = infos[id + j].url;
 				}
 				klass = defined[j] ? "spd_glyph_defined" : "spd_glyph_undefined";
 				
@@ -952,28 +726,28 @@ static gboolean gen_speedo_font(const char *filename, GString *body)
 				
 			g_string_append(body, vert_line);
 			g_string_append(body, "</tr>\n");
-			gen_hor_line(body);
+			gen_hor_line(body, columns);
 				
 			g_string_append(body, "<tr>\n");
-			for (j = 0; j < CHAR_COLUMNS; j++)
+			for (j = 0; j < columns; j++)
 			{
 				g_string_append(body, vert_line);
 				
 				g_string_append_printf(body,
-					"<td class=\"spd_glyph_image\" width=\"%d\"><img src=\"%s\"></td>",
+					"<td class=\"spd_glyph_image\" width=\"%d\" valign=\"middle\"><img src=\"%s\"></td>",
 					cell_width,
 					img[j] ? img[j] : "empty.png");
 			}				
 				
 			g_string_append(body, vert_line);
 			g_string_append(body, "</tr>\n");
-			gen_hor_line(body);
+			gen_hor_line(body, columns);
 		}
 		if ((id % PAGE_SIZE) != 0)
-			gen_hor_line(body);
+			gen_hor_line(body, columns);
 		g_string_append(body, "</table>\n");
 
-		for (i = 0; i < num_chars; i++)
+		for (i = 0; i < num_ids; i++)
 		{
 			g_free(infos[i].local_filename);
 			g_free(infos[i].url);
@@ -982,9 +756,7 @@ static gboolean gen_speedo_font(const char *filename, GString *body)
 		infos = NULL;
 		g_free(basename);
 	}
-
-	html_out_trailer(body, FALSE);
-
+		
 	return decode_ok;
 }
 
@@ -996,61 +768,73 @@ static gboolean load_speedo_font(const char *filename, GString *body)
 	ufix8 tmp[16];
 	ufix32 minbufsize;
 	
+	html_out_header(body, xbasename(filename), FALSE);
+
 	fp = fopen(filename, "rb");
 	if (fp == NULL)
 	{
-		fprintf(errorfile, "%s: %s", filename, strerror(errno));
-		return FALSE;
-	}
-	if (fread(tmp, sizeof(ufix8), 16, fp) != 16)
+		g_string_append_printf(errorout, "%s: %s\n", filename, strerror(errno));
+		ret = FALSE;
+	} else
 	{
-		fclose(fp);
-		fprintf(errorfile, "%s: read error\n", filename);
-		return FALSE;
+		if (fread(tmp, sizeof(ufix8), 16, fp) != 16)
+		{
+			fclose(fp);
+			g_string_append_printf(errorout, "%s: read error\n", filename);
+			ret = FALSE;
+		} else
+		{
+			g_free(font_buffer);
+			g_free(c_buffer);
+			c_buffer = NULL;
+			minbufsize = (ufix32) read_4b(tmp + FH_FBFSZ);
+			font_buffer = g_new(ufix8, minbufsize);
+			if (font_buffer == NULL)
+			{
+				fclose(fp);
+				g_string_append_printf(errorout, "%s\n", strerror(errno));
+				ret = FALSE;
+			} else
+			{
+				fseek(fp, 0, SEEK_SET);
+				if (fread(font_buffer, sizeof(ufix8), minbufsize, fp) != minbufsize)
+				{
+					fclose(fp);
+					g_free(font_buffer);
+					font_buffer = NULL;
+					g_string_append_printf(errorout, "%s: read error\n", filename);
+					ret = FALSE;
+				} else
+				{
+					mincharsize = read_2b(font_buffer + FH_CBFSZ);
+				
+					c_buffer = g_new(ufix8, mincharsize);
+					if (!c_buffer)
+					{
+						fclose(fp);
+						g_free(font_buffer);
+						font_buffer = NULL;
+						g_string_append_printf(errorout, "%s\n", strerror(errno));
+						ret = FALSE;
+					} else
+					{
+						font.org = font_buffer;
+						font.no_bytes = minbufsize;
+					
+						ret = gen_speedo_font(filename, body);
+						fclose(fp);
+					
+						g_free(font_buffer);
+						font_buffer = NULL;
+						g_free(c_buffer);
+						c_buffer = NULL;
+					}
+				}
+			}
+		}
 	}
-	g_free(font_buffer);
-	g_free(c_buffer);
-	c_buffer = NULL;
-	minbufsize = (ufix32) read_4b(tmp + FH_FBFSZ);
-	font_buffer = g_new(ufix8, minbufsize);
-	if (font_buffer == NULL)
-	{
-		fclose(fp);
-		fprintf(errorfile, "%s", strerror(errno));
-		return FALSE;
-	}
-	fseek(fp, 0, SEEK_SET);
-	if (fread(font_buffer, sizeof(ufix8), minbufsize, fp) != minbufsize)
-	{
-		fclose(fp);
-		g_free(font_buffer);
-		font_buffer = NULL;
-		fprintf(errorfile, "%s: read error\n", filename);
-		return FALSE;
-	}
-
-	mincharsize = read_2b(font_buffer + FH_CBFSZ);
-
-	c_buffer = g_new(ufix8, mincharsize);
-	if (!c_buffer)
-	{
-		fclose(fp);
-		g_free(font_buffer);
-		font_buffer = NULL;
-		fprintf(errorfile, "%s", strerror(errno));
-		return FALSE;
-	}
-
-	font.org = font_buffer;
-	font.no_bytes = minbufsize;
-
-	ret = gen_speedo_font(filename, body);
-	fclose(fp);
-
-	g_free(font_buffer);
-	font_buffer = NULL;
-	g_free(c_buffer);
-	c_buffer = NULL;
+		
+	html_out_trailer(body, FALSE);
 
 	return ret;
 }
@@ -1100,7 +884,7 @@ static size_t mycurl_write_callback(char *ptr, size_t size, size_t nmemb, void *
 	{
 		parms->fp = fopen(parms->filename, "wb");
 		if (parms->fp == NULL)
-			fprintf(errorfile, "%s: %s\n", parms->filename, strerror(errno));
+			g_string_append_printf(errorout, "%s: %s\n", parms->filename, strerror(errno));
 	}
 	if (parms->fp == NULL)
 		return 0;
@@ -1299,7 +1083,10 @@ int main(void)
 	char *lang;
 	char *val;
 	
-	errorfile = stderr;
+	errorfile = fopen("error.log", "a");
+	if (errorfile == NULL)
+		errorfile = stderr;
+	errorout = g_string_new(NULL);
 	
 	body = g_string_new(NULL);
 	cgiInit(body);
@@ -1314,9 +1101,9 @@ int main(void)
 		output_url = g_build_filename(cgi_cachedir, cgiRemoteAddr, NULL);
 
 		if (mkdir(cache_dir, 0750) < 0 && errno != EEXIST)
-			fprintf(errorfile, "%s: %s\n", cache_dir, strerror(errno));
+			g_string_append_printf(errorout, "%s: %s\n", cache_dir, strerror(errno));
 		if (mkdir(output_dir, 0750) < 0 && errno != EEXIST)
-			fprintf(errorfile, "%s: %s\n", output_dir, strerror(errno));
+			g_string_append_printf(errorout, "%s: %s\n", output_dir, strerror(errno));
 		
 		/*
 		 * clean up from previous run(s),
@@ -1513,6 +1300,7 @@ int main(void)
 	cgiExit();
 	write_strout(body, out);
 	g_string_free(body, TRUE);
+	g_string_free(errorout, TRUE);
 	
 	g_free(lang);
 	
@@ -1521,6 +1309,10 @@ int main(void)
 		curl_easy_cleanup(curl);
 		curl_global_cleanup();
 	}
+	
+	fflush(errorfile);
+	if (errorfile != stderr)
+		fclose(errorfile);
 	
 	return retval;
 }
