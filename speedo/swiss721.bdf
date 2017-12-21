@@ -15,7 +15,7 @@ COMMENT Font form: Roman
 COMMENT Manufacturing date: 13 Dec 91 
 COMMENT Layout name: BICS for Speedo  23 May 88
 COMMENT Number of chars in layout: 564
-COMMENT Total Number of chars in layout: 565
+COMMENT Total Number of chars in font: 565
 COMMENT Index of first character: 0
 COMMENT Number of Kerning Tracks: 3
 COMMENT Number of Kerning Pairs: 400
@@ -67,6 +67,16 @@ COMMENT Large Numerators Y scale:    0.65
 COMMENT Large Denominators Y position: 0
 COMMENT Large Denominators X scale:    0.71
 COMMENT Large Denominators Y scale:    0.65
+COMMENT
+COMMENT Max ORU value: 2228
+COMMENT Max Pixel value: 6
+COMMENT Customer Number: 432
+COMMENT Offset to Char Directory: 444
+COMMENT Offset to Constraint Data: 1577
+COMMENT Offset to Track Kerning: 2985
+COMMENT Offset to Pair Kerning: 3003
+COMMENT Offset to Character Data: 5404
+COMMENT Number of Bytes in File: 52115
 COMMENT
 FONT Swiss 721
 SIZE 24 72 72

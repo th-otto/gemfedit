@@ -1,7 +1,7 @@
 CC = gcc
 CFLAGS = -O2 -Wall -I../include -I../speedo
 LDFLAGS = -s
-LIBS= -lcurl
+LIBS= -lcurl -lpng12 -lz
 
 SPDLIB = reset.o do_char.o do_trns.o set_spcs.o set_trns.o \
 	out_bl2d.o out_blk.o out_scrn.o out_util.o out_outl.o keys.o sp_err.o
@@ -10,7 +10,7 @@ PROGRAMS = spdview.cgi
 
 all: $(PROGRAMS)
 
-spdview.cgi: spdview.o cgic.o glib.o $(SPDLIB)
+spdview.cgi: spdview.o cgic.o glib.o $(SPDLIB) writepng.o
 	$(CC) $(CFLAGS) $(LDFLAGS) $^ $(LIBS) -o $@
 	cp $@ ../www
 
