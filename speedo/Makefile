@@ -18,7 +18,8 @@ spdinfo:	spdinfo.o
 	$(CC) $(CFLAGS) $(LDFLAGS) $^ -o $@
 
 SPDLIB = reset.o do_char.o do_trns.o set_spcs.o set_trns.o \
-	out_bl2d.o out_blk.o out_scrn.o out_util.o out_outl.o keys.o sp_err.o
+	out_bl2d.o out_blk.o out_scrn.o out_util.o out_outl.o \
+	keys.o sp_err.o bics2uni.o
 
 # spencode.o spfuncs.o spfile.o spfont.o spglyph.o
 

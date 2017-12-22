@@ -49,6 +49,7 @@ li {
   padding: 5px;
   border-spacing: 0px;
   text-align: center;
+  vertical-align: middle;
   background-color: white;
   color: black;
 }

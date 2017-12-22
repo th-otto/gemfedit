@@ -109,7 +109,8 @@ Quality:
 <select id="quality" name="quality">
 <option value="0">Normal</option>
 <option value="1" selected="selected">Screen</option>
-<option value="2">2D</option>
+<!-- <option value="2">Outline</option> -->
+<option value="3">2D</option>
 </select>
 </td>
 </tr>
@@ -183,11 +184,9 @@ class spd {
 
 }
 
-$localdir = $btfontdir;
-
 {
 	$filelist = '';
-	if ($dir = opendir($localdir))
+	if ($dir = opendir($btfontdir))
 	{
 		$filelist .= "Local files:\n\n";
 		$spd = new spd(array());
@@ -198,11 +197,14 @@ $localdir = $btfontdir;
 	
 			$spd->files[$entry] = array();
 			$spd->files[$entry]['name'] = $entry;
-			$info = fopen("$localdir/$entry", "rb");
+			$info = fopen("$btfontdir/$entry", "rb");
 			if (is_resource($info))
 			{
 				fseek($info, 24);
-				$spd->files[$entry]['fontname'] = fread($info, 70);
+				$fontname = fread($info, 70);
+				if (strpos($fontname, 0) >= 0)
+					$fontname = substr($fontname, 0, strpos($fontname, 0));
+				$spd->files[$entry]['fontname'] = $fontname;
 				fclose($info);
 			} else
 			{
@@ -212,20 +214,13 @@ $localdir = $btfontdir;
 	
 	    uksort($spd->files, array($spd, 'cmp_name'));
 		$filelist .= "<ul>\n";
-		$filelist .= "<table>\n";
 	    foreach ($spd->files as $name => $entry) {
-			$filelist .= "<tr>\n";
-			$filelist .= "<td>\n";
-	    	$filelist .= '<li><a href="javascript: submitUrl(&quot;' . dirname($_SERVER['SCRIPT_NAME']) . "/$btfontdir/" . js_escape($name) . '&quot;);">' . htmlspecialchars($name, ENT_QUOTES, 'UTF-8') . "</a></li>\n";
-			$filelist .= "</td>\n";
-			$filelist .= "<td>\n";
+	    	$filelist .= '<li><a href="javascript: submitUrl(&quot;' . dirname($_SERVER['SCRIPT_NAME']) . "/$btfontdir/" . js_escape($name) . '&quot;);">' . htmlspecialchars($name, ENT_QUOTES, 'UTF-8') . "</a>";
 			if (isset($entry['fontname']))
-				$filelist .= htmlspecialchars($entry['fontname']);
-			$filelist .= "</td>\n";
-			$filelist .= "</tr>\n";
+				$filelist .= "&nbsp;" . htmlspecialchars($entry['fontname']);
+			$filelist .= "</li>\n";
 	    }
 	 	closedir($dir);
-		$filelist .= "</table>\n";
 		$filelist .= "</ul>\n";
 	}
 }

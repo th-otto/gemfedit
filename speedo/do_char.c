@@ -70,19 +70,19 @@ static fix15 sp_get_scale_arg(ufix8 * * ppointer, ufix8 format);
  */
 ufix16 sp_get_char_id(ufix16 char_index)	/* Index to character in char directory */
 {
-	ufix8 *pointer;				/* Pointer to character data */
+	ufix8 *pointer;						/* Pointer to character data */
 
 	if (!sp_globals.specs_valid)		/* Font specs not defined? */
 	{
 		sp_report_error(10);			/* Report font not specified */
-		return (ufix16) 0;				/* Return zero character id */
+		return 0;						/* Return zero character id */
 	}
 
 	pointer = sp_get_char_org(char_index, TRUE);	/* Get pointer to character data */
 	if (pointer == NULL)				/* Character data not available? */
 	{
 		sp_report_error(12);			/* Report character data not avail */
-		return (ufix16) 0;				/* Return zero character id */
+		return 0;						/* Return zero character id */
 	}
 
 	return 0xffff & NEXT_WORD(pointer);	/* Return character id */
@@ -105,14 +105,14 @@ fix31 sp_get_char_width(ufix16 char_index)	/* Index to character in char directo
 	if (!sp_globals.specs_valid)		/* Font specs not defined? */
 	{
 		sp_report_error(10);			/* Report font not specified */
-		return (fix31) 0;				/* Return zero character width */
+		return 0;						/* Return zero character width */
 	}
 
 	pointer = sp_get_char_org(char_index, TRUE);	/* Get pointer to character data */
 	if (pointer == NULL)				/* Character data not available? */
 	{
 		sp_report_error(12);			/* Report character data not avail */
-		return (fix31) 0;				/* Return zero character width */
+		return 0;						/* Return zero character width */
 	}
 
 	pointer += 2;						/* Skip over character id */
@@ -121,6 +121,7 @@ fix31 sp_get_char_width(ufix16 char_index)	/* Index to character in char directo
 	return set_width;					/* Return in 1/65536 em units */
 }
 #endif
+
 
 #if INCL_METRICS
 /*
@@ -692,6 +693,7 @@ static boolean sp_make_comp_char(ufix8 * pointer)	/* Pointer to first byte of po
 	return TRUE;
 }
 
+
 #if INCL_LCD							/* Dynamic load character data supported? */
 /*
  * Called by sp_get_char_id(), sp_get_char_width(), sp_make_char() and
@@ -706,7 +708,7 @@ static ufix8 *sp_get_char_org(ufix16 char_index,	/* Index of character to be acc
 											   boolean top_level)	/* Not a compound character element */
 {
 	buff_t *pchar_data;					/* Buffer descriptor requested */
-	ufix8 *pointer;				/* Pointer into character directory */
+	ufix8 *pointer;						/* Pointer into character directory */
 	ufix8 format;						/* Character directory format byte */
 	fix31 char_offset;					/* Offset of char data from start of font file */
 	fix31 next_char_offset;				/* Offset of char data from start of font file */
@@ -754,10 +756,9 @@ static ufix8 *sp_get_char_org(ufix16 char_index,	/* Index of character to be acc
 
 	return pchar_data->org;				/* Return pointer into character data buffer */
 }
-#endif
 
-#if INCL_LCD
 #else /* Dynamic load character data not supported? */
+
 /*
  * Called by sp_get_char_id(), sp_get_char_width(), sp_make_char() and
  * sp_make_comp_char() to get a pointer to the start of the character data
@@ -768,7 +769,7 @@ static ufix8 *sp_get_char_org(ufix16 char_index,	/* Index of character to be acc
 static ufix8 *sp_get_char_org(ufix16 char_index,	/* Index of character to be accessed */
 											   boolean top_level)	/* Not a compound character element */
 {
-	ufix8 *pointer;				/* Pointer into character directory */
+	ufix8 *pointer;						/* Pointer into character directory */
 	ufix8 format;						/* Character directory format byte */
 	fix31 char_offset;					/* Offset of char data from start of font file */
 	fix31 next_char_offset;				/* Offset of char data from start of font file */
@@ -821,12 +822,13 @@ static fix15 sp_get_posn_arg(ufix8 * * ppointer,	/* Pointer to first byte of pos
 		return NEXT_WORD(*ppointer);
 
 	case 2:
-		return (fix15) ((fix7) NEXT_BYTE(*ppointer));
+		return (fix7) NEXT_BYTE(*ppointer);
 
 	default:
-		return (fix15) 0;
+		return 0;
 	}
 }
+
 
 /*
  * Called by sp_make_comp_char() to read a scale argument from the
@@ -839,8 +841,7 @@ static fix15 sp_get_scale_arg(ufix8 * * ppointer,	/* Pointer to first byte of po
 {
 	if (format)
 		return NEXT_WORD(*ppointer);
-	else
-		return (fix15) ONE_SCALE;
+	return ONE_SCALE;
 }
 
 #if INCL_ISW
@@ -849,7 +850,6 @@ static boolean sp_reset_xmax(fix31 xmax)
 	fix15 xmin;							/* Minimum X ORU value in font */
 	fix15 ymin;							/* Minimum Y ORU value in font */
 	fix15 ymax;							/* Maximum Y ORU value in font */
-
 
 	sp_globals.isw_modified_constants = TRUE;
 	xmin = sp_read_word_u(sp_globals.font_org + FH_FXMIN);

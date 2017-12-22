@@ -385,7 +385,7 @@ int main(int argc, char **argv)
 	ufix32 i;
 	ufix8 tmp[16];
 	ufix32 minbufsize;
-	int first_char_index, num_chars;
+	int first_char_index, num_chars, real_num_chars;
 	const ufix8 *key;
 	
 	process_args(argc, argv);
@@ -456,7 +456,7 @@ int main(int argc, char **argv)
 	switch (quality)
 	{
 	case 0:
-		specs.flags = 0;
+		specs.flags = MODE_BLACK;
 		break;
 	case 1:
 		specs.flags = MODE_SCREEN;
@@ -474,15 +474,34 @@ int main(int argc, char **argv)
 	{
 		fontname = (char *) (font_buffer + FH_FNTNM);
 	}
-	if (iso_encoding)
-		num_chars = num_iso_chars;
-	dump_header(num_chars);
-
 	if (!sp_set_specs(&specs))
 	{
 		fprintf(stderr, "can't set specs\n");
 	} else
 	{
+		if (iso_encoding)
+		{
+			num_chars = num_iso_chars;
+			real_num_chars = 0;
+			for (i = 0; i < num_iso_chars * 2; i += 2)
+			{
+				char_index = iso_map[i + 1];
+				char_id = iso_map[i];
+				real_num_chars++;
+			}
+		} else
+		{
+			real_num_chars = 0;
+			for (i = 0; i < num_chars; i++)
+			{
+				char_index = i + first_char_index;
+				char_id = sp_get_char_id(char_index);
+				if (char_id)
+					real_num_chars++;
+			}
+		}
+		dump_header(real_num_chars);
+
 		if (iso_encoding)
 		{
 			for (i = 0; i < num_iso_chars * 2; i += 2)

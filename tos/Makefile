@@ -46,7 +46,8 @@ decode.o: decode.c fontdisp.h
 	$(CC) $(CFLAGS) -c -o $@ $<
 
 SPDLIB = reset.o do_char.o do_trns.o set_spcs.o set_trns.o \
-	out_bl2d.o out_blk.o out_scrn.o out_util.o out_outl.o keys.o sp_err.o
+	out_bl2d.o out_blk.o out_scrn.o out_util.o out_outl.o \
+	keys.o sp_err.o bics2uni.o
 
 sptobdf.ttp: sptobdf.o $(SPDLIB)
 	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $^ $(MATH_LIB)
@@ -91,6 +92,9 @@ keys.o: ../speedo/keys.c
 	$(CC) $(CFLAGS) -c -o $@ $<
 
 sp_err.o: ../speedo/sp_err.c
+	$(CC) $(CFLAGS) -c -o $@ $<
+
+bics2uni.o: ../speedo/bics2uni.c
 	$(CC) $(CFLAGS) -c -o $@ $<
 
 

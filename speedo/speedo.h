@@ -89,17 +89,17 @@ WITH THE SPEEDO SOFTWARE OR THE BITSTREAM CHARTER OUTLINE FONT.
 #endif                             /* 0 to omit multi device support */
 
 #ifndef SHORT_LISTS
-#define SHORT_LISTS 1                  /* 1 to allocate small intercept lists */
+#define SHORT_LISTS 1              /* 1 to allocate small intercept lists */
 #endif
 
 #ifndef INCL_PLAID_OUT
 #define  INCL_PLAID_OUT 0          /* 1 to include plaid data monitoring */
 #endif                             /* 0 to omit plaid data monitoring */
 
-#define MODE_BLACK 0
-#define MODE_SCREEN (MODE_BLACK + INCL_BLACK)
-#define MODE_OUTLINE (MODE_SCREEN + INCL_SCREEN)
-#define MODE_2D (MODE_OUTLINE + INCL_OUTLINE)
+#define MODE_BLACK   0
+#define MODE_SCREEN  1
+#define MODE_OUTLINE 2
+#define MODE_2D      3
 
 /*****  TYPE  DEFINITIONS *****/
 
