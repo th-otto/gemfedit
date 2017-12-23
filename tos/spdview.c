@@ -899,11 +899,16 @@ static _BOOL font_gen_speedo_font(void)
 			uint16_t num_glyphs;
 			fix15 width, height;
 			fix15 max_width, max_height;
+			bbox_t max_bb;
 			
 			total_width = 0;
 			num_glyphs = 0;
 			max_width = 0;
 			max_height = 0;
+			max_bb.xmin = (32000L << 16);
+			max_bb.xmax = -(32000L << 16);
+			max_bb.ymin = (32000L << 16);
+			max_bb.ymax = -(32000L << 16);
 			for (i = 0; i < num_chars; i++)
 			{
 				char_index = i + first_char_index;
@@ -918,6 +923,14 @@ static _BOOL font_gen_speedo_font(void)
 						max_width = width;
 					if (height > max_height)
 						max_height = height;
+					if (bb.xmin < max_bb.xmin)
+						max_bb.xmin = bb.xmin;
+					if (bb.ymin < max_bb.ymin)
+						max_bb.ymin = bb.ymin;
+					if (bb.xmax > max_bb.xmax)
+						max_bb.xmax = bb.xmax;
+					if (bb.ymax > max_bb.ymax)
+						max_bb.ymax = bb.ymax;
 					num_glyphs++;
 				}
 			}
@@ -926,8 +939,14 @@ static _BOOL font_gen_speedo_font(void)
 				font_cw = max_width;
 			else
 				font_cw = (_WORD)(total_width / num_glyphs);
-			font_cw = max_width;
 			nf_debugprintf("max height %d max width %d average width %d\n", max_height, max_width, font_cw);
+			nf_debugprintf("bbox: %7.2f %7.2f %7.2f %7.2f\n",
+				(double)max_bb.xmin / 65536.0, (double)max_bb.ymin / 65536.0,
+				(double)max_bb.xmax / 65536.0, (double)max_bb.ymax / 65536.0);
+			nf_debugprintf("bbox (header): %d %d %d %d\n",
+				read_2b(font_buffer + FH_FXMIN), read_2b(font_buffer + FH_FYMIN),
+				read_2b(font_buffer + FH_FXMAX), read_2b(font_buffer + FH_FYMAX));
+			font_cw = max_width;
 			row_height = font_ch + scaled_margin;
 		}
 		

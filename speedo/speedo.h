@@ -185,10 +185,9 @@ typedef   uint32_t   ufix32;
 #define FRACTION 0xFC  /* fractional portion of intercept type list */
 #endif
 
-#if INCL_SQUEEZING || INCL_CLIPPING        /* constants used by SQUEEZEing code */
+/* constants used by SQUEEZEing code */
 #define EM_TOP 764
 #define EM_BOT -236
-#endif
 
 /*****  STRUCTURE DEFINITIONS *****/
 

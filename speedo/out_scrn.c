@@ -608,8 +608,7 @@ static void sp_proc_intercepts_screen(void)
 						sp_intercepts.car[jplus1] -= diff / 2;
 						if (diff & 1)
 						{
-							if ((ufix16) (sp_intercepts.inttype[i] & FRACTION) +
-								(ufix16) (sp_intercepts.inttype[jplus1] & FRACTION) > sp_intercepts.fracpix)
+							if ((ufix16) (sp_intercepts.inttype[i] & FRACTION) + (ufix16) (sp_intercepts.inttype[jplus1] & FRACTION) > sp_intercepts.fracpix)
 								sp_intercepts.car[i]++;
 							else
 								sp_intercepts.car[jplus1]--;

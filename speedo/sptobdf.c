@@ -84,7 +84,6 @@ static int x_res = 72;
 static int y_res = 72;
 static int quality = 0;
 static int iso_encoding = 0;
-static int stretch = 120;
 
 static specs_t specs;
 
@@ -186,15 +185,6 @@ static void process_args(int ac, char **av)
 			{
 				usage();
 			}
-		} else if (!strncmp(av[i], "-st", 3))
-		{
-			if (av[i + 1])
-			{
-				stretch = atoi(av[++i]);
-			} else
-			{
-				usage();
-			}
 		} else if (!strncmp(av[i], "-noni", 5))
 		{
 			iso_encoding = 0;
@@ -221,11 +211,14 @@ static void dump_header(ufix32 num_chars)
 	long pixel_size;
 	const char *weight;
 	const char *width;
+	long fwidth, fheight;
+	fix15 orus_per_em;
 	
 	xmin = read_2b(font_buffer + FH_FXMIN);
 	ymin = read_2b(font_buffer + FH_FYMIN);
 	xmax = read_2b(font_buffer + FH_FXMAX);
 	ymax = read_2b(font_buffer + FH_FYMAX);
+	orus_per_em = read_2b(font_buffer + FH_ORUPM);
 	pixel_size = point_size * x_res / 720;
 
 	printf("STARTFONT 2.1\n");
@@ -326,7 +319,11 @@ static void dump_header(ufix32 num_chars)
 	
 	printf("FONT %s\n", fontname);
 	printf("SIZE %ld %d %d\n", pixel_size, x_res, y_res);
-	printf("FONTBOUNDINGBOX %d %d %d %d\n", xmin, ymin, xmax, ymax);
+	fwidth = xmax - xmin;
+	fwidth = fwidth * pixel_size / orus_per_em;
+	fheight = ymax - ymin;
+	fheight = fheight * pixel_size / orus_per_em;
+	printf("FONTBOUNDINGBOX %ld %ld %ld %ld\n", fwidth, fheight, xmin * pixel_size / orus_per_em, ymin * pixel_size / orus_per_em);
 	printf("STARTPROPERTIES %d\n", 10);
 
 	printf("RESOLUTION_X %d\n", x_res);
@@ -365,9 +362,7 @@ static void dump_header(ufix32 num_chars)
 	printf("WIDTH_NAME \"%s\"\n", width);
 	printf("WEIGHT_NAME \"%s\"\n", weight);
 	
-	/* do some stretching here so that its isn't too tight */
-	pixel_size = pixel_size * stretch / 100;
-	ascent = pixel_size * 764 / 1000;	/* 764 == EM_TOP */
+	ascent = pixel_size * EM_TOP / 1000;
 	descent = pixel_size - ascent;
 	printf("FONT_ASCENT %d\n", ascent);
 	printf("FONT_DESCENT %d\n", descent);
@@ -443,9 +438,8 @@ int main(int argc, char **argv)
 	num_chars = read_2b(font_buffer + FH_NCHRL);
 
 	/* set up specs */
-	/* Note that point size is in decipoints */
 	specs.pfont = &font;
-	/* XXX beware of overflow */
+	/* Note that point size is in decipoints */
 	specs.xxmult = point_size * x_res / 720 * (1L << 16);
 	specs.xymult = 0L << 16;
 	specs.xoffset = 0L << 16;
