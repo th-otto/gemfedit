@@ -61,7 +61,6 @@ static specs_t specs;
 static ufix16 char_index, char_id;
 #define	MAX_BITS	1024
 static _UWORD framebuffer[MAX_BITS >> 4][MAX_BITS];
-static buff_t char_data;
 
 #define CHAR_COLUMNS 16
 #define PAGE_SIZE    128
@@ -676,34 +675,36 @@ void sp_set_bitmap_bits(fix15 y, fix15 xbit1, fix15 xbit2)
 
 /* ------------------------------------------------------------------------- */
 
-buff_t *sp_load_char_data(fix31 file_offset, fix15 num, fix15 cb_offset)
+#if INCL_LCD
+boolean sp_load_char_data(fix31 file_offset, fix15 num, fix15 cb_offset, buff_t *char_data)
 {
 	if (fseek(fp, file_offset, SEEK_SET))
 	{
 		nf_debugprintf("can't seek to char\n");
-		char_data.org = c_buffer;
-		char_data.no_bytes = 0;
-		return &char_data;
+		char_data->org = c_buffer;
+		char_data->no_bytes = 0;
+		return FALSE;
 	}
 	if ((num + cb_offset) > mincharsize)
 	{
 		nf_debugprintf("char buf overflow\n");
-		char_data.org = c_buffer;
-		char_data.no_bytes = 0;
-		return &char_data;
+		char_data->org = c_buffer;
+		char_data->no_bytes = 0;
+		return FALSE;
 	}
 	if (fread((c_buffer + cb_offset), sizeof(ufix8), num, fp) != num)
 	{
 		nf_debugprintf("can't get char data\n");
-		char_data.org = c_buffer;
-		char_data.no_bytes = 0;
-		return &char_data;
+		char_data->org = c_buffer;
+		char_data->no_bytes = 0;
+		return FALSE;
 	}
-	char_data.org = (ufix8 *) c_buffer + cb_offset;
-	char_data.no_bytes = num;
+	char_data->org = (ufix8 *) c_buffer + cb_offset;
+	char_data->no_bytes = num;
 
-	return &char_data;
+	return TRUE;
 }
+#endif
 
 /* ------------------------------------------------------------------------- */
 

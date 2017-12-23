@@ -69,8 +69,6 @@ static ufix16 char_index, char_id;
 
 static buff_t font;
 
-static buff_t char_data;
-
 static ufix8 *f_buffer;
 static ufix8 *c_buffer;
 
@@ -232,30 +230,35 @@ int main(int argc, char **argv)
 }
 
 
-buff_t *sp_load_char_data(fix31 file_offset, fix15 num, fix15 cb_offset)
+#if INCL_LCD
+boolean sp_load_char_data(fix31 file_offset, fix15 num, fix15 cb_offset, buff_t *char_data)
 {
 	if (fseek(fp, (long) file_offset, (int) 0))
 	{
 		fprintf(stderr, "can't seek to char\n");
 		(void) fclose(fp);
 		exit(1);
+		return FALSE;
 	}
 	if ((num + cb_offset) > mincharsize)
 	{
 		fprintf(stderr, "char buf overflow\n");
 		(void) fclose(fp);
 		exit(2);
+		return FALSE;
 	}
 	if (fread((c_buffer + cb_offset), sizeof(ufix8), num, fp) != num)
 	{
 		fprintf(stderr, "can't get char data\n");
 		exit(1);
+		return FALSE;
 	}
-	char_data.org = (ufix8 *) c_buffer + cb_offset;
-	char_data.no_bytes = num;
+	char_data->org = (ufix8 *) c_buffer + cb_offset;
+	char_data->no_bytes = num;
 
-	return &char_data;
+	return TRUE;
 }
+#endif
 
 
 void sp_write_error(const char *str, ...)

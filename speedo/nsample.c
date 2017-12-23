@@ -79,9 +79,6 @@ static ufix8 *char_buffer;		/* Pointer to allocate Character buffer */
 
 static buff_t font;						/* Buffer descriptor for font data */
 
-#if INCL_LCD
-static buff_t char_data;				/* Buffer descriptor for character data */
-#endif
 static FILE *fdescr;					/* Speedo outline file descriptor */
 
 static ufix16 char_index;				/* Index of character to be generated */
@@ -276,10 +273,11 @@ int main(int argc, char **argv)
  * Returns a pointer to a buffer descriptor.
  */
 #if INCL_LCD
-buff_t *sp_load_char_data(
+boolean sp_load_char_data(
 	fix31 file_offset,						/* Offset in bytes from the start of the font file */
 	fix15 no_bytes,							/* Number of bytes to be loaded */
-	fix15 cb_offset)						/* Offset in bytes from start of char buffer */
+	fix15 cb_offset,						/* Offset in bytes from start of char buffer */
+	buff_t *char_data)
 {
 	int bytes_read;
 
@@ -291,6 +289,7 @@ buff_t *sp_load_char_data(
 		printf("****** Error in seeking character\n");
 		fclose(fdescr);
 		exit(1);
+		return FALSE;
 	}
 
 	if ((no_bytes + cb_offset) > minchrsz)
@@ -298,6 +297,7 @@ buff_t *sp_load_char_data(
 		printf("****** Character buffer overflow\n");
 		fclose(fdescr);
 		exit(3);
+		return FALSE;
 	}
 
 	bytes_read = fread((char_buffer + cb_offset), sizeof(ufix8), no_bytes, fdescr);
@@ -306,14 +306,15 @@ buff_t *sp_load_char_data(
 		printf("****** Error on reading character data\n");
 		fclose(fdescr);
 		exit(2);
+		return FALSE;
 	}
 #if DEBUG
 	printf("Character data loaded\n");
 #endif
 
-	char_data.org = (ufix8 *) char_buffer + cb_offset;
-	char_data.no_bytes = no_bytes;
-	return &char_data;
+	char_data->org = (ufix8 *) char_buffer + cb_offset;
+	char_data->no_bytes = no_bytes;
+	return TRUE;
 }
 #endif
 

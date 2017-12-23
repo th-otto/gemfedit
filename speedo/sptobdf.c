@@ -72,7 +72,6 @@ static char const progname[] = "spdtobdf";
 static char line_of_bits[MAX_BITS][MAX_BITS + 1];
 static ufix16 char_index, char_id;
 static buff_t font;
-static buff_t char_data;
 static ufix8 *font_buffer;
 static ufix8 *c_buffer;
 static ufix16 mincharsize;
@@ -538,30 +537,35 @@ int main(int argc, char **argv)
 }
 
 
-buff_t *sp_load_char_data(fix31 file_offset, fix15 num, fix15 cb_offset)
+#if INCL_LCD
+boolean sp_load_char_data(fix31 file_offset, fix15 num, fix15 cb_offset, buff_t *char_data)
 {
 	if (fseek(fp, file_offset, SEEK_SET))
 	{
 		fprintf(stderr, "can't seek to char\n");
 		(void) fclose(fp);
 		exit(1);
+		return FALSE;
 	}
 	if ((num + cb_offset) > mincharsize)
 	{
 		fprintf(stderr, "char buf overflow\n");
 		(void) fclose(fp);
 		exit(2);
+		return FALSE;
 	}
 	if (fread((c_buffer + cb_offset), sizeof(ufix8), num, fp) != num)
 	{
 		fprintf(stderr, "can't get char data\n");
 		exit(1);
+		return FALSE;
 	}
-	char_data.org = (ufix8 *) c_buffer + cb_offset;
-	char_data.no_bytes = num;
+	char_data->org = (ufix8 *) c_buffer + cb_offset;
+	char_data->no_bytes = num;
 
-	return &char_data;
+	return TRUE;
 }
+#endif
 
 
 /*

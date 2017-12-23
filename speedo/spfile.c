@@ -85,30 +85,37 @@ static fix31 read_4b(ufix8 *ptr)
 	return tmp;
 }
 
+
+#if INCL_LCD
 /*
  * loads the specified char's data
  */
-buff_t *sp_load_char_data(fix31 file_offset, fix15 num, fix15 cb_offset)
+boolean sp_load_char_data(fix31 file_offset, fix15 num, fix15 cb_offset, buff_t *char_data)
 {
 	SpeedoMasterFontPtr master = sp_fp_cur->master;
 
 	if (fseek(master->fp, (long) file_offset, (int) 0))
 	{
 		sp_write_error("can't seek to char");
+		return FALSE;
 	}
 	if ((num + cb_offset) > master->mincharsize)
 	{
 		sp_write_error("char buf overflow");
+		return FALSE;
 	}
 	if (fread((master->c_buffer + cb_offset), sizeof(ufix8), num, master->fp) != num)
 	{
 		sp_write_error("can't get char data");
+		return FALSE;
 	}
-	master->char_data.org = (ufix8 *) master->c_buffer + cb_offset;
-	master->char_data.no_bytes = num;
+	char_data->org = (ufix8 *) master->c_buffer + cb_offset;
+	char_data->no_bytes = num;
 
-	return &master->char_data;
+	return TRUE;
 }
+#endif
+
 
 struct speedo_encoding
 {

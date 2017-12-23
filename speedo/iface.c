@@ -106,8 +106,6 @@ bool fw_make_char(ufix16 char_index);					/* Fontware 2.X make character call   
 /***** STATIC VARIABLES *****/
 static buff_t *pfont;
 
-static buff_t char_data;
-
 static fix15 set_width_x;
 
 static specs_t specsarg;
@@ -362,22 +360,24 @@ bool fw_make_char(ufix16 char_index)
 	return sp_make_char(char_index);
 }
 
-/* 
+
+#if INCL_LCD
+/*
  * Called by Speedo character generator to request that character
  * data be loaded from the font file.
  * This is a dummy function that assumes that the entire font has
  * been loaded.
  */
-buff_t *sp_load_char_data(fix31 file_offset, fix15 no_bytes, fix15 cb_offset)
+boolean sp_load_char_data(fix31 file_offset, fix15 no_bytes, fix15 cb_offset, buff_t *char_data)
 {
 #if DEBUG
 	printf("fw_load_char_data(%d, %d, %d)\n", file_offset, no_bytes, char_offset);
 #endif
-	char_data.org = pfont->org + file_offset;
-	char_data.no_bytes = no_bytes;
-	return &char_data;
+	char_data->org = pfont->org + file_offset;
+	char_data->no_bytes = no_bytes;
+	return TRUE;
 }
-
+#endif
 
 
 /* 

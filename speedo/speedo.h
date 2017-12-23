@@ -768,7 +768,8 @@ void sp_close_outline(void);
 #endif
 
 #if INCL_LCD                     /* Dynamic load character data supported? */
-buff_t *sp_load_char_data(fix31 file_offset,fix15 no_bytes,fix15 cb_offset);        /* Load character data from font file */
+/* Load character data from font file */
+boolean sp_load_char_data(fix31 file_offset,fix15 no_bytes,fix15 cb_offset, buff_t *char_data);
 #endif
 
 #if INCL_PLAID_OUT               /* Plaid data monitoring included? */

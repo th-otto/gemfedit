@@ -707,7 +707,7 @@ static boolean sp_make_comp_char(ufix8 * pointer)	/* Pointer to first byte of po
 static ufix8 *sp_get_char_org(ufix16 char_index,	/* Index of character to be accessed */
 											   boolean top_level)	/* Not a compound character element */
 {
-	buff_t *pchar_data;					/* Buffer descriptor requested */
+	buff_t char_data;					/* Buffer descriptor requested */
 	ufix8 *pointer;						/* Pointer into character directory */
 	ufix8 format;						/* Character directory format byte */
 	fix31 char_offset;					/* Offset of char data from start of font file */
@@ -745,8 +745,9 @@ static ufix8 *sp_get_char_org(ufix16 char_index,	/* Index of character to be acc
 	if (next_char_offset <= sp_globals.font_buff_size)	/* Character data already in font buffer? */
 		return sp_globals.pfont->org + char_offset;	/* Return pointer into font buffer */
 
-	pchar_data = sp_load_char_data(char_offset, no_bytes, sp_globals.cb_offset);	/* Request char data load */
-	if (pchar_data->no_bytes < no_bytes)	/* Correct number of bytes loaded? */
+	/* Request char data load */
+	if (sp_load_char_data(char_offset, no_bytes, sp_globals.cb_offset, &char_data) == FALSE ||
+		char_data.no_bytes < no_bytes)
 		return NULL;
 
 	if (top_level)						/* Not element of compound char? */
@@ -754,7 +755,7 @@ static ufix8 *sp_get_char_org(ufix16 char_index,	/* Index of character to be acc
 		sp_globals.cb_offset = no_bytes;
 	}
 
-	return pchar_data->org;				/* Return pointer into character data buffer */
+	return char_data.org;				/* Return pointer into character data buffer */
 }
 
 #else /* Dynamic load character data not supported? */

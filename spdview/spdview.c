@@ -59,7 +59,6 @@ static int force_crlf = FALSE;
 static unsigned char framebuffer[MAX_BITS][MAX_BITS];
 static uint16_t char_index, char_id;
 static buff_t font;
-static buff_t char_data;
 static ufix8 *font_buffer;
 static ufix8 *c_buffer;
 static uint16_t mincharsize;
@@ -389,34 +388,36 @@ void sp_set_bitmap_bits(fix15 y, fix15 xbit1, fix15 xbit2)
 
 /* ------------------------------------------------------------------------- */
 
-buff_t *sp_load_char_data(fix31 file_offset, fix15 num, fix15 cb_offset)
+#if INCL_LCD
+boolean sp_load_char_data(fix31 file_offset, fix15 num, fix15 cb_offset, buff_t *char_data)
 {
 	if (fseek(fp, (long) file_offset, (int) 0))
 	{
 		g_string_append_printf(errorout, "can't seek to char\n");
-		char_data.org = c_buffer;
-		char_data.no_bytes = 0;
-		return &char_data;
+		char_data->org = c_buffer;
+		char_data->no_bytes = 0;
+		return FALSE;
 	}
 	if ((num + cb_offset) > mincharsize)
 	{
 		g_string_append_printf(errorout, "char buf overflow\n");
-		char_data.org = c_buffer;
-		char_data.no_bytes = 0;
-		return &char_data;
+		char_data->org = c_buffer;
+		char_data->no_bytes = 0;
+		return FALSE;
 	}
 	if (fread((c_buffer + cb_offset), sizeof(ufix8), num, fp) != num)
 	{
 		g_string_append_printf(errorout, "can't get char data\n");
-		char_data.org = c_buffer;
-		char_data.no_bytes = 0;
-		return &char_data;
+		char_data->org = c_buffer;
+		char_data->no_bytes = 0;
+		return FALSE;
 	}
-	char_data.org = (ufix8 *) c_buffer + cb_offset;
-	char_data.no_bytes = num;
+	char_data->org = (ufix8 *) c_buffer + cb_offset;
+	char_data->no_bytes = num;
 
-	return &char_data;
+	return TRUE;
 }
+#endif
 
 /* ------------------------------------------------------------------------- */
 

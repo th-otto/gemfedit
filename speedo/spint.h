@@ -85,7 +85,6 @@ typedef struct _sp_master {
     char       *copyright;
     const ufix8 *key;
     buff_t      font;
-    buff_t      char_data;
     ufix16      mincharsize;
     int         first_char_id;
     int         num_chars;
@@ -94,7 +93,7 @@ typedef struct _sp_master {
     int         refcount;	/* number of instances */
     int        *enc;
     int         enc_size;
-}           SpeedoMasterFontRec, *SpeedoMasterFontPtr;
+} SpeedoMasterFontRec, *SpeedoMasterFontPtr;
 
 typedef struct _cur_font_stats {
     fsBitmapFormat format;
@@ -110,7 +109,7 @@ typedef struct _cur_font_stats {
     /*
      * since Speedo returns extents that are not identical to what it feeds to
      * the bitmap builder, and we want to be able to use the extents for
-     * preformance reasons, some of the bitmaps require padding out.  the next
+     * performance reasons, some of the bitmaps require padding out.  the next
      * two flags keep track of this.
      */
     fix15       last_y;
@@ -118,7 +117,7 @@ typedef struct _cur_font_stats {
 
     pointer     bp;
     int         scanpad;
-}           CurrentFontValuesRec, *CurrentFontValuesPtr;
+} CurrentFontValuesRec, *CurrentFontValuesPtr;
 
 
 typedef struct _sp_font {
