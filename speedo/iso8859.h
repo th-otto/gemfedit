@@ -1,4 +1,4 @@
-static int iso_map[] = {
+static int const iso_map[] = {
 	0x0001, 348,
 	0x0002, 347,
 	0x0003, 345,

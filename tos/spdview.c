@@ -919,18 +919,12 @@ static _BOOL font_gen_speedo_font(void)
 					width = ((bb.xmax - bb.xmin) + 32768L) >> 16;
 					height = ((bb.ymax - bb.ymin) + 32768L) >> 16;
 					total_width += width;
-					if (width > max_width)
-						max_width = width;
-					if (height > max_height)
-						max_height = height;
-					if (bb.xmin < max_bb.xmin)
-						max_bb.xmin = bb.xmin;
-					if (bb.ymin < max_bb.ymin)
-						max_bb.ymin = bb.ymin;
-					if (bb.xmax > max_bb.xmax)
-						max_bb.xmax = bb.xmax;
-					if (bb.ymax > max_bb.ymax)
-						max_bb.ymax = bb.ymax;
+					max_width = MAX(max_width, width);
+					max_height = MAX(max_height, height);
+					max_bb.xmin = MIN(max_bb.xmin, bb.xmin);
+					max_bb.ymin = MIN(max_bb.ymin, bb.ymin);
+					max_bb.xmax = MAX(max_bb.xmax, bb.xmax);
+					max_bb.ymax = MAX(max_bb.ymax, bb.ymax);
 					num_glyphs++;
 				}
 			}

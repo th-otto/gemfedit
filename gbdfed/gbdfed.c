@@ -663,7 +663,7 @@ view_font_messages(GtkWidget *w, gpointer editor)
         gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(sw),
                                        GTK_POLICY_NEVER,
                                        GTK_POLICY_ALWAYS);
-        gtk_box_pack_start(GTK_BOX(vbox), sw, FALSE, FALSE, 0);
+        gtk_box_pack_start(GTK_BOX(vbox), sw, TRUE, TRUE, 0);
 
         /*
          * Add the text widget.

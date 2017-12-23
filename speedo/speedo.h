@@ -152,6 +152,12 @@ typedef   uint32_t   ufix32;
 #include <stddef.h>
 #endif
 
+#undef MAX
+#define MAX(h, i) ((h) > (i) ? (h) : (i))
+
+#undef MIN
+#define MIN(l, o) ((l) < (o) ? (l) : (o))
+
 #define  BIT0           0x01
 #define  BIT1           0x02
 #define  BIT2           0x04

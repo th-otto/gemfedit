@@ -2924,7 +2924,7 @@ fontgrid_get_font_messages(Fontgrid *fw)
 {
     g_return_val_if_fail(fw != 0, 0);
 
-    return (fw->font) ? fw->font->acmsgs : 0;
+    return fw->font ? fw->font->acmsgs : 0;
 }
 
 guint

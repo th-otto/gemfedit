@@ -204,21 +204,21 @@ static void process_args(int ac, char **av)
 }
 
 
-static void dump_header(ufix32 num_chars)
+typedef struct _fontbbox_t {
+	fix15 max_ascent;
+	fix15 max_descent;
+	fix15 max_rbearing;
+	fix15 min_lbearing;
+	fix15 max_lbearing;
+} fontbbox_t;
+
+
+static void dump_header(ufix32 num_chars, const fontbbox_t *box)
 {
-	fix15 xmin, ymin, xmax, ymax;
-	fix15 ascent, descent;
 	long pixel_size;
 	const char *weight;
 	const char *width;
-	long fwidth, fheight;
-	fix15 orus_per_em;
 	
-	xmin = read_2b(font_buffer + FH_FXMIN);
-	ymin = read_2b(font_buffer + FH_FYMIN);
-	xmax = read_2b(font_buffer + FH_FXMAX);
-	ymax = read_2b(font_buffer + FH_FYMAX);
-	orus_per_em = read_2b(font_buffer + FH_ORUPM);
 	pixel_size = point_size * x_res / 720;
 
 	printf("STARTFONT 2.1\n");
@@ -319,11 +319,29 @@ static void dump_header(ufix32 num_chars)
 	
 	printf("FONT %s\n", fontname);
 	printf("SIZE %ld %d %d\n", pixel_size, x_res, y_res);
-	fwidth = xmax - xmin;
-	fwidth = fwidth * pixel_size / orus_per_em;
-	fheight = ymax - ymin;
-	fheight = fheight * pixel_size / orus_per_em;
-	printf("FONTBOUNDINGBOX %ld %ld %ld %ld\n", fwidth, fheight, xmin * pixel_size / orus_per_em, ymin * pixel_size / orus_per_em);
+
+#if 0
+	{
+		fix15 orus_per_em;
+		fix15 xmin, ymin, xmax, ymax;
+		long fwidth, fheight;
+		
+		xmin = read_2b(font_buffer + FH_FXMIN);
+		ymin = read_2b(font_buffer + FH_FYMIN);
+		xmax = read_2b(font_buffer + FH_FXMAX);
+		ymax = read_2b(font_buffer + FH_FYMAX);
+		orus_per_em = read_2b(font_buffer + FH_ORUPM);
+		fwidth = xmax - xmin;
+		fwidth = fwidth * pixel_size / orus_per_em;
+		fheight = ymax - ymin;
+		fheight = fheight * pixel_size / orus_per_em;
+		printf("FONTBOUNDINGBOX %ld %ld %ld %ld\n", fwidth, fheight, xmin * pixel_size / orus_per_em, ymin * pixel_size / orus_per_em);
+		UNUSED(box);
+	}
+#else
+	printf("FONTBOUNDINGBOX %d %d %d %d\n", box->max_rbearing - box->min_lbearing, box->max_ascent + box->max_descent, box->min_lbearing, -box->max_descent);
+#endif
+	
 	printf("STARTPROPERTIES %d\n", 10);
 
 	printf("RESOLUTION_X %d\n", x_res);
@@ -362,10 +380,18 @@ static void dump_header(ufix32 num_chars)
 	printf("WIDTH_NAME \"%s\"\n", width);
 	printf("WEIGHT_NAME \"%s\"\n", weight);
 	
-	ascent = pixel_size * EM_TOP / 1000;
-	descent = pixel_size - ascent;
-	printf("FONT_ASCENT %d\n", ascent);
-	printf("FONT_DESCENT %d\n", descent);
+#if 0
+	{
+		fix15 ascent, descent;
+		ascent = pixel_size * EM_TOP / 1000;
+		descent = pixel_size - ascent;
+		printf("FONT_ASCENT %d\n", ascent);
+		printf("FONT_DESCENT %d\n", descent);
+	}
+#else
+	printf("FONT_ASCENT %d\n", box->max_ascent);
+	printf("FONT_DESCENT %d\n", box->max_descent);
+#endif
 
 	printf("ENDPROPERTIES\n");
 	printf("CHARS %d\n", num_chars);
@@ -373,6 +399,29 @@ static void dump_header(ufix32 num_chars)
 
 
 static FILE *fp;
+
+static void update_bbox(ufix16 ch, fontbbox_t *box)
+{
+	bbox_t bb;
+	fix15 off_horz, off_vert;
+	fix15 rbearing;
+	fix15 ascent, descent;
+	
+	sp_get_char_bbox(char_index, &bb);
+	bit_width = ((bb.xmax - bb.xmin) + 32768L) >> 16;
+	bit_height = ((bb.ymax - bb.ymin) + 32768L) >> 16;
+	off_horz = bb.xmin >> 16;
+	off_vert = bb.ymin >> 16;
+	box->min_lbearing = MIN(box->min_lbearing, off_horz);
+	box->max_lbearing = MAX(box->max_lbearing, off_horz);
+	rbearing = bit_width + off_horz;
+	box->max_rbearing = MAX(box->max_rbearing, rbearing);
+	ascent = bit_height + off_vert;
+	descent = bit_height - ascent;
+	box->max_ascent = MAX(box->max_ascent, ascent);
+	box->max_descent = MAX(box->max_descent, descent);
+}
+
 
 int main(int argc, char **argv)
 {
@@ -472,6 +521,14 @@ int main(int argc, char **argv)
 		fprintf(stderr, "can't set specs\n");
 	} else
 	{
+		fontbbox_t font_bbox;
+		
+		font_bbox.max_ascent = -32000;
+		font_bbox.max_descent = -32000;
+		font_bbox.max_rbearing = -32000;
+		font_bbox.min_lbearing = 32000;
+		font_bbox.max_lbearing = -32000;
+		
 		if (iso_encoding)
 		{
 			num_chars = num_iso_chars;
@@ -480,7 +537,11 @@ int main(int argc, char **argv)
 			{
 				char_index = iso_map[i + 1];
 				char_id = iso_map[i];
-				real_num_chars++;
+				if (char_id != 0 && char_id != 0xffff)
+				{
+					real_num_chars++;
+					update_bbox(char_index, &font_bbox);
+				}
 			}
 		} else
 		{
@@ -489,11 +550,14 @@ int main(int argc, char **argv)
 			{
 				char_index = i + first_char_index;
 				char_id = sp_get_char_id(char_index);
-				if (char_id)
+				if (char_id != 0 && char_id != 0xffff)
+				{
 					real_num_chars++;
+					update_bbox(char_index, &font_bbox);
+				}
 			}
 		}
-		dump_header(real_num_chars);
+		dump_header(real_num_chars, &font_bbox);
 
 		if (iso_encoding)
 		{
@@ -594,31 +658,27 @@ void sp_open_bitmap(fix31 xorg, fix31 yorg, fix15 xsize, fix15 ysize)
 	pix_width = width * (specs.xxmult / 65536L) + ((ufix32) width * ((ufix32) specs.xxmult & 0xffff)) / 65536L;
 	pix_width /= 65536L;
 
-	width = (pix_width * 7200L) / (point_size * y_res);
+	width = (pix_width * 720000L) / (point_size * x_res);
 
 	sp_get_char_bbox(char_index, &bb);
-	bb.xmin >>= 16;
-	bb.ymin >>= 16;
-	bb.xmax >>= 16;
-	bb.ymax >>= 16;
 
 #if DEBUG
-	if ((bb.xmax - bb.xmin) != bit_width)
+	if (((bb.xmax - bb.xmin) >> 16) != bit_width)
 		fprintf(stderr, "bbox & width mismatch 0x%x (0x%x) (%d vs %d)\n",
-				char_index, char_id, (bb.xmax - bb.xmin), bit_width);
-	if ((bb.ymax - bb.ymin) != bit_height)
+				char_index, char_id, (bb.xmax - bb.xmin) >> 16, bit_width);
+	if (((bb.ymax - bb.ymin) >> 16) != bit_height)
 		fprintf(stderr, "bbox & height mismatch 0x%x (0x%x) (%d vs %d)\n",
-				char_index, char_id, (bb.ymax - bb.ymin), bit_height);
-	if (bb.xmin != off_horz)
-		fprintf(stderr, "x min mismatch 0x%x (0x%x) (%d vs %d)\n", char_index, char_id, bb.xmin, off_horz);
-	if (bb.ymin != off_vert)
-		fprintf(stderr, "y min mismatch 0x%x (0x%x) (%d vs %d)\n", char_index, char_id, bb.ymin, off_vert);
+				char_index, char_id, (bb.ymax - bb.ymin) >> 16, bit_height);
+	if ((bb.xmin >> 16) != off_horz)
+		fprintf(stderr, "x min mismatch 0x%x (0x%x) (%d vs %d)\n", char_index, char_id, bb.xmin >> 16, off_horz);
+	if ((bb.ymin >> 16) != off_vert)
+		fprintf(stderr, "y min mismatch 0x%x (0x%x) (%d vs %d)\n", char_index, char_id, bb.ymin >> 16, off_vert);
 #endif
 
-	bit_width = bb.xmax - bb.xmin;
-	bit_height = bb.ymax - bb.ymin;
-	off_horz = bb.xmin;
-	off_vert = bb.ymin;
+	bit_width = ((bb.xmax - bb.xmin) + 32768L) >> 16;
+	bit_height = ((bb.ymax - bb.ymin) + 32768L) >> 16;
+	off_horz = bb.xmin >> 16;
+	off_vert = bb.ymin >> 16;
 
 	/* XXX kludge to handle space */
 	if (bb.xmin == 0 && bb.ymin == 0 && bb.xmax == 0 && bb.ymax == 0 && width)
@@ -626,6 +686,7 @@ void sp_open_bitmap(fix31 xorg, fix31 yorg, fix15 xsize, fix15 ysize)
 		bit_width = 1;
 		bit_height = 1;
 	}
+
 	printf("STARTCHAR %d\n", char_index);
 	printf("ENCODING %d\n", char_id);
 	printf("SWIDTH %d 0\n", width);

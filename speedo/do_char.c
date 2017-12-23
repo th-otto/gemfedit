@@ -99,7 +99,6 @@ ufix16 sp_get_char_id(ufix16 char_index)	/* Index to character in char directory
 fix31 sp_get_char_width(ufix16 char_index)	/* Index to character in char directory */
 {
 	ufix8 *pointer;				/* Pointer to character data */
-
 	fix31 set_width;					/* Set width of character */
 
 	if (!sp_globals.specs_valid)		/* Font specs not defined? */
@@ -199,6 +198,7 @@ fix15 sp_get_track_kern(fix15 track,	/* Track required (0 - 3) */
 	return adj;							/* Return interpolated adjustment (1/256 points) */
 }
 #endif
+
 
 #if INCL_METRICS
 /*
@@ -347,6 +347,7 @@ boolean sp_get_char_bbox(ufix16 char_index, bbox_t * bbox)
 	bbox->xmax = (fix31) Pmax.x << sp_globals.poshift;
 	bbox->ymin = (fix31) Pmin.y << sp_globals.poshift;
 	bbox->ymax = (fix31) Pmax.y << sp_globals.poshift;
+
 	return TRUE;
 }
 

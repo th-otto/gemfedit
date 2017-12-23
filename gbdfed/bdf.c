@@ -985,8 +985,7 @@ static int by_encoding(const void *a, const void *b)
 
 #define _BDF_SWIDTH_ADJ 0x1000
 
-#define _BDF_GLYPH_BITS (_BDF_GLYPH|_BDF_ENCODING|_BDF_SWIDTH|\
-                         _BDF_DWIDTH|_BDF_BBX|_BDF_BITMAP)
+#define _BDF_GLYPH_BITS (_BDF_GLYPH|_BDF_ENCODING|_BDF_SWIDTH|_BDF_DWIDTH|_BDF_BBX|_BDF_BITMAP)
 
 #define _BDF_GLYPH_WIDTH_CHECK 0x40000000
 #define _BDF_GLYPH_HEIGHT_CHECK 0x80000000
@@ -1304,7 +1303,7 @@ static int _bdf_parse_glyphs(char *line, unsigned int linelen, unsigned int line
 	double ps;
 	double rx;
 	double dw;
-	double sw;
+	unsigned short sw;
 	_bdf_parse_t *p;
 	bdf_glyph_t *glyph;
 	bdf_font_t *font;
@@ -1617,7 +1616,7 @@ static int _bdf_parse_glyphs(char *line, unsigned int linelen, unsigned int line
 	}
 
 	/*
-	 * Expect the DWIDTH (scalable width) field next.
+	 * Expect the DWIDTH (device width) field next.
 	 */
 	if (memcmp(line, "DWIDTH", 6) == 0)
 	{
@@ -1697,6 +1696,8 @@ static int _bdf_parse_glyphs(char *line, unsigned int linelen, unsigned int line
 
 			if (sw != glyph->swidth)
 			{
+				sprintf(nbuf, _("Glyph %s (0x%x): scalable width != actual width. Old: %d New: %d."), glyph->name, glyph->encoding, glyph->swidth, sw);
+				_bdf_add_acmsg(font, nbuf);
 				glyph->swidth = sw;
 				if (p->glyph_enc == -1)
 					_bdf_set_glyph_modified(font->umod, font->unencoded_used - 1);
@@ -2186,8 +2187,7 @@ bdf_font_t *bdf_load_font(FILE * in, bdf_options_t * opts, bdf_callback_t callba
 
 #ifdef HAVE_HBF
 
-static int
-_bdf_parse_hbf_header(char *line, unsigned int linelen, unsigned int lineno, void *call_data, void *client_data)
+static int _bdf_parse_hbf_header(char *line, unsigned int linelen, unsigned int lineno, void *call_data, void *client_data)
 {
 	unsigned int vlen = 0;
 	char *name;
