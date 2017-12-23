@@ -24,6 +24,7 @@ THE SOFTWARE.
 
 #include "linux/libcwrap.h"
 #include "bics2uni.h"
+#include "verify.h"
 
 /*
  * BICS -> UNICODE translation containing -1 for characters
@@ -156,16 +157,16 @@ unsigned short const Bics2Unicode[BICS_COUNT] = {
 /* 119 ID 0099 */	0x00f8, /* LATIN SMALL LETTER O WITH STROKE */
 /* 120 ID 009a */	0x0153, /* LATIN SMALL LIGATURE OE */
 /* 121 ID 009b */	0x00df, /* LATIN SMALL LETTER SHARP S */
-/* 122 ID 009c */	0x2758, /* LIGHT VERTICAL BAR */
+/* 122 ID 009c */	0x0131, /* LATIN SMALL LETTER DOTLESS I */
 /* 123 ID 009d */	0x2039, /* SINGLE LEFT-POINTING ANGLE QUOTATION MARK */
 /* 124 ID 009e */	0x203a, /* SINGLE RIGHT-POINTING ANGLE QUOTATION MARK */
 /* 125 ID 009f */	0x00ab, /* LEFT-POINTING DOUBLE ANGLE QUOTATION MARK */
 /* 126 ID 00a0 */	0x00bb, /* RIGHT-POINTING DOUBLE ANGLE QUOTATION MARK */
 /* 127 ID 00a1 */	0x00bf, /* INVERTED QUESTION MARK */
 /* 128 ID 00a2 */	0x00a1, /* INVERTED EXCLAMATION MARK */
-/* 129 ID 00a3 */	0x02cb, /* MODIFIER LETTER GRAVE ACCENT */
-/* 130 ID 00a4 */	0x00b4, /* ACUTE ACCENT */
-/* 131 ID 00a5 */	0x02ca, /* MODIFIER LETTER ACUTE ACCENT */
+/* 129 ID 00a3 */	0x00b4, /* ACUTE ACCENT */
+/* 130 ID 00a4 */	0x02ca, /* MODIFIER LETTER ACUTE ACCENT */
+/* 131 ID 00a5 */	0x02cb, /* MODIFIER LETTER GRAVE ACCENT */
 /* 132 ID 00a6 */	0x0060, /* GRAVE ACCENT */
 /* 133 ID 00a7 */	0x02c6, /* MODIFIER LETTER CIRCUMFLEX ACCENT */
 /* 134 ID 00a8 */	0x005e, /* CIRCUMFLEX ACCENT */
@@ -635,156 +636,230 @@ unsigned short const Bics2Unicode[BICS_COUNT] = {
 /*     ID 0223 */	0x03c9, /* GREEK SMALL LETTER OMEGA */
 #endif
 
-static short const table_160[] = { 0, 128, 98, 97, 278, 274, 277, 110, 135, 503,
-	538, 125, 309, 191, 504, 230, 339, 286, 160, 161,
-	129, 325, 279, 102, 141, 159, 544, 126, 151, 153,
-	155, 127, 259, 261, 257, 253, 255, 113, 114, 148,
-	249, 251, 247, 245, 239, 241, 237, 235, 169, 196,
-	202, 200, 204, 208, 206, 284, 115, 212, 210, 214,
-	216, 224, 271, 121, 260, 262, 258, 254, 256, 117,
-	118, 149, 250, 252, 248, 246, 240, 242, 238, 236,
-	273, 195, 201, 199, 203, 207, 205, 285, 119, 211,
-	209, 213, 215, 223, 272, 221, 477, 476, 374, 373,
-	171, 177, 376, 375, -1, -1, -1, -1, 378, 377,
-	379, -1, 169, 173, 383, 382, -1, -1, -1, -1,
-	172, 178, 243, 244, -1, -1, -1, -1, -1, -1,
-	385, -1, -1, -1, -1, -1, 233, 234, 387, 386,
-	-1, -1, 391, 390, 389, 122, 276, 275, -1, -1,
-	393, 392, -1, 395, 394, 399, 398, -1, -1, -1,
-	-1, 170, 174, 194, 193, 402, 401, 198, 197, 263,
-	-1, -1, -1, -1, -1, -1, 404, 403, 116, 120,
-	-1, -1, 408, 407, 406, 405, 410, 409, -1, -1,
-	486, 485, 412, 411, 419, 418, 364, 363, -1, -1,
-	218, 217, 421, 420, -1, -1, 220, 219, 423, 422,
-	-1, 268, 425, 424, -1, -1, 222, 368, 367, 372,
-	371, 370, 369
+static short const table_00a0[] = {
+	560, 128,  98,  97, 278, 274, 277, 110, 135, 503, 538, 125, 309, 191, 504, 230,
+	339, 286, 160, 161,	129, 325, 279, 102, 141, 159, 544, 126, 151, 153, 155, 127,
+	259, 261, 257, 253, 255, 113, 114, 148, 249, 251, 247, 245, 239, 241, 237, 235,
+	169, 196, 202, 200, 204, 208, 206, 284, 115, 212, 210, 214, 216, 224, 271, 121,
+	260, 262, 258, 254, 256, 117, 118, 149, 250, 252, 248, 246, 240, 242, 238, 236,
+	273, 195, 201, 199, 203, 207, 205, 285, 119, 211, 209, 213, 215, 223, 272, 221,
+	477, 476, 374, 373, 171, 177, 376, 375,  -1,  -1,  -1,  -1, 378, 377,  -1, 379,
+	169, 173, 383, 382,  -1,  -1,  -1,  -1, 172, 178, 243, 244,  -1,  -1,  -1,  -1,
+	 -1,  -1, 385,  -1,  -1,  -1,  -1,  -1, 233, 234, 387, 386,  -1,  -1, 391, 390,
+	389, 122, 276, 275,  -1,  -1, 393, 392,  -1, 395, 394, 399, 398,  -1,  -1,  -1,
+	 -1, 170, 174, 194, 193, 402, 401, 198, 197, 263,  -1,  -1,  -1,  -1,  -1,  -1,
+	404, 403, 116, 120,  -1,  -1, 408, 407, 406, 405, 410, 409,  -1,  -1, 486, 485,
+	412, 411, 419, 418, 364, 363,  -1,  -1, 218, 217, 421, 420,  -1,  -1, 220, 219,
+	423, 422,  -1, 268, 425, 424,  -1,  -1, 222, 368, 367, 372, 371, 370, 369
 };
 
-static short const table_728[] = { 144, 181, 146, 731, 137, 183 };
+static short const table_02d8[] = { 144, 181, 146, 190, 137, 183 };
 
-static short const table_915[] = { 313, 314, -1, -1, -1, 315, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
-	316, -1, -1, 317, -1, -1, 318, -1, -1, -1, -1, -1, -1, -1, 319, 320,
-	-1, 321, 322, -1, 323, 324, -1, -1, -1, 325, -1, -1, -1, 326, -1, -1,
-	327, 328, -1, 329
+static short const table_0393[] = {
+	313, 314,  -1,  -1,  -1, 315,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,
+	316,  -1,  -1, 317,  -1,  -1, 318,  -1,  -1,  -1,  -1,  -1,  -1,  -1, 319, 320,
+	 -1, 321, 322,  -1, 323, 324,  -1,  -1,  -1, 325,  -1,  -1,  -1, 326,  -1,  -1,
+	327, 328,  -1, 329
 };
 
-static short const table_8211[] = { 111, 112, -1, -1, -1, -1, -1, 106, -1, 103, 105, 107, 104, 108, 109,
-	-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 100, -1, -1,
-	-1, -1, -1, -1, -1, -1, 123, 124, -1, 265
+static short const table_2013[] = {
+	111, 112,  -1,  -1,  -1, 103,  -1, 106,  -1, 104, 105, 107,  -1, 108, 109,  -1,
+	 -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1, 100,  -1,  -1,
+	 -1,  -1,  -1,  -1,  -1,  -1, 123, 124,  -1, 265
 };
 
-static short const table_8319[] = { 543, 475, 466, 467, 468, 469, 470, 471, 472, 473, 474, -1, -1, -1, -1,
-	-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
-	-1, -1, -1, -1, 491, -1, -1, -1, 266
+static short const table_207f[] = {
+	 -1, 475, 466, 467, 468, 469, 470, 471, 472, 473, 474,  -1,  -1,  -1,  -1,  -1,
+	 -1, 538,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1, 543,  -1,  -1,  -1,  -1,  -1,
+	 -1,  -1,  -1,  -1, 491,  -1,  -1,  -1, 266
 };
 
-static short const table_8592[] = { 293, 295, 294, 292, 297, 296 };
+static short const table_2190[] = { 293, 294, 295, 292, 297, 296 };
 
-static short const table_8712[] = { 298, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 492, -1, -1, -1, -1, -1,
-	-1, 302, -1, -1, -1, 303, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 299,
-	-1, -1, -1, -1, 428
+static short const table_2208[] = {
+	298,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1, 492,  -1,  -1,  -1,  -1,
+	 -1,  -1, 302,  -1,  -1,  -1, 303,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,
+	 -1, 299,  -1,  -1,  -1,  -1, 428
 };
 
 
-static short const table_8800[] = { 288, -1, -1, -1, 291, 290 };
+static short const table_2260[] = { 288,  -1,  -1,  -1, 291, 290 };
 
-static short const table_9600[] = {
-	304, -1, -1, -1, 305, -1, -1, -1, 308, -1, -1, -1, 306, -1, -1, -1,
-	307, 357, 358, 359, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
-	335, 336, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
-	-1, 348, -1, -1, -1, 345, -1, -1, -1, -1, -1, 347, -1, -1, -1, 346,
-	-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 339, -1, -1, -1, 342, -1, -1,
-	-1, -1, -1, -1, -1, -1, -1, 344
+static short const table_2580[] = {
+	304,  -1,  -1,  -1, 305,  -1,  -1,  -1, 308,  -1,  -1,  -1, 306,  -1,  -1,  -1,
+	307, 357, 358, 359,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,
+	335, 336,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,
+	 -1,  -1, 348,  -1,  -1,  -1, 345,  -1,  -1,  -1,  -1,  -1, 347,  -1,  -1,  -1,
+	346,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1, 339,  -1,  -1,  -1, 342,
+	 -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1, 344
 };
 
-static short const table_9784[] = { 360, -1, 361, 362, -1, -1, -1, -1, 350, -1, 349 };
+static short const table_2638[] = {  -1,  -1, 361, 362, 360,  -1,  -1,  -1, 350,  -1, 349 };
 
-static short const table_9824[] = { 354, -1, -1, 352, -1, 351, 353, -1, -1, -1, 330, 331 };
+static short const table_2660[] = { 354,  -1,  -1, 352,  -1, 351, 353,  -1,  -1,  -1, 330, 331 };
 
-static short const table_64256[] = { 282, 95, 96, 281 };
+static short const table_fb00[] = { 282, 95, 96, 281, 280 };
 
-int unicode_to_bics(unsigned code)
+int unicode_to_bics(unsigned int code)
 {
-	if (code < 32)
+	if (code < 0x20)
 		return -1;
-	else if (code < 127)
-		return code - 32;
-	else if (code < 160)
+	if (code < 0x7f)
+		return code - 0x20;
+	if (code < 0x00a0)
 		return -1;
-	else if (code < 383)
-		return table_160[code - 160];
-	else if (code == 402)
+	if (code < 0x017f)
+	{
+		verify((sizeof(table_00a0) / sizeof(table_00a0[0])) == (0x017f - 0x00a0));
+		return table_00a0[code - 0x00a0];
+	}
+	if (code == 0x0192)
 		return 99;
-	else if (code == 486)
+	if (code == 0x01e6)
 		return 480;
-	else if (code == 487)
+	if (code == 0x01e7)
 		return 379;
-	else if (code == 501)
+	if (code == 0x01f5)
 		return 384;
-	else if (code == 711)
+	if (code == 0x02c7)
 		return 139;
-	else if (code < 728)
+	if (code < 0x02d8)
 		return -1;
-	else if (code < 734)
-		return table_728[code - 728];
-	else if (code < 915)
+	if (code < 0x02de)
+	{
+		verify((sizeof(table_02d8) / sizeof(table_02d8[0])) == (0x02de - 0x02d8));
+		return table_02d8[code - 0x02d8];
+	}
+	if (code < 0x0393)
 		return -1;
-	else if (code < 967)
-		return table_915[code - 915];
-	else if (code < 8211)
+	if (code < 0x03c7)
+	{
+		verify((sizeof(table_0393) / sizeof(table_0393[0])) == (0x03c7 - 0x0393));
+		return table_0393[code - 0x0393];
+	}
+	if (code < 0x2013)
 		return -1;
-	else if (code < 8253)
-		return table_8211[code - 8211];
-	else if (code < 8319)
+	if (code < 0x203d)
+	{
+		verify((sizeof(table_2013) / sizeof(table_2013[0])) == (0x203d - 0x2013));
+		return table_2013[code - 0x2013];
+	}
+	if (code == 0x207b)
+		return 230;
+	if (code < 0x207f)
 		return -1;
-	else if (code < 8360)
-		return table_8319[code - 8319];
-	else if (code < 8592)
+	if (code < 0x20a8)
+	{
+		verify((sizeof(table_207f) / sizeof(table_207f[0])) == (0x20a8 - 0x207f));
+		return table_207f[code - 0x207f];
+	}
+	if (code < 0x2190)
 		return -1;
-	else if (code < 8598)
-		return table_8592[code - 8592];
-	else if (code == 8616)
+	if (code < 0x2196)
+	{
+		verify((sizeof(table_2190) / sizeof(table_2190[0])) == (0x2196 - 0x2190));
+		return table_2190[code - 0x2190];
+	}
+	if (code == 0x21a8)
 		return 340;
-	else if (code < 8712)
+	if (code < 0x2208)
 		return -1;
-	else if (code < 8751)
-		return table_8712[code - 8712];
-	else if (code < 8800)
+	if (code < 0x222f)
+	{
+		verify((sizeof(table_2208) / sizeof(table_2208[0])) == (0x222f - 0x2208));
+		return table_2208[code - 0x2208];
+	}
+	if (code < 0x2260)
 		return -1;
-	else if (code < 8806)
-		return table_8800[code - 8800];
-	else if (code == 8976)
+	if (code < 0x2266)
+	{
+		verify((sizeof(table_2260) / sizeof(table_2260[0])) == (0x2266 - 0x2260));
+		return table_2260[code - 0x2260];
+	}
+	if (code == 0x2310)
 		return 310;
-	else if (code == 8992)
+	if (code == 0x2320)
 		return 300;
-	else if (code == 8993)
+	if (code == 0x2321)
 		return 301;
-	else if (code == 9400)
+	if (code == 0x24b8)
 		return 332;
-	else if (code == 9415)
+	if (code == 0x24c7)
 		return 333;
-	else if (code == 9473)
+	if (code == 0x2501)
 		return 355;
-	else if (code == 9475)
+	if (code == 0x2503)
 		return 356;
-	else if (code < 9600)
+	if (code < 0x2580)
 		return -1;
-	else if (code < 9690)
-		return table_9600[code - 9600];
-	else if (code == 9711)
+	if (code < 0x25da)
+	{
+		verify((sizeof(table_2580) / sizeof(table_2580[0])) == (0x25da - 0x2580));
+		return table_2580[code - 0x2580];
+	}
+	if (code == 0x25ef)
 		return 343;
-	else if (code < 9784)
+	if (code < 0x2638)
 		return -1;
-	else if (code < 9795)
-		return table_9784[code - 9784];
-	else if (code < 9824)
+	if (code < 0x2643)
+	{
+		verify((sizeof(table_2638) / sizeof(table_2638[0])) == (0x2643 - 0x2638));
+		return table_2638[code - 0x2638];
+	}
+	if (code < 0x2660)
 		return -1;
-	else if (code < 9836)
-		return table_9824[code - 9824];
-	else if (code < 64256)
+	if (code < 0x266c)
+	{
+		verify((sizeof(table_2660) / sizeof(table_2660[0])) == (0x266c - 0x2660));
+		return table_2660[code - 0x2660];
+	}
+	if (code < 0xfb00)
 		return -1;
-	else if (code < 64261)
-		return table_64256[code - 64256];
-	else
-		return -1;
+	if (code < 0xfb05)
+	{
+		verify((sizeof(table_fb00) / sizeof(table_fb00[0])) == (0xfb05 - 0xfb00));
+		return table_fb00[code - 0xfb00];
+	}
+	return -1;
 }
+
+
+#ifdef MAIN
+
+#include <stdio.h>
+
+int main(void)
+{
+	unsigned int i;
+	int bics;
+	int j;
+	
+	for (i = 0; i < 0xffff; i++)
+	{
+		bics = unicode_to_bics(i);
+		if (bics >= 0)
+		{
+			if (bics >= BICS_COUNT)
+			{
+				printf("%d: %04x: too high\n", bics, i);
+			} else
+			{
+				unsigned int code = Bics2Unicode[bics];
+				if (code != i)
+				{
+					printf("%d: %04x != %04x", bics, code, i);
+					for (j = 0; j < BICS_COUNT; j++)
+					{
+						if (Bics2Unicode[j] == i)
+						{
+							printf(" (duplicate: %d)", j);
+						}
+					}
+					printf("\n");
+				}
+			}
+		}
+	}
+	return 0;
+}
+#endif

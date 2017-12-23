@@ -2,4 +2,4 @@
 
 extern unsigned short const Bics2Unicode[BICS_COUNT];
 
-int unicode_to_bics(unsigned);
+int unicode_to_bics(unsigned intx);

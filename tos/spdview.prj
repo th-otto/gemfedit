@@ -31,6 +31,7 @@ spdview.c
 ..\speedo\set_spcs.c
 ..\speedo\set_trns.c
 ..\speedo\sp_err.c
+..\speedo\bics2uni.c
 
 pcgemlib.lib
 pcstdlib.lib

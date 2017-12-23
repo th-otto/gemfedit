@@ -24,18 +24,19 @@ static _WORD gl_wchar, gl_hchar;
 
 #define MAIN_Y_MARGIN 10
 #define MAIN_X_MARGIN 10
-#define MAIN_WKIND (NAME | CLOSER | MOVER)
+#define MAIN_WKIND (NAME | CLOSER | MOVER | SIZER | UPARROW | DNARROW | VSLIDE)
 
 static _WORD app_id = -1;
 static _WORD mainwin = -1;
 static _WORD panelwin = -1;
 static _WORD aeshandle;
 static _WORD vdihandle = 0;
+static MFDB screen_fdb;
+static _WORD workout[57];
+static _WORD xworkout[57];
 static _BOOL quit_app;
 static OBJECT *menu;
-static _WORD scalex = 3;
-static _WORD scaley = 3;
-static const int scaled_margin = 2;
+static const int scaled_margin = 1;
 
 static _WORD font_cw;
 static _WORD font_ch;
@@ -45,24 +46,52 @@ static ufix8 *font_buffer;
 static ufix8 *c_buffer;
 static ufix16 mincharsize;
 static char fontname[70 + 1];
-static unsigned short first_char_index;
-static unsigned short last_char_index;
-static unsigned short num_chars;
+static uint16_t first_char_index;
+static uint16_t num_chars;
+static uint16_t num_ids;
+static long char_rows;
+static long top_row;
+static _WORD row_height = 1;
 
-static int point_size = 120;
+static int point_size = 240;
 static int x_res = 72;
 static int y_res = 72;
 static int quality = 0;
 static specs_t specs;
 static ufix16 char_index, char_id;
 #define	MAX_BITS	1024
-static char line_of_bits[MAX_BITS][MAX_BITS + 1];
+static _UWORD framebuffer[MAX_BITS >> 4][MAX_BITS];
 static buff_t char_data;
 
+#define CHAR_COLUMNS 16
+#define PAGE_SIZE    128
+
 typedef struct {
-	unsigned short char_index;
-	unsigned short char_id;
+	uint16_t char_index;
+	uint16_t char_id;
+	uint16_t width;
+	uint16_t height;
+	int16_t off_horz;
+	int16_t off_vert;
+	bbox_t bbox;
+	MFDB bitmap;
 } charinfo;
+static charinfo *infos;
+
+#define g_malloc(n) malloc(n)
+#define g_calloc(n, s) calloc(n, s)
+#define g_malloc0(n) calloc(n, 1)
+#define g_realloc(ptr, s) realloc(ptr, s)
+#define g_free free
+
+#undef g_new
+#define g_new(t, n) ((t *)g_malloc(sizeof(t) * (n)))
+#undef g_renew
+#define g_renew(t, p, n) ((t *)g_realloc(p, sizeof(t) * (n)))
+#undef g_new0
+#define g_new0(t, n) ((t *)g_calloc((n), sizeof(t)))
+
+#define DEBUG 0
 
 
 /*****************************************************************************/
@@ -155,14 +184,30 @@ static void destroy_win(void)
 
 #define ror(x) (((x) >> 1) | ((x) & 1 ? 0x80 : 0))
 
-static void draw_char(unsigned short c, _WORD x0, _WORD y0)
+static void draw_char(uint16_t ch, _WORD x0, _WORD y0)
 {
+	_WORD pxy[8];
+	_WORD colors[2];
+	charinfo *c;
+	
 	if (font_buffer == NULL)
 		return;
-	if (c < first_char_index || c > last_char_index)
+	if (ch >= num_ids || (c = &infos[ch])->bitmap.fd_addr == NULL)
 		return;
-	(void) x0;
-	(void) y0;
+	colors[0] = G_BLACK;
+	colors[1] = G_WHITE;
+	pxy[0] = 0;
+	pxy[1] = 0;
+	pxy[2] = c->width - 1;
+	pxy[3] = c->height - 1;
+	pxy[4] = x0;
+	pxy[5] = y0;
+	pxy[6] = x0 + pxy[2];
+	pxy[7] = y0 + pxy[3];
+	if (screen_fdb.fd_nplanes == 1)
+		vro_cpyfm(vdihandle, S_ONLY, pxy, &c->bitmap, &screen_fdb);
+	else
+		vrt_cpyfm(vdihandle, MD_REPLACE, pxy, &c->bitmap, &screen_fdb, colors);
 }
 
 /* ------------------------------------------------------------------------- */
@@ -173,12 +218,15 @@ static void mainwin_draw(const GRECT *area)
 	GRECT work;
 	_WORD pxy[8];
 	_WORD x, y;
-	_WORD scaled_w, scaled_h;
+	_WORD scaled_w;
+	long scaled_h;
 	
 	v_hide_c(vdihandle);
 	wind_get_grect(mainwin, WF_WORKXYWH, &work);
-	scaled_w = font_cw * 16 * scalex + 17 * scaled_margin;
-	scaled_h = font_ch * 16 * scaley + 17 * scaled_margin;
+	scaled_w = font_cw * CHAR_COLUMNS + (CHAR_COLUMNS + 1) * scaled_margin;
+	scaled_h = row_height * char_rows + scaled_margin;
+	if (scaled_h > work.g_h)
+		scaled_h = work.g_h;
 	wind_get_grect(mainwin, WF_FIRSTXYWH, &gr);
 	while (gr.g_w > 0 && gr.g_h > 0)
 	{
@@ -196,30 +244,45 @@ static void mainwin_draw(const GRECT *area)
 			vr_recfl(vdihandle, pxy);
 	
 			vsf_color(vdihandle, G_RED);
-			for (y = 0; y < 17; y++)
+			/*
+			 * draw the horizontal grid lines
+			 */
+			for (y = 0; y < (char_rows + 1); y++)
 			{
+				long yy = MAIN_Y_MARGIN + (y - top_row) * row_height;
+				if ((yy + row_height) < 0)
+					continue;
+				if (yy >= work.g_h)
+					break;
 				pxy[0] = work.g_x + MAIN_X_MARGIN;
-				pxy[1] = work.g_y + MAIN_Y_MARGIN + y * (font_ch * scaley + scaled_margin);
+				pxy[1] = work.g_y + (_WORD)yy;
 				pxy[2] = pxy[0] + scaled_w - 1;
 				pxy[3] = pxy[1] + scaled_margin - 1;
 				vr_recfl(vdihandle, pxy);
 			}
-			for (x = 0; x < 17; x++)
+			/*
+			 * draw the vertical grid lines
+			 */
+			for (x = 0; x < (CHAR_COLUMNS + 1); x++)
 			{
-				pxy[0] = work.g_x + MAIN_X_MARGIN + x * (font_cw * scalex + scaled_margin);
+				pxy[0] = work.g_x + MAIN_X_MARGIN + x * (font_cw + scaled_margin);
 				pxy[1] = work.g_y + MAIN_Y_MARGIN;
 				pxy[2] = pxy[0] + scaled_margin - 1;
-				pxy[3] = pxy[1] + scaled_h - 1;
+				pxy[3] = pxy[1] + (_WORD)scaled_h - 1;
 				vr_recfl(vdihandle, pxy);
 			}
 			
-			for (y = 0; y < 16; y++)
+			for (y = 0; y < char_rows; y++)
 			{
-				for (x = 0; x < 16; x++)
+				long yy = MAIN_Y_MARGIN + (y - top_row) * row_height + scaled_margin;
+				if ((yy + row_height) < (MAIN_Y_MARGIN + scaled_margin))
+					continue;
+				if (yy >= work.g_h)
+					break;
+				for (x = 0; x < CHAR_COLUMNS; x++)
 				{
-					unsigned short c = y * 16 + x;
-					if (c >= first_char_index && c <= last_char_index)
-						draw_char(c, work.g_x + MAIN_X_MARGIN + x * (font_cw * scalex + scaled_margin) + scaled_margin, work.g_y + MAIN_Y_MARGIN + y * (font_ch * scaley + scaled_margin) + scaled_margin);
+					uint16_t c = y * CHAR_COLUMNS + x;
+					draw_char(c, work.g_x + MAIN_X_MARGIN + x * (font_cw + scaled_margin) + scaled_margin, work.g_y + (_WORD)yy);
 				}
 			}
 		}
@@ -257,12 +320,43 @@ static void panelwin_draw(const GRECT *area)
 static _BOOL open_screen(void)
 {
 	_WORD work_in[] = { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2 };
-	_WORD work_out[57];
-
+	_WORD dummy;
+	
 	vdihandle = aeshandle;
-	(void) v_opnvwk(work_in, &vdihandle, work_out);	/* VDI workstation needed */
+	(void) v_opnvwk(work_in, &vdihandle, workout);	/* VDI workstation needed */
+	screen_fdb.fd_addr = 0;
+	screen_fdb.fd_w = workout[0] + 1;
+	screen_fdb.fd_h = workout[1] + 1;
+	screen_fdb.fd_wdwidth = screen_fdb.fd_w >> 4;
+	vq_extnd(vdihandle, 1, xworkout);
+	screen_fdb.fd_nplanes = xworkout[4];
+	screen_fdb.fd_stand = FALSE;
+	screen_fdb.fd_r1 = 0;
+	screen_fdb.fd_r2 = 0;
+	screen_fdb.fd_r3 = 0;
+	
+	/*
+	 * enforce some default values
+	 */
+	vst_color(vdihandle, G_BLACK);
+	vst_alignment(vdihandle, TA_LEFT, TA_TOP, &dummy, &dummy);
 	
 	return TRUE;
+}
+
+/* ------------------------------------------------------------------------- */
+
+static void do_alert(const char *str)
+{
+	graf_mouse(ARROW, NULL);
+	form_alert(1, str);
+}
+
+/* ------------------------------------------------------------------------- */
+
+static void do_alert1(_WORD num)
+{
+	do_alert(rs_str(num));
 }
 
 /* ------------------------------------------------------------------------- */
@@ -286,7 +380,7 @@ static _BOOL create_panel_window(void)
 	panelwin = wind_create_grect(wkind, &desk);
 	if (panelwin < 0)
 	{
-		form_alert(1, rs_str(AL_NOWINDOW));
+		do_alert1(AL_NOWINDOW);
 		return FALSE;
 	}
 
@@ -298,21 +392,58 @@ static _BOOL create_panel_window(void)
 
 /* ------------------------------------------------------------------------- */
 
+static void calc_vslider(void)
+{
+	GRECT gr;
+	long max_doc;
+	long hh;
+	long val;
+	
+	wind_get_grect(mainwin, WF_WORKXYWH, &gr);
+	hh = row_height * char_rows;
+	max_doc = hh - gr.g_h;
+	if (hh <= 0)
+	{
+		val = 1000;
+	} else
+	{
+		val = (1000l * gr.g_h) / hh;
+		if (val > 1000)
+			val = 1000;
+	}
+	wind_set_int(mainwin, WF_VSLSIZE, (_WORD)val);
+	if (max_doc <= 0)
+	{
+		val = 0;
+	} else
+	{
+		long yy = top_row * row_height;
+		val = (1000l * yy) / max_doc;
+	}
+	wind_set_int(mainwin, WF_VSLIDE, (_WORD)val);
+}
+
+/* ------------------------------------------------------------------------- */
+
 static _BOOL create_window(void)
 {
 	GRECT gr, desk, panel;
 	_WORD wkind;
-	_WORD width, height;
+	_WORD width;
+	long height;
 	
-	width = MAIN_X_MARGIN * 2 + scalex * font_cw * 16 + 17 * scaled_margin;
-	height = MAIN_Y_MARGIN * 2 + scaley * font_ch * 16 + 17 * scaled_margin;
+	wind_get_grect(DESK, WF_WORKXYWH, &desk);
+
+	width = MAIN_X_MARGIN * 2 + font_cw * CHAR_COLUMNS + (CHAR_COLUMNS + 1) * scaled_margin;
+	height = MAIN_Y_MARGIN * 2 + row_height * char_rows + scaled_margin;
+	if (height > desk.g_h)
+		height = desk.g_h;
 	
 	/* create a window */
 	gr.g_x = 100;
 	gr.g_y = 100;
 	gr.g_w = width;
-	gr.g_h = height;
-	wind_get_grect(DESK, WF_WORKXYWH, &desk);
+	gr.g_h = (_WORD)height;
 	wkind = MAIN_WKIND;
 	wind_calc_grect(WC_BORDER, wkind, &gr, &gr);
 	wind_get_grect(panelwin, WF_CURRXYWH, &panel);
@@ -322,13 +453,14 @@ static _BOOL create_window(void)
 	mainwin = wind_create_grect(wkind, &desk);
 	if (mainwin < 0)
 	{
-		form_alert(1, rs_str(AL_NOWINDOW));
+		do_alert1(AL_NOWINDOW);
 		return FALSE;
 	}
 
 	wind_set_str(mainwin, WF_NAME, "");
 	wind_calc_grect(WC_WORK, wkind, &gr, &gr);
 	wind_calc_grect(WC_BORDER, wkind, &gr, &gr);
+	calc_vslider();
 	wind_open_grect(mainwin, &gr);
 	
 	return TRUE;
@@ -340,20 +472,24 @@ static _BOOL resize_window(void)
 {
 	GRECT gr, desk;
 	_WORD wkind;
-	_WORD width, height;
+	_WORD width;
+	long height;
 	
-	width = MAIN_X_MARGIN * 2 + scalex * font_cw * 16 + 17 * scaled_margin;
-	height = MAIN_Y_MARGIN * 2 + scaley * font_ch * 16 + 17 * scaled_margin;
+	wind_get_grect(DESK, WF_WORKXYWH, &desk);
+	width = MAIN_X_MARGIN * 2 + font_cw * CHAR_COLUMNS + (CHAR_COLUMNS + 1) * scaled_margin;
+	height = MAIN_Y_MARGIN * 2 + row_height * char_rows + scaled_margin;
+	if (height > desk.g_h)
+		height = desk.g_h;
 	
 	wind_get_grect(mainwin, WF_CURRXYWH, &gr);
-	wind_get_grect(DESK, WF_WORKXYWH, &desk);
 	wkind = MAIN_WKIND;
 	wind_calc_grect(WC_WORK, wkind, &gr, &gr);
 	gr.g_w = width;
-	gr.g_h = height;
+	gr.g_h = (_WORD)height;
 	wind_calc_grect(WC_BORDER, wkind, &gr, &gr);
 	rc_intersect(&desk, &gr);
 	wind_set_grect(mainwin, WF_CURRXYWH, &gr);
+	calc_vslider();
 	
 	return TRUE;
 }
@@ -423,14 +559,13 @@ void sp_write_error(const char *str, ...)
 	vsprintf(buf, str, v);
 	va_end(v);
 	sprintf(msg, "[1][%s][OK]", buf);
-	form_alert(1, msg);
+	do_alert(msg);
 }
 
 /* ------------------------------------------------------------------------- */
 
 void sp_open_bitmap(fix31 x_set_width, fix31 y_set_width, fix31 xorg, fix31 yorg, fix15 xsize, fix15 ysize)
 {
-	fix15 i, y;
 	fix15 off_horz;
 	fix15 off_vert;
 	fix31 width, pix_width;
@@ -456,26 +591,25 @@ void sp_open_bitmap(fix31 x_set_width, fix31 y_set_width, fix31 xorg, fix31 yorg
 	width = (pix_width * 7200L) / (point_size * y_res);
 
 	sp_get_char_bbox(char_index, &bb);
-	bb.xmin >>= 16;
-	bb.ymin >>= 16;
-	bb.xmax >>= 16;
-	bb.ymax >>= 16;
+	infos[char_id].bbox = bb;
 
-	if ((bb.xmax - bb.xmin) != bit_width)
-		nf_debugprintf("bbox & width mismatch 0x%x (0x%x) (%d vs %d)\n",
-				char_index, char_id, (bb.xmax - bb.xmin), bit_width);
-	if ((bb.ymax - bb.ymin) != bit_height)
-		nf_debugprintf("bbox & height mismatch 0x%x (0x%x) (%d vs %d)\n",
-				char_index, char_id, (bb.ymax - bb.ymin), bit_height);
-	if (bb.xmin != off_horz)
-		nf_debugprintf("x min mismatch 0x%x (0x%x) (%d vs %d)\n", char_index, char_id, bb.xmin, off_horz);
-	if (bb.ymin != off_vert)
-		nf_debugprintf("y min mismatch 0x%x (0x%x) (%d vs %d)\n", char_index, char_id, bb.ymin, off_vert);
+#if DEBUG
+	if (((bb.xmax - bb.xmin) >> 16) != bit_width)
+		nf_debugprintf("char 0x%x (0x%x): bbox & width mismatch (%ld vs %d)\n",
+				char_index, char_id, (unsigned long)(bb.xmax - bb.xmin) >> 16, bit_width);
+	if (((bb.ymax - bb.ymin) >> 16) != bit_height)
+		nf_debugprintf("char 0x%x (0x%x): bbox & height mismatch (%ld vs %d)\n",
+				char_index, char_id, (unsigned long)(bb.ymax - bb.ymin) >> 16, bit_height);
+	if ((bb.xmin >> 16) != off_horz)
+		nf_debugprintf("char 0x%x (0x%x): x min mismatch (%ld vs %d)\n", char_index, char_id, (unsigned long)bb.xmin >> 16, off_horz);
+	if ((bb.ymin >> 16) != off_vert)
+		nf_debugprintf("char 0x%x (0x%x): y min mismatch (%ld vs %d)\n", char_index, char_id, (unsigned long)bb.ymin >> 16, off_vert);
+#endif
 
-	bit_width = bb.xmax - bb.xmin;
-	bit_height = bb.ymax - bb.ymin;
-	off_horz = bb.xmin;
-	off_vert = bb.ymin;
+	bit_width = ((bb.xmax - bb.xmin) + 32768L) >> 16;
+	bit_height = ((bb.ymax - bb.ymin) + 32768L) >> 16;
+	off_horz = bb.xmin >> 16;
+	off_vert = bb.ymin >> 16;
 
 	/* XXX kludge to handle space */
 	if (bb.xmin == 0 && bb.ymin == 0 && bb.xmax == 0 && bb.ymax == 0 && width)
@@ -486,24 +620,22 @@ void sp_open_bitmap(fix31 x_set_width, fix31 y_set_width, fix31 xorg, fix31 yorg
 
 	if (bit_width > MAX_BITS)
 	{
-		nf_debugprintf("width too large 0x%x (0x%x) (%d vs %d)\n", char_index, char_id, bit_width, MAX_BITS);
+		nf_debugprintf("char 0x%x (0x%x): width too large (%d vs %d)\n", char_index, char_id, bit_width, MAX_BITS);
 		bit_width = MAX_BITS;
 	}
 	
 	if (bit_height > MAX_BITS)
 	{
-		nf_debugprintf("height too large 0x%x (0x%x) (%d vs %d)\n", char_index, char_id, bit_width, MAX_BITS);
+		nf_debugprintf("char 0x%x (0x%x): height too large /%d vs %d)\n", char_index, char_id, bit_width, MAX_BITS);
 		bit_height = MAX_BITS;
 	}
 	
-	for (y = 0; y < bit_height; y++)
-	{
-		for (i = 0; i < bit_width; i++)
-		{
-			line_of_bits[y][i] = ' ';
-		}
-		line_of_bits[y][bit_width] = '\0';
-	}
+	infos[char_id].width = bit_width;
+	infos[char_id].height = bit_height;
+	infos[char_id].off_horz = off_horz;
+	infos[char_id].off_vert = off_vert;
+	
+	memset(framebuffer, 0, sizeof(framebuffer));
 }
 
 /* ------------------------------------------------------------------------- */
@@ -514,27 +646,31 @@ void sp_set_bitmap_bits(fix15 y, fix15 xbit1, fix15 xbit2)
 {
 	fix15 i;
 
-	if (xbit1 > MAX_BITS)
+	if (xbit1 < 0 || xbit1 >= bit_width)
 	{
-		nf_debugprintf("run wider than max bits -- truncated\n");
-		xbit1 = MAX_BITS;
+		nf_debugprintf("char 0x%x (0x%x): bit1 %d wider than max bits %u -- truncated\n", char_index, char_id, xbit1, bit_width);
+		xbit1 = bit_width;
+		trunc = 1;
 	}
-	if (xbit2 > MAX_BITS)
+	if (xbit2 < 0 || xbit2 > bit_width)
 	{
-		nf_debugprintf("run wider than max bits -- truncated\n");
-		xbit2 = MAX_BITS;
+		nf_debugprintf("char 0x%x (0x%x): bit2 %d wider than max bits %u -- truncated\n", char_index, char_id, xbit2, bit_width);
+		xbit2 = bit_width;
+		trunc = 1;
 	}
 
-	if (y >= bit_height)
+	if (y < 0 || y >= bit_height)
 	{
-		nf_debugprintf("y value is larger than height 0x%x (0x%x) -- truncated\n", char_index, char_id);
+		nf_debugprintf("char 0x%x (0x%x): y value %d is larger than height %u -- truncated\n", char_index, char_id, y, bit_height);
 		trunc = 1;
 		return;
 	}
 
 	for (i = xbit1; i < xbit2; i++)
 	{
-		line_of_bits[y][i] = '*';
+		unsigned int x = i >> 4;
+		_UWORD mask = 0x8000 >> (i & 0x000f);
+		framebuffer[y][x] |= mask;
 	}
 }
 
@@ -571,46 +707,30 @@ buff_t *sp_load_char_data(fix31 file_offset, fix15 num, fix15 cb_offset)
 
 /* ------------------------------------------------------------------------- */
 
-static void dump_line(const char *line)
-{
-	int bit;
-	unsigned byte;
-
-	byte = 0;
-	for (bit = 0; bit < bit_width; bit++)
-	{
-		if (line[bit] != ' ')
-			byte |= (1 << (7 - (bit & 7)));
-		if ((bit & 7) == 7)
-		{
-			printf("%02X", byte);
-			byte = 0;
-		}
-	}
-	if ((bit & 7) != 0)
-		printf("%02X", byte);
-	printf("\n");
-}
-
-/* ------------------------------------------------------------------------- */
-
 void sp_close_bitmap(void)
 {
-	int y, i;
-
-	trunc = 0;
-
-	for (y = 0; y < bit_height; y++)
-		dump_line(line_of_bits[y]);
-
-	for (y = 0; y < bit_height; y++)
+	charinfo *c = &infos[char_id];
+	fix15 y;
+	_UWORD *bitmap;
+	
+	c->bitmap.fd_wdwidth = (bit_width + 15) >> 4;
+	c->bitmap.fd_w = bit_width;
+	c->bitmap.fd_h = bit_height;
+	c->bitmap.fd_nplanes = 1;
+	c->bitmap.fd_stand = 1;
+	c->bitmap.fd_r1 = c->bitmap.fd_r2 = c->bitmap.fd_r3 = 0;
+	bitmap = g_new(_UWORD, c->bitmap.fd_wdwidth * c->bitmap.fd_h);
+	c->bitmap.fd_addr = bitmap;
+	if (bitmap != NULL)
 	{
-		for (i = 0; i < bit_width; i++)
+		for (y = 0; y < c->bitmap.fd_h; y++)
 		{
-			line_of_bits[y][i] = ' ';
+			memcpy(bitmap, &framebuffer[y][0], c->bitmap.fd_wdwidth << 1);
+			bitmap += c->bitmap.fd_wdwidth;
 		}
-		line_of_bits[y][bit_width] = '\0';
 	}
+	trunc = 0;
+	memset(framebuffer, 0, sizeof(framebuffer));
 }
 
 /* ------------------------------------------------------------------------- */
@@ -681,7 +801,7 @@ static _BOOL font_gen_speedo_font(void)
 {
 	_BOOL decode_ok = TRUE;
 	const ufix8 *key;
-	unsigned short i;
+	uint16_t i;
 
 	/* init */
 	sp_reset();
@@ -690,9 +810,7 @@ static _BOOL font_gen_speedo_font(void)
 	if (key == NULL)
 	{
 		sp_write_error("Non-standard encryption");
-#if 0
-		decode_ok = FALSE;
-#endif
+		return FALSE;
 	} else
 	{
 		sp_set_key(key);
@@ -700,7 +818,11 @@ static _BOOL font_gen_speedo_font(void)
 	
 	first_char_index = read_2b(font_buffer + FH_FCHRF);
 	num_chars = read_2b(font_buffer + FH_NCHRL);
-	last_char_index = first_char_index + num_chars - 1;
+	if (num_chars == 0)
+	{
+		do_alert1(AL_NO_GLYPHS);
+		return FALSE;
+	} 
 	
 	/* set up specs */
 	/* Note that point size is in decipoints */
@@ -715,12 +837,19 @@ static _BOOL font_gen_speedo_font(void)
 	switch (quality)
 	{
 	case 0:
-		specs.flags = 0;
+		specs.flags = MODE_BLACK;
 		break;
 	case 1:
 		specs.flags = MODE_SCREEN;
 		break;
 	case 2:
+#if INCL_OUTLINE
+		specs.flags = MODE_OUTLINE;
+#else
+		specs.flags = MODE_2D;
+#endif
+		break;
+	case 3:
 		specs.flags = MODE_2D;
 		break;
 	}
@@ -732,15 +861,94 @@ static _BOOL font_gen_speedo_font(void)
 		decode_ok = FALSE;
 	} else
 	{
+		num_ids = 0;
 		for (i = 0; i < num_chars; i++)
 		{
 			char_index = i + first_char_index;
 			char_id = sp_get_char_id(char_index);
-			if (char_id)
+			if (char_id != 0 && char_id != 0xffff && char_id >= num_ids)
+				num_ids = char_id + 1;
+		}
+		
+		if (num_ids == 0)
+		{
+			do_alert1(AL_NO_GLYPHS);
+			return FALSE;
+		}
+		char_rows = (num_ids + CHAR_COLUMNS - 1) / CHAR_COLUMNS;
+		
+		infos = g_new(charinfo, num_ids);
+		if (infos == NULL)
+		{
+			do_alert1(AL_NOMEM);
+			return FALSE;
+		}
+		
+		for (i = 0; i < num_ids; i++)
+		{
+			infos[i].char_index = 0;
+			infos[i].char_id = 0xffff;
+			infos[i].bitmap.fd_addr = NULL;
+		}
+
+		/*
+		 * determine the average width of all the glyphs in the font
+		 */
+		{
+			bbox_t bb;
+			unsigned long total_width;
+			uint16_t num_glyphs;
+			fix15 width, height;
+			fix15 max_width, max_height;
+			
+			total_width = 0;
+			num_glyphs = 0;
+			max_width = 0;
+			max_height = 0;
+			for (i = 0; i < num_chars; i++)
 			{
-				if (!sp_make_char(char_index))
+				char_index = i + first_char_index;
+				char_id = sp_get_char_id(char_index);
+				if (char_id != 0 && char_id != 0xffff)
 				{
-					nf_debugprintf("can't make char %d (%x)\n", char_index, char_id);
+					sp_get_char_bbox(char_index, &bb);
+					width = ((bb.xmax - bb.xmin) + 32768L) >> 16;
+					height = ((bb.ymax - bb.ymin) + 32768L) >> 16;
+					total_width += width;
+					if (width > max_width)
+						max_width = width;
+					if (height > max_height)
+						max_height = height;
+					num_glyphs++;
+				}
+			}
+			font_ch = max_height;
+			if (num_glyphs == 0)
+				font_cw = max_width;
+			else
+				font_cw = (_WORD)(total_width / num_glyphs);
+			font_cw = max_width;
+			nf_debugprintf("max height %d max width %d average width %d\n", max_height, max_width, font_cw);
+			row_height = font_ch + scaled_margin;
+		}
+		
+		for (i = 0; i < num_chars; i++)
+		{
+			char_index = i + first_char_index;
+			char_id = sp_get_char_id(char_index);
+			if (char_id != 0 && char_id != 0xffff)
+			{
+				if (infos[char_id].char_id != 0xffff)
+				{
+					nf_debugprintf("char 0x%x (0x%x) already defined\n", char_index, char_id);
+				} else
+				{
+					infos[char_id].char_index = char_index;
+					infos[char_id].char_id = char_id;
+					if (!sp_make_char(char_index))
+					{
+						nf_debugprintf("can't make char %d (%x)\n", char_index, char_id);
+					}
 				}
 			}
 		}
@@ -763,13 +971,13 @@ static _BOOL font_load_speedo_font(const char *filename)
 		char buf[256];
 		
 		sprintf(buf, rs_str(AL_FOPEN), filename);
-		form_alert(1, buf);
+		do_alert(buf);
 		return FALSE;
 	}
 	if (fread(tmp, sizeof(ufix8), 16, fp) != 16)
 	{
 		fclose(fp);
-		form_alert(1, rs_str(AL_READERROR));
+		do_alert1(AL_READERROR);
 		return FALSE;
 	}
 	free(font_buffer);
@@ -780,7 +988,7 @@ static _BOOL font_load_speedo_font(const char *filename)
 	if (font_buffer == NULL)
 	{
 		fclose(fp);
-		form_alert(1, rs_str(AL_NOMEM));
+		do_alert1(AL_NOMEM);
 		return FALSE;
 	}
 	fseek(fp, 0, SEEK_SET);
@@ -789,19 +997,19 @@ static _BOOL font_load_speedo_font(const char *filename)
 		fclose(fp);
 		free(font_buffer);
 		font_buffer = NULL;
-		form_alert(1, rs_str(AL_READERROR));
+		do_alert1(AL_READERROR);
 		return FALSE;
 	}
 
 	mincharsize = read_2b(font_buffer + FH_CBFSZ);
 
-	c_buffer = (ufix8 *) malloc(mincharsize);
-	if (!c_buffer)
+	c_buffer = g_new(ufix8, mincharsize);
+	if (c_buffer == NULL)
 	{
 		fclose(fp);
 		free(font_buffer);
 		font_buffer = NULL;
-		form_alert(1, rs_str(AL_NOMEM));
+		do_alert1(AL_NOMEM);
 		return FALSE;
 	}
 
@@ -814,6 +1022,7 @@ static _BOOL font_load_speedo_font(const char *filename)
 	if (ret)
 	{
 		font.org = font_buffer;
+		top_row = 0;
 		resize_window();
 		wind_set_str(mainwin, WF_NAME, fontname);
 		redraw_win(mainwin);
@@ -823,6 +1032,10 @@ static _BOOL font_load_speedo_font(const char *filename)
 		font_buffer = NULL;
 		free(c_buffer);
 		c_buffer = NULL;
+		g_free(infos);
+		infos = NULL;
+		num_ids = 0;
+		char_rows = 0;
 	}
 
 	return ret;
@@ -914,6 +1127,30 @@ static void msg_mn_select(_WORD title, _WORD entry)
 
 /* ------------------------------------------------------------------------- */
 
+static void vscroll_to(long yy)
+{
+	GRECT gr;
+	long row;
+	long page_h;
+	
+	wind_get_grect(mainwin, WF_WORKXYWH, &gr);
+	page_h = ((gr.g_h - MAIN_Y_MARGIN) / row_height) * row_height;
+
+	if (yy + page_h > char_rows * row_height)
+		yy = char_rows * row_height - page_h;
+	if (yy < 0)
+		yy = 0;
+	row = yy / row_height;
+	if (row != top_row)
+	{
+		top_row = row;
+		calc_vslider();
+		redraw_win(mainwin);
+	}
+}
+
+/* ------------------------------------------------------------------------- */
+
 static void mainloop(void)
 {
 	_WORD event;
@@ -950,19 +1187,10 @@ static void mainloop(void)
 				switch ((k >> 8) & 0xff)
 				{
 				case 0x48:
-					scalex++;
-					scaley++;
-					resize_window();
-					redraw_win(mainwin);
+					vscroll_to(top_row * row_height - row_height);
 					break;
 				case 0x50:
-					if (scaley > 1)
-					{
-						scalex--;
-						scaley--;
-						resize_window();
-						redraw_win(mainwin);
-					}
+					vscroll_to(top_row * row_height + row_height);
 					break;
 				}
 				break;
@@ -985,10 +1213,8 @@ static void mainloop(void)
 			case WM_SIZED:
 				if (message[3] == mainwin)
 				{
-					GRECT gr;
-					
 					wind_set_grect(message[3], WF_CURRXYWH, (GRECT *)&message[4]);
-					wind_get_grect(message[3], WF_WORKXYWH, &gr);
+					calc_vslider();
 				}
 				break;
 
@@ -1010,7 +1236,53 @@ static void mainloop(void)
 				else if (message[3] == panelwin)
 					panelwin_draw((const GRECT *)&message[4]);
 				break;
-
+			
+			case WM_ARROWED:
+				if (message[3] == mainwin)
+				{
+					long amount = 0;
+					GRECT gr;
+					long yy;
+					long page_h;
+					
+					wind_get_grect(mainwin, WF_WORKXYWH, &gr);
+					page_h = ((gr.g_h - MAIN_Y_MARGIN) / row_height) * row_height;
+					switch (message[4])
+					{
+					case WA_UPLINE:
+						amount = -row_height;
+						break;
+					case WA_DNLINE:
+						amount = row_height;
+						break;
+					case WA_UPPAGE:
+						amount = -page_h;
+						break;
+					case WA_DNPAGE:
+						amount = page_h;
+						break;
+					}
+					yy = top_row * row_height + amount;
+					vscroll_to(yy);
+				}
+				break;
+				
+			case WM_VSLID:
+				if (message[3] == mainwin)
+				{
+					GRECT gr;
+					long hh;
+					long page_h;
+					long yy;
+					
+					wind_get_grect(mainwin, WF_WORKXYWH, &gr);
+					hh = row_height * char_rows;
+					page_h = ((gr.g_h - MAIN_Y_MARGIN) / row_height) * row_height;
+					yy = ((long)message[4] * (hh - page_h)) / 1000;
+					vscroll_to(yy);
+				}
+				break;
+				
 			case MN_SELECTED:
 				switch (message[4])
 				{
@@ -1075,7 +1347,7 @@ int main(int argc, char **argv)
 		if (argc > 1)
 			font_load_speedo_font(argv[1]);
 		else
-			font_load_speedo_font("..\\speedo\\bx000003.spd");
+			font_load_speedo_font("..\\speedo\\btfonts\\bx000003.spd");
 	}
 	
 	graf_mouse(ARROW, NULL);

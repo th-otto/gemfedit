@@ -310,15 +310,15 @@ void sp_open_bitmap(fix31 x_set_width, fix31 y_set_width, fix31 xorg, fix31 yorg
 
 #if DEBUG
 	if (((bb.xmax - bb.xmin) >> 16) != bit_width)
-		g_string_append_printf(errorout, "char 0x%x (0x%x): bbox & width mismatch (%d vs %d)\n",
-				char_index, char_id, (bb.xmax - bb.xmin) >> 16), bit_width);
+		g_string_append_printf(errorout, "char 0x%x (0x%x): bbox & width mismatch (%ld vs %d)\n",
+				char_index, char_id, (unsigned long)(bb.xmax - bb.xmin) >> 16, bit_width);
 	if (((bb.ymax - bb.ymin) >> 16) != bit_height)
-		g_string_append_printf(errorout, "char 0x%x (0x%x): bbox & height mismatch (%d vs %d)\n",
-				char_index, char_id, (bb.ymax - bb.ymin) >> 16), bit_height);
+		g_string_append_printf(errorout, "char 0x%x (0x%x): bbox & height mismatch (%ld vs %d)\n",
+				char_index, char_id, (unsigned long)(bb.ymax - bb.ymin) >> 16, bit_height);
 	if ((bb.xmin >> 16) != off_horz)
-		g_string_append_printf(errorout, "char 0x%x (0x%x): x min mismatch (%d vs %d)\n", char_index, char_id, bb.xmin >> 16, off_horz);
+		g_string_append_printf(errorout, "char 0x%x (0x%x): x min mismatch (%ld vs %d)\n", char_index, char_id, (unsigned long)bb.xmin >> 16, off_horz);
 	if ((bb.ymin >> 16) != off_vert)
-		g_string_append_printf(errorout, "char 0x%x (0x%x): y min mismatch (%d vs %d)\n", char_index, char_id, bb.ymin >> 16, off_vert);
+		g_string_append_printf(errorout, "char 0x%x (0x%x): y min mismatch (%ld vs %d)\n", char_index, char_id, (unsigned long)bb.ymin >> 16, off_vert);
 #endif
 
 	bit_width = ((bb.xmax - bb.xmin) + 32768L) >> 16;
@@ -361,20 +361,20 @@ void sp_set_bitmap_bits(fix15 y, fix15 xbit1, fix15 xbit2)
 {
 	fix15 i;
 
-	if (xbit1 >= MAX_BITS)
+	if (xbit1 < 0 || xbit1 >= bit_width)
 	{
-		g_string_append_printf(errorout, "char 0x%x (0x%x): bit1 %d wider than max bits %u -- truncated\n", char_index, char_id, xbit1, MAX_BITS);
-		xbit1 = MAX_BITS - 1;
+		g_string_append_printf(errorout, "char 0x%x (0x%x): bit1 %d wider than max bits %u -- truncated\n", char_index, char_id, xbit1, bit_width);
+		xbit1 = MAX_BITS;
 		trunc = 1;
 	}
-	if (xbit2 > MAX_BITS)
+	if (xbit2 < 0 || xbit2 > bit_width)
 	{
-		g_string_append_printf(errorout, "char 0x%x (0x%x): bit2 %d wider than max bits %u -- truncated\n", char_index, char_id, xbit2, MAX_BITS);
+		g_string_append_printf(errorout, "char 0x%x (0x%x): bit2 %d wider than max bits %u -- truncated\n", char_index, char_id, xbit2, bit_width);
 		xbit2 = MAX_BITS;
 		trunc = 1;
 	}
 
-	if (y >= bit_height)
+	if (y < 0 || y >= bit_height)
 	{
 		g_string_append_printf(errorout, "char 0x%x (0x%x): y value %d is larger than height %u -- truncated\n", char_index, char_id, y, bit_height);
 		trunc = 1;
@@ -657,16 +657,26 @@ static gboolean gen_speedo_font(const char *filename, GString *body)
 		{
 			char_index = i + first_char_index;
 			char_id = sp_get_char_id(char_index);
-			if (char_id != 0xffff && char_id >= num_ids)
+			if (char_id != 0 && char_id != 0xffff && char_id >= num_ids)
 				num_ids = char_id + 1;
 		}
 		
+		if (num_ids == 0)
+		{
+			g_string_append(errorout, "no characters in font\n");
+			return FALSE;
+		} 
+#if 0
 		num_ids = sp_get_char_id(num_chars + first_char_index - 1) + 1;
-		/* num_ids = ((num_ids + CHAR_COLUMNS - 1) / CHAR_COLUMNS) * CHAR_COLUMNS; */
+		num_ids = ((num_ids + CHAR_COLUMNS - 1) / CHAR_COLUMNS) * CHAR_COLUMNS;
+#endif
 		
 		infos = g_new(charinfo, num_ids);
 		if (infos == NULL)
+		{
+			g_string_append_printf(errorout, "%s\n", strerror(errno));
 			return FALSE;
+		}
 		
 		for (i = 0; i < num_ids; i++)
 		{
@@ -679,7 +689,7 @@ static gboolean gen_speedo_font(const char *filename, GString *body)
 		{
 			char_index = i + first_char_index;
 			char_id = sp_get_char_id(char_index);
-			if (char_id && char_id != 0xffff)
+			if (char_id != 0 && char_id != 0xffff)
 			{
 				if (infos[char_id].char_id != 0xffff)
 				{
@@ -756,7 +766,7 @@ static gboolean gen_speedo_font(const char *filename, GString *body)
 				{
 					uint16_t unicode;
 					
-					unicode = infos[char_id].char_id < BICS_COUNT ? Bics2Unicode[infos[char_id].char_id] : 0xffff;
+					unicode = infos[char_id].char_index < BICS_COUNT ? Bics2Unicode[infos[char_id].char_index] : 0xffff;
 					g_string_append_printf(body,
 						"<td class=\"spd_glyph_image\" title=\""
 						"Index: 0x%x&#10;"
@@ -768,16 +778,15 @@ static gboolean gen_speedo_font(const char *filename, GString *body)
 						infos[char_id].char_index,
 						infos[char_id].char_id,
 						unicode,
-						(real)infos[char_id].bbox.xmin / 65536.0,
-						(real)infos[char_id].bbox.ymin / 65536.0,
-						(real)infos[char_id].bbox.xmax / 65536.0,
-						(real)infos[char_id].bbox.ymax / 65536.0,
+						(double)infos[char_id].bbox.xmin / 65536.0,
+						(double)infos[char_id].bbox.ymin / 65536.0,
+						(double)infos[char_id].bbox.xmax / 65536.0,
+						(double)infos[char_id].bbox.ymax / 65536.0,
 						img[j]);
 				} else
 				{
 					g_string_append_printf(body,
-						"<td class=\"spd_glyph_image\"><img alt=\"\" src=\"%s\"></td>",
-						"empty.png");
+						"<td class=\"spd_glyph_image\" style=\"width: 0px; height: 0px;\"></td>");
 				}
 			}				
 				
@@ -851,7 +860,7 @@ static gboolean load_speedo_font(const char *filename, GString *body)
 					mincharsize = read_2b(font_buffer + FH_CBFSZ);
 				
 					c_buffer = g_new(ufix8, mincharsize);
-					if (!c_buffer)
+					if (c_buffer == NULL)
 					{
 						fclose(fp);
 						g_free(font_buffer);
