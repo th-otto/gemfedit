@@ -67,14 +67,14 @@ WITH THE SPEEDO SOFTWARE OR THE BITSTREAM CHARTER OUTLINE FONT.
 				 ((fix15)((A)[-1]) << 8) | (fix15)((A)[-2]) | \
 				 ((A)[-1] & 0x80 ? ~0xFFFF : 0))))
 
-#if INCL_EXT                       /* Extended fonts supported? */
+#if INCL_EXT
 
 #define NEXT_BYTES(A, B) \
     (((B = (ufix16)(*(A)++) ^ sp_globals.key7) >= 248) ? \
      ((ufix16)(B & 0x07) << 8) + ((*(A)++) ^ sp_globals.key8) + 248: \
      B)
 
-#else                              /* Compact fonts only supported? */
+#else
 
 #define NEXT_BYTES(A, B) ((*(A)++) ^ sp_globals.key7)
 
@@ -119,7 +119,7 @@ WITH THE SPEEDO SOFTWARE OR THE BITSTREAM CHARTER OUTLINE FONT.
 
 #if INCL_MULTIDEV
 
-#define open_bitmap(x_set_width, y_set_width, xmin, xmax, ymin, ymax) (*sp_globals.bitmap_device.p_open_bitmap)(x_set_width, y_set_width, xmin, xmax, ymin, ymax)
+#define open_bitmap(xmin, xmax, ymin, ymax) (*sp_globals.bitmap_device.p_open_bitmap)(xmin, xmax, ymin, ymax)
 #define set_bitmap_bits(y, xbit1, xbit2) (*sp_globals.bitmap_device.p_set_bits)(y, xbit1, xbit2)
 #define close_bitmap() (*sp_globals.bitmap_device.p_close_bitmap)()
 
@@ -133,7 +133,7 @@ WITH THE SPEEDO SOFTWARE OR THE BITSTREAM CHARTER OUTLINE FONT.
 
 #else
 
-#define open_bitmap(x_set_width, y_set_width, xmin, xmax, ymin, ymax) sp_open_bitmap(x_set_width, y_set_width, xmin, xmax, ymin, ymax)
+#define open_bitmap(xmin, xmax, ymin, ymax) sp_open_bitmap(xmin, xmax, ymin, ymax)
 #define set_bitmap_bits(y, xbit1, xbit2) sp_set_bitmap_bits(y, xbit1, xbit2)
 #define close_bitmap() sp_close_bitmap()
 

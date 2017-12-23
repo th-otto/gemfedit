@@ -529,7 +529,7 @@ int main(int argc, char **argv)
 		}
 	}
 
-	(void) fclose(fp);
+	fclose(fp);
 
 	printf("ENDFONT\n");
 	
@@ -543,21 +543,16 @@ boolean sp_load_char_data(fix31 file_offset, fix15 num, fix15 cb_offset, buff_t 
 	if (fseek(fp, file_offset, SEEK_SET))
 	{
 		fprintf(stderr, "can't seek to char\n");
-		(void) fclose(fp);
-		exit(1);
 		return FALSE;
 	}
 	if ((num + cb_offset) > mincharsize)
 	{
 		fprintf(stderr, "char buf overflow\n");
-		(void) fclose(fp);
-		exit(2);
 		return FALSE;
 	}
 	if (fread((c_buffer + cb_offset), sizeof(ufix8), num, fp) != num)
 	{
 		fprintf(stderr, "can't get char data\n");
-		exit(1);
 		return FALSE;
 	}
 	char_data->org = (ufix8 *) c_buffer + cb_offset;
@@ -582,7 +577,7 @@ void sp_write_error(const char *str, ...)
 }
 
 
-void sp_open_bitmap(fix31 x_set_width, fix31 y_set_width, fix31 xorg, fix31 yorg, fix15 xsize, fix15 ysize)
+void sp_open_bitmap(fix31 xorg, fix31 yorg, fix15 xsize, fix15 ysize)
 {
 	fix15 i, y;
 	fix15 off_horz;
@@ -590,8 +585,6 @@ void sp_open_bitmap(fix31 x_set_width, fix31 y_set_width, fix31 xorg, fix31 yorg
 	fix31 width, pix_width;
 	bbox_t bb;
 
-	UNUSED(x_set_width);
-	UNUSED(y_set_width);
 	bit_width = xsize;
 	bit_height = ysize;
 

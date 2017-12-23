@@ -72,7 +72,7 @@ Some features will not work without JavaScript enabled.
 <td>
 <fieldset>
 Type in URL of a SpeedoFont file (it must be remotely accessible from that URL<br />
-for example <a href="spdview.cgi?url=<?php echo dirname($_SERVER['SCRIPT_NAME']) . "/$btfontdir/" ?>bx000003.spd">http://www.tho-otto.de<?php echo dirname($_SERVER['SCRIPT_NAME']) . "/$btfontdir/" ?>bx000003.spd</a>):
+for example <a href="javascript: submitUrl(&quot;<?php echo dirname($_SERVER['SCRIPT_NAME']) . "/$btfontdir/" ?>bx000003.spd&quot;);">http://www.tho-otto.de<?php echo dirname($_SERVER['SCRIPT_NAME']) . "/$btfontdir/" ?>bx000003.spd</a>:
 <br />
 <input type="text" id="url" name="url" size="60" tabindex="1" style="margin-top: 1ex;" />
 <input id="submiturl" style="background-color: #cccccc; font-weight: bold; visibility: hidden;" type="button" value="View" onclick="submitUrl(document.getElementById('url').value);" />

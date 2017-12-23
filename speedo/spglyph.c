@@ -59,20 +59,18 @@ static CurrentFontValuesRec current_font_values;
 
 static CurrentFontValuesPtr cfv = &current_font_values;
 
-static int bit_order,
- byte_order,
- scan;
+static int bit_order;
+static int byte_order;
+static int scan;
+
 
 unsigned long sp_compute_data_size(FontPtr pfont, int mappad, int scanlinepad, unsigned long start, unsigned long end)
 {
 	unsigned long ch;
 	unsigned long size = 0;
 	int bpr;
-
 	SpeedoFontPtr spf = (SpeedoFontPtr) pfont->fontPrivate;
-
 	FontInfoPtr pinfo = &pfont->info;
-
 	int firstChar;
 
 	firstChar = spf->master->first_char_id;
@@ -81,9 +79,7 @@ unsigned long sp_compute_data_size(FontPtr pfont, int mappad, int scanlinepad, u
 	switch (mappad)
 	{
 		int charsize;
-
 		CharInfoPtr ci;
-
 		xCharInfo *cim;
 
 	case BitmapFormatImageRectMin:
@@ -127,7 +123,6 @@ unsigned long sp_compute_data_size(FontPtr pfont, int mappad, int scanlinepad, u
 static void finish_line(SpeedoFontPtr spf)
 {
 	int bpr = cfv->bpr;
-
 	CharInfoPtr ci = &spf->encoding[cfv->char_id - spf->master->first_char_id];
 
 	if (bpr == 0)
@@ -145,10 +140,7 @@ static void finish_line(SpeedoFontPtr spf)
 void sp_set_bitmap_bits(fix15 y, fix15 xbit1, fix15 xbit2)
 {
 	int nmiddle;
-
-	CARD8 startmask,
-	 endmask;
-
+	CARD8 startmask, endmask;
 	CARD8 *dst;
 
 	if (xbit1 > cfv->bit_width)
@@ -222,7 +214,7 @@ void sp_set_bitmap_bits(fix15 y, fix15 xbit1, fix15 xbit2)
 }
 
 /* ARGSUSED */
-void sp_open_bitmap(fix31 x_set_width, fix31 y_set_width, fix31 xorg, fix31 yorg, fix15 xsize, fix15 ysize)
+void sp_open_bitmap(fix31 xorg, fix31 yorg, fix15 xsize, fix15 ysize)
 {
 	CharInfoPtr ci = &sp_fp_cur->encoding[cfv->char_id - sp_fp_cur->master->first_char_id];
 
@@ -247,7 +239,6 @@ void sp_open_bitmap(fix31 x_set_width, fix31 y_set_width, fix31 xorg, fix31 yorg
 
 #ifdef BBOX_FIXUP
 	int off_horz;
-
 	int off_vert;
 
 	if (xorg < 0)
@@ -289,7 +280,6 @@ void sp_open_bitmap(fix31 x_set_width, fix31 y_set_width, fix31 xorg, fix31 yorg
 void sp_close_bitmap()
 {
 	CharInfoPtr ci = &sp_fp_cur->encoding[cfv->char_id - sp_fp_cur->master->first_char_id];
-
 	int bpr = cfv->bpr;
 
 	if (bpr == 0)
@@ -321,21 +311,14 @@ void sp_close_bitmap()
 
 int sp_build_all_bitmaps(FontPtr pfont, fsBitmapFormat format, fsBitmapFormatMask fmask)
 {
-	int ret,
-	 glyph = 1,
-		image = BitmapFormatImageRectMin;
-
+	int ret;
+	int glyph = 1;
+	int image = BitmapFormatImageRectMin;
 	unsigned long glyph_size;
-
 	SpeedoFontPtr spf = (SpeedoFontPtr) pfont->fontPrivate;
-
 	SpeedoMasterFontPtr spmf = spf->master;
-
 	pointer bitmaps;
-
-	int start,
-	 end,
-	 i;
+	int start, end, i;
 
 	scan = 1;
 	ret = CheckFSFormat(format, fmask, &bit_order, &byte_order, &scan, &glyph, &image);

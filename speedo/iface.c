@@ -121,7 +121,7 @@ void fw_reset(void)
 
 static fix31 make_mult(real point_size, real resolution)
 {
-	return (fix31) floor((point_size * resolution * 65536.0) / (real) PTPERINCH + 0.5);
+	return floor((point_size * resolution * 65536.0) / (real) PTPERINCH + 0.5);
 }
 
 
@@ -385,8 +385,6 @@ boolean sp_load_char_data(fix31 file_offset, fix15 no_bytes, fix15 cb_offset, bu
  * to receiving bitmap data.
  */
 void sp_open_bitmap(
-	fix31 sw_x,								/* X component of escapement vector */
-	fix31 sw_y,								/* Y component of escapement vector */
 	fix31 xorg,								/* X origin */
 	fix31 yorg,								/* Y origin */
 	fix15 xsize,							/* width of bitmap */
@@ -396,8 +394,6 @@ void sp_open_bitmap(
 
 #if DEBUG
 	printf("sp_open_bitmap:\n");
-	printf("    X component of set width vector = %3.1f\n", (real) sw_x / 65536.0);
-	printf("    Y component of set width vector = %3.1f\n", (real) sw_y / 65536.0);
 	printf("    Bounding box is (%d, %d, %d, %d)\n", xmin, ymin, xmax, ymax);
 #endif
 
@@ -406,8 +402,8 @@ void sp_open_bitmap(
 	xmax = xmin + xsize;
 	ymax = ymin + ysize;
 
-	set_width_x = ((sw_x >> 15) + 1) >> 1;
-	(*sp_globals.bitmap_device.p_open_bitmap)(set_width_x, set_width_x, xmin, xmax, ymin, ymax);
+	set_width_x = ((sp_globals.set_width.x >> 15) + 1) >> 1;
+	(*sp_globals.bitmap_device.p_open_bitmap)(xmin, xmax, ymin, ymax);
 }
 
 /* 

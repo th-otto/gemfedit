@@ -334,13 +334,13 @@ boolean sp_set_specs(specs_t *specsarg)	/* Bundle of conversion specifications *
 		sp_report_error(4);				/* Font format error */
 		return FALSE;
 	}
-#if INCL_LCD							/* Dynamic character data load suppoorted? */
+#if INCL_LCD
 #if INCL_METRICS
 	no_bytes_min = sp_read_long(sp_globals.hdr2_org + FH_OCHRD);	/* Offset to character data */
-#else /* Dynamic character data load not supported? */
+#else
 	no_bytes_min = sp_read_long(sp_globals.hdr2_org + FH_OFFTK);	/* Offset to track kerning data */
 #endif
-#else /* Dynamic character data load not supported? */
+#else
 	no_bytes_min = sp_read_long(sp_globals.hdr2_org + FH_NBYTE);	/* Offset to EOF + 1 */
 #endif
 

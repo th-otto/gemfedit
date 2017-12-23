@@ -45,30 +45,16 @@ WITH THE SPEEDO SOFTWARE OR THE BITSTREAM CHARTER OUTLINE FONT.
 
 #define SQUEEZE_X_ORU(A,B,C) ((((fix31)A * (fix31)B) + C) >> 16)
 #define ABS(A) ((A < 0)? -A:A)			/* absolute value */
+
+#if INCL_ISW
 #define IMPORT_FACTOR    \
 	shift = 16;\
 	while (*x_factor > (0x7fffffffL / (isw_scale >> (16 - shift))))\
 		shift--;\
-    	*x_factor = (*x_factor * (isw_scale>>(16-shift))) >> shift;
-
-/***** GLOBAL VARIABLES *****/
-
-/*****  GLOBAL FUNCTIONS *****/
-
-/***** EXTERNAL VARIABLES *****/
-
-/***** EXTERNAL FUNCTIONS *****/
-
-/***** STATIC VARIABLES *****/
-
-/***** STATIC FUNCTIONS *****/
-
-static void sp_constr_update(void);
-
-static ufix8 *sp_setup_pix_table(ufix8 * pointer, boolean short_form, fix15 no_X_ctrl_zones,
-										 fix15 no_Y_ctrl_zones);
-static ufix8 *sp_setup_int_table(ufix8 * pointer, fix15 no_X_int_zones,
-										 fix15 no_Y_int_zones);
+    *x_factor = (*x_factor * (isw_scale>>(16-shift))) >> shift
+#else
+#define IMPORT_FACTOR
+#endif
 
 
 /*
@@ -161,320 +147,6 @@ ufix8 *sp_skip_control_zone(ufix8 * pointer,	/* Pointer to next byte in char dat
 	return pointer;
 }
 
-#if INCL_RULES
-/* 
- * Called by sp_make_simp_char() and sp_make_comp_char() to set up the controlled
- * coordinate table and process all intelligent scaling rules embedded
- * in the character data.
- * Updates pointer to first byte after plaid data.
- * This is used only if intelligent scaling is enabled in the
- * configuration definitions.
- */
-ufix8 *sp_plaid_tcb(ufix8 * pointer,	/* Pointer to next byte in char data */
-								  ufix8 format)	/* Character format byte */
-{
-	fix15 no_X_ctrl_zones;
-	fix15 no_Y_ctrl_zones;
-	fix15 no_X_int_zones;
-	fix15 no_Y_int_zones;
-
-#if INCL_PLAID_OUT						/* Plaid data monitoring included? */
-	begin_plaid_data();
-#endif
-
-	sp_constr_update();					/* Update constraint table if required */
-
-	sp_globals.no_X_orus = (format & BIT2) ? (fix15) NEXT_BYTE(pointer) : 0;
-	sp_globals.no_Y_orus = (format & BIT3) ? (fix15) NEXT_BYTE(pointer) : 0;
-	pointer = sp_read_oru_table(pointer);	/* Updates no_X/Y/orus to include zero values */
-	sp_globals.Y_edge_org = sp_globals.no_X_orus;
-	if (sp_globals.no_X_orus > 1)		/* 2 or more controlled X coordinates? */
-		sp_globals.tcb.xmode = sp_globals.tcb.xtype;	/* Enable intelligent scaling in X */
-
-	if (sp_globals.no_Y_orus > 1)		/* 2 or more controlled Y coordinates? */
-		sp_globals.tcb.ymode = sp_globals.tcb.ytype;	/* Enable intelligent scaling in Y */
-
-	no_X_ctrl_zones = sp_globals.no_X_orus - 1;
-	no_Y_ctrl_zones = sp_globals.no_Y_orus - 1;
-	pointer = sp_setup_pix_table(pointer, (boolean) (format & BIT4), no_X_ctrl_zones, no_Y_ctrl_zones);
-
-	no_X_int_zones = (format & BIT6) ? (fix15) NEXT_BYTE(pointer) : 0;
-	no_Y_int_zones = (format & BIT7) ? (fix15) NEXT_BYTE(pointer) : 0;
-	sp_globals.Y_int_org = no_X_int_zones;
-	pointer = sp_setup_int_table(pointer, no_X_int_zones, no_Y_int_zones);
-
-#if INCL_PLAID_OUT						/* Plaid data monitoring included? */
-	end_plaid_data();
-#endif
-
-	return pointer;
-}
-#else
-/* 
- * Called by sp_make_simp_char() and sp_make_comp_char() to set up the controlled
- * coordinate table and skip all other intelligent scaling rules embedded
- * in the character data.
- * Updates pointer to first byte after plaid data.
- * This is used only if intelligent scaling is not supported in the
- * configuration definitions.
- */
-ufix8 *sp_plaid_tcb(ufix8 * pointer,	/* Pointer to next byte in char data */
-								  ufix8 format)	/* Character format byte */
-{
-	fix15 i, n;
-
-	sp_globals.no_X_orus = (format & BIT2) ? (fix15) NEXT_BYTE(pointer) : 0;
-	sp_globals.no_Y_orus = (format & BIT3) ? (fix15) NEXT_BYTE(pointer) : 0;
-	pointer = sp_read_oru_table(pointer);	/* Updates no_X/Y/orus */
-	sp_globals.Y_edge_org = sp_globals.no_X_orus;
-
-	/* Skip over control zone table */
-	pointer = sp_skip_control_zone(pointer, format);
-
-	/* Skip over interpolation table */
-	pointer = sp_skip_interpolation_table(pointer, format);
-	return pointer;
-}
-#endif
-
-
-#if INCL_RULES
-/*
- * Called by sp_plaid_tcb() to update the constraint table for the current
- * transformation.
- * This is always carried out whenever a character is generated following
- * a change of font or scale factor or after initialization.     
- */
-static void sp_constr_update(void)
-{
-	fix31 ppo;
-	fix15 xppo;
-	fix15 yppo;
-	ufix8 *pointer;
-	fix15 no_X_constr;
-	fix15 no_Y_constr;
-	fix15 i, j, k, l, n;
-	fix15 ppm;
-	ufix8 format;
-	ufix8 format1;
-	fix15 limit;
-	ufix16 constr_org;
-	fix15 constr_nr;
-	fix15 size;
-	fix31 off;
-	fix15 min;
-	fix15 orus;
-	fix15 pix;
-	ufix16 tmpufix16;					/* in extended mode, macro uses secnd term */
-
-	if (sp_globals.constr.data_valid &&	/* Constr table already done and ... */
-		(sp_globals.tcb.xppo == sp_globals.constr.xppo) &&	/* ... X pix per oru unchanged and ... */
-		(sp_globals.tcb.yppo == sp_globals.constr.yppo))	/* ... Y pix per oru unchanged? */
-	{
-		return;							/* No need to update constraint table */
-	}
-
-	sp_globals.constr.xppo = xppo = sp_globals.tcb.xppo;	/* Update X pixels per oru indicator */
-	sp_globals.constr.yppo = yppo = sp_globals.tcb.yppo;	/* Update Y pixels per oru indicator */
-	sp_globals.constr.data_valid = TRUE;	/* Mark constraint table valid */
-
-	pointer = sp_globals.constr.org;	/* Point to first byte of constraint data */
-	no_X_constr = NEXT_BYTES(pointer, tmpufix16);	/* Read nmbr of X constraints */
-	no_Y_constr = NEXT_BYTES(pointer, tmpufix16);	/* Read nmbr of Y constraints */
-
-	i = 0;
-	constr_org = 0;
-	n = no_X_constr;
-	ppo = xppo;
-	for (j = 0;; j++)
-	{
-		sp_globals.c_act[i] = FALSE;	/* Flag constraint 0 not active */
-		sp_globals.c_pix[i++] = 0;		/* Constraint 0 implies no minimum */
-		sp_globals.c_act[i] = FALSE;	/* Flag constraint 1 not active */
-		sp_globals.c_pix[i++] = sp_globals.onepix;	/* Constraint 1 implies min 1 pixel */
-		ppm = (ppo * (fix31) sp_globals.orus_per_em) >> sp_globals.multshift;
-		for (k = 0; k < n; k++)
-		{
-			format = NEXT_BYTE(pointer);	/* Read format byte */
-			limit = (fix15) NEXT_BYTE(pointer);	/* Read limit field */
-			sp_globals.c_act[i] = ((ppm < limit) || (limit == 255)) && sp_globals.constr.active;
-			if (sp_globals.c_act[i])	/* Constraint active? */
-			{
-				if ((format & BIT1) &&	/* Constraint specified and ... */
-					(constr_nr = constr_org + ((format & BIT0) ?	/* Read unsigned constraint value */
-											   NEXT_WORD(pointer) : (fix15) NEXT_BYTE(pointer)), sp_globals.c_act[constr_nr]))	/* ... and specified constraint active? */
-				{
-					pix = sp_globals.c_pix[constr_nr];	/* Use constrained pixel value */
-					format1 = format;
-					for (l = 2; l > 0; l--)	/* Skip 2 arguments */
-					{
-						format1 >>= 2;
-						if ((size = format1 & 0x03) != 0)
-							pointer += size - 1;
-					}
-				} else					/* Constraint absent or inactive? */
-				{
-					orus = (format & BIT2) ?	/* Read unsigned oru value */
-						NEXT_WORD(pointer) : (fix15) NEXT_BYTE(pointer);
-
-					if (format & BIT5)	/* Specified offset value? */
-					{
-						off = (fix31) ((format & BIT4) ?	/* Read offset value */
-									   NEXT_WORD(pointer) : (fix7) NEXT_BYTE(pointer));
-						off = (off << (sp_globals.multshift - 6)) + sp_globals.multrnd;
-					} else				/* Unspecified (zero) offset value? */
-					{
-						off = sp_globals.multrnd;
-					}
-
-					pix = (fix15) (((fix31) orus * ppo + off) / (1 << sp_globals.mpshift)) & sp_globals.pixfix;
-				}
-			} else						/* Constraint inactive? */
-			{
-				format1 = format;
-				for (l = 3; l > 0; l--)	/* Skip over 3 arguments */
-				{
-					if ((size = format1 & 0x03) != 0)
-						pointer += size - 1;
-					format1 >>= 2;
-				}
-				pix = 0;
-			}
-
-			if (format & 0xc0)			/* Specified minimum value? */
-			{
-				min = (format & BIT7) ?	/* Read unsigned minimum value */
-					(fix15) NEXT_BYTE(pointer) << sp_globals.pixshift : sp_globals.onepix;
-			} else						/* Unspecified (zero) minimum value? */
-			{
-				min = 0;
-			}
-
-			sp_globals.c_pix[i] = (pix < min) ? min : pix;
-			i++;
-		}
-		if (j)
-			break;						/* Finished if second time around loop */
-		constr_org = sp_globals.Y_constr_org = i;
-		n = no_Y_constr;
-		ppo = yppo;
-	}
-
-#if DEBUG
-	printf("\nCONSTRAINT TABLE\n");
-	n = no_X_constr + 2;
-	for (i = 0; i < n; i++)
-	{
-		printf("%3d   ", i);
-		if (sp_globals.c_act[i])
-		{
-			printf("T ");
-		} else
-		{
-			printf("F ");
-		}
-		printf("%5.1f\n", ((real) sp_globals.c_pix[i] / (real) sp_globals.onepix));
-	}
-	printf("--------------\n");
-	n = no_Y_constr + 2;
-	for (i = 0; i < n; i++)
-	{
-		j = i + sp_globals.Y_constr_org;
-		printf("%3d   ", i);
-		if (sp_globals.c_act[j])
-		{
-			printf("T ");
-		} else
-		{
-			printf("F ");
-		}
-		printf("%5.1f\n", ((real) sp_globals.c_pix[j] / (real) sp_globals.onepix));
-	}
-#endif
-
-}
-#endif
-
-/*
- * Called by sp_plaid_tcb() to read the controlled coordinate table from the
- * character data in the font. 
- * Updates the pointer to the byte following the controlled coordinate
- * data.
- */
-ufix8 *sp_read_oru_table(ufix8 * pointer)	/* Pointer to first byte in controlled coord table */
-{
-	fix15 i, j, k, n;
-	boolean zero_not_in;
-	boolean zero_added;
-	fix15 oru;
-
-#if INCL_RULES
-	fix15 pos;
-#endif
-
-	i = 0;
-	n = sp_globals.no_X_orus;
-#if INCL_RULES
-	pos = sp_globals.tcb.xpos;
-#endif
-	for (j = 0;; j++)
-	{
-		zero_not_in = TRUE;
-		zero_added = FALSE;
-		for (k = 0; k < n; k++)
-		{
-			oru = NEXT_WORD(pointer);
-			if (zero_not_in && (oru >= 0))	/* First positive oru value? */
-			{
-#if INCL_RULES
-				sp_plaid.pix[i] = pos;	/* Insert position in pix array */
-#endif
-				if (oru != 0)			/* Zero oru value omitted? */
-				{
-					sp_plaid.orus[i++] = 0;	/* Insert zero value in oru array */
-					zero_added = TRUE;	/* Remember to increment size of array */
-				}
-				zero_not_in = FALSE;	/* Inhibit further testing for zero ins */
-			}
-			sp_plaid.orus[i++] = oru;	/* Add specified oru value to array */
-		}
-		if (zero_not_in)				/* All specified oru values negative? */
-		{
-#if INCL_RULES
-			sp_plaid.pix[i] = pos;		/* Insert position in pix array */
-#endif
-			sp_plaid.orus[i++] = 0;		/* Add zero oru value */
-			zero_added = TRUE;			/* Remember to increment size of array */
-		}
-		if (j)							/* Both X and Y orus read? */
-			break;
-		if (zero_added)
-			sp_globals.no_X_orus++;		/* Increment X array size */
-		n = sp_globals.no_Y_orus;		/* Prepare to read Y oru values */
-#if INCL_RULES
-		pos = sp_globals.tcb.ypos;
-#endif
-	}
-	if (zero_added)						/* Zero Y oru value added to array? */
-		sp_globals.no_Y_orus++;			/* Increment Y array size */
-
-#if DEBUG
-	printf("\nX ORUS\n");
-	n = sp_globals.no_X_orus;
-	for (i = 0; i < n; i++)
-	{
-		printf("%2d %4d\n", i, sp_plaid.orus[i]);
-	}
-	printf("\nY ORUS\n");
-	n = sp_globals.no_Y_orus;
-	for (i = 0; i < n; i++)
-	{
-		printf("%2d %4d\n", i, sp_plaid.orus[i + sp_globals.no_X_orus]);
-	}
-#endif
-
-	return pointer;						/* Update pointer */
-}
 
 #if INCL_SQUEEZING || INCL_ISW
 /*
@@ -534,312 +206,159 @@ static void sp_calculate_x_pix(ufix8 start_edge, ufix8 end_edge,
 }
 #endif
 
-#if INCL_SQUEEZING
-/*
- * Called by sp_setup_pix_table() when Y squeezing is necessary
- * to insert the correct edge in the global pix array
- */
-static void sp_calculate_y_pix(ufix8 start_edge, ufix8 end_edge,
-									 ufix16 constr_nr,
-									 fix31 top_scale, fix31 bottom_scale, fix31 ppo, fix15 em_top_pix, fix15 em_bot_pix)
-{
-	fix15 zone_pix;
-	fix15 start_oru, end_oru;
-	fix31 zone_width, above_base, below_base;
-
-	/* check whether edge is above or below the baseline                */
-	/* and apply appropriate scale factor to get scaled oru coordinates */
-	if (sp_plaid.orus[start_edge] < 0)
-		start_oru = (fix15) (SQUEEZE_MULT(sp_plaid.orus[start_edge], bottom_scale));
-	else
-		start_oru = (fix15) (SQUEEZE_MULT(sp_plaid.orus[start_edge], top_scale));
-
-	if (sp_plaid.orus[end_edge] < 0)
-		end_oru = (fix15) (SQUEEZE_MULT(sp_plaid.orus[end_edge], bottom_scale));
-	else
-		end_oru = (fix15) (SQUEEZE_MULT(sp_plaid.orus[end_edge], top_scale));
-
-	if (!sp_globals.c_act[constr_nr])	/* Constraint inactive? */
-	{
-		/* calculate zone width */
-		zone_pix = (fix15) (((((fix31) end_oru - (fix31) start_oru) * ppo)
-							 >> sp_globals.mpshift) + sp_globals.pixrnd) & sp_globals.pixfix;
-		/* check minimum */
-		if ((ABS(zone_pix)) >= sp_globals.c_pix[constr_nr])
-			goto Ly;
-	}
-
-	/* Use zone size from constr table */
-	if ((end_oru >= 0) && (start_oru >= 0))
-		/* all above baseline */
-		zone_pix = (fix15) (SQUEEZE_MULT(top_scale, sp_globals.c_pix[constr_nr]));
-	else if ((end_oru <= 0) && (start_oru <= 0))
-		/* all below baseline */
-		zone_pix = (fix15) (SQUEEZE_MULT(bottom_scale, sp_globals.c_pix[constr_nr]));
-	else
-	{
-		/* mixture */
-		if (start_oru > 0)
-		{
-			zone_width = start_oru - end_oru;
-			/* get % above baseline in 16.16 fixed point */
-			above_base = (((fix31) start_oru) << 16) / ((fix31) zone_width);
-			/* get % below baseline in 16.16 fixed point */
-			below_base = (((fix31) - end_oru) << 16) / ((fix31) zone_width);
-		} else
-		{
-			zone_width = end_oru - start_oru;
-			/* get % above baseline in 16.16 fixed point */
-			above_base = (((fix31) - start_oru) << 16) / ((fix31) zone_width);
-			/* get % below baseline in 16.16 fixed point */
-			below_base = (((fix31) end_oru) << 16) / ((fix31) zone_width);
-		}
-		/* % above baseline * total zone * top_scale +  */
-		/* % below baseline * total zone * bottom_scale */
-		zone_pix = ((((above_base * (fix31) sp_globals.c_pix[constr_nr]) >> 16) *
-					 top_scale) + (((below_base * (fix31) sp_globals.c_pix[constr_nr]) >> 16) * bottom_scale)) >> 16;
-	}
-
-	/* make this zone pix fall on a pixel boundary */
-	zone_pix = (zone_pix + sp_globals.pixrnd) & sp_globals.pixfix;
-
-	/* if minimum is in effect make the zone one pixel */
-	if ((sp_globals.c_pix[constr_nr] != 0) && (zone_pix < sp_globals.onepix))
-		zone_pix = sp_globals.onepix;
-
-	if (start_edge > end_edge)
-	{
-		zone_pix = -zone_pix;			/* Use negatve zone size */
-	}
-  Ly:
-	/* assign global pix value */
-	sp_plaid.pix[end_edge] = sp_plaid.pix[start_edge] + zone_pix;	/* Insert end pixels */
-
-	/* make sure it is in the EM !*/
-	if ((sp_globals.pspecs->flags & SQUEEZE_TOP) && (sp_plaid.pix[end_edge] > em_top_pix))
-		sp_plaid.pix[end_edge] = em_top_pix;
-	if ((sp_globals.pspecs->flags & SQUEEZE_BOTTOM) && (sp_plaid.pix[end_edge] < em_bot_pix))
-		sp_plaid.pix[end_edge] = em_bot_pix;
-}
-
-/*
- * Called by sp_setup_pix_table() when squeezing is included
- * to determine whether X scaling is necessary.  If it is, the
- * scale factor and offset are computed.  This function returns
- * a boolean value TRUE = X squeezind is necessary, FALSE = no
- * X squeezing is necessary.
- */
-boolean sp_calculate_x_scale(fix31 *x_factor, fix31 *x_offset, fix15 no_X_ctrl_zones)
-{
-	boolean squeeze_left, squeeze_right;
-	boolean out_on_right, out_on_left;
-	fix15 bbox_width, set_width;
-	fix15 bbox_xmin, bbox_xmax;
-	fix15 x_offset_pix;
-	fix15 i;
-
-#if INCL_ISW
-	fix31 isw_scale;
-	fix15 shift;
-#endif
-
-
-	/* set up some flags and common calculations */
-	squeeze_left = (sp_globals.pspecs->flags & SQUEEZE_LEFT) ? TRUE : FALSE;
-	squeeze_right = (sp_globals.pspecs->flags & SQUEEZE_RIGHT) ? TRUE : FALSE;
-	bbox_xmin = sp_globals.bbox_xmin_orus;
-	bbox_xmax = sp_globals.bbox_xmax_orus;
-	set_width = sp_globals.setwidth_orus;
-
-	if (bbox_xmax > set_width)
-		out_on_right = TRUE;
-	else
-		out_on_right = FALSE;
-	if (bbox_xmin < 0)
-		out_on_left = TRUE;
-	else
-		out_on_left = FALSE;
-	bbox_width = bbox_xmax - bbox_xmin;
-
-	/*
-	 * don't need X squeezing if:
-	 *     - X squeezing not enabled
-	 *     - bbox doesn't violate on left or right
-	 *     - left squeezing only is enabled and char isn't out on left
-	 *     - right squeezing only is enabled and char isn't out on right
-	 */
-	if ((!squeeze_left && !squeeze_right) ||
-		(!out_on_right && !out_on_left) ||
-		(squeeze_left && !squeeze_right && !out_on_left) || (squeeze_right && !squeeze_left && !out_on_right))
-		return FALSE;
-
-#if INCL_ISW
-	if (sp_globals.import_setwidth_act)
-	{
-		/* if both isw and squeezing is going on - let the imported */
-		/* setwidth factor be factored in with the squeeze          */
-		isw_scale = sp_compute_isw_scale();
-		/*sp_globals.setwidth_orus = sp_globals.imported_width; */
-	} else
-	{
-		isw_scale = 0x10000L;			/* 1 in 16.16 notation */
-	}
-#endif
-
-	/* squeezing on left and right ?  */
-	if (squeeze_left && squeeze_right)
-	{
-		/* calculate scale factor */
-		if (bbox_width < set_width)
-			*x_factor = 0x10000L;		/* 1 in 16.16 notation */
-		else
-			*x_factor = ((fix31) set_width << 16) / (fix31) bbox_width;
-#if INCL_ISW
-		IMPORT_FACTOR
-#endif
-			/* calculate offset */
-			if (out_on_left)			/* fall out on left ? */
-			*x_offset = -(fix31) * x_factor * (fix31) bbox_xmin;
-		/* fall out on right and I am shifting only ? */
-		else if (out_on_right && (*x_factor == 0x10000L))
-			*x_offset = -(fix31) * x_factor * (fix31) (bbox_xmax - set_width);
-		else
-			*x_offset = 0x0L;			/* 0 in 16.16 notation */
-	}
-	/* squeezing on left only and violates left */
-	else if (squeeze_left)
-	{
-		if (bbox_width < set_width)		/* will it fit if I shift it ? */
-			*x_factor = 0x10000L;		/* 1 in 16.16 notation */
-		else if (out_on_right)
-			*x_factor = ((fix31) set_width << 16) / (fix31) bbox_width;
-		else
-			*x_factor = ((fix31) set_width << 16) / (fix31) (bbox_width - (bbox_xmax - set_width));
-#if INCL_ISW
-		IMPORT_FACTOR
-#endif
-			* x_offset = (fix31) - *x_factor * (fix31) bbox_xmin;
-	}
-
-	/* I must be squeezing on right, and violates right */
-	else
-	{
-		if (bbox_width < set_width)		/* will it fit if I shift it ? */
-		{								/* just shift it left - it will fit in the bbox */
-			*x_factor = 0x10000L;		/* 1 in 16.16 notation */
-#if INCL_ISW
-			IMPORT_FACTOR
-#endif
-				* x_offset = (fix31) - *x_factor * (fix31) bbox_xmin;
-		} else if (out_on_left)
-		{
-			*x_factor = ((fix31) set_width << 16) / (fix31) bbox_width;
-#if INCL_ISW
-			IMPORT_FACTOR
-#endif
-				* x_offset = 0x0L;		/* 0 in 16.16 notation */
-		} else
-		{
-			*x_factor = ((fix31) set_width << 16) / (fix31) bbox_xmax;
-#if INCL_ISW
-			IMPORT_FACTOR
-#endif
-				* x_offset = 0x0L;		/* 0 in 16.16 notation */
-		}
-	}
-
-	x_offset_pix = (fix15) (((*x_offset >> 16) * sp_globals.tcb0.xppo) / (1 << sp_globals.mpshift));
-
-	if ((x_offset_pix > 0) && (x_offset_pix < sp_globals.onepix))
-		x_offset_pix = sp_globals.onepix;
-
-	/* look for the first non-negative oru value, scale and add the offset    */
-	/* to the corresponding pixel value - note that the pixel value           */
-	/* is set in sp_read_oru_table.                                              */
-	
-	/* look at all the X edges */
-	for (i = 0; i < (no_X_ctrl_zones + 1); i++)
-		if (sp_plaid.orus[i] >= 0)
-		{
-			sp_plaid.pix[i] = (SQUEEZE_MULT(sp_plaid.pix[i], *x_factor)
-							   + sp_globals.pixrnd + x_offset_pix) & sp_globals.pixfix;
-			break;
-		}
-
-	return TRUE;
-}
-
-/*
- * Called by sp_setup_pix_table() when squeezing is included
- * to determine whether Y scaling is necessary.  If it is, 
- * two scale factors are computed, one for above the baseline,
- * and one for below the basline.
- * This function returns a boolean value TRUE = Y squeezind is necessary, 
- * FALSE = no Y squeezing is necessary.
- */
-boolean sp_calculate_y_scale(fix31 * top_scale, fix31 * bottom_scale, fix15 first_Y_zone, fix15 no_Y_ctrl_zones)
-{
-	boolean squeeze_top, squeeze_bottom;
-	boolean out_on_top, out_on_bottom;
-	fix15 bbox_top, bbox_bottom;
-	fix15 bbox_height;
-	fix15 i;
-
-	/* set up some flags and common calculations */
-	squeeze_top = (sp_globals.pspecs->flags & SQUEEZE_TOP) ? TRUE : FALSE;
-	squeeze_bottom = (sp_globals.pspecs->flags & SQUEEZE_BOTTOM) ? TRUE : FALSE;
-	bbox_top = sp_globals.bbox_ymax_orus;
-	bbox_bottom = sp_globals.bbox_ymin_orus;
-	bbox_height = bbox_top - bbox_bottom;
-
-	if (bbox_top > EM_TOP)
-		out_on_top = TRUE;
-	else
-		out_on_top = FALSE;
-
-	if (bbox_bottom < EM_BOT)
-		out_on_bottom = TRUE;
-	else
-		out_on_bottom = FALSE;
-
-	/*
-	 * don't need Y squeezing if:
-	 *     - Y squeezing not enabled
-	 *     - bbox doesn't violate on top or bottom
-	 *     - top squeezing only is enabled and char isn't out on top
-	 *     - bottom squeezing only is enabled and char isn't out on bottom
-	 */
-	if ((!squeeze_top && !squeeze_bottom) ||
-		(!out_on_top && !out_on_bottom) ||
-		(squeeze_top && !squeeze_bottom && !out_on_top) || (squeeze_bottom && !squeeze_top && !out_on_bottom))
-		return FALSE;
-
-	if (squeeze_top && (bbox_top > EM_TOP))
-		*top_scale = ((fix31) EM_TOP << 16) / (fix31) (bbox_top);
-	else
-		*top_scale = 0x10000L;			/* 1 in 16.16 fixed point */
-
-	if (squeeze_bottom && (bbox_bottom < EM_BOT))
-		*bottom_scale = ((fix31) - (EM_BOT) << 16) / (fix31) - bbox_bottom;
-	else
-		*bottom_scale = 0x10000L;
-
-	if (sp_globals.squeezing_compound)
-	{
-		for (i = first_Y_zone; i < (first_Y_zone + no_Y_ctrl_zones + 1); i++)
-		{
-			if (sp_plaid.orus[i] >= 0)
-				sp_plaid.pix[i] = (SQUEEZE_MULT(sp_plaid.pix[i], *top_scale) + sp_globals.pixrnd) & sp_globals.pixfix;
-			else
-				sp_plaid.pix[i] = (SQUEEZE_MULT(sp_plaid.pix[i], *bottom_scale)
-								   + sp_globals.pixrnd) & sp_globals.pixfix;
-		}
-	}
-	return TRUE;
-}
-#endif
 
 #if INCL_RULES
+/*
+ * Called by sp_plaid_tcb() to read the interpolation zone table from the
+ * character data in the font. 
+ * Sets up a table of interpolation coefficients with one entry for
+ * every X or Y interpolation zone.
+ * Updates the pointer to the byte following the interpolation zone
+ * data.
+ */
+static ufix8 *sp_setup_int_table(ufix8 * pointer,	/* Pointer to first byte in interpolation zone table */
+												  fix15 no_X_int_zones,	/* Number of X interpolation zones */
+												  fix15 no_Y_int_zones)	/* Number of X interpolation zones */
+{
+	fix15 i, j, k, l, n;
+	ufix8 format;
+	ufix8 format_copy;
+	ufix8 tmpufix8;
+	fix15 start_orus = 0;
+	ufix8 edge_org;
+	ufix8 edge;
+	ufix16 adj_factor;
+	fix15 adj_orus;
+	fix15 end_orus = 0;
+	fix31 zone_orus;
+	fix15 start_pix = 0;
+	fix15 end_pix = 0;
+
+#if INCL_PLAID_OUT						/* Plaid data monitoring included? */
+	begin_int_zones(no_X_int_zones, no_Y_int_zones);
+#endif
+
+	i = 0;
+	edge_org = 0;
+	n = no_X_int_zones;
+	for (j = 0;; j++)
+	{
+		for (k = 0; k < n; k++)
+		{
+			format = NEXT_BYTE(pointer);
+			if (format & BIT7)			/* Short start/end point spec? */
+			{
+				tmpufix8 = NEXT_BYTE(pointer);
+				edge = edge_org + (tmpufix8 & 0xf);
+				start_orus = sp_plaid.orus[edge];
+				start_pix = sp_plaid.pix[edge];
+				edge = edge_org + (tmpufix8 >> 4);
+				end_orus = sp_plaid.orus[edge];
+				end_pix = sp_plaid.pix[edge];
+			} else						/* Standard start and end point spec? */
+			{
+				format_copy = format;
+				for (l = 0;; l++)		/* Loop for start and end point */
+				{
+					switch (format_copy & 0x7)	/* Decode start/end point format */
+					{
+					case 0:			/* Index to control edge */
+						edge = edge_org + NEXT_BYTE(pointer);
+						end_orus = sp_plaid.orus[edge];
+						end_pix = sp_plaid.pix[edge];
+						break;
+
+					case 1:			/* 1 byte fractional distance to next edge */
+						adj_factor = 0xffff & (NEXT_BYTE(pointer) << 8);
+						goto L1;
+
+
+					case 2:			/* 2 byte fractional distance to next edge */
+						adj_factor = 0xffff & NEXT_WORD(pointer);
+					  L1:edge = edge_org + NEXT_BYTE(pointer);
+						end_orus = sp_plaid.orus[edge] +
+							((((fix31) sp_plaid.orus[edge + 1] - (fix31) sp_plaid.orus[edge]) *
+							  (ufix32) adj_factor + (fix31) 32768L) >> 16);
+						end_pix = sp_plaid.pix[edge] +
+							((((fix31) sp_plaid.pix[edge + 1] - (fix31) sp_plaid.pix[edge]) *
+							  (ufix32) adj_factor + (fix31) 32768L) >> 16);
+						break;
+
+					case 3:			/* 1 byte delta orus before first edge */
+						adj_orus = -(fix15) NEXT_BYTE(pointer);
+						goto L2;
+
+					case 4:			/* 2 byte delta orus before first edge */
+						adj_orus = -NEXT_WORD(pointer);
+					  L2:edge = edge_org;
+						goto L4;
+
+					case 5:			/* 1 byte delta orus after last edge */
+						adj_orus = (fix15) NEXT_BYTE(pointer);
+						goto L3;
+
+					case 6:			/* 2 byte delta orus after last edge */
+						adj_orus = NEXT_WORD(pointer);
+					  L3:edge =
+							j ? sp_globals.Y_edge_org + sp_globals.no_Y_orus - 1 : sp_globals.no_X_orus -
+							1;
+					  L4:end_orus = sp_plaid.orus[edge] + adj_orus;
+						end_pix = sp_plaid.pix[edge] +
+							(((fix31) adj_orus * (fix31) (j ? sp_globals.tcb.yppo : sp_globals.tcb.xppo) +
+							  sp_globals.mprnd) / (1 << sp_globals.mpshift));
+						break;
+
+					}
+
+					if (l)				/* Second time round loop? */
+						break;
+					format_copy >>= 3;	/* Adj format to decode end point format */
+					start_orus = end_orus;	/* Save start point oru value */
+					start_pix = end_pix;	/* Save start point pixel value */
+				}
+			}
+#if INCL_PLAID_OUT						/* Plaid data monitoring included? */
+			record_int_zone((fix31) start_pix << (16 - sp_globals.pixshift),
+							(fix31) end_pix << (16 - sp_globals.pixshift));
+#endif
+			zone_orus = (fix31) end_orus - (fix31) start_orus;
+			sp_plaid.mult[i] = ((((fix31) end_pix - (fix31) start_pix) << sp_globals.mpshift) +
+								(zone_orus / 2)) / zone_orus;
+			sp_plaid.offset[i] =
+				(((((fix31) start_pix + (fix31) end_pix) << sp_globals.mpshift) -
+				  ((fix31) sp_plaid.mult[i] * ((fix31) start_orus + (fix31) end_orus))) / 2) + sp_globals.mprnd;
+			i++;
+		}
+		if (j)							/* Finished? */
+			break;
+		edge_org = sp_globals.Y_edge_org;	/* Prepare to process Y ctrl zones */
+		n = no_Y_int_zones;
+	}
+
+#if DEBUG
+	printf("\nX INT TABLE\n");
+	n = no_X_int_zones;
+	for (i = 0; i < n; i++)
+	{
+		printf("%2d %7.4f %7.4f\n", i,
+			   (real) sp_plaid.mult[i] / (real) (1 << sp_globals.multshift),
+			   (real) sp_plaid.offset[i] / (real) (1 << sp_globals.multshift));
+	}
+	printf("\nY INT TABLE\n");
+	n = no_Y_int_zones;
+	for (i = 0; i < n; i++)
+	{
+		j = i + no_X_int_zones;
+		printf("%2d %7.4f %7.4f\n", i,
+			   (real) sp_plaid.mult[j] / (real) (1 << sp_globals.multshift),
+			   (real) sp_plaid.offset[j] / (real) (1 << sp_globals.multshift));
+	}
+#endif
+
+	return pointer;
+}
+
+
 /*
  * Called by sp_plaid_tcb() to read the control zone table from the
  * character data in the font.
@@ -1055,160 +574,617 @@ static ufix8 *sp_setup_pix_table(ufix8 * pointer,	/* Pointer to first byte in co
 
 	return pointer;
 }
-#endif
 
 
-#if INCL_RULES
 /*
- * Called by sp_plaid_tcb() to read the interpolation zone table from the
- * character data in the font. 
- * Sets up a table of interpolation coefficients with one entry for
- * every X or Y interpolation zone.
- * Updates the pointer to the byte following the interpolation zone
- * data.
+ * Called by sp_plaid_tcb() to update the constraint table for the current
+ * transformation.
+ * This is always carried out whenever a character is generated following
+ * a change of font or scale factor or after initialization.     
  */
-static ufix8 *sp_setup_int_table(ufix8 * pointer,	/* Pointer to first byte in interpolation zone table */
-												  fix15 no_X_int_zones,	/* Number of X interpolation zones */
-												  fix15 no_Y_int_zones)	/* Number of X interpolation zones */
+static void sp_constr_update(void)
 {
+	fix31 ppo;
+	fix15 xppo;
+	fix15 yppo;
+	ufix8 *pointer;
+	fix15 no_X_constr;
+	fix15 no_Y_constr;
 	fix15 i, j, k, l, n;
+	fix15 ppm;
 	ufix8 format;
-	ufix8 format_copy;
-	ufix8 tmpufix8;
-	fix15 start_orus = 0;
-	ufix8 edge_org;
-	ufix8 edge;
-	ufix16 adj_factor;
-	fix15 adj_orus;
-	fix15 end_orus = 0;
-	fix31 zone_orus;
-	fix15 start_pix = 0;
-	fix15 end_pix = 0;
+	ufix8 format1;
+	fix15 limit;
+	ufix16 constr_org;
+	fix15 constr_nr;
+	fix15 size;
+	fix31 off;
+	fix15 min;
+	fix15 orus;
+	fix15 pix;
+	ufix16 tmpufix16;					/* in extended mode, macro uses secnd term */
 
-#if INCL_PLAID_OUT						/* Plaid data monitoring included? */
-	begin_int_zones(no_X_int_zones, no_Y_int_zones);
-#endif
+	if (sp_globals.constr.data_valid &&	/* Constr table already done and ... */
+		(sp_globals.tcb.xppo == sp_globals.constr.xppo) &&	/* ... X pix per oru unchanged and ... */
+		(sp_globals.tcb.yppo == sp_globals.constr.yppo))	/* ... Y pix per oru unchanged? */
+	{
+		return;							/* No need to update constraint table */
+	}
+
+	sp_globals.constr.xppo = xppo = sp_globals.tcb.xppo;	/* Update X pixels per oru indicator */
+	sp_globals.constr.yppo = yppo = sp_globals.tcb.yppo;	/* Update Y pixels per oru indicator */
+	sp_globals.constr.data_valid = TRUE;	/* Mark constraint table valid */
+
+	pointer = sp_globals.constr.org;	/* Point to first byte of constraint data */
+	no_X_constr = NEXT_BYTES(pointer, tmpufix16);	/* Read nmbr of X constraints */
+	no_Y_constr = NEXT_BYTES(pointer, tmpufix16);	/* Read nmbr of Y constraints */
 
 	i = 0;
-	edge_org = 0;
-	n = no_X_int_zones;
+	constr_org = 0;
+	n = no_X_constr;
+	ppo = xppo;
 	for (j = 0;; j++)
 	{
+		sp_globals.c_act[i] = FALSE;	/* Flag constraint 0 not active */
+		sp_globals.c_pix[i++] = 0;		/* Constraint 0 implies no minimum */
+		sp_globals.c_act[i] = FALSE;	/* Flag constraint 1 not active */
+		sp_globals.c_pix[i++] = sp_globals.onepix;	/* Constraint 1 implies min 1 pixel */
+		ppm = (ppo * (fix31) sp_globals.orus_per_em) >> sp_globals.multshift;
 		for (k = 0; k < n; k++)
 		{
-			format = NEXT_BYTE(pointer);
-			if (format & BIT7)			/* Short start/end point spec? */
+			format = NEXT_BYTE(pointer);	/* Read format byte */
+			limit = (fix15) NEXT_BYTE(pointer);	/* Read limit field */
+			sp_globals.c_act[i] = ((ppm < limit) || (limit == 255)) && sp_globals.constr.active;
+			if (sp_globals.c_act[i])	/* Constraint active? */
 			{
-				tmpufix8 = NEXT_BYTE(pointer);
-				edge = edge_org + (tmpufix8 & 0xf);
-				start_orus = sp_plaid.orus[edge];
-				start_pix = sp_plaid.pix[edge];
-				edge = edge_org + (tmpufix8 >> 4);
-				end_orus = sp_plaid.orus[edge];
-				end_pix = sp_plaid.pix[edge];
-			} else						/* Standard start and end point spec? */
-			{
-				format_copy = format;
-				for (l = 0;; l++)		/* Loop for start and end point */
+				if ((format & BIT1) &&	/* Constraint specified and ... */
+					(constr_nr = constr_org + ((format & BIT0) ?	/* Read unsigned constraint value */
+											   NEXT_WORD(pointer) : (fix15) NEXT_BYTE(pointer)), sp_globals.c_act[constr_nr]))	/* ... and specified constraint active? */
 				{
-					switch (format_copy & 0x7)	/* Decode start/end point format */
+					pix = sp_globals.c_pix[constr_nr];	/* Use constrained pixel value */
+					format1 = format;
+					for (l = 2; l > 0; l--)	/* Skip 2 arguments */
 					{
-					case 0:			/* Index to control edge */
-						edge = edge_org + NEXT_BYTE(pointer);
-						end_orus = sp_plaid.orus[edge];
-						end_pix = sp_plaid.pix[edge];
-						break;
+						format1 >>= 2;
+						if ((size = format1 & 0x03) != 0)
+							pointer += size - 1;
+					}
+				} else					/* Constraint absent or inactive? */
+				{
+					orus = (format & BIT2) ?	/* Read unsigned oru value */
+						NEXT_WORD(pointer) : (fix15) NEXT_BYTE(pointer);
 
-					case 1:			/* 1 byte fractional distance to next edge */
-						adj_factor = 0xffff & (NEXT_BYTE(pointer) << 8);
-						goto L1;
-
-
-					case 2:			/* 2 byte fractional distance to next edge */
-						adj_factor = 0xffff & NEXT_WORD(pointer);
-					  L1:edge = edge_org + NEXT_BYTE(pointer);
-						end_orus = sp_plaid.orus[edge] +
-							((((fix31) sp_plaid.orus[edge + 1] - (fix31) sp_plaid.orus[edge]) *
-							  (ufix32) adj_factor + (fix31) 32768L) >> 16);
-						end_pix = sp_plaid.pix[edge] +
-							((((fix31) sp_plaid.pix[edge + 1] - (fix31) sp_plaid.pix[edge]) *
-							  (ufix32) adj_factor + (fix31) 32768L) >> 16);
-						break;
-
-					case 3:			/* 1 byte delta orus before first edge */
-						adj_orus = -(fix15) NEXT_BYTE(pointer);
-						goto L2;
-
-					case 4:			/* 2 byte delta orus before first edge */
-						adj_orus = -NEXT_WORD(pointer);
-					  L2:edge = edge_org;
-						goto L4;
-
-					case 5:			/* 1 byte delta orus after last edge */
-						adj_orus = (fix15) NEXT_BYTE(pointer);
-						goto L3;
-
-					case 6:			/* 2 byte delta orus after last edge */
-						adj_orus = NEXT_WORD(pointer);
-					  L3:edge =
-							j ? sp_globals.Y_edge_org + sp_globals.no_Y_orus - 1 : sp_globals.no_X_orus -
-							1;
-					  L4:end_orus = sp_plaid.orus[edge] + adj_orus;
-						end_pix = sp_plaid.pix[edge] +
-							(((fix31) adj_orus * (fix31) (j ? sp_globals.tcb.yppo : sp_globals.tcb.xppo) +
-							  sp_globals.mprnd) / (1 << sp_globals.mpshift));
-						break;
-
+					if (format & BIT5)	/* Specified offset value? */
+					{
+						off = (fix31) ((format & BIT4) ?	/* Read offset value */
+									   NEXT_WORD(pointer) : (fix7) NEXT_BYTE(pointer));
+						off = (off << (sp_globals.multshift - 6)) + sp_globals.multrnd;
+					} else				/* Unspecified (zero) offset value? */
+					{
+						off = sp_globals.multrnd;
 					}
 
-					if (l)				/* Second time round loop? */
-						break;
-					format_copy >>= 3;	/* Adj format to decode end point format */
-					start_orus = end_orus;	/* Save start point oru value */
-					start_pix = end_pix;	/* Save start point pixel value */
+					pix = (fix15) (((fix31) orus * ppo + off) / (1 << sp_globals.mpshift)) & sp_globals.pixfix;
 				}
+			} else						/* Constraint inactive? */
+			{
+				format1 = format;
+				for (l = 3; l > 0; l--)	/* Skip over 3 arguments */
+				{
+					if ((size = format1 & 0x03) != 0)
+						pointer += size - 1;
+					format1 >>= 2;
+				}
+				pix = 0;
 			}
-#if INCL_PLAID_OUT						/* Plaid data monitoring included? */
-			record_int_zone((fix31) start_pix << (16 - sp_globals.pixshift),
-							(fix31) end_pix << (16 - sp_globals.pixshift));
-#endif
-			zone_orus = (fix31) end_orus - (fix31) start_orus;
-			sp_plaid.mult[i] = ((((fix31) end_pix - (fix31) start_pix) << sp_globals.mpshift) +
-								(zone_orus / 2)) / zone_orus;
-			sp_plaid.offset[i] =
-				(((((fix31) start_pix + (fix31) end_pix) << sp_globals.mpshift) -
-				  ((fix31) sp_plaid.mult[i] * ((fix31) start_orus + (fix31) end_orus))) / 2) + sp_globals.mprnd;
+
+			if (format & 0xc0)			/* Specified minimum value? */
+			{
+				min = (format & BIT7) ?	/* Read unsigned minimum value */
+					(fix15) NEXT_BYTE(pointer) << sp_globals.pixshift : sp_globals.onepix;
+			} else						/* Unspecified (zero) minimum value? */
+			{
+				min = 0;
+			}
+
+			sp_globals.c_pix[i] = (pix < min) ? min : pix;
 			i++;
 		}
-		if (j)							/* Finished? */
-			break;
-		edge_org = sp_globals.Y_edge_org;	/* Prepare to process Y ctrl zones */
-		n = no_Y_int_zones;
+		if (j)
+			break;						/* Finished if second time around loop */
+		constr_org = sp_globals.Y_constr_org = i;
+		n = no_Y_constr;
+		ppo = yppo;
 	}
 
 #if DEBUG
-	printf("\nX INT TABLE\n");
-	n = no_X_int_zones;
+	printf("\nCONSTRAINT TABLE\n");
+	n = no_X_constr + 2;
 	for (i = 0; i < n; i++)
 	{
-		printf("%2d %7.4f %7.4f\n", i,
-			   (real) sp_plaid.mult[i] / (real) (1 << sp_globals.multshift),
-			   (real) sp_plaid.offset[i] / (real) (1 << sp_globals.multshift));
+		printf("%3d   ", i);
+		if (sp_globals.c_act[i])
+		{
+			printf("T ");
+		} else
+		{
+			printf("F ");
+		}
+		printf("%5.1f\n", ((real) sp_globals.c_pix[i] / (real) sp_globals.onepix));
 	}
-	printf("\nY INT TABLE\n");
-	n = no_Y_int_zones;
+	printf("--------------\n");
+	n = no_Y_constr + 2;
 	for (i = 0; i < n; i++)
 	{
-		j = i + no_X_int_zones;
-		printf("%2d %7.4f %7.4f\n", i,
-			   (real) sp_plaid.mult[j] / (real) (1 << sp_globals.multshift),
-			   (real) sp_plaid.offset[j] / (real) (1 << sp_globals.multshift));
+		j = i + sp_globals.Y_constr_org;
+		printf("%3d   ", i);
+		if (sp_globals.c_act[j])
+		{
+			printf("T ");
+		} else
+		{
+			printf("F ");
+		}
+		printf("%5.1f\n", ((real) sp_globals.c_pix[j] / (real) sp_globals.onepix));
 	}
+#endif
+
+}
+
+
+/* 
+ * Called by sp_make_simp_char() and sp_make_comp_char() to set up the controlled
+ * coordinate table and process all intelligent scaling rules embedded
+ * in the character data.
+ * Updates pointer to first byte after plaid data.
+ * This is used only if intelligent scaling is enabled in the
+ * configuration definitions.
+ */
+ufix8 *sp_plaid_tcb(ufix8 * pointer,	/* Pointer to next byte in char data */
+								  ufix8 format)	/* Character format byte */
+{
+	fix15 no_X_ctrl_zones;
+	fix15 no_Y_ctrl_zones;
+	fix15 no_X_int_zones;
+	fix15 no_Y_int_zones;
+
+#if INCL_PLAID_OUT						/* Plaid data monitoring included? */
+	begin_plaid_data();
+#endif
+
+	sp_constr_update();					/* Update constraint table if required */
+
+	sp_globals.no_X_orus = (format & BIT2) ? (fix15) NEXT_BYTE(pointer) : 0;
+	sp_globals.no_Y_orus = (format & BIT3) ? (fix15) NEXT_BYTE(pointer) : 0;
+	pointer = sp_read_oru_table(pointer);	/* Updates no_X/Y/orus to include zero values */
+	sp_globals.Y_edge_org = sp_globals.no_X_orus;
+	if (sp_globals.no_X_orus > 1)		/* 2 or more controlled X coordinates? */
+		sp_globals.tcb.xmode = sp_globals.tcb.xtype;	/* Enable intelligent scaling in X */
+
+	if (sp_globals.no_Y_orus > 1)		/* 2 or more controlled Y coordinates? */
+		sp_globals.tcb.ymode = sp_globals.tcb.ytype;	/* Enable intelligent scaling in Y */
+
+	no_X_ctrl_zones = sp_globals.no_X_orus - 1;
+	no_Y_ctrl_zones = sp_globals.no_Y_orus - 1;
+	pointer = sp_setup_pix_table(pointer, (boolean) (format & BIT4), no_X_ctrl_zones, no_Y_ctrl_zones);
+
+	no_X_int_zones = (format & BIT6) ? (fix15) NEXT_BYTE(pointer) : 0;
+	no_Y_int_zones = (format & BIT7) ? (fix15) NEXT_BYTE(pointer) : 0;
+	sp_globals.Y_int_org = no_X_int_zones;
+	pointer = sp_setup_int_table(pointer, no_X_int_zones, no_Y_int_zones);
+
+#if INCL_PLAID_OUT						/* Plaid data monitoring included? */
+	end_plaid_data();
 #endif
 
 	return pointer;
 }
+#else
+/* 
+ * Called by sp_make_simp_char() and sp_make_comp_char() to set up the controlled
+ * coordinate table and skip all other intelligent scaling rules embedded
+ * in the character data.
+ * Updates pointer to first byte after plaid data.
+ * This is used only if intelligent scaling is not supported in the
+ * configuration definitions.
+ */
+ufix8 *sp_plaid_tcb(ufix8 * pointer,	/* Pointer to next byte in char data */
+								  ufix8 format)	/* Character format byte */
+{
+	fix15 i, n;
+
+	sp_globals.no_X_orus = (format & BIT2) ? (fix15) NEXT_BYTE(pointer) : 0;
+	sp_globals.no_Y_orus = (format & BIT3) ? (fix15) NEXT_BYTE(pointer) : 0;
+	pointer = sp_read_oru_table(pointer);	/* Updates no_X/Y/orus */
+	sp_globals.Y_edge_org = sp_globals.no_X_orus;
+
+	/* Skip over control zone table */
+	pointer = sp_skip_control_zone(pointer, format);
+
+	/* Skip over interpolation table */
+	pointer = sp_skip_interpolation_table(pointer, format);
+	return pointer;
+}
 #endif
+
+
+/*
+ * Called by sp_plaid_tcb() to read the controlled coordinate table from the
+ * character data in the font. 
+ * Updates the pointer to the byte following the controlled coordinate
+ * data.
+ */
+ufix8 *sp_read_oru_table(ufix8 * pointer)	/* Pointer to first byte in controlled coord table */
+{
+	fix15 i, j, k, n;
+	boolean zero_not_in;
+	boolean zero_added;
+	fix15 oru;
+
+#if INCL_RULES
+	fix15 pos;
+#endif
+
+	i = 0;
+	n = sp_globals.no_X_orus;
+#if INCL_RULES
+	pos = sp_globals.tcb.xpos;
+#endif
+	for (j = 0;; j++)
+	{
+		zero_not_in = TRUE;
+		zero_added = FALSE;
+		for (k = 0; k < n; k++)
+		{
+			oru = NEXT_WORD(pointer);
+			if (zero_not_in && (oru >= 0))	/* First positive oru value? */
+			{
+#if INCL_RULES
+				sp_plaid.pix[i] = pos;	/* Insert position in pix array */
+#endif
+				if (oru != 0)			/* Zero oru value omitted? */
+				{
+					sp_plaid.orus[i++] = 0;	/* Insert zero value in oru array */
+					zero_added = TRUE;	/* Remember to increment size of array */
+				}
+				zero_not_in = FALSE;	/* Inhibit further testing for zero ins */
+			}
+			sp_plaid.orus[i++] = oru;	/* Add specified oru value to array */
+		}
+		if (zero_not_in)				/* All specified oru values negative? */
+		{
+#if INCL_RULES
+			sp_plaid.pix[i] = pos;		/* Insert position in pix array */
+#endif
+			sp_plaid.orus[i++] = 0;		/* Add zero oru value */
+			zero_added = TRUE;			/* Remember to increment size of array */
+		}
+		if (j)							/* Both X and Y orus read? */
+			break;
+		if (zero_added)
+			sp_globals.no_X_orus++;		/* Increment X array size */
+		n = sp_globals.no_Y_orus;		/* Prepare to read Y oru values */
+#if INCL_RULES
+		pos = sp_globals.tcb.ypos;
+#endif
+	}
+	if (zero_added)						/* Zero Y oru value added to array? */
+		sp_globals.no_Y_orus++;			/* Increment Y array size */
+
+#if DEBUG
+	printf("\nX ORUS\n");
+	n = sp_globals.no_X_orus;
+	for (i = 0; i < n; i++)
+	{
+		printf("%2d %4d\n", i, sp_plaid.orus[i]);
+	}
+	printf("\nY ORUS\n");
+	n = sp_globals.no_Y_orus;
+	for (i = 0; i < n; i++)
+	{
+		printf("%2d %4d\n", i, sp_plaid.orus[i + sp_globals.no_X_orus]);
+	}
+#endif
+
+	return pointer;						/* Update pointer */
+}
+
+
+#if INCL_SQUEEZING
+/*
+ * Called by sp_setup_pix_table() when Y squeezing is necessary
+ * to insert the correct edge in the global pix array
+ */
+static void sp_calculate_y_pix(ufix8 start_edge, ufix8 end_edge,
+									 ufix16 constr_nr,
+									 fix31 top_scale, fix31 bottom_scale, fix31 ppo, fix15 em_top_pix, fix15 em_bot_pix)
+{
+	fix15 zone_pix;
+	fix15 start_oru, end_oru;
+	fix31 zone_width, above_base, below_base;
+
+	/* check whether edge is above or below the baseline                */
+	/* and apply appropriate scale factor to get scaled oru coordinates */
+	if (sp_plaid.orus[start_edge] < 0)
+		start_oru = (fix15) (SQUEEZE_MULT(sp_plaid.orus[start_edge], bottom_scale));
+	else
+		start_oru = (fix15) (SQUEEZE_MULT(sp_plaid.orus[start_edge], top_scale));
+
+	if (sp_plaid.orus[end_edge] < 0)
+		end_oru = (fix15) (SQUEEZE_MULT(sp_plaid.orus[end_edge], bottom_scale));
+	else
+		end_oru = (fix15) (SQUEEZE_MULT(sp_plaid.orus[end_edge], top_scale));
+
+	if (!sp_globals.c_act[constr_nr])	/* Constraint inactive? */
+	{
+		/* calculate zone width */
+		zone_pix = (fix15) (((((fix31) end_oru - (fix31) start_oru) * ppo)
+							 >> sp_globals.mpshift) + sp_globals.pixrnd) & sp_globals.pixfix;
+		/* check minimum */
+		if ((ABS(zone_pix)) >= sp_globals.c_pix[constr_nr])
+			goto Ly;
+	}
+
+	/* Use zone size from constr table */
+	if ((end_oru >= 0) && (start_oru >= 0))
+		/* all above baseline */
+		zone_pix = (fix15) (SQUEEZE_MULT(top_scale, sp_globals.c_pix[constr_nr]));
+	else if ((end_oru <= 0) && (start_oru <= 0))
+		/* all below baseline */
+		zone_pix = (fix15) (SQUEEZE_MULT(bottom_scale, sp_globals.c_pix[constr_nr]));
+	else
+	{
+		/* mixture */
+		if (start_oru > 0)
+		{
+			zone_width = start_oru - end_oru;
+			/* get % above baseline in 16.16 fixed point */
+			above_base = (((fix31) start_oru) << 16) / ((fix31) zone_width);
+			/* get % below baseline in 16.16 fixed point */
+			below_base = (((fix31) - end_oru) << 16) / ((fix31) zone_width);
+		} else
+		{
+			zone_width = end_oru - start_oru;
+			/* get % above baseline in 16.16 fixed point */
+			above_base = (((fix31) - start_oru) << 16) / ((fix31) zone_width);
+			/* get % below baseline in 16.16 fixed point */
+			below_base = (((fix31) end_oru) << 16) / ((fix31) zone_width);
+		}
+		/* % above baseline * total zone * top_scale +  */
+		/* % below baseline * total zone * bottom_scale */
+		zone_pix = ((((above_base * (fix31) sp_globals.c_pix[constr_nr]) >> 16) *
+					 top_scale) + (((below_base * (fix31) sp_globals.c_pix[constr_nr]) >> 16) * bottom_scale)) >> 16;
+	}
+
+	/* make this zone pix fall on a pixel boundary */
+	zone_pix = (zone_pix + sp_globals.pixrnd) & sp_globals.pixfix;
+
+	/* if minimum is in effect make the zone one pixel */
+	if ((sp_globals.c_pix[constr_nr] != 0) && (zone_pix < sp_globals.onepix))
+		zone_pix = sp_globals.onepix;
+
+	if (start_edge > end_edge)
+	{
+		zone_pix = -zone_pix;			/* Use negatve zone size */
+	}
+  Ly:
+	/* assign global pix value */
+	sp_plaid.pix[end_edge] = sp_plaid.pix[start_edge] + zone_pix;	/* Insert end pixels */
+
+	/* make sure it is in the EM !*/
+	if ((sp_globals.pspecs->flags & SQUEEZE_TOP) && (sp_plaid.pix[end_edge] > em_top_pix))
+		sp_plaid.pix[end_edge] = em_top_pix;
+	if ((sp_globals.pspecs->flags & SQUEEZE_BOTTOM) && (sp_plaid.pix[end_edge] < em_bot_pix))
+		sp_plaid.pix[end_edge] = em_bot_pix;
+}
+
+/*
+ * Called by sp_setup_pix_table() when squeezing is included
+ * to determine whether X scaling is necessary.  If it is, the
+ * scale factor and offset are computed.  This function returns
+ * a boolean value TRUE = X squeezind is necessary, FALSE = no
+ * X squeezing is necessary.
+ */
+boolean sp_calculate_x_scale(fix31 *x_factor, fix31 *x_offset, fix15 no_X_ctrl_zones)
+{
+	boolean squeeze_left, squeeze_right;
+	boolean out_on_right, out_on_left;
+	fix15 bbox_width, set_width;
+	fix15 bbox_xmin, bbox_xmax;
+	fix15 x_offset_pix;
+	fix15 i;
+
+#if INCL_ISW
+	fix31 isw_scale;
+	fix15 shift;
+#endif
+
+
+	/* set up some flags and common calculations */
+	squeeze_left = (sp_globals.pspecs->flags & SQUEEZE_LEFT) ? TRUE : FALSE;
+	squeeze_right = (sp_globals.pspecs->flags & SQUEEZE_RIGHT) ? TRUE : FALSE;
+	bbox_xmin = sp_globals.bbox_xmin_orus;
+	bbox_xmax = sp_globals.bbox_xmax_orus;
+	set_width = sp_globals.setwidth_orus;
+
+	if (bbox_xmax > set_width)
+		out_on_right = TRUE;
+	else
+		out_on_right = FALSE;
+	if (bbox_xmin < 0)
+		out_on_left = TRUE;
+	else
+		out_on_left = FALSE;
+	bbox_width = bbox_xmax - bbox_xmin;
+
+	/*
+	 * don't need X squeezing if:
+	 *     - X squeezing not enabled
+	 *     - bbox doesn't violate on left or right
+	 *     - left squeezing only is enabled and char isn't out on left
+	 *     - right squeezing only is enabled and char isn't out on right
+	 */
+	if ((!squeeze_left && !squeeze_right) ||
+		(!out_on_right && !out_on_left) ||
+		(squeeze_left && !squeeze_right && !out_on_left) || (squeeze_right && !squeeze_left && !out_on_right))
+		return FALSE;
+
+#if INCL_ISW
+	if (sp_globals.import_setwidth_act)
+	{
+		/* if both isw and squeezing is going on - let the imported */
+		/* setwidth factor be factored in with the squeeze          */
+		isw_scale = sp_compute_isw_scale();
+		/*sp_globals.setwidth_orus = sp_globals.imported_width; */
+	} else
+	{
+		isw_scale = 0x10000L;			/* 1 in 16.16 notation */
+	}
+#endif
+
+	/* squeezing on left and right ?  */
+	if (squeeze_left && squeeze_right)
+	{
+		/* calculate scale factor */
+		if (bbox_width < set_width)
+			*x_factor = 0x10000L;		/* 1 in 16.16 notation */
+		else
+			*x_factor = ((fix31) set_width << 16) / (fix31) bbox_width;
+		IMPORT_FACTOR;
+		/* calculate offset */
+		if (out_on_left)			/* fall out on left ? */
+			*x_offset = -(fix31) * x_factor * (fix31) bbox_xmin;
+		/* fall out on right and I am shifting only ? */
+		else if (out_on_right && (*x_factor == 0x10000L))
+			*x_offset = -(fix31) * x_factor * (fix31) (bbox_xmax - set_width);
+		else
+			*x_offset = 0x0L;			/* 0 in 16.16 notation */
+	}
+	/* squeezing on left only and violates left */
+	else if (squeeze_left)
+	{
+		if (bbox_width < set_width)		/* will it fit if I shift it ? */
+			*x_factor = 0x10000L;		/* 1 in 16.16 notation */
+		else if (out_on_right)
+			*x_factor = ((fix31) set_width << 16) / (fix31) bbox_width;
+		else
+			*x_factor = ((fix31) set_width << 16) / (fix31) (bbox_width - (bbox_xmax - set_width));
+		IMPORT_FACTOR;
+		*x_offset = (fix31) - *x_factor * (fix31) bbox_xmin;
+	}
+
+	/* I must be squeezing on right, and violates right */
+	else
+	{
+		if (bbox_width < set_width)		/* will it fit if I shift it ? */
+		{								/* just shift it left - it will fit in the bbox */
+			*x_factor = 0x10000L;		/* 1 in 16.16 notation */
+			IMPORT_FACTOR;
+			*x_offset = (fix31) - *x_factor * (fix31) bbox_xmin;
+		} else if (out_on_left)
+		{
+			*x_factor = ((fix31) set_width << 16) / (fix31) bbox_width;
+			IMPORT_FACTOR;
+			*x_offset = 0x0L;		/* 0 in 16.16 notation */
+		} else
+		{
+			*x_factor = ((fix31) set_width << 16) / (fix31) bbox_xmax;
+			IMPORT_FACTOR;
+			*x_offset = 0x0L;		/* 0 in 16.16 notation */
+		}
+	}
+
+	x_offset_pix = (fix15) (((*x_offset >> 16) * sp_globals.tcb0.xppo) / (1 << sp_globals.mpshift));
+
+	if ((x_offset_pix > 0) && (x_offset_pix < sp_globals.onepix))
+		x_offset_pix = sp_globals.onepix;
+
+	/* look for the first non-negative oru value, scale and add the offset    */
+	/* to the corresponding pixel value - note that the pixel value           */
+	/* is set in sp_read_oru_table.                                              */
+	
+	/* look at all the X edges */
+	for (i = 0; i < (no_X_ctrl_zones + 1); i++)
+		if (sp_plaid.orus[i] >= 0)
+		{
+			sp_plaid.pix[i] = (SQUEEZE_MULT(sp_plaid.pix[i], *x_factor)
+							   + sp_globals.pixrnd + x_offset_pix) & sp_globals.pixfix;
+			break;
+		}
+
+	return TRUE;
+}
+
+/*
+ * Called by sp_setup_pix_table() when squeezing is included
+ * to determine whether Y scaling is necessary.  If it is, 
+ * two scale factors are computed, one for above the baseline,
+ * and one for below the basline.
+ * This function returns a boolean value TRUE = Y squeezind is necessary, 
+ * FALSE = no Y squeezing is necessary.
+ */
+boolean sp_calculate_y_scale(fix31 * top_scale, fix31 * bottom_scale, fix15 first_Y_zone, fix15 no_Y_ctrl_zones)
+{
+	boolean squeeze_top, squeeze_bottom;
+	boolean out_on_top, out_on_bottom;
+	fix15 bbox_top, bbox_bottom;
+	fix15 bbox_height;
+	fix15 i;
+
+	/* set up some flags and common calculations */
+	squeeze_top = (sp_globals.pspecs->flags & SQUEEZE_TOP) ? TRUE : FALSE;
+	squeeze_bottom = (sp_globals.pspecs->flags & SQUEEZE_BOTTOM) ? TRUE : FALSE;
+	bbox_top = sp_globals.bbox_ymax_orus;
+	bbox_bottom = sp_globals.bbox_ymin_orus;
+	bbox_height = bbox_top - bbox_bottom;
+
+	if (bbox_top > EM_TOP)
+		out_on_top = TRUE;
+	else
+		out_on_top = FALSE;
+
+	if (bbox_bottom < EM_BOT)
+		out_on_bottom = TRUE;
+	else
+		out_on_bottom = FALSE;
+
+	/*
+	 * don't need Y squeezing if:
+	 *     - Y squeezing not enabled
+	 *     - bbox doesn't violate on top or bottom
+	 *     - top squeezing only is enabled and char isn't out on top
+	 *     - bottom squeezing only is enabled and char isn't out on bottom
+	 */
+	if ((!squeeze_top && !squeeze_bottom) ||
+		(!out_on_top && !out_on_bottom) ||
+		(squeeze_top && !squeeze_bottom && !out_on_top) || (squeeze_bottom && !squeeze_top && !out_on_bottom))
+		return FALSE;
+
+	if (squeeze_top && (bbox_top > EM_TOP))
+		*top_scale = ((fix31) EM_TOP << 16) / (fix31) (bbox_top);
+	else
+		*top_scale = 0x10000L;			/* 1 in 16.16 fixed point */
+
+	if (squeeze_bottom && (bbox_bottom < EM_BOT))
+		*bottom_scale = ((fix31) - (EM_BOT) << 16) / (fix31) - bbox_bottom;
+	else
+		*bottom_scale = 0x10000L;
+
+	if (sp_globals.squeezing_compound)
+	{
+		for (i = first_Y_zone; i < (first_Y_zone + no_Y_ctrl_zones + 1); i++)
+		{
+			if (sp_plaid.orus[i] >= 0)
+				sp_plaid.pix[i] = (SQUEEZE_MULT(sp_plaid.pix[i], *top_scale) + sp_globals.pixrnd) & sp_globals.pixfix;
+			else
+				sp_plaid.pix[i] = (SQUEEZE_MULT(sp_plaid.pix[i], *bottom_scale)
+								   + sp_globals.pixrnd) & sp_globals.pixfix;
+		}
+	}
+	return TRUE;
+}
+#endif
+
 
 #if INCL_ISW
 fix31 sp_compute_isw_scale(void)

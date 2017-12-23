@@ -30,6 +30,8 @@ WITH THE SPEEDO SOFTWARE OR THE BITSTREAM CHARTER OUTLINE FONT.
 #include "linux/libcwrap.h"
 #include "spdo_prv.h"					/* General definitions for Speedo   */
 
+#if INCL_SCREEN /* whole file */
+
 #define   DEBUG      0
 #define   ABS(X)     ( (X < 0) ? -X : X)
 
@@ -41,24 +43,6 @@ WITH THE SPEEDO SOFTWARE OR THE BITSTREAM CHARTER OUTLINE FONT.
 #endif
 
 
-/***** GLOBAL VARIABLES *****/
-
-/***** GLOBAL FUNCTIONS *****/
-
-/***** EXTERNAL VARIABLES *****/
-
-/***** EXTERNAL FUNCTIONS *****/
-
-/***** STATIC VARIABLES *****/
-
-/***** STATIC FUNCTIONS *****/
-
-static void sp_add_intercept_screen(fix15 y, fix31 x);
-
-static void sp_proc_intercepts_screen(void);
-
-
-#if INCL_SCREEN
 /*
  * init_out0() is called by sp_set_specs() to initialize the output module.
  * Returns TRUE if output module can accept requested specifications.
@@ -72,10 +56,8 @@ boolean sp_init_screen(specs_t *specsarg)
 	UNUSED(specsarg);
 	return TRUE;
 }
-#endif
 
 
-#if INCL_SCREEN
 /* Called once at the start of the character generation process
  */
 boolean sp_begin_char_screen(fix31 x, fix31 y, fix31 minx, fix31 miny, fix31 maxx, fix31 maxy)
@@ -95,10 +77,70 @@ boolean sp_begin_char_screen(fix31 x, fix31 y, fix31 minx, fix31 miny, fix31 max
 
 	return TRUE;
 }
+
+
+/*  Called by line() to add an intercept to the intercept list structure
+ */
+static void sp_add_intercept_screen(fix15 y,	/* Y coordinate in relative pixel units */
+											/* (0 is lowest sample in band) */
+											fix31 x)	/* X coordinate of intercept in subpixel units */
+{
+	fix15 from;				/* Insertion pointers for the linked list sort */
+	fix15 to;
+	fix15 xloc;
+	fix15 xfrac;
+
+#if DEBUG
+	printf("    Add intercept(%2d, %x)\n", y + sp_globals.y_band.band_min, x);
+
+	/* Bounds checking IS done in debug mode */
+	if (y < 0)							/* Y value below bottom of current band? */
+	{
+		printf(" Intecerpt less than 0!!!\007\n");
+		return;
+	}
+
+	if (y > (sp_globals.no_y_lists - 1))	/* Y value above top of current band? */
+	{
+		printf(" Intercept too big for band!!!!!\007\n");
+		return;
+	}
 #endif
 
+	/* Store new values */
 
-#if INCL_SCREEN
+	sp_intercepts.car[sp_globals.next_offset] = xloc = (fix15) (x >> 16);
+	sp_intercepts.inttype[sp_globals.next_offset] = sp_intercepts.leftedge | (xfrac = ((x >> 8) & FRACTION));
+
+	/* Find slot to insert new element (between from and to) */
+
+	from = y;							/* Start at list head */
+
+	while ((to = sp_intercepts.cdr[from]) != 0)	/* Until to == end of list */
+	{
+		if (xloc < sp_intercepts.car[to])	/* If next item is larger than or same as this one... */
+			goto insert_element;		/* ... drop out and insert here */
+		else if (xloc == sp_intercepts.car[to] && xfrac < (sp_intercepts.inttype[to] & FRACTION))
+			goto insert_element;		/* ... drop out and insert here */
+		from = to;						/* move forward in list */
+	}
+
+  insert_element:						/* insert element "sp_globals.next_offset" between elements "from" */
+	/* and "to" */
+
+	sp_intercepts.cdr[from] = sp_globals.next_offset;
+	sp_intercepts.cdr[sp_globals.next_offset] = to;
+
+	if (++sp_globals.next_offset >= MAX_INTERCEPTS)	/* Intercept buffer full? */
+	{
+		sp_globals.intercept_oflo = TRUE;
+		/* There may be a few more calls to "add_intercept" from the current line */
+		/* To avoid problems, we set next_offset to a safe value. We don't care   */
+		/* if the intercept table gets trashed at this point                      */
+		sp_globals.next_offset = sp_globals.first_offset;
+	}
+}
+
 
 static void sp_vert_line_screen(fix31 x, fix15 y1, fix15 y2)
 {
@@ -140,8 +182,6 @@ static void sp_vert_line_screen(fix31 x, fix15 y1, fix15 y2)
 			sp_add_intercept_screen(y1++, x);	/* Add intercept */
 		}
 	}
-
-
 }
 
 
@@ -205,10 +245,8 @@ void sp_begin_contour_screen(fix31 x1, fix31 y1, boolean outside)
 	sp_globals.y0_spxl = y1;
 	sp_globals.y_pxl = (sp_globals.y0_spxl + sp_globals.pixrnd) >> sp_globals.pixshift;
 }
-#endif
 
 
-#if INCL_SCREEN
 void sp_curve_screen(fix31 x1, fix31 y1, fix31 x2, fix31 y2, fix31 x3, fix31 y3, fix15 depth)
 {
 	fix31 X0;
@@ -264,10 +302,6 @@ void sp_curve_screen(fix31 x1, fix31 y1, fix31 x2, fix31 y2, fix31 x3, fix31 y3,
 }
 
 
-#endif
-
-
-#if INCL_SCREEN
 /* Called for each vector in the transformed character
  */
 void sp_line_screen(fix31 x1, fix31 y1)
@@ -406,9 +440,8 @@ void sp_line_screen(fix31 x1, fix31 y1)
 		}
 	}
 }
-#endif
 
-#if INCL_SCREEN
+
 /* Called after the last vector in each contour
  */
 void sp_end_contour_screen(void)
@@ -418,310 +451,9 @@ void sp_end_contour_screen(void)
 #endif
 	sp_intercepts.inttype[sp_globals.next_offset - 1] |= END_INT;
 }
-#endif
 
 
 
-#if INCL_SCREEN
-/* Called when all character data has been output
- * Return TRUE if output process is complete
- * Return FALSE to repeat output of the transformed data beginning
- * with the first contour
- */
-boolean sp_end_char_screen(void)
-{
-	fix31 xorg;
-	fix31 yorg;
-
-#if INCL_CLIPPING
-	fix31 em_max, em_min, bmap_max, bmap_min;
-#endif
-
-#if DEBUG
-	printf("END_CHAR_SCREEN()\n");
-#endif
-
-	if (sp_globals.first_pass)
-	{
-		if (sp_globals.bmap_xmax >= sp_globals.bmap_xmin)
-		{
-			sp_globals.xmin = (sp_globals.bmap_xmin + sp_globals.pixrnd + 1) >> sp_globals.pixshift;
-			sp_globals.xmax = (sp_globals.bmap_xmax + sp_globals.pixrnd) >> sp_globals.pixshift;
-		} else
-		{
-			sp_globals.xmin = sp_globals.xmax = 0;
-		}
-		if (sp_globals.bmap_ymax >= sp_globals.bmap_ymin)
-		{
-
-#if INCL_CLIPPING
-			switch (sp_globals.tcb0.xtype)
-			{
-			case 1:					/* 180 degree rotation */
-				if (sp_globals.specs.flags & CLIP_TOP)
-				{
-					sp_globals.clip_ymin =
-						(fix31) ((fix31) EM_TOP * sp_globals.tcb0.yppo + ((1 << sp_globals.multshift) / 2));
-					sp_globals.clip_ymin = sp_globals.clip_ymin >> sp_globals.multshift;
-					bmap_min = (sp_globals.bmap_ymin + sp_globals.pixrnd + 1) >> sp_globals.pixshift;
-					sp_globals.clip_ymin = -1 * sp_globals.clip_ymin;
-					if (bmap_min < sp_globals.clip_ymin)
-						sp_globals.ymin = sp_globals.clip_ymin;
-					else
-						sp_globals.ymin = bmap_min;
-				}
-				if (sp_globals.specs.flags & CLIP_BOTTOM)
-				{
-					sp_globals.clip_ymax =
-						(fix31) ((fix31) (-1 * EM_BOT) * sp_globals.tcb0.yppo + ((1 << sp_globals.multshift) / 2));
-					sp_globals.clip_ymax = sp_globals.clip_ymax >> sp_globals.multshift;
-					bmap_max = (sp_globals.bmap_ymax + sp_globals.pixrnd) >> sp_globals.pixshift;
-					if (bmap_max < sp_globals.clip_ymax)
-						sp_globals.ymax = bmap_max;
-					else
-						sp_globals.ymax = sp_globals.clip_ymax;
-				}
-				sp_globals.clip_xmax = -sp_globals.xmin;
-				sp_globals.clip_xmin = ((sp_globals.set_width.x + 32768L) >> 16) - sp_globals.xmin;
-				break;
-			case 2:					/* 90 degree rotation */
-				if (sp_globals.specs.flags & CLIP_TOP)
-				{
-					sp_globals.clip_xmin =
-						(fix31) ((fix31) (-1 * EM_BOT) * sp_globals.tcb0.yppo + ((1 << sp_globals.multshift) / 2));
-					sp_globals.clip_xmin = sp_globals.clip_xmin >> sp_globals.multshift;
-					sp_globals.clip_xmin = -1 * sp_globals.clip_xmin;
-					bmap_min = (sp_globals.bmap_xmin + sp_globals.pixrnd + 1) >> sp_globals.pixshift;
-					if (bmap_min > sp_globals.clip_xmin)
-						sp_globals.clip_xmin = bmap_min;
-
-					/* normalize to x origin */
-					sp_globals.clip_xmin -= sp_globals.xmin;
-				}
-				if (sp_globals.specs.flags & CLIP_BOTTOM)
-				{
-					sp_globals.clip_xmax =
-						(fix31) ((fix31) EM_TOP * sp_globals.tcb0.yppo + ((1 << sp_globals.multshift) / 2));
-					sp_globals.clip_xmax = sp_globals.clip_xmax >> sp_globals.multshift;
-					bmap_max = (sp_globals.bmap_xmax + sp_globals.pixrnd) >> sp_globals.pixshift;
-					if (bmap_max < sp_globals.clip_xmax)
-						sp_globals.xmax = bmap_max;
-					else
-						sp_globals.xmax = sp_globals.clip_xmax;
-					sp_globals.clip_ymax = 0;
-					if ((sp_globals.specs.flags & CLIP_TOP) && (sp_globals.ymax > sp_globals.clip_ymax))
-						sp_globals.ymax = sp_globals.clip_ymax;
-					sp_globals.clip_ymin = ((sp_globals.set_width.y + 32768L) >> 16);
-					if ((sp_globals.specs.flags & CLIP_BOTTOM) && (sp_globals.ymin < sp_globals.clip_ymin))
-						sp_globals.ymin = sp_globals.clip_ymin;
-					/* normalize to x origin */
-					sp_globals.clip_xmax -= sp_globals.xmin;
-				}
-				break;
-			case 3:					/* 270 degree rotation */
-				if (sp_globals.specs.flags & CLIP_TOP)
-				{
-					sp_globals.clip_xmin =
-						(fix31) ((fix31) EM_TOP * sp_globals.tcb0.yppo + ((1 << sp_globals.multshift) / 2));
-					sp_globals.clip_xmin = sp_globals.clip_xmin >> sp_globals.multshift;
-					sp_globals.clip_xmin = -1 * sp_globals.clip_xmin;
-					bmap_min = (sp_globals.bmap_xmin + sp_globals.pixrnd + 1) >> sp_globals.pixshift;
-
-					/* let the minimum be the larger of these two values */
-					if (bmap_min > sp_globals.clip_xmin)
-						sp_globals.clip_xmin = bmap_min;
-
-					/* normalize the x value to new xorgin */
-					sp_globals.clip_xmin -= sp_globals.xmin;
-				}
-				if (sp_globals.specs.flags & CLIP_BOTTOM)
-				{
-					sp_globals.clip_xmax =
-						(fix31) ((fix31) (-1 * EM_BOT) * sp_globals.tcb0.yppo + ((1 << sp_globals.multshift) / 2));
-					sp_globals.clip_xmax = sp_globals.clip_xmax >> sp_globals.multshift;
-					bmap_max = (sp_globals.bmap_xmax + sp_globals.pixrnd) >> sp_globals.pixshift;
-
-					/* let the max be the lesser of these two values */
-					if (bmap_max < sp_globals.clip_xmax)
-					{
-						sp_globals.xmax = bmap_max;
-						sp_globals.clip_xmax = bmap_max;
-					} else
-						sp_globals.xmax = sp_globals.clip_xmax;
-
-					/* normalize the x value to new x origin */
-					sp_globals.clip_xmax -= sp_globals.xmin;
-				}
-				/* compute y clip values */
-				sp_globals.clip_ymax = ((sp_globals.set_width.y + 32768L) >> 16);
-				if ((sp_globals.specs.flags & CLIP_TOP) && (sp_globals.ymax > sp_globals.clip_ymax))
-					sp_globals.ymax = sp_globals.clip_ymax;
-				sp_globals.clip_ymin = 0;
-				if ((sp_globals.specs.flags & CLIP_BOTTOM) && (sp_globals.ymin < sp_globals.clip_ymin))
-					sp_globals.ymin = sp_globals.clip_ymin;
-				break;
-			default:					/* this is for zero degree rotation and arbitrary rotation */
-				if (sp_globals.specs.flags & CLIP_TOP)
-				{
-					sp_globals.clip_ymax =
-						(fix31) ((fix31) EM_TOP * sp_globals.tcb0.yppo + ((1 << sp_globals.multshift) / 2));
-					sp_globals.clip_ymax = sp_globals.clip_ymax >> sp_globals.multshift;
-					bmap_max = (sp_globals.bmap_ymax + sp_globals.pixrnd) >> sp_globals.pixshift;
-					if (bmap_max > sp_globals.clip_ymax)
-						sp_globals.ymax = bmap_max;
-					else
-						sp_globals.ymax = sp_globals.clip_ymax;
-				}
-				if (sp_globals.specs.flags & CLIP_BOTTOM)
-				{
-					sp_globals.clip_ymin =
-						(fix31) ((fix31) (-1 * EM_BOT) * sp_globals.tcb0.yppo + ((1 << sp_globals.multshift) / 2));
-					sp_globals.clip_ymin = sp_globals.clip_ymin >> sp_globals.multshift;
-					sp_globals.clip_ymin = -sp_globals.clip_ymin;
-					bmap_min = (sp_globals.bmap_ymin + sp_globals.pixrnd + 1) >> sp_globals.pixshift;
-					if (bmap_min < sp_globals.clip_ymin)
-						sp_globals.ymin = sp_globals.clip_ymin;
-					else
-						sp_globals.ymin = bmap_min;
-				}
-				sp_globals.clip_xmin = -sp_globals.xmin;
-				sp_globals.clip_xmax = ((sp_globals.set_width.x + 32768L) >> 16) - sp_globals.xmin;
-				break;
-			}
-			if (!(sp_globals.specs.flags & CLIP_TOP))
-#endif
-				sp_globals.ymax = (sp_globals.bmap_ymax + sp_globals.pixrnd) >> sp_globals.pixshift;
-
-#if INCL_CLIPPING
-			if (!(sp_globals.specs.flags & CLIP_BOTTOM))
-#endif
-
-				sp_globals.ymin = (sp_globals.bmap_ymin + sp_globals.pixrnd + 1) >> sp_globals.pixshift;
-		} else
-		{
-			sp_globals.ymin = sp_globals.ymax = 0;
-		}
-
-		/* add in the rounded out part (from xform.) of the left edge */
-		if (sp_globals.tcb.xmode == 0)	/* for X pix is function of X orus only add the round */
-			xorg = (((fix31) sp_globals.xmin << 16) + (sp_globals.rnd_xmin << sp_globals.poshift));
-		else if (sp_globals.tcb.xmode == 1)	/* for X pix is function of -X orus only, subtr. round */
-			xorg = (((fix31) sp_globals.xmin << 16) - (sp_globals.rnd_xmin << sp_globals.poshift));
-		else
-			xorg = (fix31) sp_globals.xmin << 16;	/* for other cases don't use round on x */
-
-		if (sp_globals.tcb.ymode == 2)	/* for Y pix is function of X orus only, add round error */
-			yorg = (((fix31) sp_globals.ymin << 16) + (sp_globals.rnd_xmin << sp_globals.poshift));
-		else if (sp_globals.tcb.ymode == 3)	/* for Y pix is function of -X orus only, sub round */
-			yorg = (((fix31) sp_globals.ymin << 16) - (sp_globals.rnd_xmin << sp_globals.poshift));
-		else							/* all other cases have no round error on yorg */
-			yorg = (fix31) sp_globals.ymin << 16;
-
-		open_bitmap(sp_globals.set_width.x, sp_globals.set_width.y, xorg, yorg,
-					sp_globals.xmax - sp_globals.xmin, sp_globals.ymax - sp_globals.ymin);
-		if (sp_globals.intercept_oflo)
-		{
-			sp_globals.y_band.band_min = sp_globals.ymin;
-			sp_globals.y_band.band_max = sp_globals.ymax;
-			sp_init_intercepts_out();
-			sp_globals.first_pass = FALSE;
-			sp_globals.extents_running = FALSE;
-			return FALSE;
-		} else
-		{
-			sp_proc_intercepts_screen();
-			close_bitmap();
-			return TRUE;
-		}
-	} else
-	{
-		if (sp_globals.intercept_oflo)
-		{
-			sp_reduce_band_size_out();
-			sp_init_intercepts_out();
-			return FALSE;
-		} else
-		{
-			sp_proc_intercepts_screen();
-			if (sp_next_band_out())
-			{
-				sp_init_intercepts_out();
-				return FALSE;
-			}
-			close_bitmap();
-			return TRUE;
-		}
-	}
-}
-#endif
-
-#if INCL_SCREEN
-/*  Called by line() to add an intercept to the intercept list structure
- */
-static void sp_add_intercept_screen(fix15 y,	/* Y coordinate in relative pixel units */
-											/* (0 is lowest sample in band) */
-											fix31 x)	/* X coordinate of intercept in subpixel units */
-{
-	fix15 from;				/* Insertion pointers for the linked list sort */
-	fix15 to;
-	fix15 xloc;
-	fix15 xfrac;
-
-#if DEBUG
-	printf("    Add intercept(%2d, %x)\n", y + sp_globals.y_band.band_min, x);
-
-	/* Bounds checking IS done in debug mode */
-	if (y < 0)							/* Y value below bottom of current band? */
-	{
-		printf(" Intecerpt less than 0!!!\007\n");
-		return;
-	}
-
-	if (y > (sp_globals.no_y_lists - 1))	/* Y value above top of current band? */
-	{
-		printf(" Intercept too big for band!!!!!\007\n");
-		return;
-	}
-#endif
-
-	/* Store new values */
-
-	sp_intercepts.car[sp_globals.next_offset] = xloc = (fix15) (x >> 16);
-	sp_intercepts.inttype[sp_globals.next_offset] = sp_intercepts.leftedge | (xfrac = ((x >> 8) & FRACTION));
-
-	/* Find slot to insert new element (between from and to) */
-
-	from = y;							/* Start at list head */
-
-	while ((to = sp_intercepts.cdr[from]) != 0)	/* Until to == end of list */
-	{
-		if (xloc < sp_intercepts.car[to])	/* If next item is larger than or same as this one... */
-			goto insert_element;		/* ... drop out and insert here */
-		else if (xloc == sp_intercepts.car[to] && xfrac < (sp_intercepts.inttype[to] & FRACTION))
-			goto insert_element;		/* ... drop out and insert here */
-		from = to;						/* move forward in list */
-	}
-
-  insert_element:						/* insert element "sp_globals.next_offset" between elements "from" */
-	/* and "to" */
-
-	sp_intercepts.cdr[from] = sp_globals.next_offset;
-	sp_intercepts.cdr[sp_globals.next_offset] = to;
-
-	if (++sp_globals.next_offset >= MAX_INTERCEPTS)	/* Intercept buffer full? */
-	{
-		sp_globals.intercept_oflo = TRUE;
-		/* There may be a few more calls to "add_intercept" from the current line */
-		/* To avoid problems, we set next_offset to a safe value. We don't care   */
-		/* if the intercept table gets trashed at this point                      */
-		sp_globals.next_offset = sp_globals.first_offset;
-	}
-}
-
-#endif
-
-
-#if INCL_SCREEN
 /*  Called by sp_make_char to output accumulated intercept lists
  *  Clips output to sp_globals.xmin, sp_globals.xmax, sp_globals.ymin, sp_globals.ymax boundaries
  */
@@ -1058,4 +790,232 @@ static void sp_proc_intercepts_screen(void)
 	}
 }
 
+
+/* Called when all character data has been output
+ * Return TRUE if output process is complete
+ * Return FALSE to repeat output of the transformed data beginning
+ * with the first contour
+ */
+boolean sp_end_char_screen(void)
+{
+	fix31 xorg;
+	fix31 yorg;
+
+#if INCL_CLIPPING
+	fix31 em_max, em_min, bmap_max, bmap_min;
 #endif
+
+#if DEBUG
+	printf("END_CHAR_SCREEN()\n");
+#endif
+
+	if (sp_globals.first_pass)
+	{
+		if (sp_globals.bmap_xmax >= sp_globals.bmap_xmin)
+		{
+			sp_globals.xmin = (sp_globals.bmap_xmin + sp_globals.pixrnd + 1) >> sp_globals.pixshift;
+			sp_globals.xmax = (sp_globals.bmap_xmax + sp_globals.pixrnd) >> sp_globals.pixshift;
+		} else
+		{
+			sp_globals.xmin = sp_globals.xmax = 0;
+		}
+		if (sp_globals.bmap_ymax >= sp_globals.bmap_ymin)
+		{
+
+#if INCL_CLIPPING
+			switch (sp_globals.tcb0.xtype)
+			{
+			case 1:					/* 180 degree rotation */
+				if (sp_globals.specs.flags & CLIP_TOP)
+				{
+					sp_globals.clip_ymin = ((fix31) EM_TOP * sp_globals.tcb0.yppo + ((1 << sp_globals.multshift) / 2));
+					sp_globals.clip_ymin = sp_globals.clip_ymin >> sp_globals.multshift;
+					bmap_min = (sp_globals.bmap_ymin + sp_globals.pixrnd + 1) >> sp_globals.pixshift;
+					sp_globals.clip_ymin = -1 * sp_globals.clip_ymin;
+					if (bmap_min < sp_globals.clip_ymin)
+						sp_globals.ymin = sp_globals.clip_ymin;
+					else
+						sp_globals.ymin = bmap_min;
+				}
+				if (sp_globals.specs.flags & CLIP_BOTTOM)
+				{
+					sp_globals.clip_ymax = ((fix31) (-1 * EM_BOT) * sp_globals.tcb0.yppo + ((1 << sp_globals.multshift) / 2));
+					sp_globals.clip_ymax = sp_globals.clip_ymax >> sp_globals.multshift;
+					bmap_max = (sp_globals.bmap_ymax + sp_globals.pixrnd) >> sp_globals.pixshift;
+					if (bmap_max < sp_globals.clip_ymax)
+						sp_globals.ymax = bmap_max;
+					else
+						sp_globals.ymax = sp_globals.clip_ymax;
+				}
+				sp_globals.clip_xmax = -sp_globals.xmin;
+				sp_globals.clip_xmin = ((sp_globals.set_width.x + 32768L) >> 16) - sp_globals.xmin;
+				break;
+			case 2:					/* 90 degree rotation */
+				if (sp_globals.specs.flags & CLIP_TOP)
+				{
+					sp_globals.clip_xmin = ((fix31) (-1 * EM_BOT) * sp_globals.tcb0.yppo + ((1 << sp_globals.multshift) / 2));
+					sp_globals.clip_xmin = sp_globals.clip_xmin >> sp_globals.multshift;
+					sp_globals.clip_xmin = -1 * sp_globals.clip_xmin;
+					bmap_min = (sp_globals.bmap_xmin + sp_globals.pixrnd + 1) >> sp_globals.pixshift;
+					if (bmap_min > sp_globals.clip_xmin)
+						sp_globals.clip_xmin = bmap_min;
+
+					/* normalize to x origin */
+					sp_globals.clip_xmin -= sp_globals.xmin;
+				}
+				if (sp_globals.specs.flags & CLIP_BOTTOM)
+				{
+					sp_globals.clip_xmax =
+						(fix31) ((fix31) EM_TOP * sp_globals.tcb0.yppo + ((1 << sp_globals.multshift) / 2));
+					sp_globals.clip_xmax = sp_globals.clip_xmax >> sp_globals.multshift;
+					bmap_max = (sp_globals.bmap_xmax + sp_globals.pixrnd) >> sp_globals.pixshift;
+					if (bmap_max < sp_globals.clip_xmax)
+						sp_globals.xmax = bmap_max;
+					else
+						sp_globals.xmax = sp_globals.clip_xmax;
+					sp_globals.clip_ymax = 0;
+					if ((sp_globals.specs.flags & CLIP_TOP) && (sp_globals.ymax > sp_globals.clip_ymax))
+						sp_globals.ymax = sp_globals.clip_ymax;
+					sp_globals.clip_ymin = ((sp_globals.set_width.y + 32768L) >> 16);
+					if ((sp_globals.specs.flags & CLIP_BOTTOM) && (sp_globals.ymin < sp_globals.clip_ymin))
+						sp_globals.ymin = sp_globals.clip_ymin;
+					/* normalize to x origin */
+					sp_globals.clip_xmax -= sp_globals.xmin;
+				}
+				break;
+			case 3:					/* 270 degree rotation */
+				if (sp_globals.specs.flags & CLIP_TOP)
+				{
+					sp_globals.clip_xmin = ((fix31) EM_TOP * sp_globals.tcb0.yppo + ((1 << sp_globals.multshift) / 2));
+					sp_globals.clip_xmin = sp_globals.clip_xmin >> sp_globals.multshift;
+					sp_globals.clip_xmin = -1 * sp_globals.clip_xmin;
+					bmap_min = (sp_globals.bmap_xmin + sp_globals.pixrnd + 1) >> sp_globals.pixshift;
+
+					/* let the minimum be the larger of these two values */
+					if (bmap_min > sp_globals.clip_xmin)
+						sp_globals.clip_xmin = bmap_min;
+
+					/* normalize the x value to new xorgin */
+					sp_globals.clip_xmin -= sp_globals.xmin;
+				}
+				if (sp_globals.specs.flags & CLIP_BOTTOM)
+				{
+					sp_globals.clip_xmax = ((fix31) (-1 * EM_BOT) * sp_globals.tcb0.yppo + ((1 << sp_globals.multshift) / 2));
+					sp_globals.clip_xmax = sp_globals.clip_xmax >> sp_globals.multshift;
+					bmap_max = (sp_globals.bmap_xmax + sp_globals.pixrnd) >> sp_globals.pixshift;
+
+					/* let the max be the lesser of these two values */
+					if (bmap_max < sp_globals.clip_xmax)
+					{
+						sp_globals.xmax = bmap_max;
+						sp_globals.clip_xmax = bmap_max;
+					} else
+						sp_globals.xmax = sp_globals.clip_xmax;
+
+					/* normalize the x value to new x origin */
+					sp_globals.clip_xmax -= sp_globals.xmin;
+				}
+				/* compute y clip values */
+				sp_globals.clip_ymax = ((sp_globals.set_width.y + 32768L) >> 16);
+				if ((sp_globals.specs.flags & CLIP_TOP) && (sp_globals.ymax > sp_globals.clip_ymax))
+					sp_globals.ymax = sp_globals.clip_ymax;
+				sp_globals.clip_ymin = 0;
+				if ((sp_globals.specs.flags & CLIP_BOTTOM) && (sp_globals.ymin < sp_globals.clip_ymin))
+					sp_globals.ymin = sp_globals.clip_ymin;
+				break;
+			default:					/* this is for zero degree rotation and arbitrary rotation */
+				if (sp_globals.specs.flags & CLIP_TOP)
+				{
+					sp_globals.clip_ymax = ((fix31) EM_TOP * sp_globals.tcb0.yppo + ((1 << sp_globals.multshift) / 2));
+					sp_globals.clip_ymax = sp_globals.clip_ymax >> sp_globals.multshift;
+					bmap_max = (sp_globals.bmap_ymax + sp_globals.pixrnd) >> sp_globals.pixshift;
+					if (bmap_max > sp_globals.clip_ymax)
+						sp_globals.ymax = bmap_max;
+					else
+						sp_globals.ymax = sp_globals.clip_ymax;
+				}
+				if (sp_globals.specs.flags & CLIP_BOTTOM)
+				{
+					sp_globals.clip_ymin = ((fix31) (-1 * EM_BOT) * sp_globals.tcb0.yppo + ((1 << sp_globals.multshift) / 2));
+					sp_globals.clip_ymin = sp_globals.clip_ymin >> sp_globals.multshift;
+					sp_globals.clip_ymin = -sp_globals.clip_ymin;
+					bmap_min = (sp_globals.bmap_ymin + sp_globals.pixrnd + 1) >> sp_globals.pixshift;
+					if (bmap_min < sp_globals.clip_ymin)
+						sp_globals.ymin = sp_globals.clip_ymin;
+					else
+						sp_globals.ymin = bmap_min;
+				}
+				sp_globals.clip_xmin = -sp_globals.xmin;
+				sp_globals.clip_xmax = ((sp_globals.set_width.x + 32768L) >> 16) - sp_globals.xmin;
+				break;
+			}
+			if (!(sp_globals.specs.flags & CLIP_TOP))
+#endif
+				sp_globals.ymax = (sp_globals.bmap_ymax + sp_globals.pixrnd) >> sp_globals.pixshift;
+
+#if INCL_CLIPPING
+			if (!(sp_globals.specs.flags & CLIP_BOTTOM))
+#endif
+
+				sp_globals.ymin = (sp_globals.bmap_ymin + sp_globals.pixrnd + 1) >> sp_globals.pixshift;
+		} else
+		{
+			sp_globals.ymin = sp_globals.ymax = 0;
+		}
+
+		/* add in the rounded out part (from xform.) of the left edge */
+		if (sp_globals.tcb.xmode == 0)	/* for X pix is function of X orus only add the round */
+			xorg = (((fix31) sp_globals.xmin << 16) + (sp_globals.rnd_xmin << sp_globals.poshift));
+		else if (sp_globals.tcb.xmode == 1)	/* for X pix is function of -X orus only, subtr. round */
+			xorg = (((fix31) sp_globals.xmin << 16) - (sp_globals.rnd_xmin << sp_globals.poshift));
+		else
+			xorg = (fix31) sp_globals.xmin << 16;	/* for other cases don't use round on x */
+
+		if (sp_globals.tcb.ymode == 2)	/* for Y pix is function of X orus only, add round error */
+			yorg = (((fix31) sp_globals.ymin << 16) + (sp_globals.rnd_xmin << sp_globals.poshift));
+		else if (sp_globals.tcb.ymode == 3)	/* for Y pix is function of -X orus only, sub round */
+			yorg = (((fix31) sp_globals.ymin << 16) - (sp_globals.rnd_xmin << sp_globals.poshift));
+		else							/* all other cases have no round error on yorg */
+			yorg = (fix31) sp_globals.ymin << 16;
+
+		open_bitmap(xorg, yorg, sp_globals.xmax - sp_globals.xmin, sp_globals.ymax - sp_globals.ymin);
+		if (sp_globals.intercept_oflo)
+		{
+			sp_globals.y_band.band_min = sp_globals.ymin;
+			sp_globals.y_band.band_max = sp_globals.ymax;
+			sp_init_intercepts_out();
+			sp_globals.first_pass = FALSE;
+			sp_globals.extents_running = FALSE;
+			return FALSE;
+		} else
+		{
+			sp_proc_intercepts_screen();
+			close_bitmap();
+			return TRUE;
+		}
+	} else
+	{
+		if (sp_globals.intercept_oflo)
+		{
+			sp_reduce_band_size_out();
+			sp_init_intercepts_out();
+			return FALSE;
+		} else
+		{
+			sp_proc_intercepts_screen();
+			if (sp_next_band_out())
+			{
+				sp_init_intercepts_out();
+				return FALSE;
+			}
+			close_bitmap();
+			return TRUE;
+		}
+	}
+}
+
+#else
+
+extern int _I_dont_care_that_ISO_C_forbids_an_empty_source_file_;
+
+#endif /* INCL_SCREEN */

@@ -155,7 +155,7 @@ int main(int argc, char **argv)
 		fprintf(stderr, "can't get %x bytes of memory\n", minbufsize);
 		return 1;
 	}
-	fseek(fp, (ufix32) 0, 0);
+	fseek(fp, 0, SEEK_SET);
 
 	if (fread(f_buffer, sizeof(ufix8), (ufix16) minbufsize, fp) != minbufsize)
 	{
@@ -224,7 +224,7 @@ int main(int argc, char **argv)
 		}
 	}
 
-	(void) fclose(fp);
+	fclose(fp);
 
 	return 0;
 }
@@ -233,24 +233,19 @@ int main(int argc, char **argv)
 #if INCL_LCD
 boolean sp_load_char_data(fix31 file_offset, fix15 num, fix15 cb_offset, buff_t *char_data)
 {
-	if (fseek(fp, (long) file_offset, (int) 0))
+	if (fseek(fp, file_offset, SEEK_SET))
 	{
 		fprintf(stderr, "can't seek to char\n");
-		(void) fclose(fp);
-		exit(1);
 		return FALSE;
 	}
 	if ((num + cb_offset) > mincharsize)
 	{
 		fprintf(stderr, "char buf overflow\n");
-		(void) fclose(fp);
-		exit(2);
 		return FALSE;
 	}
 	if (fread((c_buffer + cb_offset), sizeof(ufix8), num, fp) != num)
 	{
 		fprintf(stderr, "can't get char data\n");
-		exit(1);
 		return FALSE;
 	}
 	char_data->org = (ufix8 *) c_buffer + cb_offset;
@@ -272,13 +267,20 @@ void sp_write_error(const char *str, ...)
 }
 
 
-void sp_open_bitmap(fix31 x_set_width, fix31 y_set_width, fix31 xorg, fix31 yorg, fix15 xsize, fix15 ysize)
+void sp_open_bitmap(fix31 xorg, fix31 yorg, fix15 xsize, fix15 ysize)
 {
+	UNUSED(xorg);
+	UNUSED(yorg);
+	UNUSED(xsize);
+	UNUSED(ysize);
 }
 
 
 void sp_set_bitmap_bits(fix15 y, fix15 xbit1, fix15 xbit2)
 {
+	UNUSED(y);
+	UNUSED(xbit1);
+	UNUSED(xbit2);
 }
 
 
@@ -290,12 +292,12 @@ void sp_close_bitmap(void)
 #if INCL_OUTLINE
 void sp_open_outline(fix31 x_set_width, fix31 y_set_width, fix31 xmin, fix31 xmax, fix31 ymin, fix31 ymax)
 {
-	(void) x_set_width;
-	(void) y_set_width;
-	(void) xmin;
-	(void) xmax;
-	(void) ymin;
-	(void) ymax;
+	UNUSED(x_set_width);
+	UNUSED(y_set_width);
+	UNUSED(xmin);
+	UNUSED(xmax);
+	UNUSED(ymin);
+	UNUSED(ymax);
 }
 
 void sp_start_new_char(void)
@@ -304,25 +306,25 @@ void sp_start_new_char(void)
 
 void sp_start_contour(fix31 x, fix31 y, boolean outside)
 {
-	(void) x;
-	(void) y;
-	(void) outside;
+	UNUSED(x);
+	UNUSED(y);
+	UNUSED(outside);
 }
 
 void sp_curve_to(fix31 x1, fix31 y1, fix31 x2, fix31 y2, fix31 x3, fix31 y3)
 {
-	(void) x1;
-	(void) y1;
-	(void) x2;
-	(void) y2;
-	(void) x3;
-	(void) y3;
+	UNUSED(x1);
+	UNUSED(y1);
+	UNUSED(x2);
+	UNUSED(y2);
+	UNUSED(x3);
+	UNUSED(y3);
 }
 
 void sp_line_to(fix31 x, fix31 y)
 {
-	(void) x;
-	(void) y;
+	UNUSED(x);
+	UNUSED(y);
 }
 
 void sp_close_contour(void)

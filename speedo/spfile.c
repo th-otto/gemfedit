@@ -94,7 +94,7 @@ boolean sp_load_char_data(fix31 file_offset, fix15 num, fix15 cb_offset, buff_t 
 {
 	SpeedoMasterFontPtr master = sp_fp_cur->master;
 
-	if (fseek(master->fp, (long) file_offset, (int) 0))
+	if (fseek(master->fp, file_offset, SEEK_SET)
 	{
 		sp_write_error("can't seek to char");
 		return FALSE;
@@ -284,7 +284,7 @@ int sp_open_master(const char *fontname, const char *filename, SpeedoMasterFontP
 	}
 	spmf->f_buffer = f_buffer;
 
-	fseek(fp, (ufix32) 0, 0);
+	fseek(fp, 0, SEEK_SET);
 
 	/* read in the font */
 	if (fread(f_buffer, sizeof(ufix8), (ufix16) minbufsize, fp) != minbufsize)
@@ -377,7 +377,7 @@ void sp_close_master_font(SpeedoMasterFontPtr spmf)
 
 void sp_close_master_file(SpeedoMasterFontPtr spmf)
 {
-	(void) fclose(spmf->fp);
+	fclose(spmf->fp);
 	spmf->state &= ~MasterFileOpen;
 }
 
@@ -394,5 +394,5 @@ void sp_reset_master(SpeedoMasterFontPtr spmf)
 		/* XXX -- what to do if we can't open the file? */
 		spmf->state |= MasterFileOpen;
 	}
-	fseek(spmf->fp, 0, 0);
+	fseek(spmf->fp, 0, SEEK_SET);
 }

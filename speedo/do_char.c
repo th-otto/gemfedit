@@ -694,7 +694,7 @@ static boolean sp_make_comp_char(ufix8 * pointer)	/* Pointer to first byte of po
 }
 
 
-#if INCL_LCD							/* Dynamic load character data supported? */
+#if INCL_LCD
 /*
  * Called by sp_get_char_id(), sp_get_char_width(), sp_make_char() and
  * sp_make_comp_char() to get a pointer to the start of the character data
@@ -758,7 +758,7 @@ static ufix8 *sp_get_char_org(ufix16 char_index,	/* Index of character to be acc
 	return char_data.org;				/* Return pointer into character data buffer */
 }
 
-#else /* Dynamic load character data not supported? */
+#else
 
 /*
  * Called by sp_get_char_id(), sp_get_char_width(), sp_make_char() and

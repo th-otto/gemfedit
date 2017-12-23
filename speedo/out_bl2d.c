@@ -40,27 +40,10 @@ WITH THE SPEEDO SOFTWARE OR THE BITSTREAM CHARTER OUTLINE FONT.
 #define SHOW(X)
 #endif
 
-/***** GLOBAL VARIABLES *****/
 
-/***** GLOBAL FUNCTIONS *****/
+#if INCL_2D /* whole file */
 
-/***** EXTERNAL VARIABLES *****/
 
-/***** EXTERNAL FUNCTIONS *****/
-
-/***** STATIC VARIABLES *****/
-
-/***** STATIC FUNCTIONS *****/
-
-#if INCL_2D
-static void sp_draw_vector_to_2d(fix15 x0, fix15 y0, fix15 x1, fix15 y1, band_t * band);
-
-static void sp_add_intercept_2d(fix15 y, fix15 x);
-
-static void sp_proc_intercepts_2d(void);
-#endif
-
-#if INCL_2D
 /*
  * init_out_2d() is called by sp_set_specs() to initialize the output module.
  * Returns TRUE if output module can accept requested specifications.
@@ -77,10 +60,8 @@ boolean sp_init_2d(specs_t * specsarg)
 #endif
 	return TRUE;
 }
-#endif
 
 
-#if INCL_2D
 /* Called once at the start of the character generation process
  * Initializes intercept table, either calculates pixel maxima or
  * decides that they need to be collected
@@ -99,10 +80,8 @@ boolean sp_begin_char_2d(fix31 x, fix31 y, fix31 minx, fix31 miny, fix31 maxx, f
 	sp_init_char_out(x, y, minx, miny, maxx, maxy);
 	return TRUE;
 }
-#endif
 
 
-#if INCL_2D
 /* Called at the start of each contour
  */
 void sp_begin_contour_2d(fix31 x1, fix31 y1, boolean outside)
@@ -116,42 +95,74 @@ void sp_begin_contour_2d(fix31 x1, fix31 y1, boolean outside)
 	sp_globals.x0_spxl = x1;
 	sp_globals.y0_spxl = y1;
 }
-#endif
 
 
-#if INCL_2D
-/*
- * Called for each vector in the transformed character
- *     "draws" vector into intercept table
+/*  Called by line() to add an intercept to the intercept list structure
  */
-void sp_line_2d(fix31 x1, fix31 y1)
+static void sp_add_intercept_2d(fix15 y,	/* Y coordinate in relative pixel units */
+										 /* (0 is lowest sample in band) */
+										 fix15 x)	/* X coordinate of intercept in subpixel units */
 {
+	fix15 from;				/* Insertion pointers for the linked list sort */
+	fix15 to;
+
 #if DEBUG
-	printf("LINE_0(%3.4f, %3.4f)\n", (real) x1 / (real) sp_globals.onepix, (real) y1 / (real) sp_globals.onepix);
+	/* Bounds checking IS done in debug mode */
+	if ((y >= MAX_INTERCEPTS) || (y < 0))
+	{
+		printf("Intercept out of table!!!!! (%d)\n", y);
+		return;
+	}
+
+	if (y >= sp_globals.no_y_lists)
+	{
+		printf("    Add x intercept(%2d, %f)\n",
+			   y + sp_globals.x_band.band_min - sp_globals.no_y_lists, (real) x / (real) sp_globals.onepix);
+		if (y > (sp_globals.no_x_lists + sp_globals.no_y_lists))
+		{
+			printf(" Intercept too big for band!!!!!\007\n");
+			return;
+		}
+	} else
+	{
+		printf("    Add y intercept(%2d, %f)\n", y + sp_globals.y_band.band_min, (real) x / (real) sp_globals.onepix);
+	}
+
+	if (y < 0)							/* Y value below bottom of current band? */
+	{
+		printf(" Intecerpt less than 0!!!\007\n");
+		return;
+	}
 #endif
 
-	if (sp_globals.extents_running)
+	/* Store new values */
+	sp_intercepts.car[sp_globals.next_offset] = x;
+
+	/* Find slot to insert new element (between from and to) */
+
+	from = y;							/* Start at list head */
+
+	while ((to = sp_intercepts.cdr[from]) >= sp_globals.first_offset)	/* Until to == end of list */
 	{
-		if (sp_globals.x0_spxl > sp_globals.bmap_xmax)
-			sp_globals.bmap_xmax = sp_globals.x0_spxl;
-		if (sp_globals.x0_spxl < sp_globals.bmap_xmin)
-			sp_globals.bmap_xmin = sp_globals.x0_spxl;
-		if (sp_globals.y0_spxl > sp_globals.bmap_ymax)
-			sp_globals.bmap_ymax = sp_globals.y0_spxl;
-		if (sp_globals.y0_spxl < sp_globals.bmap_ymin)
-			sp_globals.bmap_ymin = sp_globals.y0_spxl;
+		if (x <= sp_intercepts.car[to])	/* If next item is larger than or same as this one... */
+			goto insert_element;		/* ... drop out and insert here */
+		from = to;						/* move forward in list */
 	}
 
-	if (!sp_globals.intercept_oflo)
+  insert_element:						/* insert element "next_offset" between elements "from" */
+	/* and "to" */
+
+	sp_intercepts.cdr[from] = sp_globals.next_offset;
+	sp_intercepts.cdr[sp_globals.next_offset] = to;
+
+	if (++sp_globals.next_offset >= MAX_INTERCEPTS)	/* Intercept buffer full? */
 	{
-		sp_draw_vector_to_2d(sp_globals.x0_spxl, sp_globals.y0_spxl, x1, y1, &sp_globals.y_band);	/* y-scan */
-
-		if (sp_globals.x_scan_active)
-			sp_draw_vector_to_2d(sp_globals.y0_spxl, sp_globals.x0_spxl, y1, x1, &sp_globals.x_band);	/* x-scan if selected */
+		sp_globals.intercept_oflo = TRUE;
+		/* There may be a few more calls to "add_intercept" from the current line */
+		/* To avoid problems, we set next_offset to a safe value. We don't care   */
+		/* if the intercept table gets trashed at this point                      */
+		sp_globals.next_offset = sp_globals.first_offset;
 	}
-
-	sp_globals.x0_spxl = x1;
-	sp_globals.y0_spxl = y1;			/* update endpoint */
 }
 
 
@@ -261,10 +272,204 @@ static void sp_draw_vector_to_2d(fix15 x0,	/* X coordinate */
 	}
 }
 
+
+/*
+ * Called for each vector in the transformed character
+ *     "draws" vector into intercept table
+ */
+void sp_line_2d(fix31 x1, fix31 y1)
+{
+#if DEBUG
+	printf("LINE_0(%3.4f, %3.4f)\n", (real) x1 / (real) sp_globals.onepix, (real) y1 / (real) sp_globals.onepix);
 #endif
 
+	if (sp_globals.extents_running)
+	{
+		if (sp_globals.x0_spxl > sp_globals.bmap_xmax)
+			sp_globals.bmap_xmax = sp_globals.x0_spxl;
+		if (sp_globals.x0_spxl < sp_globals.bmap_xmin)
+			sp_globals.bmap_xmin = sp_globals.x0_spxl;
+		if (sp_globals.y0_spxl > sp_globals.bmap_ymax)
+			sp_globals.bmap_ymax = sp_globals.y0_spxl;
+		if (sp_globals.y0_spxl < sp_globals.bmap_ymin)
+			sp_globals.bmap_ymin = sp_globals.y0_spxl;
+	}
 
-#if INCL_2D
+	if (!sp_globals.intercept_oflo)
+	{
+		sp_draw_vector_to_2d(sp_globals.x0_spxl, sp_globals.y0_spxl, x1, y1, &sp_globals.y_band);	/* y-scan */
+
+		if (sp_globals.x_scan_active)
+			sp_draw_vector_to_2d(sp_globals.y0_spxl, sp_globals.x0_spxl, y1, x1, &sp_globals.x_band);	/* x-scan if selected */
+	}
+
+	sp_globals.x0_spxl = x1;
+	sp_globals.y0_spxl = y1;			/* update endpoint */
+}
+
+
+
+/*  Called by sp_make_char to output accumulated intercept lists
+ *  Clips output to xmin, xmax, sp_globals.ymin, ymax boundaries
+ */
+static void sp_proc_intercepts_2d(void)
+{
+	fix15 i;
+	fix15 from, to;						/* Start and end of run in pixel units   
+										   relative to left extent of character  */
+	fix15 y;
+	fix15 scan_line;
+	fix15 local_bmap_xmin;
+	fix15 local_bmap_xmax;
+	fix15 first_y, last_y;
+	fix15 j, k;
+
+#if INCL_CLIPPING
+	if ((sp_globals.specs.flags & CLIP_LEFT) != 0)
+		clipleft = TRUE;
+	else
+		clipleft = FALSE;
+	if ((sp_globals.specs.flags & CLIP_RIGHT) != 0)
+		clipright = TRUE;
+	else
+		clipright = FALSE;
+	if (clipleft || clipright)
+	{
+		xmax = sp_globals.clip_xmax << sp_globals.pixshift;
+		xmin = sp_globals.clip_xmin << sp_globals.pixshift;
+	}
+	if (!clipright)
+		xmax = ((sp_globals.set_width.x + 32768L) >> 16);
+#endif
+
+	if (sp_globals.x_scan_active)		/* If xscanning, we need to make sure we don't miss any important pixels */
+	{
+		first_y = sp_globals.x_band.band_floor;	/* start of x lists */
+		last_y = sp_globals.x_band.band_ceiling;	/* end of x lists   */
+		for (y = first_y; y != last_y; y++)	/* scan all xlists  */
+		{
+			i = sp_intercepts.cdr[y];	/* Index head of intercept list */
+			while (i != 0)				/* Link to next intercept if present */
+			{
+				from = sp_intercepts.car[i];
+				j = i;
+				i = sp_intercepts.cdr[i];	/* Link to next intercept */
+				if (i == 0)				/* End of list? */
+				{
+#if DEBUG
+					printf("****** proc_intercepts: odd number of intercepts in x list\n");
+#endif
+					break;
+				}
+				to = sp_intercepts.car[i];
+				k = sp_intercepts.cdr[i];
+				if (((to >> sp_globals.pixshift) >= (from >> sp_globals.pixshift)) &&
+					((to - from) < (sp_globals.onepix + 1)))
+				{
+					from = ((fix31) to + (fix31) from - (fix31) sp_globals.onepix) >> (sp_globals.pixshift + 1);
+					if (from > sp_globals.y_band.band_max)
+						from = sp_globals.y_band.band_max;
+					if ((from -= sp_globals.y_band.band_min) < 0)
+						from = 0;
+					to = ((y - sp_globals.x_band.band_floor + sp_globals.x_band.band_min)
+						  << sp_globals.pixshift) + sp_globals.pixrnd;
+					sp_intercepts.car[j] = to;
+					sp_intercepts.car[i] = to + sp_globals.onepix;
+					sp_intercepts.cdr[i] = sp_intercepts.cdr[from];
+					sp_intercepts.cdr[from] = j;
+				}
+				i = k;
+			}
+		}
+	}
+#if DEBUG
+	printf("\nIntercept lists:\n");
+#endif
+
+	if ((first_y = sp_globals.y_band.band_max) >= sp_globals.ymax)
+		first_y = sp_globals.ymax - 1;	/* Clip to ymax boundary */
+
+	if ((last_y = sp_globals.y_band.band_min) < sp_globals.ymin)
+		last_y = sp_globals.ymin;		/* Clip to sp_globals.ymin boundary */
+
+	last_y -= sp_globals.y_band.band_array_offset;
+
+	local_bmap_xmin = sp_globals.xmin << sp_globals.pixshift;
+	local_bmap_xmax = (sp_globals.xmax << sp_globals.pixshift) + sp_globals.pixrnd;
+
+#if DEBUG
+	/* Print out all of the intercept info */
+	scan_line = sp_globals.ymax - first_y - 1;
+
+	for (y = first_y - sp_globals.y_band.band_min; y >= last_y; y--, scan_line++)
+	{
+		i = y;							/* Index head of intercept list */
+		while ((i = sp_intercepts.cdr[i]) != 0)	/* Link to next intercept if present */
+		{
+			if ((from = sp_intercepts.car[i] - local_bmap_xmin) < 0)
+				from = 0;				/* Clip to xmin boundary */
+			i = sp_intercepts.cdr[i];	/* Link to next intercept */
+			if (i == 0)					/* End of list? */
+			{
+				printf("****** proc_intercepts: odd number of intercepts\n");
+				break;
+			}
+			if ((to = sp_intercepts.car[i]) > sp_globals.bmap_xmax)
+				to = sp_globals.bmap_xmax - local_bmap_xmin;	/* Clip to xmax boundary */
+			else
+				to -= local_bmap_xmin;
+			printf("    Y = %2d (scanline %2d): %3.4f %3.4f:\n",
+				   y + sp_globals.y_band.band_min,
+				   scan_line, (real) from / (real) sp_globals.onepix, (real) to / (real) sp_globals.onepix);
+		}
+	}
+#endif
+
+	/* Draw the image */
+	scan_line = sp_globals.ymax - first_y - 1;
+
+	for (y = first_y - sp_globals.y_band.band_min; y >= last_y; y--, scan_line++)
+	{
+		i = y;							/* Index head of intercept list */
+		while ((i = sp_intercepts.cdr[i]) != 0)	/* Link to next intercept if present */
+		{
+			if ((from = sp_intercepts.car[i] - local_bmap_xmin) < 0)
+				from = 0;				/* Clip to xmin boundary */
+			i = sp_intercepts.cdr[i];	/* Link to next intercept */
+
+			if ((to = sp_intercepts.car[i]) > local_bmap_xmax)
+				to = sp_globals.bmap_xmax - local_bmap_xmin;	/* Clip to xmax boundary */
+			else
+				to -= local_bmap_xmin;
+#if INCL_CLIPPING
+			if (clipleft)
+			{
+				if (to <= xmin)
+					continue;
+				if (from < xmin)
+					from = xmin;
+			}
+			if (clipright)
+			{
+				if (from >= xmax)
+					continue;
+				if (to > xmax)
+					to = xmax;
+			}
+#endif
+			if ((to - from) <= sp_globals.onepix)
+			{
+				from = (to + from - sp_globals.onepix) >> (sp_globals.pixshift + 1);
+				set_bitmap_bits(scan_line, from, from + 1);
+			} else
+			{
+				set_bitmap_bits(scan_line, from >> sp_globals.pixshift, to >> sp_globals.pixshift);
+			}
+		}
+	}
+}
+
+
 /* Called when all character data has been output
  * Return TRUE if output process is complete
  * Return FALSE to repeat output of the transformed data beginning
@@ -461,8 +666,7 @@ boolean sp_end_char_2d(void)
 		else							/* all other cases have no round error on yorg */
 			yorg = (fix31) sp_globals.ymin << 16;
 
-		open_bitmap(sp_globals.set_width.x, sp_globals.set_width.y, xorg, yorg,
-					sp_globals.xmax - sp_globals.xmin, sp_globals.ymax - sp_globals.ymin);
+		open_bitmap(xorg, yorg, sp_globals.xmax - sp_globals.xmin, sp_globals.ymax - sp_globals.ymin);
 		if (sp_globals.intercept_oflo)
 		{
 			sp_globals.y_band.band_min = sp_globals.ymin;
@@ -499,240 +703,9 @@ boolean sp_end_char_2d(void)
 		}
 	}
 }
-#endif
 
+#else /* INCL_2D */
 
-#if INCL_2D
-/*  Called by line() to add an intercept to the intercept list structure
- */
-static void sp_add_intercept_2d(fix15 y,	/* Y coordinate in relative pixel units */
-										 /* (0 is lowest sample in band) */
-										 fix15 x)	/* X coordinate of intercept in subpixel units */
-{
-	fix15 from;				/* Insertion pointers for the linked list sort */
-	fix15 to;
-
-#if DEBUG
-	/* Bounds checking IS done in debug mode */
-	if ((y >= MAX_INTERCEPTS) || (y < 0))
-	{
-		printf("Intercept out of table!!!!! (%d)\n", y);
-		return;
-	}
-
-	if (y >= sp_globals.no_y_lists)
-	{
-		printf("    Add x intercept(%2d, %f)\n",
-			   y + sp_globals.x_band.band_min - sp_globals.no_y_lists, (real) x / (real) sp_globals.onepix);
-		if (y > (sp_globals.no_x_lists + sp_globals.no_y_lists))
-		{
-			printf(" Intercept too big for band!!!!!\007\n");
-			return;
-		}
-	} else
-	{
-		printf("    Add y intercept(%2d, %f)\n", y + sp_globals.y_band.band_min, (real) x / (real) sp_globals.onepix);
-	}
-
-	if (y < 0)							/* Y value below bottom of current band? */
-	{
-		printf(" Intecerpt less than 0!!!\007\n");
-		return;
-	}
-#endif
-
-	/* Store new values */
-	sp_intercepts.car[sp_globals.next_offset] = x;
-
-	/* Find slot to insert new element (between from and to) */
-
-	from = y;							/* Start at list head */
-
-	while ((to = sp_intercepts.cdr[from]) >= sp_globals.first_offset)	/* Until to == end of list */
-	{
-		if (x <= sp_intercepts.car[to])	/* If next item is larger than or same as this one... */
-			goto insert_element;		/* ... drop out and insert here */
-		from = to;						/* move forward in list */
-	}
-
-  insert_element:						/* insert element "next_offset" between elements "from" */
-	/* and "to" */
-
-	sp_intercepts.cdr[from] = sp_globals.next_offset;
-	sp_intercepts.cdr[sp_globals.next_offset] = to;
-
-	if (++sp_globals.next_offset >= MAX_INTERCEPTS)	/* Intercept buffer full? */
-	{
-		sp_globals.intercept_oflo = TRUE;
-		/* There may be a few more calls to "add_intercept" from the current line */
-		/* To avoid problems, we set next_offset to a safe value. We don't care   */
-		/* if the intercept table gets trashed at this point                      */
-		sp_globals.next_offset = sp_globals.first_offset;
-	}
-}
-
-#endif
-
-
-#if INCL_2D
-/*  Called by sp_make_char to output accumulated intercept lists
- *  Clips output to xmin, xmax, sp_globals.ymin, ymax boundaries
- */
-static void sp_proc_intercepts_2d(void)
-{
-	fix15 i;
-	fix15 from, to;						/* Start and end of run in pixel units   
-										   relative to left extent of character  */
-	fix15 y;
-	fix15 scan_line;
-	fix15 local_bmap_xmin;
-	fix15 local_bmap_xmax;
-	fix15 first_y, last_y;
-	fix15 j, k;
-
-#if INCL_CLIPPING
-	if ((sp_globals.specs.flags & CLIP_LEFT) != 0)
-		clipleft = TRUE;
-	else
-		clipleft = FALSE;
-	if ((sp_globals.specs.flags & CLIP_RIGHT) != 0)
-		clipright = TRUE;
-	else
-		clipright = FALSE;
-	if (clipleft || clipright)
-	{
-		xmax = sp_globals.clip_xmax << sp_globals.pixshift;
-		xmin = sp_globals.clip_xmin << sp_globals.pixshift;
-	}
-	if (!clipright)
-		xmax = ((sp_globals.set_width.x + 32768L) >> 16);
-#endif
-
-	if (sp_globals.x_scan_active)		/* If xscanning, we need to make sure we don't miss any important pixels */
-	{
-		first_y = sp_globals.x_band.band_floor;	/* start of x lists */
-		last_y = sp_globals.x_band.band_ceiling;	/* end of x lists   */
-		for (y = first_y; y != last_y; y++)	/* scan all xlists  */
-		{
-			i = sp_intercepts.cdr[y];	/* Index head of intercept list */
-			while (i != 0)				/* Link to next intercept if present */
-			{
-				from = sp_intercepts.car[i];
-				j = i;
-				i = sp_intercepts.cdr[i];	/* Link to next intercept */
-				if (i == 0)				/* End of list? */
-				{
-#if DEBUG
-					printf("****** proc_intercepts: odd number of intercepts in x list\n");
-#endif
-					break;
-				}
-				to = sp_intercepts.car[i];
-				k = sp_intercepts.cdr[i];
-				if (((to >> sp_globals.pixshift) >= (from >> sp_globals.pixshift)) &&
-					((to - from) < (sp_globals.onepix + 1)))
-				{
-					from = ((fix31) to + (fix31) from - (fix31) sp_globals.onepix) >> (sp_globals.pixshift + 1);
-					if (from > sp_globals.y_band.band_max)
-						from = sp_globals.y_band.band_max;
-					if ((from -= sp_globals.y_band.band_min) < 0)
-						from = 0;
-					to = ((y - sp_globals.x_band.band_floor + sp_globals.x_band.band_min)
-						  << sp_globals.pixshift) + sp_globals.pixrnd;
-					sp_intercepts.car[j] = to;
-					sp_intercepts.car[i] = to + sp_globals.onepix;
-					sp_intercepts.cdr[i] = sp_intercepts.cdr[from];
-					sp_intercepts.cdr[from] = j;
-				}
-				i = k;
-			}
-		}
-	}
-#if DEBUG
-	printf("\nIntercept lists:\n");
-#endif
-
-	if ((first_y = sp_globals.y_band.band_max) >= sp_globals.ymax)
-		first_y = sp_globals.ymax - 1;	/* Clip to ymax boundary */
-
-	if ((last_y = sp_globals.y_band.band_min) < sp_globals.ymin)
-		last_y = sp_globals.ymin;		/* Clip to sp_globals.ymin boundary */
-
-	last_y -= sp_globals.y_band.band_array_offset;
-
-	local_bmap_xmin = sp_globals.xmin << sp_globals.pixshift;
-	local_bmap_xmax = (sp_globals.xmax << sp_globals.pixshift) + sp_globals.pixrnd;
-
-#if DEBUG
-	/* Print out all of the intercept info */
-	scan_line = sp_globals.ymax - first_y - 1;
-
-	for (y = first_y - sp_globals.y_band.band_min; y >= last_y; y--, scan_line++)
-	{
-		i = y;							/* Index head of intercept list */
-		while ((i = sp_intercepts.cdr[i]) != 0)	/* Link to next intercept if present */
-		{
-			if ((from = sp_intercepts.car[i] - local_bmap_xmin) < 0)
-				from = 0;				/* Clip to xmin boundary */
-			i = sp_intercepts.cdr[i];	/* Link to next intercept */
-			if (i == 0)					/* End of list? */
-			{
-				printf("****** proc_intercepts: odd number of intercepts\n");
-				break;
-			}
-			if ((to = sp_intercepts.car[i]) > sp_globals.bmap_xmax)
-				to = sp_globals.bmap_xmax - local_bmap_xmin;	/* Clip to xmax boundary */
-			else
-				to -= local_bmap_xmin;
-			printf("    Y = %2d (scanline %2d): %3.4f %3.4f:\n",
-				   y + sp_globals.y_band.band_min,
-				   scan_line, (real) from / (real) sp_globals.onepix, (real) to / (real) sp_globals.onepix);
-		}
-	}
-#endif
-
-	/* Draw the image */
-	scan_line = sp_globals.ymax - first_y - 1;
-
-	for (y = first_y - sp_globals.y_band.band_min; y >= last_y; y--, scan_line++)
-	{
-		i = y;							/* Index head of intercept list */
-		while ((i = sp_intercepts.cdr[i]) != 0)	/* Link to next intercept if present */
-		{
-			if ((from = sp_intercepts.car[i] - local_bmap_xmin) < 0)
-				from = 0;				/* Clip to xmin boundary */
-			i = sp_intercepts.cdr[i];	/* Link to next intercept */
-
-			if ((to = sp_intercepts.car[i]) > local_bmap_xmax)
-				to = sp_globals.bmap_xmax - local_bmap_xmin;	/* Clip to xmax boundary */
-			else
-				to -= local_bmap_xmin;
-#if INCL_CLIPPING
-			if (clipleft)
-			{
-				if (to <= xmin)
-					continue;
-				if (from < xmin)
-					from = xmin;
-			}
-			if (clipright)
-			{
-				if (from >= xmax)
-					continue;
-				if (to > xmax)
-					to = xmax;
-			}
-#endif
-			if ((to - from) <= sp_globals.onepix)
-			{
-				from = (to + from - sp_globals.onepix) >> (sp_globals.pixshift + 1);
-				set_bitmap_bits(scan_line, from, from + 1);
-			} else
-			{
-				set_bitmap_bits(scan_line, from >> sp_globals.pixshift, to >> sp_globals.pixshift);
-			}
-		}
-	}
-}
+extern int _I_dont_care_that_ISO_C_forbids_an_empty_source_file_;
 
 #endif

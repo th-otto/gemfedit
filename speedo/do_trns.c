@@ -40,21 +40,146 @@ WITH THE SPEEDO SOFTWARE OR THE BITSTREAM CHARTER OUTLINE FONT.
 #define SHOW(X)
 #endif
 
-/***** GLOBAL VARIABLES *****/
 
-/***** GLOBAL FUNCTIONS *****/
+/*
+ * Called by sp_read_bbox() and sp_proc_outl_data() to read an X Y argument
+ * pair from the font.
+ * The format is specified as follows:
+ *     Bits 0-1: Type of X argument.
+ *     Bits 2-3: Type of Y argument.
+ * where the 4 possible argument types are:
+ *     Type 0:   Controlled coordinate represented by one byte
+ *               index into the X or Y controlled coordinate table.
+ *     Type 1:   Interpolated coordinate represented by a two-byte
+ *               signed integer.
+ *     Type 2:   Interpolated coordinate represented by a one-byte
+ *               signed increment/decrement relative to the 
+ *               proceding X or Y coordinate.
+ *     Type 3:   Repeat of preceding X or Y argument value and type.
+ * The units of P are sub-pixels.
+ * Updates *ppointer to point to the byte following the
+ * argument pair.
+ */
+static ufix8 *sp_get_args(ufix8 * pointer,	/* Pointer to next byte in char data */
+										   ufix8 format,	/* Format specifiaction of argument pair */
+										   point_t * pP)	/* Resulting transformed point */
+{
+	ufix8 edge;
 
-/***** EXTERNAL VARIABLES *****/
+	/* Read X argument */
+	switch (format & 0x03)
+	{
+	case 0:							/* Index to controlled oru */
+		edge = NEXT_BYTE(pointer);
+		sp_globals.x_orus = sp_plaid.orus[edge];
+#if INCL_RULES
+		sp_globals.x_pix = sp_plaid.pix[edge];
+#endif
+		break;
 
-/***** EXTERNAL FUNCTIONS *****/
+	case 1:							/* 2 byte interpolated oru value */
+		sp_globals.x_orus = NEXT_WORD(pointer);
+		goto L1;
 
-/***** STATIC VARIABLES *****/
+	case 2:							/* 1 byte signed oru increment */
+		sp_globals.x_orus += (fix15) ((fix7) NEXT_BYTE(pointer));
+	  L1:
+#if INCL_RULES
+		sp_globals.x_pix =
+			TRANS(sp_globals.x_orus, sp_plaid.mult[sp_globals.x_int], sp_plaid.offset[sp_globals.x_int],
+				  sp_globals.mpshift);
+#endif
+		break;
 
-/***** STATIC FUNCTIONS *****/
+	default:							/* No change in X value */
+		break;
+	}
 
-static void sp_split_curve(fix31 x1, fix31 y1, fix31 x2, fix31 y2, fix31 x3, fix31 y3, fix15 depth);
+	/* Read Y argument */
+	switch ((format >> 2) & 0x03)
+	{
+	case 0:							/* Index to controlled oru */
+		edge = sp_globals.Y_edge_org + NEXT_BYTE(pointer);
+		sp_globals.y_orus = sp_plaid.orus[edge];
+#if INCL_RULES
+		sp_globals.y_pix = sp_plaid.pix[edge];
+#endif
+		break;
 
-static ufix8 *sp_get_args(ufix8 * pointer, ufix8 format, point_t * pP);
+	case 1:							/* 2 byte interpolated oru value */
+		sp_globals.y_orus = NEXT_WORD(pointer);
+		goto L2;
+
+	case 2:							/* 1 byte signed oru increment */
+		sp_globals.y_orus += (fix15) ((fix7) NEXT_BYTE(pointer));
+	  L2:
+#if INCL_RULES
+		sp_globals.y_pix =
+			TRANS(sp_globals.y_orus, sp_plaid.mult[sp_globals.y_int], sp_plaid.offset[sp_globals.y_int],
+				  sp_globals.mpshift);
+#endif
+		break;
+
+	default:							/* No change in X value */
+		break;
+	}
+
+#if INCL_RULES
+	switch (sp_globals.tcb.xmode)
+	{
+	case 0:							/* X mode 0 */
+		pP->x = sp_globals.x_pix;
+		break;
+
+	case 1:							/* X mode 1 */
+		pP->x = -sp_globals.x_pix;
+		break;
+
+	case 2:							/* X mode 2 */
+		pP->x = sp_globals.y_pix;
+		break;
+
+	case 3:							/* X mode 3 */
+		pP->x = -sp_globals.y_pix;
+		break;
+
+	default:							/* X mode 4 */
+#endif
+		pP->x = (MULT16(sp_globals.x_orus, sp_globals.tcb.xxmult) +
+				 MULT16(sp_globals.y_orus, sp_globals.tcb.xymult) + sp_globals.tcb.xoffset) >> sp_globals.mpshift;
+#if INCL_RULES
+		break;
+	}
+
+	switch (sp_globals.tcb.ymode)
+	{
+	case 0:							/* Y mode 0 */
+		pP->y = sp_globals.y_pix;
+		break;
+
+	case 1:							/* Y mode 1 */
+		pP->y = -sp_globals.y_pix;
+		break;
+
+	case 2:							/* Y mode 2 */
+		pP->y = sp_globals.x_pix;
+		break;
+
+	case 3:							/* Y mode 3 */
+		pP->y = -sp_globals.x_pix;
+		break;
+
+	default:							/* Y mode 4 */
+#endif
+		pP->y = (MULT16(sp_globals.x_orus, sp_globals.tcb.yxmult) +
+				 MULT16(sp_globals.y_orus, sp_globals.tcb.yymult) + sp_globals.tcb.yoffset) >> sp_globals.mpshift;
+#if INCL_RULES
+		break;
+	}
+#endif
+
+	return pointer;
+}
 
 
 /*
@@ -145,6 +270,62 @@ ufix8 *sp_read_bbox(ufix8 * pointer,	/* Pointer to next byte in char data */
 
 #endif
 	return pointer;
+}
+
+
+/*
+ * Called by sp_proc_outl_data() to subdivide Bezier curves into an
+ * appropriate number of vectors, whenever curves are not enabled
+ * for output to the currently selected output module.
+ * sp_split_curve() calls itself recursively to the depth specified
+ * at which point it calls line() to deliver each vector resulting
+ * from the spliting process.
+ */
+static void sp_split_curve(fix31 x1, fix31 y1, fix31 x2, fix31 y2, fix31 x3, fix31 y3, fix15 depth)
+{
+	fix31 X0 = (fix31) sp_globals.P0.x;
+	fix31 Y0 = (fix31) sp_globals.P0.y;
+	fix31 X1 = (fix31) x1;
+	fix31 Y1 = (fix31) y1;
+	fix31 X2 = (fix31) x2;
+	fix31 Y2 = (fix31) y2;
+	fix31 X3 = (fix31) x3;
+	fix31 Y3 = (fix31) y3;
+	point_t Pmid, P3;
+	point_t Pctrl1;
+	point_t Pctrl2;
+
+#if DEBUG
+	printf("CRVE(%3.1f, %3.1f, %3.1f, %3.1f, %3.1f, %3.1f)\n",
+		   (real) x1 / (real) sp_globals.onepix, (real) y1 / (real) sp_globals.onepix,
+		   (real) x2 / (real) sp_globals.onepix, (real) y2 / (real) sp_globals.onepix,
+		   (real) x3 / (real) sp_globals.onepix, (real) y3 / (real) sp_globals.onepix);
+#endif
+
+
+	P3.x = x3;
+	P3.y = y3;
+	Pmid.x = (X0 + (X1 + X2) * 3 + X3 + 4) >> 3;
+	Pmid.y = (Y0 + (Y1 + Y2) * 3 + Y3 + 4) >> 3;
+	if ((--depth) <= 0)
+	{
+		fn_line(Pmid);
+		sp_globals.P0 = Pmid;
+		fn_line(P3);
+		sp_globals.P0 = P3;
+	} else
+	{
+		Pctrl1.x = (X0 + X1 + 1) >> 1;
+		Pctrl1.y = (Y0 + Y1 + 1) >> 1;
+		Pctrl2.x = (X0 + (X1 << 1) + X2 + 2) >> 2;
+		Pctrl2.y = (Y0 + (Y1 << 1) + Y2 + 2) >> 2;
+		sp_split_curve(Pctrl1.x, Pctrl1.y, Pctrl2.x, Pctrl2.y, Pmid.x, Pmid.y, depth);
+		Pctrl1.x = (X1 + (X2 << 1) + X3 + 2) >> 2;
+		Pctrl1.y = (Y1 + (Y2 << 1) + Y3 + 2) >> 2;
+		Pctrl2.x = (X2 + X3 + 1) >> 1;
+		Pctrl2.y = (Y2 + Y3 + 1) >> 1;
+		sp_split_curve(Pctrl1.x, Pctrl1.y, Pctrl2.x, Pctrl2.y, P3.x, P3.y, depth);
+	}
 }
 
 
@@ -301,197 +482,4 @@ void sp_proc_outl_data(ufix8 * pointer)	/* Pointer to next byte in char data */
 	}
 }
 
-/*
- * Called by sp_proc_outl_data() to subdivide Bezier curves into an
- * appropriate number of vectors, whenever curves are not enabled
- * for output to the currently selected output module.
- * sp_split_curve() calls itself recursively to the depth specified
- * at which point it calls line() to deliver each vector resulting
- * from the spliting process.
- */
-static void sp_split_curve(fix31 x1, fix31 y1, fix31 x2, fix31 y2, fix31 x3, fix31 y3, fix15 depth)
-{
-	fix31 X0 = (fix31) sp_globals.P0.x;
-	fix31 Y0 = (fix31) sp_globals.P0.y;
-	fix31 X1 = (fix31) x1;
-	fix31 Y1 = (fix31) y1;
-	fix31 X2 = (fix31) x2;
-	fix31 Y2 = (fix31) y2;
-	fix31 X3 = (fix31) x3;
-	fix31 Y3 = (fix31) y3;
-	point_t Pmid, P3;
-	point_t Pctrl1;
-	point_t Pctrl2;
 
-#if DEBUG
-	printf("CRVE(%3.1f, %3.1f, %3.1f, %3.1f, %3.1f, %3.1f)\n",
-		   (real) x1 / (real) sp_globals.onepix, (real) y1 / (real) sp_globals.onepix,
-		   (real) x2 / (real) sp_globals.onepix, (real) y2 / (real) sp_globals.onepix,
-		   (real) x3 / (real) sp_globals.onepix, (real) y3 / (real) sp_globals.onepix);
-#endif
-
-
-	P3.x = x3;
-	P3.y = y3;
-	Pmid.x = (X0 + (X1 + X2) * 3 + X3 + 4) >> 3;
-	Pmid.y = (Y0 + (Y1 + Y2) * 3 + Y3 + 4) >> 3;
-	if ((--depth) <= 0)
-	{
-		fn_line(Pmid);
-		sp_globals.P0 = Pmid;
-		fn_line(P3);
-		sp_globals.P0 = P3;
-	} else
-	{
-		Pctrl1.x = (X0 + X1 + 1) >> 1;
-		Pctrl1.y = (Y0 + Y1 + 1) >> 1;
-		Pctrl2.x = (X0 + (X1 << 1) + X2 + 2) >> 2;
-		Pctrl2.y = (Y0 + (Y1 << 1) + Y2 + 2) >> 2;
-		sp_split_curve(Pctrl1.x, Pctrl1.y, Pctrl2.x, Pctrl2.y, Pmid.x, Pmid.y, depth);
-		Pctrl1.x = (X1 + (X2 << 1) + X3 + 2) >> 2;
-		Pctrl1.y = (Y1 + (Y2 << 1) + Y3 + 2) >> 2;
-		Pctrl2.x = (X2 + X3 + 1) >> 1;
-		Pctrl2.y = (Y2 + Y3 + 1) >> 1;
-		sp_split_curve(Pctrl1.x, Pctrl1.y, Pctrl2.x, Pctrl2.y, P3.x, P3.y, depth);
-	}
-}
-
-/*
- * Called by sp_read_bbox() and sp_proc_outl_data() to read an X Y argument
- * pair from the font.
- * The format is specified as follows:
- *     Bits 0-1: Type of X argument.
- *     Bits 2-3: Type of Y argument.
- * where the 4 possible argument types are:
- *     Type 0:   Controlled coordinate represented by one byte
- *               index into the X or Y controlled coordinate table.
- *     Type 1:   Interpolated coordinate represented by a two-byte
- *               signed integer.
- *     Type 2:   Interpolated coordinate represented by a one-byte
- *               signed increment/decrement relative to the 
- *               proceding X or Y coordinate.
- *     Type 3:   Repeat of preceding X or Y argument value and type.
- * The units of P are sub-pixels.
- * Updates *ppointer to point to the byte following the
- * argument pair.
- */
-static ufix8 *sp_get_args(ufix8 * pointer,	/* Pointer to next byte in char data */
-										   ufix8 format,	/* Format specifiaction of argument pair */
-										   point_t * pP)	/* Resulting transformed point */
-{
-	ufix8 edge;
-
-	/* Read X argument */
-	switch (format & 0x03)
-	{
-	case 0:							/* Index to controlled oru */
-		edge = NEXT_BYTE(pointer);
-		sp_globals.x_orus = sp_plaid.orus[edge];
-#if INCL_RULES
-		sp_globals.x_pix = sp_plaid.pix[edge];
-#endif
-		break;
-
-	case 1:							/* 2 byte interpolated oru value */
-		sp_globals.x_orus = NEXT_WORD(pointer);
-		goto L1;
-
-	case 2:							/* 1 byte signed oru increment */
-		sp_globals.x_orus += (fix15) ((fix7) NEXT_BYTE(pointer));
-	  L1:
-#if INCL_RULES
-		sp_globals.x_pix =
-			TRANS(sp_globals.x_orus, sp_plaid.mult[sp_globals.x_int], sp_plaid.offset[sp_globals.x_int],
-				  sp_globals.mpshift);
-#endif
-		break;
-
-	default:							/* No change in X value */
-		break;
-	}
-
-	/* Read Y argument */
-	switch ((format >> 2) & 0x03)
-	{
-	case 0:							/* Index to controlled oru */
-		edge = sp_globals.Y_edge_org + NEXT_BYTE(pointer);
-		sp_globals.y_orus = sp_plaid.orus[edge];
-#if INCL_RULES
-		sp_globals.y_pix = sp_plaid.pix[edge];
-#endif
-		break;
-
-	case 1:							/* 2 byte interpolated oru value */
-		sp_globals.y_orus = NEXT_WORD(pointer);
-		goto L2;
-
-	case 2:							/* 1 byte signed oru increment */
-		sp_globals.y_orus += (fix15) ((fix7) NEXT_BYTE(pointer));
-	  L2:
-#if INCL_RULES
-		sp_globals.y_pix =
-			TRANS(sp_globals.y_orus, sp_plaid.mult[sp_globals.y_int], sp_plaid.offset[sp_globals.y_int],
-				  sp_globals.mpshift);
-#endif
-		break;
-
-	default:							/* No change in X value */
-		break;
-	}
-
-#if INCL_RULES
-	switch (sp_globals.tcb.xmode)
-	{
-	case 0:							/* X mode 0 */
-		pP->x = sp_globals.x_pix;
-		break;
-
-	case 1:							/* X mode 1 */
-		pP->x = -sp_globals.x_pix;
-		break;
-
-	case 2:							/* X mode 2 */
-		pP->x = sp_globals.y_pix;
-		break;
-
-	case 3:							/* X mode 3 */
-		pP->x = -sp_globals.y_pix;
-		break;
-
-	default:							/* X mode 4 */
-#endif
-		pP->x = (MULT16(sp_globals.x_orus, sp_globals.tcb.xxmult) +
-				 MULT16(sp_globals.y_orus, sp_globals.tcb.xymult) + sp_globals.tcb.xoffset) >> sp_globals.mpshift;
-#if INCL_RULES
-		break;
-	}
-
-	switch (sp_globals.tcb.ymode)
-	{
-	case 0:							/* Y mode 0 */
-		pP->y = sp_globals.y_pix;
-		break;
-
-	case 1:							/* Y mode 1 */
-		pP->y = -sp_globals.y_pix;
-		break;
-
-	case 2:							/* Y mode 2 */
-		pP->y = sp_globals.x_pix;
-		break;
-
-	case 3:							/* Y mode 3 */
-		pP->y = -sp_globals.x_pix;
-		break;
-
-	default:							/* Y mode 4 */
-#endif
-		pP->y = (MULT16(sp_globals.x_orus, sp_globals.tcb.yxmult) +
-				 MULT16(sp_globals.y_orus, sp_globals.tcb.yymult) + sp_globals.tcb.yoffset) >> sp_globals.mpshift;
-#if INCL_RULES
-		break;
-	}
-#endif
-
-	return pointer;
-}

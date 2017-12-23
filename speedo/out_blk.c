@@ -41,26 +41,9 @@ WITH THE SPEEDO SOFTWARE OR THE BITSTREAM CHARTER OUTLINE FONT.
 #endif
 
 
-/***** GLOBAL VARIABLES *****/
-
-/***** GLOBAL FUNCTIONS *****/
-
-/***** EXTERNAL VARIABLES *****/
-
-/***** EXTERNAL FUNCTIONS *****/
-
-/***** STATIC VARIABLES *****/
-
-/***** STATIC FUNCTIONS *****/
-
-#if INCL_BLACK
-static void sp_add_intercept_black(fix15 y, fix15 x);
-
-static void sp_proc_intercepts_black(void);
-#endif
+#if INCL_BLACK /* whole file */
 
 
-#if INCL_BLACK
 /*
  * init_out0() is called by sp_set_specs() to initialize the output module.
  * Returns TRUE if output module can accept requested specifications.
@@ -73,12 +56,10 @@ boolean sp_init_black(specs_t * specsarg)
 #endif
 	if (specsarg->flags & CURVES_OUT)
 		return FALSE;					/* Curves out not supported */
-	return (TRUE);
+	return TRUE;
 }
-#endif
 
 
-#if INCL_BLACK
 /* Called once at the start of the character generation process
  */
 boolean sp_begin_char_black(fix31 x, fix31 y, fix31 minx, fix31 miny, fix31 maxx, fix31 maxy)
@@ -92,10 +73,8 @@ boolean sp_begin_char_black(fix31 x, fix31 y, fix31 minx, fix31 miny, fix31 maxx
 	sp_init_char_out(x, y, minx, miny, maxx, maxy);
 	return TRUE;
 }
-#endif
 
 
-#if INCL_BLACK
 /* Called at the start of each contour
  */
 void sp_begin_contour_black(fix31 x1, fix31 y1, boolean outside)
@@ -110,9 +89,66 @@ void sp_begin_contour_black(fix31 x1, fix31 y1, boolean outside)
 	sp_globals.y0_spxl = y1;
 	sp_globals.y_pxl = (sp_globals.y0_spxl + sp_globals.pixrnd) >> sp_globals.pixshift;
 }
+
+
+/*  Called by line() to add an intercept to the intercept list structure
+ */
+static void sp_add_intercept_black(fix15 y,	/* Y coordinate in relative pixel units */
+										   /* (0 is lowest sample in band) */
+										   fix15 x)	/* X coordinate of intercept in subpixel units */
+{
+	fix15 from;				/* Insertion pointers for the linked list sort */
+	fix15 to;
+
+#if DEBUG
+	printf("    Add intercept(%2d, %d)\n", y + sp_globals.y_band.band_min, x);
+
+	/* Bounds checking IS done in debug mode */
+	if (y < 0)							/* Y value below bottom of current band? */
+	{
+		printf(" Intecerpt less than 0!!!\007\n");
+		return;
+	}
+
+	if (y > (sp_globals.no_y_lists - 1))	/* Y value above top of current band? */
+	{
+		printf(" Intercept too big for band!!!!!\007\n");
+		return;
+	}
 #endif
 
-#if INCL_BLACK
+	/* Store new values */
+
+	sp_intercepts.car[sp_globals.next_offset] = x;
+
+	/* Find slot to insert new element (between from and to) */
+
+	from = y;							/* Start at list head */
+
+	while ((to = sp_intercepts.cdr[from]) >= sp_globals.first_offset)	/* Until to == end of list */
+	{
+		if (x <= sp_intercepts.car[to])	/* If next item is larger than or same as this one... */
+			goto insert_element;		/* ... drop out and insert here */
+		from = to;						/* move forward in list */
+	}
+
+  insert_element:						/* insert element "sp_globals.next_offset" between elements "from" */
+	/* and "to" */
+
+	sp_intercepts.cdr[from] = sp_globals.next_offset;
+	sp_intercepts.cdr[sp_globals.next_offset] = to;
+
+	if (++sp_globals.next_offset >= MAX_INTERCEPTS)	/* Intercept buffer full? */
+	{
+		sp_globals.intercept_oflo = TRUE;
+		/* There may be a few more calls to "add_intercept" from the current line */
+		/* To avoid problems, we set next_offset to a safe value. We don't care   */
+		/* if the intercept table gets trashed at this point                      */
+		sp_globals.next_offset = sp_globals.first_offset;
+	}
+}
+
+
 /* Called for each vector in the transformed character
  */
 void sp_line_black(fix31 x1, fix31 y1)
@@ -268,10 +304,121 @@ void sp_line_black(fix31 x1, fix31 y1)
 		}
 	}
 }
+
+
+/*  Called by sp_make_char to output accumulated intercept lists
+ *  Clips output to sp_globals.xmin, sp_globals.xmax, sp_globals.ymin, sp_globals.ymax boundaries
+ */
+static void sp_proc_intercepts_black(void)
+{
+	fix15 i;
+	fix15 from, to;						/* Start and end of run in pixel units   
+										   relative to left extent of character  */
+	fix15 y;
+	fix15 scan_line;
+	fix15 first_y, last_y;
+
+#if DEBUG
+	printf("\nIntercept lists:\n");
 #endif
 
+#if INCL_CLIPPING
+	if ((sp_globals.specs.flags & CLIP_LEFT) != 0)
+		clipleft = TRUE;
+	else
+		clipleft = FALSE;
+	if ((sp_globals.specs.flags & CLIP_RIGHT) != 0)
+		clipright = TRUE;
+	else
+		clipright = FALSE;
+	if (clipleft || clipright)
+	{
+		xmax = sp_globals.clip_xmax;
+		xmin = sp_globals.clip_xmin;
+	}
+	if (!clipright)
+		xmax = ((sp_globals.set_width.x + 32768L) >> 16);
+#endif
 
-#if INCL_BLACK
+	if ((first_y = sp_globals.y_band.band_max) >= sp_globals.ymax)
+		first_y = sp_globals.ymax - 1;	/* Clip to sp_globals.ymax boundary */
+
+	if ((last_y = sp_globals.y_band.band_min) < sp_globals.ymin)
+		last_y = sp_globals.ymin;		/* Clip to sp_globals.ymin boundary */
+
+	last_y -= sp_globals.y_band.band_min;
+#if DEBUG
+	/* Print out all of the intercept info */
+	scan_line = sp_globals.ymax - first_y - 1;
+
+	for (y = first_y - sp_globals.y_band.band_min; y >= last_y; y--, scan_line++)
+	{
+		i = y;							/* Index head of intercept list */
+		while ((i = sp_intercepts.cdr[i]) != 0)	/* Link to next intercept if present */
+		{
+			if ((from = sp_intercepts.car[i] - sp_globals.xmin) < 0)
+				from = 0;				/* Clip to sp_globals.xmin boundary */
+			i = sp_intercepts.cdr[i];	/* Link to next intercept */
+			if (i == 0)					/* End of list? */
+			{
+				printf("****** proc_intercepts: odd number of intercepts\n");
+				break;
+			}
+			if ((to = sp_intercepts.car[i]) > sp_globals.xmax)
+				to = sp_globals.xmax - sp_globals.xmin;	/* Clip to sp_globals.xmax boundary */
+			else
+				to -= sp_globals.xmin;
+			printf("    Y = %2d (scanline %2d): %d %d:\n", y + sp_globals.y_band.band_min, scan_line, from, to);
+		}
+	}
+#endif
+
+	/* Draw the image */
+	scan_line = sp_globals.ymax - first_y - 1;
+
+	for (y = first_y - sp_globals.y_band.band_min; y >= last_y; y--, scan_line++)
+	{
+		i = y;							/* Index head of intercept list */
+		while ((i = sp_intercepts.cdr[i]) != 0)	/* Link to next intercept if present */
+		{
+			if ((from = sp_intercepts.car[i] - sp_globals.xmin) < 0)
+				from = 0;				/* Clip to sp_globals.xmin boundary */
+			i = sp_intercepts.cdr[i];	/* Link to next intercept */
+
+			if ((to = sp_intercepts.car[i]) > sp_globals.xmax)
+				to = sp_globals.xmax - sp_globals.xmin;	/* Clip to sp_globals.xmax boundary */
+			else
+				to -= sp_globals.xmin;
+			if (from >= to)
+			{
+				if (from >= sp_globals.xmax - sp_globals.xmin)
+				{
+					--from;
+				}
+				to = from + 1;
+			}
+#if INCL_CLIPPING
+			if (clipleft)
+			{
+				if (to <= xmin)
+					continue;
+				if (from < xmin)
+					from = xmin;
+			}
+			if (clipright)
+			{
+				if (from >= xmax)
+					continue;
+				if (to > xmax)
+					to = xmax;
+			}
+#endif
+			set_bitmap_bits(scan_line, from, to);
+		}
+	}
+}
+
+
 /* Called when all character data has been output
  * Return TRUE if output process is complete
  * Return FALSE to repeat output of the transformed data beginning
@@ -465,8 +612,7 @@ boolean sp_end_char_black(void)
 		else							/* all other cases have no round error on yorg */
 			yorg = (fix31) sp_globals.ymin << 16;
 
-		open_bitmap(sp_globals.set_width.x, sp_globals.set_width.y, xorg, yorg,
-					sp_globals.xmax - sp_globals.xmin, sp_globals.ymax - sp_globals.ymin);
+		open_bitmap(xorg, yorg, sp_globals.xmax - sp_globals.xmin, sp_globals.ymax - sp_globals.ymin);
 		if (sp_globals.intercept_oflo)
 		{
 			sp_globals.y_band.band_min = sp_globals.ymin;
@@ -501,181 +647,10 @@ boolean sp_end_char_black(void)
 		}
 	}
 }
-#endif
 
-#if INCL_BLACK
-/*  Called by line() to add an intercept to the intercept list structure
- */
-static void sp_add_intercept_black(fix15 y,	/* Y coordinate in relative pixel units */
-										   /* (0 is lowest sample in band) */
-										   fix15 x)	/* X coordinate of intercept in subpixel units */
-{
-	fix15 from;				/* Insertion pointers for the linked list sort */
-	fix15 to;
+#else /* INCL_BLACK */
 
-#if DEBUG
-	printf("    Add intercept(%2d, %d)\n", y + sp_globals.y_band.band_min, x);
-
-	/* Bounds checking IS done in debug mode */
-	if (y < 0)							/* Y value below bottom of current band? */
-	{
-		printf(" Intecerpt less than 0!!!\007\n");
-		return;
-	}
-
-	if (y > (sp_globals.no_y_lists - 1))	/* Y value above top of current band? */
-	{
-		printf(" Intercept too big for band!!!!!\007\n");
-		return;
-	}
-#endif
-
-	/* Store new values */
-
-	sp_intercepts.car[sp_globals.next_offset] = x;
-
-	/* Find slot to insert new element (between from and to) */
-
-	from = y;							/* Start at list head */
-
-	while ((to = sp_intercepts.cdr[from]) >= sp_globals.first_offset)	/* Until to == end of list */
-	{
-		if (x <= sp_intercepts.car[to])	/* If next item is larger than or same as this one... */
-			goto insert_element;		/* ... drop out and insert here */
-		from = to;						/* move forward in list */
-	}
-
-  insert_element:						/* insert element "sp_globals.next_offset" between elements "from" */
-	/* and "to" */
-
-	sp_intercepts.cdr[from] = sp_globals.next_offset;
-	sp_intercepts.cdr[sp_globals.next_offset] = to;
-
-	if (++sp_globals.next_offset >= MAX_INTERCEPTS)	/* Intercept buffer full? */
-	{
-		sp_globals.intercept_oflo = TRUE;
-		/* There may be a few more calls to "add_intercept" from the current line */
-		/* To avoid problems, we set next_offset to a safe value. We don't care   */
-		/* if the intercept table gets trashed at this point                      */
-		sp_globals.next_offset = sp_globals.first_offset;
-	}
-}
-
-#endif
-
-
-#if INCL_BLACK
-/*  Called by sp_make_char to output accumulated intercept lists
- *  Clips output to sp_globals.xmin, sp_globals.xmax, sp_globals.ymin, sp_globals.ymax boundaries
- */
-static void sp_proc_intercepts_black(void)
-{
-	fix15 i;
-	fix15 from, to;						/* Start and end of run in pixel units   
-										   relative to left extent of character  */
-	fix15 y;
-	fix15 scan_line;
-	fix15 first_y, last_y;
-
-#if DEBUG
-	printf("\nIntercept lists:\n");
-#endif
-
-#if INCL_CLIPPING
-	if ((sp_globals.specs.flags & CLIP_LEFT) != 0)
-		clipleft = TRUE;
-	else
-		clipleft = FALSE;
-	if ((sp_globals.specs.flags & CLIP_RIGHT) != 0)
-		clipright = TRUE;
-	else
-		clipright = FALSE;
-	if (clipleft || clipright)
-	{
-		xmax = sp_globals.clip_xmax;
-		xmin = sp_globals.clip_xmin;
-	}
-	if (!clipright)
-		xmax = ((sp_globals.set_width.x + 32768L) >> 16);
-#endif
-
-	if ((first_y = sp_globals.y_band.band_max) >= sp_globals.ymax)
-		first_y = sp_globals.ymax - 1;	/* Clip to sp_globals.ymax boundary */
-
-	if ((last_y = sp_globals.y_band.band_min) < sp_globals.ymin)
-		last_y = sp_globals.ymin;		/* Clip to sp_globals.ymin boundary */
-
-	last_y -= sp_globals.y_band.band_min;
-#if DEBUG
-	/* Print out all of the intercept info */
-	scan_line = sp_globals.ymax - first_y - 1;
-
-	for (y = first_y - sp_globals.y_band.band_min; y >= last_y; y--, scan_line++)
-	{
-		i = y;							/* Index head of intercept list */
-		while ((i = sp_intercepts.cdr[i]) != 0)	/* Link to next intercept if present */
-		{
-			if ((from = sp_intercepts.car[i] - sp_globals.xmin) < 0)
-				from = 0;				/* Clip to sp_globals.xmin boundary */
-			i = sp_intercepts.cdr[i];	/* Link to next intercept */
-			if (i == 0)					/* End of list? */
-			{
-				printf("****** proc_intercepts: odd number of intercepts\n");
-				break;
-			}
-			if ((to = sp_intercepts.car[i]) > sp_globals.xmax)
-				to = sp_globals.xmax - sp_globals.xmin;	/* Clip to sp_globals.xmax boundary */
-			else
-				to -= sp_globals.xmin;
-			printf("    Y = %2d (scanline %2d): %d %d:\n", y + sp_globals.y_band.band_min, scan_line, from, to);
-		}
-	}
-#endif
-
-	/* Draw the image */
-	scan_line = sp_globals.ymax - first_y - 1;
-
-	for (y = first_y - sp_globals.y_band.band_min; y >= last_y; y--, scan_line++)
-	{
-		i = y;							/* Index head of intercept list */
-		while ((i = sp_intercepts.cdr[i]) != 0)	/* Link to next intercept if present */
-		{
-			if ((from = sp_intercepts.car[i] - sp_globals.xmin) < 0)
-				from = 0;				/* Clip to sp_globals.xmin boundary */
-			i = sp_intercepts.cdr[i];	/* Link to next intercept */
-
-			if ((to = sp_intercepts.car[i]) > sp_globals.xmax)
-				to = sp_globals.xmax - sp_globals.xmin;	/* Clip to sp_globals.xmax boundary */
-			else
-				to -= sp_globals.xmin;
-			if (from >= to)
-			{
-				if (from >= sp_globals.xmax - sp_globals.xmin)
-				{
-					--from;
-				}
-				to = from + 1;
-			}
-#if INCL_CLIPPING
-			if (clipleft)
-			{
-				if (to <= xmin)
-					continue;
-				if (from < xmin)
-					from = xmin;
-			}
-			if (clipright)
-			{
-				if (from >= xmax)
-					continue;
-				if (to > xmax)
-					to = xmax;
-			}
-#endif
-			set_bitmap_bits(scan_line, from, to);
-		}
-	}
-}
+extern int _I_dont_care_that_ISO_C_forbids_an_empty_source_file_;
 
 #endif
 

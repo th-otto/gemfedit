@@ -89,25 +89,15 @@ static int sp_get_glyphs(FontPtr pFont, unsigned long count, unsigned char *char
 						 CharInfoPtr * glyphs)	/* RETURN */
 {
 	SpeedoFontPtr spf;
-
 	unsigned int firstCol;
-
 	unsigned int numCols;
-
 	unsigned int firstRow;
-
 	unsigned int numRows;
-
 	CharInfoPtr *glyphsBase;
-
 	unsigned int c;
-
 	CharInfoPtr pci;
-
 	unsigned int r;
-
 	CharInfoPtr encoding;
-
 	CharInfoPtr pDefault;
 
 #ifdef notyet
@@ -217,9 +207,7 @@ static int sp_get_metrics(FontPtr pFont, unsigned long count, unsigned char *cha
 						  xCharInfo ** glyphs)	/* RETURN */
 {
 	int ret;
-
 	SpeedoFontPtr spf;
-
 	CharInfoPtr oldDefault;
 
 	spf = (SpeedoFontPtr) pFont->fontPrivate;
@@ -327,13 +315,9 @@ sp_load_font(char *fontname,
 			 FontScalablePtr vals, fsBitmapFormat format, fsBitmapFormatMask fmask, FontPtr pfont, Mask flags)
 {
 	SpeedoFontPtr spf;
-
 	SpeedoMasterFontPtr spmf;
-
 	int esize;
-
 	int ret;
-
 	long sWidth;
 
 	ret = sp_open_font(fontname, filename, entry, vals, format, fmask, flags, &spf);
@@ -398,7 +382,6 @@ SpeedoFontLoad(FontPtr * ppfont,
 			   FontEntryPtr entry, FontScalablePtr vals, fsBitmapFormat format, fsBitmapFormatMask fmask, Mask flags)
 {
 	FontPtr pfont;
-
 	int ret;
 
 	/* Reject ridiculously small sizes that will blow up the math */

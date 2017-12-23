@@ -104,8 +104,14 @@ static char line_of_bits[2 * MAX_BITS + 1];	/* Buffer for row of generated bits 
 bitmap_t bfuncs = { sp_open_bitmap, sp_set_bitmap_bits, sp_close_bitmap };
 #endif
 #if INCL_OUTLINE
-outline_t ofuncs = { sp_open_outline, sp_start_new_char, sp_start_contour, sp_curve_to,
-	sp_line_to, sp_close_contour, sp_close_outline
+outline_t ofuncs = {
+	sp_open_outline,
+	sp_start_new_char,
+	sp_start_contour,
+	sp_curve_to,
+	sp_line_to,
+	sp_close_contour,
+	sp_close_outline
 };
 #endif
 #endif
@@ -175,7 +181,7 @@ int main(int argc, char **argv)
 	printf("Loading font file %s\n", pathname);
 #endif
 
-	fseek(fdescr, (ufix32) 0, 0);
+	fseek(fdescr, 0, SEEK_SET);
 	bytes_read = fread((ufix8 *) font_buffer, sizeof(ufix8), minbufsz, fdescr);
 	if (bytes_read == 0)
 	{
@@ -284,28 +290,22 @@ boolean sp_load_char_data(
 #if DEBUG
 	printf("\nCharacter data(%d, %d, %d) requested\n", file_offset, no_bytes, cb_offset);
 #endif
-	if (fseek(fdescr, (long) file_offset, (int) 0) != 0)
+	if (fseek(fdescr, file_offset, SEEK_SET) != 0)
 	{
-		printf("****** Error in seeking character\n");
-		fclose(fdescr);
-		exit(1);
+		fprintf(stderr, "****** Error in seeking character\n");
 		return FALSE;
 	}
 
 	if ((no_bytes + cb_offset) > minchrsz)
 	{
-		printf("****** Character buffer overflow\n");
-		fclose(fdescr);
-		exit(3);
+		fprintf(stderr, "****** Character buffer overflow\n");
 		return FALSE;
 	}
 
 	bytes_read = fread((char_buffer + cb_offset), sizeof(ufix8), no_bytes, fdescr);
 	if (bytes_read != no_bytes)
 	{
-		printf("****** Error on reading character data\n");
-		fclose(fdescr);
-		exit(2);
+		fprintf(stderr, "****** Error on reading character data\n");
 		return FALSE;
 	}
 #if DEBUG
@@ -337,8 +337,6 @@ void sp_write_error(const char *str, ...)
  * to receiving bitmap data.
  */
 void sp_open_bitmap(
-	fix31 x_set_width,						/* Set width vector */
-	fix31 y_set_width,
 	fix31 xorg,								/* Pixel boundary at left extent of bitmap character */
 	fix31 yorg,								/* Pixel boundary at right extent of bitmap character */
 	fix15 xsize,							/* Pixel boundary of bottom extent of bitmap character */
@@ -347,8 +345,7 @@ void sp_open_bitmap(
 	fix15 i;
 
 #if DEBUG
-	printf("open_bitmap(%3.1f, %3.1f, %3.1f, %3.1f, %d, %d)\n",
-		   (real) x_set_width / 65536.0, (real) y_set_width / 65536.0,
+	printf("open_bitmap(%3.1f, %3.1f, %d, %d)\n",
 		   (real) xorg / 65536.0, (real) yorg / 65536.0, (int) xsize, (int) ysize);
 #endif
 	raswid = xsize;
@@ -360,7 +357,6 @@ void sp_open_bitmap(
 		raswid = MAX_BITS;
 
 	printf("\nCharacter index = %d, ID = %d\n", char_index, char_id);
-	printf("set width = %3.1f, %3.1f\n", (real) x_set_width / 65536.0, (real) y_set_width / 65536.0);
 	printf("X offset  = %d\n", offhor);
 	printf("Y offset  = %d\n\n", offver);
 	for (i = 0; i < raswid; i++)

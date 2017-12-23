@@ -43,20 +43,12 @@ WITH THE SPEEDO SOFTWARE OR THE BITSTREAM CHARTER OUTLINE FONT.
 /* the following macro is used to limit points on the outline to the bounding box */
 
 #define RANGECHECK(value,min,max) (((value) >= (min) ? (value) : (min)) < (max) ? (value) : (max))
-/***** GLOBAL VARIABLES *****/
-
-/***** GLOBAL FUNCTIONS *****/
-
-/***** EXTERNAL VARIABLES *****/
-
-/***** EXTERNAL FUNCTIONS *****/
-
-/***** STATIC VARIABLES *****/
-
-/***** STATIC FUNCTIONS *****/
 
 
-#if INCL_OUTLINE
+#if INCL_OUTLINE /* whole file */
+
+
+
 /*
  * init_out2() is called by sp_set_specs() to initialize the output module.
  * Returns TRUE if output module can accept requested specifications.
@@ -69,11 +61,10 @@ boolean sp_init_outline(specs_t *specsarg)
 #endif
 	if (specsarg->flags & (CLIP_LEFT + CLIP_RIGHT + CLIP_TOP + CLIP_BOTTOM))
 		return FALSE;					/* Clipping not supported */
-	return (TRUE);
+	return TRUE;
 }
-#endif
 
-#if INCL_OUTLINE
+
 /*
  * If two or more output modules are included in the configuration, begin_char2()
  * is called by begin_char() to signal the start of character output data.
@@ -112,10 +103,8 @@ boolean sp_begin_char_outline(
 	open_outline(set_width_x, set_width_y, xmin, xmax, ymin, ymax);
 	return TRUE;
 }
-#endif
 
 
-#if INCL_OUTLINE
 /*
  * If two or more output modules are included in the configuration, begin_sub_char2()
  * is called by begin_sub_char() to signal the start of sub-character output data.
@@ -141,7 +130,6 @@ void sp_begin_sub_char_outline(
 	UNUSED(maxy);
 	start_new_char();
 }
-#endif
 
 
 /*
@@ -152,7 +140,6 @@ void sp_begin_sub_char_outline(
  * If only one output module is included in the configuration, begin_sub_char() is 
  * called by sp_proc_outl_data().
  */
-#if INCL_OUTLINE
 void sp_begin_contour_outline(
 	fix31 x1, fix31 y1,	/* Start point of contour */
 	boolean outside)						/* TRUE if outside (counter-clockwise) contour */
@@ -168,9 +155,8 @@ void sp_begin_contour_outline(
 
 	start_contour((fix31) x << sp_globals.poshift, (fix31) y << sp_globals.poshift, outside);
 }
-#endif
 
-#if INCL_OUTLINE
+
 /*
  * If two or more output modules are included in the configuration, curve2()
  * is called by curve() to output one curve segment.
@@ -204,10 +190,8 @@ void sp_curve_outline(
 			 x2 << sp_globals.poshift, y2 << sp_globals.poshift,
 			 x3 << sp_globals.poshift, y3 << sp_globals.poshift);
 }
-#endif
 
 
-#if INCL_OUTLINE
 /*
  * If two or more output modules are included in the configuration, line2()
  * is called by line() to output one vector.
@@ -225,9 +209,8 @@ void sp_line_outline(fix31 x1, fix31 y1)	/* End point of vector */
 
 	line_to((fix31) x1 << sp_globals.poshift, (fix31) y1 << sp_globals.poshift);
 }
-#endif
 
-#if INCL_OUTLINE
+
 /*
  * If two or more output modules are included in the configuration, end_contour2()
  * is called by end_contour() to signal the end of a contour.
@@ -241,10 +224,8 @@ void sp_end_contour_outline(void)
 #endif
 	close_contour();
 }
-#endif
 
 
-#if INCL_OUTLINE
 /*
  * If two or more output modules are included in the configuration, end_sub_char2()
  * is called by end_sub_char() to signal the end of sub-character data.
@@ -257,10 +238,8 @@ void sp_end_sub_char_outline(void)
 	printf("END_SUB_CHAR_2()\n");
 #endif
 }
-#endif
 
 
-#if INCL_OUTLINE
 /*
  * If two or more output modules are included in the configuration, end_char2()
  * is called by end_char() to signal the end of the character data.
@@ -278,4 +257,9 @@ boolean sp_end_char_outline(void)
 	close_outline();
 	return TRUE;
 }
+
+#else /* INCL_OUTLINE */
+
+extern int _I_dont_care_that_ISO_C_forbids_an_empty_source_file_;
+
 #endif

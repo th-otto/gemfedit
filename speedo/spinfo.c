@@ -201,27 +201,18 @@ static void adjust_min_max(xCharInfo * minc, xCharInfo * maxc, xCharInfo * tmp)
 
 void sp_compute_bounds(SpeedoFontPtr spf, FontInfoPtr pinfo, unsigned long flags, long *sWidth)
 {
-	int i,
-	 id,
-	 index,
-	 maxOverlap,
-	 overlap,
-	 total_width = 0;
-
-	xCharInfo minchar,
-	 maxchar,
-	 tmpchar;
-
+	int i;
+	int id;
+	int index;
+	int maxOverlap;
+	int overlap;
+	int total_width = 0;
+	xCharInfo minchar, maxchar, tmpchar;
 	bbox_t bbox;
-
 	fix31 width;
-
 	double pix_width;
-
 	SpeedoMasterFontPtr spmf = spf->master;
-
 	int firstChar;
-
 	int num_chars = 0;
 
 	firstChar = spmf->first_char_id;
@@ -234,7 +225,6 @@ void sp_compute_bounds(SpeedoFontPtr spf, FontInfoPtr pinfo, unsigned long flags
 	for (i = 0; i < spmf->num_chars; i++)
 	{
 		int j;
-
 		int char_id;
 
 		index = spmf->enc[i * 2 + 1];
@@ -302,7 +292,6 @@ void sp_compute_bounds(SpeedoFontPtr spf, FontInfoPtr pinfo, unsigned long flags
 		}
 	}
 
-
 	if (num_chars > 0)
 	{
 		*sWidth = (int) (((double) *sWidth * 10.0 + (double) num_chars / 2.0) / num_chars);
@@ -327,21 +316,13 @@ void sp_compute_bounds(SpeedoFontPtr spf, FontInfoPtr pinfo, unsigned long flags
 void sp_compute_props(SpeedoFontPtr spf, char *fontname, FontInfoPtr pinfo, long sWidth)
 {
 	FontPropPtr pp;
-
-	int i,
-	 nprops;
-
+	int i, nprops;
 	fontProp *fpt;
-
 	char *is_str;
-
-	char *ptr1 = NULL,
-		*ptr2;
-
+	char *ptr1 = NULL;
+	char *ptr2;
 	char *ptr3;
-
 	char tmpname[1024];
-
 	FontScalableRec tmpvals;
 
 	nprops = pinfo->nprops = NPROPS;

@@ -274,7 +274,7 @@ static void mainwin_draw(const GRECT *area)
 			for (y = 0; y < char_rows; y++)
 			{
 				long yy = MAIN_Y_MARGIN + (y - top_row) * row_height + scaled_margin;
-				if ((yy + row_height) < (MAIN_Y_MARGIN + scaled_margin))
+				if ((yy + row_height) <= (MAIN_Y_MARGIN + scaled_margin))
 					continue;
 				if (yy >= work.g_h)
 					break;
@@ -563,15 +563,13 @@ void sp_write_error(const char *str, ...)
 
 /* ------------------------------------------------------------------------- */
 
-void sp_open_bitmap(fix31 x_set_width, fix31 y_set_width, fix31 xorg, fix31 yorg, fix15 xsize, fix15 ysize)
+void sp_open_bitmap(fix31 xorg, fix31 yorg, fix15 xsize, fix15 ysize)
 {
 	fix15 off_horz;
 	fix15 off_vert;
 	fix31 width, pix_width;
 	bbox_t bb;
 
-	UNUSED(x_set_width);
-	UNUSED(y_set_width);
 	bit_width = xsize;
 	bit_height = ysize;
 
