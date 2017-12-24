@@ -90,6 +90,13 @@ typedef struct {
 } charinfo;
 static charinfo *infos;
 
+#define QUOTE_CONVSLASH  0x0001
+#define QUOTE_SPACE      0x0002
+#define QUOTE_URI        0x0004
+#define QUOTE_JS         0x0008
+#define QUOTE_ALLOWUTF8  0x0010
+#define QUOTE_LABEL      0x0020
+
 /*****************************************************************************/
 /* ------------------------------------------------------------------------- */
 /*****************************************************************************/
@@ -135,6 +142,414 @@ static void make_font_filename(char *dst, const char *src)
 
 /* ------------------------------------------------------------------------- */
 
+static char *html_quote_name(const char *name, unsigned int flags)
+{
+	char *str, *ret;
+	size_t len;
+	static char const hex[] = "0123456789ABCDEF";
+	
+	if (name == NULL)
+		return NULL;
+	len = strlen(name);
+	str = ret = g_new(char, len * 20 + 1);
+	if (str != NULL)
+	{
+		if (*name != '\0' && (flags & QUOTE_LABEL) && *name != '_' && !g_ascii_isalpha(*name))
+			*str++ = '_';
+		while (*name)
+		{
+			unsigned char c = *name++;
+#define STR(s) strcpy(str, s), str += sizeof(s) - 1
+			switch (c)
+			{
+			case '\\':
+				if (flags & QUOTE_URI)
+				{
+					STR("%2F");
+				} else if (flags & QUOTE_CONVSLASH)
+				{
+					*str++ = '/';
+				} else
+				{
+					*str++ = '\\';
+				}
+				break;
+			case ' ':
+				if (flags & QUOTE_URI)
+				{
+					STR("%20");
+				} else if (flags & QUOTE_SPACE)
+				{
+					STR("&nbsp;");
+				} else if (flags & QUOTE_LABEL)
+				{
+					*str++ = '_';
+				} else
+				{
+					*str++ = ' ';
+				}
+				break;
+			case '"':
+				if (flags & QUOTE_JS)
+				{
+					STR("\\&quot;");
+				} else if (flags & QUOTE_URI)
+				{
+					STR("%22");
+				} else
+				{
+					STR("&quot;");
+				}
+				break;
+			case '&':
+				if (flags & QUOTE_URI)
+				{
+					STR("%26");
+				} else
+				{
+					STR("&amp;");
+				}
+				break;
+			case '\'':
+				if (flags & QUOTE_URI)
+				{
+					STR("%27");
+				} else
+				{
+					STR("&apos;");
+				}
+				break;
+			case '<':
+				if (flags & QUOTE_URI)
+				{
+					STR("%3C");
+				} else
+				{
+					STR("&lt;");
+				}
+				break;
+			case '>':
+				if (flags & QUOTE_URI)
+				{
+					STR("%3E");
+				} else
+				{
+					STR("&gt;");
+				}
+				break;
+			case '-':
+			case '.':
+			case '_':
+			case '~':
+				*str++ = c;
+				break;
+			case 0x01:
+				if (flags & QUOTE_URI)
+				{
+					STR("%01");
+				} else
+				{
+					STR("&soh;");
+				}
+				break;
+			case 0x02:
+				if (flags & QUOTE_URI)
+				{
+					STR("%02");
+				} else
+				{
+					STR("&stx;");
+				}
+				break;
+			case 0x03:
+				if (flags & QUOTE_URI)
+				{
+					STR("%03");
+				} else
+				{
+					STR("&etx;");
+				}
+				break;
+			case 0x04:
+				if (flags & QUOTE_URI)
+				{
+					STR("%04");
+				} else
+				{
+					STR("&eot;");
+				}
+				break;
+			case 0x05:
+				if (flags & QUOTE_URI)
+				{
+					STR("%05");
+				} else
+				{
+					STR("&enq;");
+				}
+				break;
+			case 0x06:
+				if (flags & QUOTE_URI)
+				{
+					STR("%06");
+				} else
+				{
+					STR("&ack;");
+				}
+				break;
+			case 0x07:
+				if (flags & QUOTE_URI)
+				{
+					STR("%07");
+				} else
+				{
+					STR("&bel;");
+				}
+				break;
+			case 0x08:
+				if (flags & QUOTE_URI)
+				{
+					STR("%08");
+				} else
+				{
+					STR("&bs;");
+				}
+				break;
+			case 0x09:
+				if (flags & QUOTE_URI)
+				{
+					STR("%09");
+				} else
+				{
+					STR("&ht;");
+				}
+				break;
+			case 0x0a:
+				if (flags & QUOTE_URI)
+				{
+					STR("%0A");
+				} else
+				{
+					STR("&lf;");
+				}
+				break;
+			case 0x0b:
+				if (flags & QUOTE_URI)
+				{
+					STR("%0B");
+				} else
+				{
+					STR("&vt;");
+				}
+				break;
+			case 0x0c:
+				if (flags & QUOTE_URI)
+				{
+					STR("%0C");
+				} else
+				{
+					STR("&ff;");
+				}
+				break;
+			case 0x0d:
+				if (flags & QUOTE_URI)
+				{
+					STR("%0D");
+				} else
+				{
+					STR("&cr;");
+				}
+				break;
+			case 0x0e:
+				if (flags & QUOTE_URI)
+				{
+					STR("%0E");
+				} else
+				{
+					STR("&so;");
+				}
+				break;
+			case 0x0f:
+				if (flags & QUOTE_URI)
+				{
+					STR("%0F");
+				} else
+				{
+					STR("&si;");
+				}
+				break;
+			case 0x10:
+				if (flags & QUOTE_URI)
+				{
+					STR("%10");
+				} else
+				{
+					STR("&dle;");
+				}
+				break;
+			case 0x11:
+				if (flags & QUOTE_URI)
+				{
+					STR("%11");
+				} else
+				{
+					STR("&dc1;");
+				}
+				break;
+			case 0x12:
+				if (flags & QUOTE_URI)
+				{
+					STR("%12");
+				} else
+				{
+					STR("&dc2;");
+				}
+				break;
+			case 0x13:
+				if (flags & QUOTE_URI)
+				{
+					STR("%13");
+				} else
+				{
+					STR("&dc3;");
+				}
+				break;
+			case 0x14:
+				if (flags & QUOTE_URI)
+				{
+					STR("%14");
+				} else
+				{
+					STR("&dc4;");
+				}
+				break;
+			case 0x15:
+				if (flags & QUOTE_URI)
+				{
+					STR("%15");
+				} else
+				{
+					STR("&nak;");
+				}
+				break;
+			case 0x16:
+				if (flags & QUOTE_URI)
+				{
+					STR("%16");
+				} else
+				{
+					STR("&syn;");
+				}
+				break;
+			case 0x17:
+				if (flags & QUOTE_URI)
+				{
+					STR("%17");
+				} else
+				{
+					STR("&etb;");
+				}
+				break;
+			case 0x18:
+				if (flags & QUOTE_URI)
+				{
+					STR("%18");
+				} else
+				{
+					STR("&can;");
+				}
+				break;
+			case 0x19:
+				if (flags & QUOTE_URI)
+				{
+					STR("%19");
+				} else
+				{
+					STR("&em;");
+				}
+				break;
+			case 0x1a:
+				if (flags & QUOTE_URI)
+				{
+					STR("%1A");
+				} else
+				{
+					STR("&sub;");
+				}
+				break;
+			case 0x1b:
+				if (flags & QUOTE_URI)
+				{
+					STR("%1B");
+				} else
+				{
+					STR("&esc;");
+				}
+				break;
+			case 0x1c:
+				if (flags & QUOTE_URI)
+				{
+					STR("%1C");
+				} else
+				{
+					STR("&fs;");
+				}
+				break;
+			case 0x1D:
+				if (flags & QUOTE_URI)
+				{
+					STR("%1D");
+				} else
+				{
+					STR("&gs;");
+				}
+				break;
+			case 0x1E:
+				if (flags & QUOTE_URI)
+				{
+					STR("%1E");
+				} else
+				{
+					STR("&rs;");
+				}
+				break;
+			case 0x1F:
+				if (flags & QUOTE_URI)
+				{
+					STR("%1F");
+				} else
+				{
+					STR("&us;");
+				}
+				break;
+			default:
+				if (c >= 0x80 && (flags & QUOTE_ALLOWUTF8))
+				{
+					*str++ = c;
+				} else if (g_ascii_isalnum(c))
+				{
+					*str++ = c;
+				} else if (flags & QUOTE_URI)
+				{
+					*str++ = '%';
+					*str++ = hex[c >> 4];
+					*str++ = hex[c & 0x0f];
+				} else
+				{
+					*str++ = c;
+				}
+				break;
+			}
+#undef STR
+		}
+		*str++ = '\0';
+		ret = g_renew(char, ret, str - ret);
+	}
+	return ret;
+}
+
+/* ------------------------------------------------------------------------- */
+
 static gboolean html_out_stylesheet(GString *out)
 {
 	g_string_append_printf(out, "<link rel=\"stylesheet\" type=\"text/css\" href=\"%s\"%s\n", spdview_css_name, html_closer);
@@ -175,8 +590,12 @@ static void html_out_header(GString *out, const char *title, gboolean for_error)
 	g_string_append_printf(out, "<meta charset=\"%s\"%s\n", charset, html_closer);
 	g_string_append_printf(out, "<meta name=\"GENERATOR\" content=\"%s %s\"%s\n", gl_program_name, gl_program_version, html_closer);
 	if (title)
-		g_string_append_printf(out, "<title>%s</title>\n", title);
-
+	{
+		char *quoted = html_quote_name(title, QUOTE_ALLOWUTF8);
+		g_string_append_printf(out, "<title>%s</title>\n", quoted);
+		g_free(quoted);
+	}
+	
 	html_out_stylesheet(out);
 	html_out_javascript(out);
 	
@@ -629,6 +1048,7 @@ static gboolean gen_speedo_font(const char *filename, GString *body)
 
 	chomp(fontname, (char *) (font_buffer + FH_FNTNM), sizeof(fontname));
 	make_font_filename(fontfilename, fontname);
+	html_out_header(body, fontname, FALSE);
 	
 	if (!sp_set_specs(&specs))
 	{
@@ -817,9 +1237,8 @@ static gboolean load_speedo_font(const char *filename, GString *body)
 	gboolean ret;
 	ufix8 tmp[16];
 	ufix32 minbufsize;
+	const char *title = NULL;
 	
-	html_out_header(body, xbasename(filename), FALSE);
-
 	fp = fopen(filename, "rb");
 	if (fp == NULL)
 	{
@@ -871,6 +1290,7 @@ static gboolean load_speedo_font(const char *filename, GString *body)
 						font.org = font_buffer;
 						font.no_bytes = minbufsize;
 					
+						title = fontname;
 						ret = gen_speedo_font(filename, body);
 						fclose(fp);
 					
@@ -884,6 +1304,8 @@ static gboolean load_speedo_font(const char *filename, GString *body)
 		}
 	}
 		
+	if (title == NULL)
+		html_out_header(body, xbasename(filename), FALSE);
 	html_out_trailer(body, FALSE);
 
 	return ret;
