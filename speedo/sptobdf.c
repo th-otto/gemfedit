@@ -85,6 +85,12 @@ static int y_res = 72;
 static int quality = 0;
 static int iso_encoding = 0;
 
+typedef struct {
+	uint16_t char_index;
+	uint16_t char_id;
+	glyphinfo_t bbox;
+} charinfo;
+
 static specs_t specs;
 
 #define DEBUG 0
@@ -204,16 +210,7 @@ static void process_args(int ac, char **av)
 }
 
 
-typedef struct _fontbbox_t {
-	fix15 max_ascent;
-	fix15 max_descent;
-	fix15 max_rbearing;
-	fix15 min_lbearing;
-	fix15 max_lbearing;
-} fontbbox_t;
-
-
-static void dump_header(ufix32 num_chars, const fontbbox_t *box)
+static void dump_header(ufix32 num_chars, const glyphinfo_t *box)
 {
 	long pixel_size;
 	const char *weight;
@@ -339,7 +336,7 @@ static void dump_header(ufix32 num_chars, const fontbbox_t *box)
 		UNUSED(box);
 	}
 #else
-	printf("FONTBOUNDINGBOX %d %d %d %d\n", box->max_rbearing - box->min_lbearing, box->max_ascent + box->max_descent, box->min_lbearing, -box->max_descent);
+	printf("FONTBOUNDINGBOX %d %d %d %d\n", box->rbearing - box->lbearing, box->ascent + box->descent, box->lbearing, -box->descent);
 #endif
 	
 	printf("STARTPROPERTIES %d\n", 10);
@@ -389,8 +386,8 @@ static void dump_header(ufix32 num_chars, const fontbbox_t *box)
 		printf("FONT_DESCENT %d\n", descent);
 	}
 #else
-	printf("FONT_ASCENT %d\n", box->max_ascent);
-	printf("FONT_DESCENT %d\n", box->max_descent);
+	printf("FONT_ASCENT %d\n", box->ascent);
+	printf("FONT_DESCENT %d\n", box->descent);
 #endif
 
 	printf("ENDPROPERTIES\n");
@@ -400,26 +397,32 @@ static void dump_header(ufix32 num_chars, const fontbbox_t *box)
 
 static FILE *fp;
 
-static void update_bbox(ufix16 ch, fontbbox_t *box)
+static void update_bbox(charinfo *c, glyphinfo_t *box)
 {
 	bbox_t bb;
-	fix15 off_horz, off_vert;
-	fix15 rbearing;
-	fix15 ascent, descent;
 	
-	sp_get_char_bbox(char_index, &bb);
-	bit_width = ((bb.xmax - bb.xmin) + 32768L) >> 16;
-	bit_height = ((bb.ymax - bb.ymin) + 32768L) >> 16;
-	off_horz = bb.xmin >> 16;
-	off_vert = bb.ymin >> 16;
-	box->min_lbearing = MIN(box->min_lbearing, off_horz);
-	box->max_lbearing = MAX(box->max_lbearing, off_horz);
-	rbearing = bit_width + off_horz;
-	box->max_rbearing = MAX(box->max_rbearing, rbearing);
-	ascent = bit_height + off_vert;
-	descent = bit_height - ascent;
-	box->max_ascent = MAX(box->max_ascent, ascent);
-	box->max_descent = MAX(box->max_descent, descent);
+	sp_get_char_bbox(c->char_index, &bb);
+	c->bbox.xmin = bb.xmin;
+	c->bbox.ymin = bb.ymin;
+	c->bbox.xmax = bb.xmax;
+	c->bbox.ymax = bb.ymax;
+	box->xmin = MIN(box->xmin, c->bbox.xmin);
+	box->ymin = MIN(box->ymin, c->bbox.ymin);
+	box->xmax = MIN(box->xmax, c->bbox.xmax);
+	box->ymax = MIN(box->ymax, c->bbox.ymax);
+	c->bbox.width = ((bb.xmax - bb.xmin) + 32768L) >> 16;
+	c->bbox.height = ((bb.ymax - bb.ymin) + 32768L) >> 16;
+	c->bbox.lbearing = bb.xmin >> 16;
+	c->bbox.off_vert = bb.ymin >> 16;
+	box->lbearing = MIN(box->lbearing, c->bbox.lbearing);
+	c->bbox.rbearing = c->bbox.width + c->bbox.lbearing;
+	box->rbearing = MAX(box->rbearing, c->bbox.rbearing);
+	c->bbox.ascent = c->bbox.height + c->bbox.off_vert;
+	c->bbox.descent = c->bbox.height - c->bbox.ascent;
+	box->width = MAX(box->width, c->bbox.width);
+	box->height = MAX(box->height, c->bbox.height);
+	box->ascent = MAX(box->ascent, c->bbox.ascent);
+	box->descent = MAX(box->descent, c->bbox.descent);
 }
 
 
@@ -521,13 +524,20 @@ int main(int argc, char **argv)
 		fprintf(stderr, "can't set specs\n");
 	} else
 	{
-		fontbbox_t font_bbox;
+		glyphinfo_t font_bbox;
+		charinfo c;
 		
-		font_bbox.max_ascent = -32000;
-		font_bbox.max_descent = -32000;
-		font_bbox.max_rbearing = -32000;
-		font_bbox.min_lbearing = 32000;
-		font_bbox.max_lbearing = -32000;
+		font_bbox.width = 0;
+		font_bbox.height = 0;
+		font_bbox.off_vert = 0;
+		font_bbox.ascent = -32000;
+		font_bbox.descent = -32000;
+		font_bbox.rbearing = -32000;
+		font_bbox.lbearing = 32000;
+		font_bbox.xmin = 32000L << 16;
+		font_bbox.ymin = 32000L << 16;
+		font_bbox.xmax = -(32000L << 16);
+		font_bbox.ymax = -(32000L << 16);
 		
 		if (iso_encoding)
 		{
@@ -535,12 +545,12 @@ int main(int argc, char **argv)
 			real_num_chars = 0;
 			for (i = 0; i < num_iso_chars * 2; i += 2)
 			{
-				char_index = iso_map[i + 1];
-				char_id = iso_map[i];
+				c.char_index = char_index = iso_map[i + 1];
+				c.char_id = char_id = iso_map[i];
 				if (char_id != 0 && char_id != 0xffff)
 				{
 					real_num_chars++;
-					update_bbox(char_index, &font_bbox);
+					update_bbox(&c, &font_bbox);
 				}
 			}
 		} else
@@ -548,15 +558,17 @@ int main(int argc, char **argv)
 			real_num_chars = 0;
 			for (i = 0; i < num_chars; i++)
 			{
-				char_index = i + first_char_index;
-				char_id = sp_get_char_id(char_index);
+				c.char_index = char_index = i + first_char_index;
+				c.char_id = char_id = sp_get_char_id(char_index);
 				if (char_id != 0 && char_id != 0xffff)
 				{
 					real_num_chars++;
-					update_bbox(char_index, &font_bbox);
+					update_bbox(&c, &font_bbox);
 				}
 			}
 		}
+	fprintf(stderr, "height %d descent %d\n", font_bbox.height, font_bbox.descent);
+		font_bbox.ascent = font_bbox.height - font_bbox.descent;
 		dump_header(real_num_chars, &font_bbox);
 
 		if (iso_encoding)

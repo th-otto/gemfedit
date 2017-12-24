@@ -192,8 +192,8 @@ fix15 sp_get_track_kern(fix15 track,	/* Track required (0 - 3) */
 		return max_adj;					/* Return maximum adjustment (1/256 points) */
 	}
 
-	delta_pt_size = (fix31) (max_pt_size - min_pt_size);
-	delta_adj = (fix31) (min_adj - max_adj);
+	delta_pt_size = (max_pt_size - min_pt_size);
+	delta_adj = (min_adj - max_adj);
 	adj = (fix15) (min_adj - (((fix31) (point_size - min_pt_size) * delta_adj + (delta_pt_size >> 1)) / delta_pt_size));
 	return adj;							/* Return interpolated adjustment (1/256 points) */
 }
@@ -335,7 +335,7 @@ boolean sp_get_char_bbox(ufix16 char_index, bbox_t * bbox)
 	}
 
 	pointer = sp_plaid_tcb(pointer, format);	/* Process plaid data */
-	pointer = sp_read_bbox(pointer, &Pmin, &Pmax, (boolean) FALSE);	/* Read bounding box */
+	pointer = sp_read_bbox(pointer, &Pmin, &Pmax, FALSE);	/* Read bounding box */
 
 	Pmin.x -= pix_adj;					/* ... of components of ... */
 	Pmin.y -= pix_adj;					/* ... compound ... */
@@ -845,6 +845,7 @@ static fix15 sp_get_scale_arg(ufix8 * * ppointer,	/* Pointer to first byte of po
 		return NEXT_WORD(*ppointer);
 	return ONE_SCALE;
 }
+
 
 #if INCL_ISW
 static boolean sp_reset_xmax(fix31 xmax)

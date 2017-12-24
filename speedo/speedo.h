@@ -290,6 +290,20 @@ typedef struct bbox_tag {
 	fix31   ymax;
 } bbox_t;
 
+typedef struct _glyphinfo_t {
+	fix15 ascent;
+	fix15 descent;
+	fix15 lbearing;
+	fix15 rbearing;
+	fix15 off_vert;
+	uint16_t width;
+	uint16_t height;
+	fix31 xmin;
+	fix31 ymin;
+	fix31 xmax;
+	fix31 ymax;
+} glyphinfo_t;
+
 #if SHORT_LISTS 
 #define  MAX_INTERCEPTS  256      /* Max storage for intercepts */
 typedef  ufix8   cdr_t;           /* 8 bit links in intercept chains */
@@ -641,13 +655,13 @@ static boolean sp_reset_xmax(fix31 xmax);
 
 #if INCL_METRICS
 fix31 sp_get_char_width(ufix16 char_index);
-fix15 sp_get_track_kern(fix15 track,fix15 point_size);
-fix31 sp_get_pair_kern(ufix16 char_index1,ufix16 char_index2);
+fix15 sp_get_track_kern(fix15 track, fix15 point_size);
+fix31 sp_get_pair_kern(ufix16 char_index1, ufix16 char_index2);
 boolean sp_get_char_bbox(ufix16 char_index, bbox_t *bbox);
 #endif
 
 /* do_trns.c functions */
-ufix8 *sp_read_bbox(ufix8 *pointer,point_t *pPmin,point_t *pPmax,boolean set_flag);
+ufix8 *sp_read_bbox(ufix8 *pointer, point_t *pPmin, point_t *pPmax, boolean set_flag);
 void sp_proc_outl_data(ufix8 *pointer);
 
 /* out_blk.c functions */
@@ -737,19 +751,19 @@ fix15 sp_read_word_u(ufix8 *pointer);
 
 /* set_trns.c functions */
 void sp_init_tcb(void);
-void sp_scale_tcb(tcb_t *ptcb,fix15 x_pos,fix15 y_pos,fix15 x_scale,fix15 y_scale);
-ufix8 *sp_plaid_tcb(ufix8 *pointer,ufix8 format);
+void sp_scale_tcb(tcb_t *ptcb, fix15 x_pos, fix15 y_pos, fix15 x_scale, fix15 y_scale);
+ufix8 *sp_plaid_tcb(ufix8 *pointer, ufix8 format);
 ufix8 *sp_skip_interpolation_table(ufix8 *pointer, ufix8 format);
 ufix8 *sp_skip_control_zone(ufix8 *pointer, ufix8 format);
 
 ufix8 *sp_read_oru_table(ufix8 *pointer);
 #if INCL_SQUEEZING || INCL_ISW
-static void sp_calculate_x_pix(ufix8 start_edge,ufix8 end_edge,ufix16 constr_nr,fix31 x_scale,fix31 x_offset,fix31 ppo,fix15 setwidth_pix);
+static void sp_calculate_x_pix(ufix8 start_edge, ufix8 end_edge, ufix16 constr_nr, fix31 x_scale, fix31 x_offset, fix31 ppo, fix15 setwidth_pix);
 #endif
 #if INCL_SQUEEZING
-static void sp_calculate_y_pix(ufix8 start_edge,ufix8 end_edge,ufix16 constr_nr,fix31 top_scale,fix31 bottom_scale,fix31 ppo,fix15 emtop_pix,fix15 embot_pix);
-boolean sp_calculate_x_scale(fix31 *x_factor,fix31 *x_offset,fix15 no_x_ctrl_zones);
-boolean sp_calculate_y_scale(fix31 *top_scale,fix31 *bottom_scale,fix15 first_y_zone, fix15 no_Y_ctrl_zones);
+static void sp_calculate_y_pix(ufix8 start_edge, ufix8 end_edge, ufix16 constr_nr, fix31 top_scale, fix31 bottom_scale, fix31 ppo, fix15 emtop_pix, fix15 embot_pix);
+boolean sp_calculate_x_scale(fix31 *x_factor, fix31 *x_offset, fix15 no_x_ctrl_zones);
+boolean sp_calculate_y_scale(fix31 *top_scale, fix31 *bottom_scale, fix15 first_y_zone,  fix15 no_Y_ctrl_zones);
 #endif
 
 
@@ -776,7 +790,7 @@ void sp_close_outline(void);
 
 #if INCL_LCD
 /* Load character data from font file */
-boolean sp_load_char_data(fix31 file_offset,fix15 no_bytes,fix15 cb_offset, buff_t *char_data);
+boolean sp_load_char_data(fix31 file_offset, fix15 no_bytes, fix15 cb_offset, buff_t *char_data);
 #endif
 
 #if INCL_PLAID_OUT               /* Plaid data monitoring included? */

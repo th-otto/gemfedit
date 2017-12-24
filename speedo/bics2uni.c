@@ -329,8 +329,8 @@ unsigned short const Bics2Unicode[BICS_COUNT] = {
 /* 291 ID 01c9 */	0x2264, /* LESS-THAN OR EQUAL TO */
 /* 292 ID 01ca */	0x2193, /* DOWNWARDS ARROW */
 /* 293 ID 01cb */	0x2190, /* LEFTWARDS ARROW */
-/* 294 ID 01cc */	0x2191, /* RIGHTWARDS ARROW */
-/* 295 ID 01cd */	0x2192, /* UPWARDS ARROW */
+/* 294 ID 01cc */	0x2192, /* RIGHTWARDS ARROW */
+/* 295 ID 01cd */	0x2191, /* UPWARDS ARROW */
 /* 296 ID 01ce */	0x2195, /* UP DOWN ARROW */
 /* 297 ID 01cf */	0x2194, /* LEFT RIGHT ARROW */
 /* 298 ID 01d0 */	0x2208, /* ELEMENT OF */
@@ -590,7 +590,7 @@ unsigned short const Bics2Unicode[BICS_COUNT] = {
 /* 552 ID 15a4 */	0x255c, /* BOX DRAWINGS UP DOUBLE AND LEFT SINGLE */
 /* 553 ID 15a5 */	0x255b, /* BOX DRAWINGS UP SINGLE AND LEFT DOUBLE */
 /* 554 ID 15a6 */	0x2559, /* BOX DRAWINGS UP DOUBLE AND RIGHT SINGLE */
-/* 555 ID 15a7 */	0x2588, /* BOX DRAWINGS UP SINGLE AND RIGHT DOUBLE */
+/* 555 ID 15a7 */	0x2558, /* BOX DRAWINGS UP SINGLE AND RIGHT DOUBLE */
 /* 556 ID 15a8 */	0x2553, /* BOX DRAWINGS DOWN DOUBLE AND RIGHT SINGLE */
 /* 557 ID 15a9 */	0x2552, /* BOX DRAWINGS DOWN SINGLE AND RIGHT DOUBLE */
 /* 558 ID 15ac */	0x2572, /* BOX DRAWINGS LIGHT DIAGONAL UPPER LEFT TO LOWER RIGHT */
@@ -598,7 +598,7 @@ unsigned short const Bics2Unicode[BICS_COUNT] = {
 /* 560 ID 15da */	0x00a0, /* NO-BREAK SPACE */
 /* 561 ID 15db */	-1,
 /* 562 ID 15dc */	-1,
-/* 563 ID 193a */	-1
+/* 563 ID 193a */	-1 /* smiley with tongue */
 };
 
 #if 0
@@ -674,7 +674,7 @@ static short const table_207f[] = {
 	 -1,  -1,  -1,  -1, 491,  -1,  -1,  -1, 266
 };
 
-static short const table_2190[] = { 293, 294, 295, 292, 297, 296 };
+static short const table_2190[] = { 293, 295, 294, 292, 297, 296 };
 
 static short const table_2208[] = {
 	298,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1, 492,  -1,  -1,  -1,  -1,
@@ -790,6 +790,8 @@ int unicode_to_bics(unsigned int code)
 		return 355;
 	if (code == 0x2503)
 		return 356;
+	if (code == 0x2558)
+		return 555;
 	if (code < 0x2580)
 		return -1;
 	if (code < 0x25da)

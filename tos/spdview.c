@@ -24,7 +24,7 @@ static _WORD gl_wchar, gl_hchar;
 
 #define MAIN_Y_MARGIN 10
 #define MAIN_X_MARGIN 10
-#define MAIN_WKIND (NAME | CLOSER | MOVER | SIZER | UPARROW | DNARROW | VSLIDE)
+#define MAIN_WKIND (NAME | CLOSER | MOVER | SIZER | UPARROW | DNARROW | VSLIDE | LFARROW | RTARROW | HSLIDE)
 
 static _WORD app_id = -1;
 static _WORD mainwin = -1;
@@ -40,6 +40,7 @@ static const int scaled_margin = 1;
 
 static _WORD font_cw;
 static _WORD font_ch;
+static glyphinfo_t font_bb;
 
 static buff_t font;
 static ufix8 *font_buffer;
@@ -51,7 +52,9 @@ static uint16_t num_chars;
 static uint16_t num_ids;
 static long char_rows;
 static long top_row;
+static long left_col;
 static _WORD row_height = 1;
+static _WORD col_width = 1;
 
 static int point_size = 240;
 static int x_res = 72;
@@ -68,11 +71,7 @@ static _UWORD framebuffer[MAX_BITS >> 4][MAX_BITS];
 typedef struct {
 	uint16_t char_index;
 	uint16_t char_id;
-	uint16_t width;
-	uint16_t height;
-	int16_t off_horz;
-	int16_t off_vert;
-	bbox_t bbox;
+	glyphinfo_t bbox;
 	MFDB bitmap;
 } charinfo;
 static charinfo *infos;
@@ -197,16 +196,16 @@ static void draw_char(uint16_t ch, _WORD x0, _WORD y0)
 	colors[1] = G_WHITE;
 	pxy[0] = 0;
 	pxy[1] = 0;
-	pxy[2] = c->width - 1;
-	pxy[3] = c->height - 1;
-	pxy[4] = x0;
-	pxy[5] = y0;
-	pxy[6] = x0 + pxy[2];
-	pxy[7] = y0 + pxy[3];
+	pxy[2] = c->bbox.width - 1;
+	pxy[3] = c->bbox.height - 1;
+	pxy[4] = x0 - font_bb.lbearing + c->bbox.lbearing;
+	pxy[5] = y0 + font_bb.ascent - c->bbox.ascent;
+	pxy[6] = pxy[4] + pxy[2];
+	pxy[7] = pxy[5] + pxy[3];
 	if (screen_fdb.fd_nplanes == 1)
-		vro_cpyfm(vdihandle, S_ONLY, pxy, &c->bitmap, &screen_fdb);
+		vro_cpyfm(vdihandle, S_OR_D, pxy, &c->bitmap, &screen_fdb);
 	else
-		vrt_cpyfm(vdihandle, MD_REPLACE, pxy, &c->bitmap, &screen_fdb, colors);
+		vrt_cpyfm(vdihandle, MD_TRANS, pxy, &c->bitmap, &screen_fdb, colors);
 }
 
 /* ------------------------------------------------------------------------- */
@@ -222,7 +221,7 @@ static void mainwin_draw(const GRECT *area)
 	
 	v_hide_c(vdihandle);
 	wind_get_grect(mainwin, WF_WORKXYWH, &work);
-	scaled_w = font_cw * CHAR_COLUMNS + (CHAR_COLUMNS + 1) * scaled_margin;
+	scaled_w = col_width * CHAR_COLUMNS + scaled_margin;
 	scaled_h = row_height * char_rows + scaled_margin;
 	if (scaled_h > work.g_h)
 		scaled_h = work.g_h;
@@ -264,7 +263,12 @@ static void mainwin_draw(const GRECT *area)
 			 */
 			for (x = 0; x < (CHAR_COLUMNS + 1); x++)
 			{
-				pxy[0] = work.g_x + MAIN_X_MARGIN + x * (font_cw + scaled_margin);
+				long xx = MAIN_X_MARGIN + (x - left_col) * col_width;
+				if ((xx + col_width) < 0)
+					continue;
+				if (xx >= work.g_w)
+					break;
+				pxy[0] = work.g_x + (_WORD)xx;
 				pxy[1] = work.g_y + MAIN_Y_MARGIN;
 				pxy[2] = pxy[0] + scaled_margin - 1;
 				pxy[3] = pxy[1] + (_WORD)scaled_h - 1;
@@ -281,7 +285,12 @@ static void mainwin_draw(const GRECT *area)
 				for (x = 0; x < CHAR_COLUMNS; x++)
 				{
 					uint16_t c = y * CHAR_COLUMNS + x;
-					draw_char(c, work.g_x + MAIN_X_MARGIN + x * (font_cw + scaled_margin) + scaled_margin, work.g_y + (_WORD)yy);
+					long xx = MAIN_X_MARGIN + (x - left_col) * col_width + scaled_margin;
+					if ((xx + col_width) <= (MAIN_X_MARGIN + scaled_margin))
+						continue;
+					if (xx >= work.g_w)
+						break;
+					draw_char(c, work.g_x + (_WORD)xx, work.g_y + (_WORD)yy);
 				}
 			}
 		}
@@ -424,6 +433,39 @@ static void calc_vslider(void)
 
 /* ------------------------------------------------------------------------- */
 
+static void calc_hslider(void)
+{
+	GRECT gr;
+	long max_doc;
+	long ww;
+	long val;
+	
+	wind_get_grect(mainwin, WF_WORKXYWH, &gr);
+	ww = col_width * CHAR_COLUMNS;
+	max_doc = ww - gr.g_w;
+	if (ww <= 0)
+	{
+		val = 1000;
+	} else
+	{
+		val = (1000l * gr.g_w) / ww;
+		if (val > 1000)
+			val = 1000;
+	}
+	wind_set_int(mainwin, WF_HSLSIZE, (_WORD)val);
+	if (max_doc <= 0)
+	{
+		val = 0;
+	} else
+	{
+		long xx = left_col * col_width;
+		val = (1000l * xx) / max_doc;
+	}
+	wind_set_int(mainwin, WF_HSLIDE, (_WORD)val);
+}
+
+/* ------------------------------------------------------------------------- */
+
 static _BOOL create_window(void)
 {
 	GRECT gr, desk, panel;
@@ -433,7 +475,7 @@ static _BOOL create_window(void)
 	
 	wind_get_grect(DESK, WF_WORKXYWH, &desk);
 
-	width = MAIN_X_MARGIN * 2 + font_cw * CHAR_COLUMNS + (CHAR_COLUMNS + 1) * scaled_margin;
+	width = MAIN_X_MARGIN * 2 + col_width * CHAR_COLUMNS + scaled_margin;
 	height = MAIN_Y_MARGIN * 2 + row_height * char_rows + scaled_margin;
 	if (height > desk.g_h)
 		height = desk.g_h;
@@ -460,6 +502,7 @@ static _BOOL create_window(void)
 	wind_calc_grect(WC_WORK, wkind, &gr, &gr);
 	wind_calc_grect(WC_BORDER, wkind, &gr, &gr);
 	calc_vslider();
+	calc_hslider();
 	wind_open_grect(mainwin, &gr);
 	
 	return TRUE;
@@ -475,7 +518,7 @@ static _BOOL resize_window(void)
 	long height;
 	
 	wind_get_grect(DESK, WF_WORKXYWH, &desk);
-	width = MAIN_X_MARGIN * 2 + font_cw * CHAR_COLUMNS + (CHAR_COLUMNS + 1) * scaled_margin;
+	width = MAIN_X_MARGIN * 2 + col_width * CHAR_COLUMNS + scaled_margin;
 	height = MAIN_Y_MARGIN * 2 + row_height * char_rows + scaled_margin;
 	if (height > desk.g_h)
 		height = desk.g_h;
@@ -489,6 +532,7 @@ static _BOOL resize_window(void)
 	rc_intersect(&desk, &gr);
 	wind_set_grect(mainwin, WF_CURRXYWH, &gr);
 	calc_vslider();
+	calc_hslider();
 	
 	return TRUE;
 }
@@ -565,16 +609,14 @@ void sp_write_error(const char *str, ...)
 
 void sp_open_bitmap(fix31 xorg, fix31 yorg, fix15 xsize, fix15 ysize)
 {
-	fix15 off_horz;
-	fix15 off_vert;
 	fix31 width, pix_width;
 	bbox_t bb;
-
+	charinfo *c;
+	
+	UNUSED(xorg);
+	UNUSED(yorg);
 	bit_width = xsize;
 	bit_height = ysize;
-
-	off_horz = (fix15) ((xorg + 32768L) >> 16);
-	off_vert = (fix15) ((yorg + 32768L) >> 16);
 
 	if (bit_width > MAX_BITS)
 	{
@@ -588,25 +630,31 @@ void sp_open_bitmap(fix31 xorg, fix31 yorg, fix15 xsize, fix15 ysize)
 	width = (pix_width * 7200L) / (point_size * y_res);
 
 	sp_get_char_bbox(char_index, &bb);
-	infos[char_id].bbox = bb;
 
 #if DEBUG
-	if (((bb.xmax - bb.xmin) >> 16) != bit_width)
-		nf_debugprintf("char 0x%x (0x%x): bbox & width mismatch (%ld vs %d)\n",
-				char_index, char_id, (unsigned long)(bb.xmax - bb.xmin) >> 16, bit_width);
-	if (((bb.ymax - bb.ymin) >> 16) != bit_height)
-		nf_debugprintf("char 0x%x (0x%x): bbox & height mismatch (%ld vs %d)\n",
-				char_index, char_id, (unsigned long)(bb.ymax - bb.ymin) >> 16, bit_height);
-	if ((bb.xmin >> 16) != off_horz)
-		nf_debugprintf("char 0x%x (0x%x): x min mismatch (%ld vs %d)\n", char_index, char_id, (unsigned long)bb.xmin >> 16, off_horz);
-	if ((bb.ymin >> 16) != off_vert)
-		nf_debugprintf("char 0x%x (0x%x): y min mismatch (%ld vs %d)\n", char_index, char_id, (unsigned long)bb.ymin >> 16, off_vert);
+	{
+		fix15 off_horz;
+		fix15 off_vert;
+		
+		off_horz = (fix15) ((xorg + 32768L) >> 16);
+		off_vert = (fix15) ((yorg + 32768L) >> 16);
+	
+		if (((bb.xmax - bb.xmin) >> 16) != bit_width)
+			nf_debugprintf("char 0x%x (0x%x): bbox & width mismatch (%ld vs %d)\n",
+					char_index, char_id, (unsigned long)(bb.xmax - bb.xmin) >> 16, bit_width);
+		if (((bb.ymax - bb.ymin) >> 16) != bit_height)
+			nf_debugprintf("char 0x%x (0x%x): bbox & height mismatch (%ld vs %d)\n",
+					char_index, char_id, (unsigned long)(bb.ymax - bb.ymin) >> 16, bit_height);
+		if ((bb.xmin >> 16) != off_horz)
+			nf_debugprintf("char 0x%x (0x%x): x min mismatch (%ld vs %d)\n", char_index, char_id, (unsigned long)bb.xmin >> 16, off_horz);
+		if ((bb.ymin >> 16) != off_vert)
+			nf_debugprintf("char 0x%x (0x%x): y min mismatch (%ld vs %d)\n", char_index, char_id, (unsigned long)bb.ymin >> 16, off_vert);
+	}
 #endif
 
-	bit_width = ((bb.xmax - bb.xmin) + 32768L) >> 16;
-	bit_height = ((bb.ymax - bb.ymin) + 32768L) >> 16;
-	off_horz = bb.xmin >> 16;
-	off_vert = bb.ymin >> 16;
+	c = &infos[char_id];
+	bit_width = c->bbox.width;
+	bit_height = c->bbox.height;
 
 	/* XXX kludge to handle space */
 	if (bb.xmin == 0 && bb.ymin == 0 && bb.xmax == 0 && bb.ymax == 0 && width)
@@ -626,11 +674,6 @@ void sp_open_bitmap(fix31 xorg, fix31 yorg, fix15 xsize, fix15 ysize)
 		nf_debugprintf("char 0x%x (0x%x): height too large /%d vs %d)\n", char_index, char_id, bit_width, MAX_BITS);
 		bit_height = MAX_BITS;
 	}
-	
-	infos[char_id].width = bit_width;
-	infos[char_id].height = bit_height;
-	infos[char_id].off_horz = off_horz;
-	infos[char_id].off_vert = off_vert;
 	
 	memset(framebuffer, 0, sizeof(framebuffer));
 }
@@ -796,6 +839,46 @@ void sp_close_outline(void)
 
 /* ------------------------------------------------------------------------- */
 
+static void update_bbox(charinfo *c, glyphinfo_t *box)
+{
+	bbox_t bb;
+	
+	sp_get_char_bbox(c->char_index, &bb);
+	c->bbox.xmin = bb.xmin;
+	c->bbox.ymin = bb.ymin;
+	c->bbox.xmax = bb.xmax;
+	c->bbox.ymax = bb.ymax;
+	box->xmin = MIN(box->xmin, c->bbox.xmin);
+	box->ymin = MIN(box->ymin, c->bbox.ymin);
+	box->xmax = MIN(box->xmax, c->bbox.xmax);
+	box->ymax = MIN(box->ymax, c->bbox.ymax);
+	c->bbox.width = ((bb.xmax - bb.xmin) + 32768L) >> 16;
+	c->bbox.height = ((bb.ymax - bb.ymin) + 32768L) >> 16;
+	c->bbox.lbearing = bb.xmin >> 16;
+	c->bbox.off_vert = bb.ymin >> 16;
+	box->lbearing = MIN(box->lbearing, c->bbox.lbearing);
+	c->bbox.rbearing = c->bbox.width + c->bbox.lbearing;
+	box->rbearing = MAX(box->rbearing, c->bbox.rbearing);
+	c->bbox.ascent = c->bbox.height + c->bbox.off_vert;
+	c->bbox.descent = c->bbox.height - c->bbox.ascent;
+	box->width = MAX(box->width, c->bbox.width);
+	box->height = MAX(box->height, c->bbox.height);
+	box->ascent = MAX(box->ascent, c->bbox.ascent);
+	box->descent = MAX(box->descent, c->bbox.descent);
+#if 0
+	nf_debugprintf("bbox(%x): %d %d %d %d %7.2f %7.2f %7.2f %7.2f\n",
+		c->char_id,
+		c->bbox.width, c->bbox.height,
+		c->bbox.lbearing, -c->bbox.descent,
+		(double)c->bbox.xmin / 65536.0,
+		(double)c->bbox.ymin / 65536.0,
+		(double)c->bbox.xmax / 65536.0,
+		(double)c->bbox.ymax / 65536.0);
+#endif
+}
+
+/* ------------------------------------------------------------------------- */
+
 static _BOOL font_gen_speedo_font(void)
 {
 	_BOOL decode_ok = TRUE;
@@ -894,54 +977,72 @@ static _BOOL font_gen_speedo_font(void)
 		 * determine the average width of all the glyphs in the font
 		 */
 		{
-			bbox_t bb;
 			unsigned long total_width;
 			uint16_t num_glyphs;
-			fix15 width, height;
-			fix15 max_width, max_height;
-			bbox_t max_bb;
+			glyphinfo_t max_bb;
+			fix15 max_lbearing;
+			fix15 min_descent;
+			fix15 average_width;
 			
 			total_width = 0;
 			num_glyphs = 0;
-			max_width = 0;
-			max_height = 0;
-			max_bb.xmin = (32000L << 16);
+			max_bb.width = 0;
+			max_bb.height = 0;
+			max_bb.off_vert = 0;
+			max_bb.ascent = -32000;
+			max_bb.descent = -32000;
+			max_bb.rbearing = -32000;
+			max_bb.lbearing = 32000;
+			max_bb.xmin = 32000L << 16;
+			max_bb.ymin = 32000L << 16;
 			max_bb.xmax = -(32000L << 16);
-			max_bb.ymin = (32000L << 16);
 			max_bb.ymax = -(32000L << 16);
+			max_lbearing = -32000;
+			min_descent = 32000;
 			for (i = 0; i < num_chars; i++)
 			{
 				char_index = i + first_char_index;
 				char_id = sp_get_char_id(char_index);
 				if (char_id != 0 && char_id != 0xffff)
 				{
-					sp_get_char_bbox(char_index, &bb);
-					width = ((bb.xmax - bb.xmin) + 32768L) >> 16;
-					height = ((bb.ymax - bb.ymin) + 32768L) >> 16;
-					total_width += width;
-					max_width = MAX(max_width, width);
-					max_height = MAX(max_height, height);
-					max_bb.xmin = MIN(max_bb.xmin, bb.xmin);
-					max_bb.ymin = MIN(max_bb.ymin, bb.ymin);
-					max_bb.xmax = MAX(max_bb.xmax, bb.xmax);
-					max_bb.ymax = MAX(max_bb.ymax, bb.ymax);
-					num_glyphs++;
+					charinfo *c = &infos[char_id];
+					
+					if (c->char_id != 0xffff)
+					{
+						nf_debugprintf("char 0x%x (0x%x) already defined\n", char_index, char_id);
+					} else
+					{
+						c->char_index = char_index;
+						c->char_id = char_id;
+						update_bbox(c, &max_bb);
+						max_lbearing = MAX(max_lbearing, c->bbox.lbearing);
+						min_descent = MIN(min_descent, c->bbox.descent);
+						total_width += c->bbox.width;
+						num_glyphs++;
+					}
 				}
 			}
-			font_ch = max_height;
 			if (num_glyphs == 0)
-				font_cw = max_width;
+				average_width = max_bb.width;
 			else
-				font_cw = (_WORD)(total_width / num_glyphs);
-			nf_debugprintf("max height %d max width %d average width %d\n", max_height, max_width, font_cw);
-			nf_debugprintf("bbox: %7.2f %7.2f %7.2f %7.2f\n",
-				(double)max_bb.xmin / 65536.0, (double)max_bb.ymin / 65536.0,
-				(double)max_bb.xmax / 65536.0, (double)max_bb.ymax / 65536.0);
+				average_width = (fix15)(total_width / num_glyphs);
+			nf_debugprintf("max height %d max width %d average width %d\n", max_bb.height, max_bb.width, average_width);
+
+			max_bb.height = max_bb.ascent + max_bb.descent;
+			max_bb.width = max_bb.rbearing - max_bb.lbearing;
+
+			nf_debugprintf("bbox: %d %d ascent %d descent %d lb %d rb %d\n",
+				max_bb.width, max_bb.height,
+				max_bb.ascent, max_bb.descent,
+				max_bb.lbearing, max_bb.rbearing);
 			nf_debugprintf("bbox (header): %d %d %d %d\n",
 				read_2b(font_buffer + FH_FXMIN), read_2b(font_buffer + FH_FYMIN),
 				read_2b(font_buffer + FH_FXMAX), read_2b(font_buffer + FH_FYMAX));
-			font_cw = max_width;
+			font_ch = max_bb.height;
+			font_cw = max_bb.width;
 			row_height = font_ch + scaled_margin;
+			col_width = font_cw + scaled_margin;
+			font_bb = max_bb;
 		}
 		
 		for (i = 0; i < num_chars; i++)
@@ -950,17 +1051,9 @@ static _BOOL font_gen_speedo_font(void)
 			char_id = sp_get_char_id(char_index);
 			if (char_id != 0 && char_id != 0xffff)
 			{
-				if (infos[char_id].char_id != 0xffff)
+				if (!sp_make_char(char_index))
 				{
-					nf_debugprintf("char 0x%x (0x%x) already defined\n", char_index, char_id);
-				} else
-				{
-					infos[char_id].char_index = char_index;
-					infos[char_id].char_id = char_id;
-					if (!sp_make_char(char_index))
-					{
-						nf_debugprintf("can't make char %d (%x)\n", char_index, char_id);
-					}
+					nf_debugprintf("can't make char %d (%x)\n", char_index, char_id);
 				}
 			}
 		}
@@ -1035,6 +1128,7 @@ static _BOOL font_load_speedo_font(const char *filename)
 	{
 		font.org = font_buffer;
 		top_row = 0;
+		left_col = 0;
 		resize_window();
 		wind_set_str(mainwin, WF_NAME, fontname);
 		redraw_win(mainwin);
@@ -1083,7 +1177,7 @@ static void select_font(void)
 {
 	char filename[128];
 	static char path[128];
-	static char mask[128] = "*.FNT";
+	static char mask[128] = "*.SPD";
 	
 	if (path[0] == '\0')
 	{
@@ -1163,6 +1257,30 @@ static void vscroll_to(long yy)
 
 /* ------------------------------------------------------------------------- */
 
+static void hscroll_to(long xx)
+{
+	GRECT gr;
+	long col;
+	long page_w;
+	
+	wind_get_grect(mainwin, WF_WORKXYWH, &gr);
+	page_w = ((gr.g_w - MAIN_Y_MARGIN) / col_width) * col_width;
+
+	if (xx + page_w > CHAR_COLUMNS * col_width)
+		xx = CHAR_COLUMNS * col_width - page_w;
+	if (xx < 0)
+		xx = 0;
+	col = xx / col_width;
+	if (col != left_col)
+	{
+		left_col = col;
+		calc_hslider();
+		redraw_win(mainwin);
+	}
+}
+
+/* ------------------------------------------------------------------------- */
+
 static void mainloop(void)
 {
 	_WORD event;
@@ -1204,6 +1322,12 @@ static void mainloop(void)
 				case 0x50:
 					vscroll_to(top_row * row_height + row_height);
 					break;
+				case 0x4b:
+					hscroll_to(left_col * col_width - col_width);
+					break;
+				case 0x4d:
+					hscroll_to(left_col * col_width + col_width);
+					break;
 				}
 				break;
 			}
@@ -1227,6 +1351,7 @@ static void mainloop(void)
 				{
 					wind_set_grect(message[3], WF_CURRXYWH, (GRECT *)&message[4]);
 					calc_vslider();
+					calc_hslider();
 				}
 				break;
 
@@ -1252,12 +1377,15 @@ static void mainloop(void)
 			case WM_ARROWED:
 				if (message[3] == mainwin)
 				{
-					long amount = 0;
+					long amount;
 					GRECT gr;
-					long yy;
+					long yy, xx;
 					long page_h;
+					long page_w;
 					
 					wind_get_grect(mainwin, WF_WORKXYWH, &gr);
+
+					amount = 0;
 					page_h = ((gr.g_h - MAIN_Y_MARGIN) / row_height) * row_height;
 					switch (message[4])
 					{
@@ -1276,6 +1404,26 @@ static void mainloop(void)
 					}
 					yy = top_row * row_height + amount;
 					vscroll_to(yy);
+
+					amount = 0;
+					page_w = ((gr.g_w - MAIN_X_MARGIN) / col_width) * col_width;
+					switch (message[4])
+					{
+					case WA_LFLINE:
+						amount = -col_width;
+						break;
+					case WA_RTLINE:
+						amount = col_width;
+						break;
+					case WA_LFPAGE:
+						amount = -page_w;
+						break;
+					case WA_RTPAGE:
+						amount = page_w;
+						break;
+					}
+					xx = left_col * col_width + amount;
+					hscroll_to(xx);
 				}
 				break;
 				
@@ -1292,6 +1440,22 @@ static void mainloop(void)
 					page_h = ((gr.g_h - MAIN_Y_MARGIN) / row_height) * row_height;
 					yy = ((long)message[4] * (hh - page_h)) / 1000;
 					vscroll_to(yy);
+				}
+				break;
+				
+			case WM_HSLID:
+				if (message[3] == mainwin)
+				{
+					GRECT gr;
+					long ww;
+					long page_w;
+					long xx;
+					
+					wind_get_grect(mainwin, WF_WORKXYWH, &gr);
+					ww = col_width * CHAR_COLUMNS;
+					page_w = ((gr.g_w - MAIN_X_MARGIN) / col_width) * col_width;
+					xx = ((long)message[4] * (ww - page_w)) / 1000;
+					hscroll_to(xx);
 				}
 				break;
 				

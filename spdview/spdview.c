@@ -10,6 +10,7 @@
 #include "writepng.h"
 #include "vdimaps.h"
 #include "bics2uni.h"
+#include "ucbycode.h"
 
 char const gl_program_name[] = "spdview.cgi";
 char const gl_program_version[] = "1.0";
@@ -45,6 +46,7 @@ static GString *errorout;
 static FILE *errorfile;
 static size_t body_start;
 static gboolean cgi_cached;
+static gboolean debug;
 
 #define _(x) x
 
@@ -67,6 +69,7 @@ static char fontname[70 + 1];
 static char fontfilename[70 + 1];
 static uint16_t first_char_index;
 static uint16_t num_chars;
+static glyphinfo_t font_bb;
 
 static long point_size = 120;
 static int x_res = 72;
@@ -82,11 +85,7 @@ typedef struct {
 	uint16_t char_id;
 	char *local_filename;
 	char *url;
-	uint16_t width;
-	uint16_t height;
-	int16_t off_horz;
-	int16_t off_vert;
-	bbox_t bbox;
+	glyphinfo_t bbox;
 } charinfo;
 static charinfo *infos;
 
@@ -699,16 +698,14 @@ void sp_write_error(const char *str, ...)
 
 void sp_open_bitmap(fix31 xorg, fix31 yorg, fix15 xsize, fix15 ysize)
 {
-	fix15 off_horz;
-	fix15 off_vert;
 	fix31 width, pix_width;
 	bbox_t bb;
+	charinfo *c;
 
+	UNUSED(xorg);
+	UNUSED(yorg);
 	bit_width = xsize;
 	bit_height = ysize;
-
-	off_horz = (fix15) ((xorg + 32768L) >> 16);
-	off_vert = (fix15) ((yorg + 32768L) >> 16);
 
 	if (bit_width > MAX_BITS)
 	{
@@ -722,25 +719,31 @@ void sp_open_bitmap(fix31 xorg, fix31 yorg, fix15 xsize, fix15 ysize)
 	width = (pix_width * 7200L) / (point_size * y_res);
 
 	sp_get_char_bbox(char_index, &bb);
-	infos[char_id].bbox = bb;
 
 #if DEBUG
-	if (((bb.xmax - bb.xmin) >> 16) != bit_width)
-		g_string_append_printf(errorout, "char 0x%x (0x%x): bbox & width mismatch (%ld vs %d)\n",
-				char_index, char_id, (unsigned long)(bb.xmax - bb.xmin) >> 16, bit_width);
-	if (((bb.ymax - bb.ymin) >> 16) != bit_height)
-		g_string_append_printf(errorout, "char 0x%x (0x%x): bbox & height mismatch (%ld vs %d)\n",
-				char_index, char_id, (unsigned long)(bb.ymax - bb.ymin) >> 16, bit_height);
-	if ((bb.xmin >> 16) != off_horz)
-		g_string_append_printf(errorout, "char 0x%x (0x%x): x min mismatch (%ld vs %d)\n", char_index, char_id, (unsigned long)bb.xmin >> 16, off_horz);
-	if ((bb.ymin >> 16) != off_vert)
-		g_string_append_printf(errorout, "char 0x%x (0x%x): y min mismatch (%ld vs %d)\n", char_index, char_id, (unsigned long)bb.ymin >> 16, off_vert);
+	{
+		fix15 off_horz;
+		fix15 off_vert;
+		
+		off_horz = (fix15) ((xorg + 32768L) >> 16);
+		off_vert = (fix15) ((yorg + 32768L) >> 16);
+
+		if (((bb.xmax - bb.xmin) >> 16) != bit_width)
+			g_string_append_printf(errorout, "char 0x%x (0x%x): bbox & width mismatch (%ld vs %d)\n",
+					char_index, char_id, (unsigned long)(bb.xmax - bb.xmin) >> 16, bit_width);
+		if (((bb.ymax - bb.ymin) >> 16) != bit_height)
+			g_string_append_printf(errorout, "char 0x%x (0x%x): bbox & height mismatch (%ld vs %d)\n",
+					char_index, char_id, (unsigned long)(bb.ymax - bb.ymin) >> 16, bit_height);
+		if ((bb.xmin >> 16) != off_horz)
+			g_string_append_printf(errorout, "char 0x%x (0x%x): x min mismatch (%ld vs %d)\n", char_index, char_id, (unsigned long)bb.xmin >> 16, off_horz);
+		if ((bb.ymin >> 16) != off_vert)
+			g_string_append_printf(errorout, "char 0x%x (0x%x): y min mismatch (%ld vs %d)\n", char_index, char_id, (unsigned long)bb.ymin >> 16, off_vert);
+	}
 #endif
 
-	bit_width = ((bb.xmax - bb.xmin) + 32768L) >> 16;
-	bit_height = ((bb.ymax - bb.ymin) + 32768L) >> 16;
-	off_horz = bb.xmin >> 16;
-	off_vert = bb.ymin >> 16;
+	c = &infos[char_id];
+	bit_width = c->bbox.width;
+	bit_height = c->bbox.height;
 
 	/* XXX kludge to handle space */
 	if (bb.xmin == 0 && bb.ymin == 0 && bb.xmax == 0 && bb.ymax == 0 && width)
@@ -760,11 +763,6 @@ void sp_open_bitmap(fix31 xorg, fix31 yorg, fix15 xsize, fix15 ysize)
 		g_string_append_printf(errorout, "char 0x%x (0x%x): height too large (%d vs %d)\n", char_index, char_id, bit_width, MAX_BITS);
 		bit_height = MAX_BITS;
 	}
-	
-	infos[char_id].width = bit_width;
-	infos[char_id].height = bit_height;
-	infos[char_id].off_horz = off_horz;
-	infos[char_id].off_vert = off_vert;
 	
 	memset(framebuffer, 0, sizeof(framebuffer));
 }
@@ -849,8 +847,8 @@ static gboolean write_png(void)
 	info->rowbytes = MAX_BITS;
 	info->bpp = 8;
 	info->image_data = &framebuffer[0][0];
-	info->width = cinfo->width;
-	info->height = cinfo->height;
+	info->width = cinfo->bbox.width;
+	info->height = cinfo->bbox.height;
 	info->have_bg = vdi_maptab256[0];
 	info->x_res = (x_res * 10000L) / 254;
 	info->y_res = (y_res * 10000L) / 254;
@@ -985,6 +983,59 @@ static void gen_hor_line(GString *body, int columns)
 
 /* ------------------------------------------------------------------------- */
 
+static void update_bbox(charinfo *c, glyphinfo_t *box)
+{
+	bbox_t bb;
+	
+	sp_get_char_bbox(c->char_index, &bb);
+	c->bbox.xmin = bb.xmin;
+	c->bbox.ymin = bb.ymin;
+	c->bbox.xmax = bb.xmax;
+	c->bbox.ymax = bb.ymax;
+	box->xmin = MIN(box->xmin, c->bbox.xmin);
+	box->ymin = MIN(box->ymin, c->bbox.ymin);
+	box->xmax = MIN(box->xmax, c->bbox.xmax);
+	box->ymax = MIN(box->ymax, c->bbox.ymax);
+	c->bbox.width = ((bb.xmax - bb.xmin) + 32768L) >> 16;
+	c->bbox.height = ((bb.ymax - bb.ymin) + 32768L) >> 16;
+	c->bbox.lbearing = bb.xmin >> 16;
+	c->bbox.off_vert = bb.ymin >> 16;
+	box->lbearing = MIN(box->lbearing, c->bbox.lbearing);
+	c->bbox.rbearing = c->bbox.width + c->bbox.lbearing;
+	box->rbearing = MAX(box->rbearing, c->bbox.rbearing);
+	c->bbox.ascent = c->bbox.height + c->bbox.off_vert;
+	c->bbox.descent = c->bbox.height - c->bbox.ascent;
+	box->width = MAX(box->width, c->bbox.width);
+	box->height = MAX(box->height, c->bbox.height);
+	box->ascent = MAX(box->ascent, c->bbox.ascent);
+	box->descent = MAX(box->descent, c->bbox.descent);
+}
+
+/* ------------------------------------------------------------------------- */
+
+static const char *get_uniname(uint16_t unicode)
+{
+	size_t a, b, c;
+	const struct ucd *p;
+	
+	a = 0;
+	b = sizeof(ucd_bycode) / sizeof(ucd_bycode[0]);
+	while (a < b)
+	{
+		c = (a + b) >> 1;				/* == ((a + b) / 2) */
+		p = &ucd_bycode[c];
+		if (p->code == unicode)
+			return p->name;
+		if (p->code > unicode)
+			b = c;
+		else
+			a = c + 1;
+	}
+	return "UNDEFINED";
+}
+
+/* ------------------------------------------------------------------------- */
+
 static gboolean gen_speedo_font(const char *filename, GString *body)
 {
 	gboolean decode_ok = TRUE;
@@ -1104,25 +1155,93 @@ static gboolean gen_speedo_font(const char *filename, GString *body)
 			infos[i].local_filename = NULL;
 			infos[i].url = NULL;
 		}
+
+		/*
+		 * determine the average width of all the glyphs in the font
+		 */
+		{
+			unsigned long total_width;
+			uint16_t num_glyphs;
+			glyphinfo_t max_bb;
+			fix15 max_lbearing;
+			fix15 min_descent;
+			fix15 average_width;
+			
+			total_width = 0;
+			num_glyphs = 0;
+			max_bb.width = 0;
+			max_bb.height = 0;
+			max_bb.off_vert = 0;
+			max_bb.ascent = -32000;
+			max_bb.descent = -32000;
+			max_bb.rbearing = -32000;
+			max_bb.lbearing = 32000;
+			max_bb.xmin = 32000L << 16;
+			max_bb.ymin = 32000L << 16;
+			max_bb.xmax = -(32000L << 16);
+			max_bb.ymax = -(32000L << 16);
+			max_lbearing = -32000;
+			min_descent = 32000;
+			for (i = 0; i < num_chars; i++)
+			{
+				char_index = i + first_char_index;
+				char_id = sp_get_char_id(char_index);
+				if (char_id != 0 && char_id != 0xffff)
+				{
+					charinfo *c = &infos[char_id];
+					
+					if (c->char_id != 0xffff)
+					{
+						g_string_append_printf(errorout, "char 0x%x (0x%x) already defined\n", char_index, char_id);
+					} else
+					{
+						c->char_index = char_index;
+						c->char_id = char_id;
+						update_bbox(c, &max_bb);
+						max_lbearing = MAX(max_lbearing, c->bbox.lbearing);
+						min_descent = MIN(min_descent, c->bbox.descent);
+						total_width += c->bbox.width;
+						num_glyphs++;
+					}
+				}
+			}
+			if (num_glyphs == 0)
+				average_width = max_bb.width;
+			else
+				average_width = (fix15)(total_width / num_glyphs);
+			if (debug)
+			{
+				g_string_append_printf(errorout, "max height %d max width %d average width %d\n", max_bb.height, max_bb.width, average_width);
+			}
+			
+			max_bb.height = max_bb.ascent + max_bb.descent;
+			max_bb.width = max_bb.rbearing - max_bb.lbearing;
+
+			if (debug)
+			{
+				g_string_append_printf(errorout, "bbox: %d %d ascent %d descent %d lb %d rb %d\n",
+					max_bb.width, max_bb.height,
+					max_bb.ascent, max_bb.descent,
+					max_bb.lbearing, max_bb.rbearing);
+				g_string_append_printf(errorout, "bbox (header): %d %d %d %d\n",
+					read_2b(font_buffer + FH_FXMIN), read_2b(font_buffer + FH_FYMIN),
+					read_2b(font_buffer + FH_FXMAX), read_2b(font_buffer + FH_FYMAX));
+			}
+			
+			font_bb = max_bb;
+		}
+		
 		for (i = 0; i < num_chars; i++)
 		{
 			char_index = i + first_char_index;
 			char_id = sp_get_char_id(char_index);
 			if (char_id != 0 && char_id != 0xffff)
 			{
-				if (infos[char_id].char_id != 0xffff)
+				infos[char_id].local_filename = g_strdup_printf("%s/%schr%04x.png", output_dir, basename, char_id);
+				infos[char_id].url = g_strdup_printf("%s/%schr%04x.png", output_url, basename, char_id);
+				if (!sp_make_char(char_index))
 				{
-					g_string_append_printf(errorout, "char 0x%x (0x%x) already defined\n", char_index, char_id);
-				} else
-				{
-					infos[char_id].char_index = char_index;
-					infos[char_id].char_id = char_id;
-					infos[char_id].local_filename = g_strdup_printf("%s/%schr%04x.png", output_dir, basename, char_id);
-					infos[char_id].url = g_strdup_printf("%s/%schr%04x.png", output_url, basename, char_id);
-					if (!sp_make_char(char_index))
-					{
-						g_string_append_printf(errorout, "can't make char 0x%x (0x%x)\n", char_index, char_id);
-					}
+					g_string_append_printf(errorout, "can't make char 0x%x (0x%x)\n", char_index, char_id);
 				}
 			}
 		}
@@ -1153,13 +1272,15 @@ static gboolean gen_speedo_font(const char *filename, GString *body)
 			for (j = 0; j < columns; j++)
 			{
 				uint16_t char_id = id + j;
+				charinfo *c = &infos[char_id];
+				
 				defined[j] = FALSE;
 				img[j] = NULL;
-				if (infos[char_id].char_id != 0xffff)
+				if (c->char_id != 0xffff)
 				{
 					defined[j] = TRUE;
-					if (infos[char_id].url != NULL)
-						img[j] = infos[char_id].url;
+					if (c->url != NULL)
+						img[j] = c->url;
 				}
 				klass = defined[j] ? "spd_glyph_defined" : "spd_glyph_undefined";
 				
@@ -1179,29 +1300,41 @@ static gboolean gen_speedo_font(const char *filename, GString *body)
 			for (j = 0; j < columns; j++)
 			{
 				uint16_t char_id = id + j;
+				charinfo *c = &infos[char_id];
+				
 				g_string_append(body, vert_line);
 				
 				if (img[j] != NULL)
 				{
 					uint16_t unicode;
+					char *debuginfo = NULL;
 					
-					unicode = infos[char_id].char_index < BICS_COUNT ? Bics2Unicode[infos[char_id].char_index] : 0xffff;
+					unicode = c->char_index < BICS_COUNT ? Bics2Unicode[c->char_index] : 0xffff;
+					if (debug)
+					{
+						debuginfo = g_strdup_printf("Width: %u Height %u&#10;Ascent: %d Descent: %d lb: %d rb: %d&#10;",
+							c->bbox.width, c->bbox.height, c->bbox.ascent, c->bbox.descent, c->bbox.lbearing, c->bbox.rbearing);
+					}
 					g_string_append_printf(body,
 						"<td class=\"spd_glyph_image\" title=\""
-						"Index: 0x%x&#10;"
+						"Index: 0x%x (%u)&#10;"
 						"ID: 0x%04x&#10;"
-						"Unicode: 0x%04x&#10;"
+						"Unicode: 0x%04x &#%u;&#10;"
+						"%s&#10;"
 						"Xmin: %7.2f Ymin: %7.2f&#10;"
-						"Xmax: %7.2f Ymax: %7.2f&#10;"
+						"Xmax: %7.2f Ymax: %7.2f&#10;%s"
 						"\"><img alt=\"\" src=\"%s\"></td>",
-						infos[char_id].char_index,
-						infos[char_id].char_id,
-						unicode,
-						(double)infos[char_id].bbox.xmin / 65536.0,
-						(double)infos[char_id].bbox.ymin / 65536.0,
-						(double)infos[char_id].bbox.xmax / 65536.0,
-						(double)infos[char_id].bbox.ymax / 65536.0,
+						c->char_index, c->char_index,
+						c->char_id,
+						unicode, unicode,
+						get_uniname(unicode),
+						(double)c->bbox.xmin / 65536.0,
+						(double)c->bbox.ymin / 65536.0,
+						(double)c->bbox.xmax / 65536.0,
+						(double)c->bbox.ymax / 65536.0,
+						debuginfo ? debuginfo : "",
 						img[j]);
+					g_free(debuginfo);
 				} else
 				{
 					g_string_append_printf(body,
@@ -1644,6 +1777,13 @@ int main(void)
 	if ((val = cgiFormString("yresolution")) != NULL)
 	{
 		y_res = (int)strtol(val, NULL, 10);
+		g_free(val);
+	}
+	
+	debug = FALSE;
+	if ((val = cgiFormString("debug")) != NULL)
+	{
+		debug = strtol(val, NULL, 10) != 0;
 		g_free(val);
 	}
 	
