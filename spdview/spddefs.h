@@ -139,3 +139,5 @@ const char *xbasename(const char *path);
 char *spd_path_get_dirname(const char *path);
 char *spd_uri_unescape_string(const char *escaped_string, const char *illegal_characters);
 char *spd_uri_unescape_segment(const char *escaped_string, const char *escaped_string_end, const char *illegal_characters);
+const char *x_utf8_getchar(const char *p, wchar_t *ch);
+

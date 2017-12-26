@@ -130,20 +130,20 @@ static void process_args(int ac, char **av)
 int main(int argc, char **argv)
 {
 	ufix32 i;
-	ufix8 tmp[16];
+	ufix8 tmp[FH_FBFSZ + 4];
 	ufix32 minbufsize;
 	const ufix8 *key;
 	int first_char_index, num_chars;
 
 	progname = argv[0];
 	process_args(argc, argv);
-	fp = fopen(fontfile, "r");
+	fp = fopen(fontfile, "rb");
 	if (!fp)
 	{
 		fprintf(stderr, "No such font file, \"%s\"\n", fontfile);
 		return 1;
 	}
-	if (fread(tmp, sizeof(ufix8), 16, fp) != 16)
+	if (fread(tmp, sizeof(tmp), 1, fp) != 1)
 	{
 		fprintf(stderr, "error reading \"%s\"\n", fontfile);
 		return 1;
@@ -157,7 +157,7 @@ int main(int argc, char **argv)
 	}
 	fseek(fp, 0, SEEK_SET);
 
-	if (fread(f_buffer, sizeof(ufix8), (ufix16) minbufsize, fp) != minbufsize)
+	if (fread(f_buffer, minbufsize, 1, fp) != 1)
 	{
 		fprintf(stderr, "error reading file \"%s\"\n", fontfile);
 		return 1;
@@ -193,8 +193,6 @@ int main(int argc, char **argv)
 
 	/* set up specs */
 	/* Note that point size is in decipoints */
-	specs.pfont = &font;
-	/* XXX beware of overflow */
 	specs.xxmult = 0;
 	specs.xymult = 0L << 16;
 	specs.xoffset = 0L << 16;
@@ -204,7 +202,7 @@ int main(int argc, char **argv)
 	specs.flags = 0;
 	specs.out_info = NULL;
 
-	if (!sp_set_specs(&specs))
+	if (!sp_set_specs(&specs, &font))
 	{
 		fprintf(stderr, "can't set specs\n");
 	} else
@@ -231,7 +229,7 @@ int main(int argc, char **argv)
 
 
 #if INCL_LCD
-boolean sp_load_char_data(fix31 file_offset, fix15 num, fix15 cb_offset, buff_t *char_data)
+boolean sp_load_char_data(long file_offset, fix15 num, fix15 cb_offset, buff_t *char_data)
 {
 	if (fseek(fp, file_offset, SEEK_SET))
 	{
@@ -248,7 +246,7 @@ boolean sp_load_char_data(fix31 file_offset, fix15 num, fix15 cb_offset, buff_t 
 		fprintf(stderr, "can't get char data\n");
 		return FALSE;
 	}
-	char_data->org = (ufix8 *) c_buffer + cb_offset;
+	char_data->org = c_buffer + cb_offset;
 	char_data->no_bytes = num;
 
 	return TRUE;

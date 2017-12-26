@@ -4,6 +4,11 @@
 #include <time.h>
 #include <mint/arch/nf_ops.h>
 #include <stdint.h>
+#ifdef __PUREC__
+#include <ext.h>
+#else
+#include <sys/stat.h>
+#endif
 #include "spdview.h"
 #define RSC_NAMED_FUNCTIONS 1
 static _WORD gl_wchar, gl_hchar;
@@ -12,6 +17,11 @@ static _WORD gl_wchar, gl_hchar;
 #define hrelease_objs(a, b)
 #include "spdview.rsh"
 #include "speedo.h"
+#include "version.h"
+
+#ifndef K_SHIFT
+#define K_SHIFT			(K_LSHIFT|K_RSHIFT)
+#endif
 
 #undef SWAP_W
 #undef SWAP_L
@@ -42,6 +52,7 @@ static _WORD font_cw;
 static _WORD font_ch;
 static glyphinfo_t font_bb;
 
+static const char *font_filename;
 static buff_t font;
 static ufix8 *font_buffer;
 static ufix8 *c_buffer;
@@ -56,17 +67,19 @@ static long left_col;
 static _WORD row_height = 1;
 static _WORD col_width = 1;
 
-static int point_size = 240;
+static long point_size = 240;
 static int x_res = 72;
 static int y_res = 72;
 static int quality = 0;
 static specs_t specs;
 static ufix16 char_index, char_id;
 #define	MAX_BITS	1024
-static _UWORD framebuffer[MAX_BITS >> 4][MAX_BITS];
+static _UWORD framebuffer[MAX_BITS][MAX_BITS >> 4];
 
 #define CHAR_COLUMNS 16
 #define PAGE_SIZE    128
+
+#define is_font_loaded() (font_buffer != NULL)
 
 typedef struct {
 	uint16_t char_index;
@@ -188,9 +201,12 @@ static void draw_char(uint16_t ch, _WORD x0, _WORD y0)
 	_WORD colors[2];
 	charinfo *c;
 	
-	if (font_buffer == NULL)
+	if (!is_font_loaded())
 		return;
-	if (ch >= num_ids || (c = &infos[ch])->bitmap.fd_addr == NULL)
+	if (ch >= num_ids)
+		return;
+	c = &infos[ch];
+	if (c->bitmap.fd_addr == NULL || c->bbox.width == 0 || c->bbox.height == 0)
 		return;
 	colors[0] = G_BLACK;
 	colors[1] = G_WHITE;
@@ -216,13 +232,15 @@ static void mainwin_draw(const GRECT *area)
 	GRECT work;
 	_WORD pxy[8];
 	_WORD x, y;
-	_WORD scaled_w;
+	long scaled_w;
 	long scaled_h;
 	
 	v_hide_c(vdihandle);
 	wind_get_grect(mainwin, WF_WORKXYWH, &work);
-	scaled_w = col_width * CHAR_COLUMNS + scaled_margin;
-	scaled_h = row_height * char_rows + scaled_margin;
+	scaled_w = col_width * (CHAR_COLUMNS - left_col) + scaled_margin;
+	scaled_h = row_height * (char_rows - top_row) + scaled_margin;
+	if (scaled_w > work.g_w)
+		scaled_w = work.g_w;
 	if (scaled_h > work.g_h)
 		scaled_h = work.g_h;
 	wind_get_grect(mainwin, WF_FIRSTXYWH, &gr);
@@ -254,7 +272,7 @@ static void mainwin_draw(const GRECT *area)
 					break;
 				pxy[0] = work.g_x + MAIN_X_MARGIN;
 				pxy[1] = work.g_y + (_WORD)yy;
-				pxy[2] = pxy[0] + scaled_w - 1;
+				pxy[2] = pxy[0] + (_WORD)scaled_w - 1;
 				pxy[3] = pxy[1] + scaled_margin - 1;
 				vr_recfl(vdihandle, pxy);
 			}
@@ -717,11 +735,11 @@ void sp_set_bitmap_bits(fix15 y, fix15 xbit1, fix15 xbit2)
 /* ------------------------------------------------------------------------- */
 
 #if INCL_LCD
-boolean sp_load_char_data(fix31 file_offset, fix15 num, fix15 cb_offset, buff_t *char_data)
+boolean sp_load_char_data(long file_offset, fix15 num, fix15 cb_offset, buff_t *char_data)
 {
 	if (fseek(fp, file_offset, SEEK_SET))
 	{
-		nf_debugprintf("can't seek to char\n");
+		nf_debugprintf("%x (%x) can't seek to char at %ld\n", char_index, char_id, file_offset);
 		char_data->org = c_buffer;
 		char_data->no_bytes = 0;
 		return FALSE;
@@ -740,7 +758,7 @@ boolean sp_load_char_data(fix31 file_offset, fix15 num, fix15 cb_offset, buff_t 
 		char_data->no_bytes = 0;
 		return FALSE;
 	}
-	char_data->org = (ufix8 *) c_buffer + cb_offset;
+	char_data->org = c_buffer + cb_offset;
 	char_data->no_bytes = num;
 
 	return TRUE;
@@ -761,14 +779,25 @@ void sp_close_bitmap(void)
 	c->bitmap.fd_nplanes = 1;
 	c->bitmap.fd_stand = 1;
 	c->bitmap.fd_r1 = c->bitmap.fd_r2 = c->bitmap.fd_r3 = 0;
-	bitmap = g_new(_UWORD, c->bitmap.fd_wdwidth * c->bitmap.fd_h);
-	c->bitmap.fd_addr = bitmap;
-	if (bitmap != NULL)
+	if (bit_width != 0 && bit_height != 0)
 	{
-		for (y = 0; y < c->bitmap.fd_h; y++)
+		_UWORD words = c->bitmap.fd_wdwidth * c->bitmap.fd_h;
+		if (((size_t)c->bitmap.fd_wdwidth * c->bitmap.fd_h) != words)
 		{
-			memcpy(bitmap, &framebuffer[y][0], c->bitmap.fd_wdwidth << 1);
-			bitmap += c->bitmap.fd_wdwidth;
+			nf_debugprintf("16bit overflow %x: %u != %lu\n", c->char_id, words, (size_t)c->bitmap.fd_wdwidth * c->bitmap.fd_h);
+			bitmap = NULL;
+		} else
+		{
+			bitmap = g_new(_UWORD, words);
+		}
+		c->bitmap.fd_addr = bitmap;
+		if (bitmap != NULL)
+		{
+			for (y = 0; y < c->bitmap.fd_h; y++)
+			{
+				memcpy(bitmap, &framebuffer[y][0], c->bitmap.fd_wdwidth << 1);
+				bitmap += c->bitmap.fd_wdwidth;
+			}
 		}
 	}
 	trunc = 0;
@@ -908,13 +937,11 @@ static _BOOL font_gen_speedo_font(void)
 	
 	/* set up specs */
 	/* Note that point size is in decipoints */
-	specs.pfont = &font;
-	/* XXX beware of overflow */
-	specs.xxmult = (long)point_size * x_res / 720 * (1L << 16);
+	specs.xxmult = point_size * x_res / 720 * (1L << 16);
 	specs.xymult = 0L << 16;
 	specs.xoffset = 0L << 16;
 	specs.yxmult = 0L << 16;
-	specs.yymult = (long)point_size * y_res / 720 * (1L << 16);
+	specs.yymult = point_size * y_res / 720 * (1L << 16);
 	specs.yoffset = 0L << 16;
 	switch (quality)
 	{
@@ -938,7 +965,7 @@ static _BOOL font_gen_speedo_font(void)
 
 	chomp(fontname, (char *) (font_buffer + FH_FNTNM), sizeof(fontname));
 	
-	if (!sp_set_specs(&specs))
+	if (!sp_set_specs(&specs, &font))
 	{
 		decode_ok = FALSE;
 	} else
@@ -1067,9 +1094,10 @@ static _BOOL font_gen_speedo_font(void)
 static _BOOL font_load_speedo_font(const char *filename)
 {
 	_BOOL ret;
-	ufix8 tmp[16];
+	ufix8 tmp[FH_FBFSZ + 4];
 	ufix32 minbufsize;
 	
+	graf_mouse(BUSY_BEE, NULL);
 	fp = fopen(filename, "rb");
 	if (fp == NULL)
 	{
@@ -1079,7 +1107,7 @@ static _BOOL font_load_speedo_font(const char *filename)
 		do_alert(buf);
 		return FALSE;
 	}
-	if (fread(tmp, sizeof(ufix8), 16, fp) != 16)
+	if (fread(tmp, sizeof(tmp), 1, fp) != 1)
 	{
 		fclose(fp);
 		do_alert1(AL_READERROR);
@@ -1088,8 +1116,8 @@ static _BOOL font_load_speedo_font(const char *filename)
 	free(font_buffer);
 	free(c_buffer);
 	c_buffer = NULL;
-	minbufsize = (ufix32) read_4b(tmp + FH_FBFSZ);
-	font_buffer = (ufix8 *) malloc(minbufsize);
+	minbufsize = read_4b(tmp + FH_FBFSZ);
+	font_buffer = g_new(ufix8, minbufsize);
 	if (font_buffer == NULL)
 	{
 		fclose(fp);
@@ -1097,7 +1125,7 @@ static _BOOL font_load_speedo_font(const char *filename)
 		return FALSE;
 	}
 	fseek(fp, 0, SEEK_SET);
-	if (fread(font_buffer, sizeof(ufix8), minbufsize, fp) != minbufsize)
+	if (fread(font_buffer, minbufsize, 1, fp) != 1)
 	{
 		fclose(fp);
 		free(font_buffer);
@@ -1126,6 +1154,7 @@ static _BOOL font_load_speedo_font(const char *filename)
 
 	if (ret)
 	{
+		font_filename = filename;
 		font.org = font_buffer;
 		top_row = 0;
 		left_col = 0;
@@ -1134,6 +1163,7 @@ static _BOOL font_load_speedo_font(const char *filename)
 		redraw_win(mainwin);
 	} else
 	{
+		font_filename = NULL;
 		free(font_buffer);
 		font_buffer = NULL;
 		free(c_buffer);
@@ -1144,7 +1174,32 @@ static _BOOL font_load_speedo_font(const char *filename)
 		char_rows = 0;
 	}
 
+	graf_mouse(ARROW, NULL);
 	return ret;
+}
+
+/* ------------------------------------------------------------------------- */
+
+static void set_pointsize(long size)
+{
+	menu_icheck(menu, POINTS_6, size == 60);
+	menu_icheck(menu, POINTS_8, size == 80);
+	menu_icheck(menu, POINTS_9, size == 90);
+	menu_icheck(menu, POINTS_10, size == 100);
+	menu_icheck(menu, POINTS_12, size == 120);
+	menu_icheck(menu, POINTS_14, size == 140);
+	menu_icheck(menu, POINTS_16, size == 160);
+	menu_icheck(menu, POINTS_18, size == 180);
+	menu_icheck(menu, POINTS_24, size == 240);
+	menu_icheck(menu, POINTS_36, size == 360);
+	menu_icheck(menu, POINTS_48, size == 480);
+	menu_icheck(menu, POINTS_64, size == 640);
+	menu_icheck(menu, POINTS_72, size == 720);
+
+	if (!is_font_loaded() || size == point_size)
+		return;
+	point_size = size;
+	font_load_speedo_font(font_filename);
 }
 
 /*****************************************************************************/
@@ -1193,17 +1248,11 @@ static void select_font(void)
 	font_load_speedo_font(path);
 }
 
-/* ------------------------------------------------------------------------- */
+/* -------------------------------------------------------------------------- */
 
-static void font_info(void)
+static _WORD do_dialog(_WORD num)
 {
-}
-
-/* ------------------------------------------------------------------------- */
-
-static void do_about(void)
-{
-	OBJECT *tree = rs_tree(ABOUT_DIALOG);
+	OBJECT *tree = rs_tree(num);
 	GRECT gr;
 	_WORD ret;
 
@@ -1214,6 +1263,62 @@ static void do_about(void)
 	ret &= 0x7fff;
 	tree[ret].ob_state &= ~OS_SELECTED;
 	form_dial_grect(FMD_FINISH, &gr, &gr);
+	return ret;
+}
+
+/* ------------------------------------------------------------------------- */
+
+static void set_text(OBJECT *tree, _WORD idx, const void *_text, int maxlen)
+{
+	TEDINFO *ted;
+	char *p;
+	const unsigned char *text = (const unsigned char *)_text;
+	
+	tree += idx;
+	ted = tree->ob_spec.tedinfo;
+	if (maxlen > (ted->te_txtlen - 1))
+		maxlen = ted->te_txtlen - 1;
+	p = ted->te_ptext;
+	while (--maxlen >= 0)
+		*p++ = *text++;
+	*p = '\0';
+}
+
+/* ------------------------------------------------------------------------- */
+
+static void font_info(void)
+{
+	OBJECT *tree = rs_tree(FONT_PARAMS);
+	char buf[20];
+	
+	if (!is_font_loaded())
+		return;
+	set_text(tree, FONT_NAME, font_buffer + FH_FNTNM, 70);
+	set_text(tree, FONT_SHORT_NAME, font_buffer + FH_SFNTN, 32);
+	set_text(tree, FONT_FACE_NAME, font_buffer + FH_SFACN, 16);
+	set_text(tree, FONT_FORM, font_buffer + FH_FNTFM, 14);
+	set_text(tree, FONT_DATE, font_buffer + FH_MDATE, 10);
+	set_text(tree, FONT_LAYOUT_NAME, font_buffer + FH_LAYNM, 70);
+	sprintf(buf, "%5u", read_2b(font_buffer + FH_FNTID));
+	set_text(tree, FONT_ID, buf, 5);
+	sprintf(buf, "%5u", read_2b(font_buffer + FH_NCHRL));
+	set_text(tree, FONT_CHARS_LAYOUT, buf, 5);
+	sprintf(buf, "%5u", read_2b(font_buffer + FH_NCHRF));
+	set_text(tree, FONT_CHARS_FONT, buf, 5);
+	sprintf(buf, "%5u", read_2b(font_buffer + FH_FCHRF));
+	set_text(tree, FONT_FIRST_INDEX, buf, 5);
+	do_dialog(FONT_PARAMS);
+}
+
+/* ------------------------------------------------------------------------- */
+
+static void do_about(void)
+{
+	OBJECT *tree = rs_tree(ABOUT_DIALOG);
+
+	tree[ABOUT_VERSION].ob_spec.free_string = PACKAGE_VERSION;
+	tree[ABOUT_DATE].ob_spec.free_string = PACKAGE_DATE;
+	do_dialog(ABOUT_DIALOG);
 }
 
 /* ------------------------------------------------------------------------- */
@@ -1287,11 +1392,26 @@ static void mainloop(void)
 	_WORD message[8];
 	_WORD k, kstate, dummy, mox, moy;
 
-	if (font_buffer == NULL)
+	if (!is_font_loaded())
 		msg_mn_select(TFILE, FOPEN);
 	
 	while (!quit_app)
 	{
+		menu_ienable(menu, FINFO, is_font_loaded());
+		menu_ienable(menu, POINTS_6, is_font_loaded());
+		menu_ienable(menu, POINTS_8, is_font_loaded());
+		menu_ienable(menu, POINTS_9, is_font_loaded());
+		menu_ienable(menu, POINTS_10, is_font_loaded());
+		menu_ienable(menu, POINTS_12, is_font_loaded());
+		menu_ienable(menu, POINTS_14, is_font_loaded());
+		menu_ienable(menu, POINTS_16, is_font_loaded());
+		menu_ienable(menu, POINTS_18, is_font_loaded());
+		menu_ienable(menu, POINTS_24, is_font_loaded());
+		menu_ienable(menu, POINTS_36, is_font_loaded());
+		menu_ienable(menu, POINTS_48, is_font_loaded());
+		menu_ienable(menu, POINTS_64, is_font_loaded());
+		menu_ienable(menu, POINTS_72, is_font_loaded());
+
 		event = evnt_multi(MU_KEYBD | MU_MESAG | MU_BUTTON,
 			2, 1, 1,
 			0, 0, 0, 0, 0,
@@ -1314,20 +1434,59 @@ static void mainloop(void)
 				quit_app = TRUE;
 				break;
 			default:
-				switch ((k >> 8) & 0xff)
 				{
-				case 0x48:
-					vscroll_to(top_row * row_height - row_height);
-					break;
-				case 0x50:
-					vscroll_to(top_row * row_height + row_height);
-					break;
-				case 0x4b:
-					hscroll_to(left_col * col_width - col_width);
-					break;
-				case 0x4d:
-					hscroll_to(left_col * col_width + col_width);
-					break;
+					long page_h;
+					long page_w;
+					GRECT gr;
+					
+					wind_get_grect(mainwin, WF_WORKXYWH, &gr);
+					page_w = ((gr.g_w - MAIN_X_MARGIN) / col_width) * col_width;
+					page_h = ((gr.g_h - MAIN_Y_MARGIN) / row_height) * row_height;
+					switch ((k >> 8) & 0xff)
+					{
+					case 0x48: /* cursor up */
+						vscroll_to(top_row * row_height - ((kstate & K_SHIFT) ? page_h : row_height));
+						break;
+					case 0x50: /* cursor down */
+						vscroll_to(top_row * row_height + ((kstate & K_SHIFT) ? page_h : row_height));
+						break;
+					case 0x49: /* page up */
+						vscroll_to(top_row * row_height - page_h);
+						break;
+					case 0x51: /* page down */
+						vscroll_to(top_row * row_height + page_h);
+						break;
+					case 0x4b: /* cursor left */
+						if (kstate & (K_SHIFT|K_CTRL))
+						{
+							hscroll_to(0);
+							vscroll_to(0);
+						} else
+						{
+							hscroll_to(left_col * col_width - ((kstate & K_SHIFT) ? page_w : col_width));
+						}
+						break;
+					case 0x4d: /* cursor right */
+						if (kstate & (K_SHIFT|K_CTRL))
+						{
+							hscroll_to(0);
+							vscroll_to(char_rows * row_height);
+						} else
+						{
+							hscroll_to(left_col * col_width + ((kstate & K_SHIFT) ? page_w : col_width));
+						}
+						break;
+					case 0x47: /* Home */
+					case 0x77: /* Ctrl-Home */
+						hscroll_to(0);
+						vscroll_to(0);
+						break;
+					case 0x4f: /* End */
+					case 0x75: /* Ctrl-End */
+						hscroll_to(0);
+						vscroll_to(char_rows * row_height);
+						break;
+					}
 				}
 				break;
 			}
@@ -1471,6 +1630,45 @@ static void mainloop(void)
 				case FINFO:
 					font_info();
 					break;
+				case POINTS_6:
+					set_pointsize(60);
+					break;
+				case POINTS_8:
+					set_pointsize(80);
+					break;
+				case POINTS_9:
+					set_pointsize(90);
+					break;
+				case POINTS_10:
+					set_pointsize(100);
+					break;
+				case POINTS_12:
+					set_pointsize(120);
+					break;
+				case POINTS_14:
+					set_pointsize(140);
+					break;
+				case POINTS_16:
+					set_pointsize(160);
+					break;
+				case POINTS_18:
+					set_pointsize(180);
+					break;
+				case POINTS_24:
+					set_pointsize(240);
+					break;
+				case POINTS_36:
+					set_pointsize(360);
+					break;
+				case POINTS_48:
+					set_pointsize(480);
+					break;
+				case POINTS_64:
+					set_pointsize(640);
+					break;
+				case POINTS_72:
+					set_pointsize(720);
+					break;
 				case FQUIT:
 					quit_app = TRUE;
 					break;
@@ -1481,6 +1679,17 @@ static void mainloop(void)
 			wind_update(END_UPDATE);
 		}
 	}
+}
+
+/* ------------------------------------------------------------------------- */
+
+static void load_deffont(void)
+{
+	const char *filename = "..\\speedo\\btfonts\\bx000003.spd";
+	struct stat st;
+	
+	if (stat(filename, &st) == 0)
+		font_load_speedo_font(filename);
 }
 
 /* ------------------------------------------------------------------------- */
@@ -1520,10 +1729,11 @@ int main(int argc, char **argv)
 	{
 		menu = rs_tree(MAINMENU);
 		menu_bar(menu, TRUE);
+		set_pointsize(point_size);
 		if (argc > 1)
 			font_load_speedo_font(argv[1]);
 		else
-			font_load_speedo_font("..\\speedo\\btfonts\\bx000003.spd");
+			load_deffont();
 	}
 	
 	graf_mouse(ARROW, NULL);

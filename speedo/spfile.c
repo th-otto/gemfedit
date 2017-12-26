@@ -90,7 +90,7 @@ static fix31 read_4b(ufix8 *ptr)
 /*
  * loads the specified char's data
  */
-boolean sp_load_char_data(fix31 file_offset, fix15 num, fix15 cb_offset, buff_t *char_data)
+boolean sp_load_char_data(long file_offset, fix15 num, fix15 cb_offset, buff_t *char_data)
 {
 	SpeedoMasterFontPtr master = sp_fp_cur->master;
 
@@ -109,7 +109,7 @@ boolean sp_load_char_data(fix31 file_offset, fix15 num, fix15 cb_offset, buff_t 
 		sp_write_error("can't get char data");
 		return FALSE;
 	}
-	char_data->org = (ufix8 *) master->c_buffer + cb_offset;
+	char_data->org = master->c_buffer + cb_offset;
 	char_data->no_bytes = num;
 
 	return TRUE;
@@ -239,7 +239,7 @@ static int find_encoding(const char *fontname, const char *filename, int **enc, 
 int sp_open_master(const char *fontname, const char *filename, SpeedoMasterFontPtr *master)
 {
 	SpeedoMasterFontPtr spmf;
-	ufix8 tmp[16];
+	ufix8 tmp[FH_FBFSZ + 4];
 	FILE *fp;
 	ufix32 minbufsize;
 	ufix16 mincharsize;
@@ -260,7 +260,7 @@ int sp_open_master(const char *fontname, const char *filename, SpeedoMasterFontP
 	spmf->fname = (char *) xalloc(strlen(filename) + 1);
 	if (!spmf->fname)
 		return AllocError;
-	fp = fopen(filename, "r");
+	fp = fopen(filename, "rb");
 	if (!fp)
 	{
 		ret = BadFontName;
@@ -270,7 +270,7 @@ int sp_open_master(const char *fontname, const char *filename, SpeedoMasterFontP
 	spmf->fp = fp;
 	spmf->state |= MasterFileOpen;
 
-	if (fread(tmp, sizeof(ufix8), 16, fp) != 16)
+	if (fread(tmp, sizeof(tmp), 1, fp) != 1)
 	{
 		ret = BadFontName;
 		goto cleanup;
@@ -287,7 +287,7 @@ int sp_open_master(const char *fontname, const char *filename, SpeedoMasterFontP
 	fseek(fp, 0, SEEK_SET);
 
 	/* read in the font */
-	if (fread(f_buffer, sizeof(ufix8), (ufix16) minbufsize, fp) != minbufsize)
+	if (fread(f_buffer, minbufsize, 1, fp) != 1)
 	{
 		ret = BadFontName;
 		goto cleanup;
@@ -390,7 +390,7 @@ void sp_reset_master(SpeedoMasterFontPtr spmf)
 	sp_set_key(spmf->key);
 	if (!(spmf->state & MasterFileOpen))
 	{
-		spmf->fp = fopen(spmf->fname, "r");
+		spmf->fp = fopen(spmf->fname, "rb");
 		/* XXX -- what to do if we can't open the file? */
 		spmf->state |= MasterFileOpen;
 	}

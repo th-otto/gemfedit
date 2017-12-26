@@ -101,11 +101,11 @@ static void usage(void)
 			"Usage: %s [-xres x resolution] [-yres y resolution]\n\t[-ptsize pointsize] [-fn fontname] [-q quality (0-1)] fontfile\n",
 			progname);
 	fprintf(stderr, "Where:\n");
-	fprintf(stderr, "-xres specifies the X resolution (72)\n");
-	fprintf(stderr, "-yres specifies the Y resolution (72)\n");
-	fprintf(stderr, "-pts specifies the pointsize in decipoints (120)\n");
+	fprintf(stderr, "-xres specifies the X resolution (%d)\n", x_res);
+	fprintf(stderr, "-yres specifies the Y resolution (%d)\n", y_res);
+	fprintf(stderr, "-pts specifies the pointsize in decipoints (%ld)\n", point_size);
 	fprintf(stderr, "-fn specifies the font name (full Bitstream name)\n");
-	fprintf(stderr, "-q specifies the font quality [0-1] (0)\n");
+	fprintf(stderr, "-q specifies the font quality [0-3] (%d)\n", quality);
 	fprintf(stderr, "\n");
 	exit(0);
 }
@@ -210,7 +210,7 @@ static void process_args(int ac, char **av)
 }
 
 
-static void dump_header(ufix32 num_chars, const glyphinfo_t *box)
+static void dump_header(uint16_t num_chars, const glyphinfo_t *box)
 {
 	long pixel_size;
 	const char *weight;
@@ -391,7 +391,7 @@ static void dump_header(ufix32 num_chars, const glyphinfo_t *box)
 #endif
 
 	printf("ENDPROPERTIES\n");
-	printf("CHARS %d\n", num_chars);
+	printf("CHARS %u\n", num_chars);
 }
 
 
@@ -429,19 +429,19 @@ static void update_bbox(charinfo *c, glyphinfo_t *box)
 int main(int argc, char **argv)
 {
 	ufix32 i;
-	ufix8 tmp[16];
+	ufix8 tmp[FH_FBFSZ + 4];
 	ufix32 minbufsize;
-	int first_char_index, num_chars, real_num_chars;
+	uint16_t first_char_index, num_chars, real_num_chars;
 	const ufix8 *key;
 	
 	process_args(argc, argv);
-	fp = fopen(fontfile, "r");
+	fp = fopen(fontfile, "rb");
 	if (!fp)
 	{
 		fprintf(stderr, "No such font file, \"%s\"\n", fontfile);
 		return 1;
 	}
-	if (fread(tmp, sizeof(ufix8), 16, fp) != 16)
+	if (fread(tmp, sizeof(tmp), 1, fp) != 1)
 	{
 		fprintf(stderr, "error reading \"%s\"\n", fontfile);
 		return 1;
@@ -455,7 +455,7 @@ int main(int argc, char **argv)
 	}
 	fseek(fp, 0, SEEK_SET);
 
-	if (fread(font_buffer, sizeof(ufix8), minbufsize, fp) != minbufsize)
+	if (fread(font_buffer, minbufsize, 1, fp) != 1)
 	{
 		fprintf(stderr, "error reading file \"%s\"\n", fontfile);
 		return 1;
@@ -490,7 +490,6 @@ int main(int argc, char **argv)
 	num_chars = read_2b(font_buffer + FH_NCHRL);
 
 	/* set up specs */
-	specs.pfont = &font;
 	/* Note that point size is in decipoints */
 	specs.xxmult = point_size * x_res / 720 * (1L << 16);
 	specs.xymult = 0L << 16;
@@ -507,6 +506,13 @@ int main(int argc, char **argv)
 		specs.flags = MODE_SCREEN;
 		break;
 	case 2:
+#if INCL_OUTLINE
+		specs.flags = MODE_OUTLINE;
+#else
+		specs.flags = MODE_2D;
+#endif
+		break;
+	case 3:
 		specs.flags = MODE_2D;
 		break;
 	default:
@@ -519,7 +525,7 @@ int main(int argc, char **argv)
 	{
 		fontname = (char *) (font_buffer + FH_FNTNM);
 	}
-	if (!sp_set_specs(&specs))
+	if (!sp_set_specs(&specs, &font))
 	{
 		fprintf(stderr, "can't set specs\n");
 	} else
@@ -567,7 +573,6 @@ int main(int argc, char **argv)
 				}
 			}
 		}
-	fprintf(stderr, "height %d descent %d\n", font_bbox.height, font_bbox.descent);
 		font_bbox.ascent = font_bbox.height - font_bbox.descent;
 		dump_header(real_num_chars, &font_bbox);
 
@@ -608,11 +613,11 @@ int main(int argc, char **argv)
 
 
 #if INCL_LCD
-boolean sp_load_char_data(fix31 file_offset, fix15 num, fix15 cb_offset, buff_t *char_data)
+boolean sp_load_char_data(long file_offset, fix15 num, fix15 cb_offset, buff_t *char_data)
 {
 	if (fseek(fp, file_offset, SEEK_SET))
 	{
-		fprintf(stderr, "can't seek to char\n");
+		fprintf(stderr, "%x (%x): can't seek to char at %ld\n", char_index, char_id, file_offset);
 		return FALSE;
 	}
 	if ((num + cb_offset) > mincharsize)
@@ -625,7 +630,7 @@ boolean sp_load_char_data(fix31 file_offset, fix15 num, fix15 cb_offset, buff_t 
 		fprintf(stderr, "can't get char data\n");
 		return FALSE;
 	}
-	char_data->org = (ufix8 *) c_buffer + cb_offset;
+	char_data->org = c_buffer + cb_offset;
 	char_data->no_bytes = num;
 
 	return TRUE;
@@ -701,8 +706,8 @@ void sp_open_bitmap(fix31 xorg, fix31 yorg, fix15 xsize, fix15 ysize)
 
 	printf("STARTCHAR %d\n", char_index);
 	printf("ENCODING %d\n", char_id);
-	printf("SWIDTH %d 0\n", width);
-	printf("DWIDTH %d 0\n", pix_width);
+	printf("SWIDTH %ld 0\n", (long)width);
+	printf("DWIDTH %ld 0\n", (long)pix_width);
 	printf("BBX %d %d %d %d\n", bit_width, bit_height, off_horz, off_vert);
 	printf("BITMAP\n");
 
@@ -757,30 +762,22 @@ void sp_set_bitmap_bits(fix15 y, fix15 xbit1, fix15 xbit2)
 {
 	fix15 i;
 
-	if (xbit1 >= MAX_BITS)
+	if (xbit1 < 0 || xbit1 >= MAX_BITS)
 	{
-#if DEBUG
-		fprintf(stderr, "run wider than max bits -- truncated\n");
-#endif
-
+		fprintf(stderr, "char 0x%x (0x%x): bit1 %d wider than max bits %u -- truncated\n", char_index, char_id, xbit1, bit_width);
 		xbit1 = MAX_BITS - 1;
+		trunc = 1;
 	}
-	if (xbit2 > MAX_BITS)
+	if (xbit2 < 0 || xbit2 > MAX_BITS)
 	{
-
-#if DEBUG
-		fprintf(stderr, "run wider than max bits -- truncated\n");
-#endif
-
+		fprintf(stderr, "char 0x%x (0x%x): bit2 %d wider than max bits %u -- truncated\n", char_index, char_id, xbit2, bit_width);
 		xbit2 = MAX_BITS;
+		trunc = 1;
 	}
 
 	if (y >= bit_height)
 	{
-#if DEBUG
-		fprintf(stderr, "y value is larger than height 0x%x (0x%x) -- truncated\n", char_index, char_id);
-#endif
-
+		fprintf(stderr, "char 0x%x (0x%x): y value %d is larger than height %u -- truncated\n", char_index, char_id, y, bit_height);
 		trunc = 1;
 		return;
 	}

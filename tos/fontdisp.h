@@ -1,11 +1,11 @@
 /*
  * resource set indices for fontdisp
  *
- * created by ORCS 2.15
+ * created by ORCS 2.16
  */
 
 /*
- * Number of Strings:        91
+ * Number of Strings:        92
  * Number of Bitblks:        0
  * Number of Iconblks:       0
  * Number of Color Iconblks: 0
@@ -13,11 +13,11 @@
  * Number of Tedinfos:       13
  * Number of Free Strings:   10
  * Number of Free Images:    0
- * Number of Objects:        65
+ * Number of Objects:        66
  * Number of Trees:          4
  * Number of Userblks:       0
  * Number of Images:         0
- * Total file size:          3550
+ * Total file size:          3574
  */
 
 #undef RSC_NAME
@@ -35,7 +35,7 @@
 # define RSC_STATIC_FILE 0
 #endif
 #if !RSC_STATIC_FILE
-#define NUM_STRINGS 91
+#define NUM_STRINGS 92
 #define NUM_FRSTR 10
 #define NUM_UD 0
 #define NUM_IMAGES 0
@@ -44,7 +44,7 @@
 #define NUM_IB 0
 #define NUM_CIB 0
 #define NUM_TI 13
-#define NUM_OBS 65
+#define NUM_OBS 66
 #define NUM_TREE 4
 #endif
 
@@ -81,8 +81,9 @@
 #define PANEL                              2 /* unknown form */
 
 #define ABOUT_DIALOG                       3 /* form/dialog */
-#define ABOUT_VERSION                      4 /* STRING in tree ABOUT_DIALOG */
+#define ABOUT_VERSION_LABEL                4 /* STRING in tree ABOUT_DIALOG */
 #define ABOUT_DATE                         5 /* STRING in tree ABOUT_DIALOG */
+#define ABOUT_VERSION                      7 /* STRING in tree ABOUT_DIALOG */
 
 #define AL_NOWINDOW                        0 /* Alert string */
 /* [3][Cannot create window][Abort] */

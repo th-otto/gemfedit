@@ -34,6 +34,7 @@ spdview.c
 ..\speedo\bics2uni.c
 
 pcgemlib.lib
+pcextlib.lib
 pcfltlib.lib
 pcstdlib.lib
 pctoslib.lib

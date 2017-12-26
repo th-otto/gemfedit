@@ -523,9 +523,10 @@ static boolean sp_make_simp_char(ufix8 * pointer,	/* Pointer to first byte of po
 
 #if INCL_SQUEEZING
 	sp_globals.squeezing_compound = FALSE;
-	if ((sp_globals.pspecs->flags & SQUEEZE_LEFT) ||
-		(sp_globals.pspecs->flags & SQUEEZE_RIGHT) ||
-		(sp_globals.pspecs->flags & SQUEEZE_TOP) || (sp_globals.pspecs->flags & SQUEEZE_BOTTOM))
+	if ((sp_globals.specs.flags & SQUEEZE_LEFT) ||
+		(sp_globals.specs.flags & SQUEEZE_RIGHT) ||
+		(sp_globals.specs.flags & SQUEEZE_TOP) ||
+		(sp_globals.specs.flags & SQUEEZE_BOTTOM))
 	{
 		/* get the bounding box data before processing the character */
 		save_pointer = pointer;
@@ -711,8 +712,8 @@ static ufix8 *sp_get_char_org(ufix16 char_index,	/* Index of character to be acc
 	buff_t char_data;					/* Buffer descriptor requested */
 	ufix8 *pointer;						/* Pointer into character directory */
 	ufix8 format;						/* Character directory format byte */
-	fix31 char_offset;					/* Offset of char data from start of font file */
-	fix31 next_char_offset;				/* Offset of char data from start of font file */
+	long char_offset;					/* Offset of char data from start of font file */
+	long next_char_offset;				/* Offset of char data from start of font file */
 	fix15 no_bytes;						/* Number of bytes required for char data */
 
 	if (top_level)						/* Not element of compound char? */
@@ -735,8 +736,8 @@ static ufix8 *sp_get_char_org(ufix16 char_index,	/* Index of character to be acc
 		next_char_offset = sp_read_long(pointer + 3);	/* Read offset to next char */
 	} else
 	{
-		char_offset = (fix31) (0xffff & NEXT_WORD(pointer));	/* Read file offset to char data */
-		next_char_offset = (fix31) (0xffff & NEXT_WORD(pointer));	/* Read offset to next char */
+		char_offset = 0xffffL & NEXT_WORD(pointer);	/* Read file offset to char data */
+		next_char_offset = 0xffffL & NEXT_WORD(pointer);	/* Read offset to next char */
 	}
 
 	no_bytes = next_char_offset - char_offset;
@@ -744,7 +745,7 @@ static ufix8 *sp_get_char_org(ufix16 char_index,	/* Index of character to be acc
 		return NULL;
 
 	if (next_char_offset <= sp_globals.font_buff_size)	/* Character data already in font buffer? */
-		return sp_globals.pfont->org + char_offset;	/* Return pointer into font buffer */
+		return sp_globals.font.org + char_offset;	/* Return pointer into font buffer */
 
 	/* Request char data load */
 	if (sp_load_char_data(char_offset, no_bytes, sp_globals.cb_offset, &char_data) == FALSE ||
@@ -773,8 +774,8 @@ static ufix8 *sp_get_char_org(ufix16 char_index,	/* Index of character to be acc
 {
 	ufix8 *pointer;						/* Pointer into character directory */
 	ufix8 format;						/* Character directory format byte */
-	fix31 char_offset;					/* Offset of char data from start of font file */
-	fix31 next_char_offset;				/* Offset of char data from start of font file */
+	long char_offset;					/* Offset of char data from start of font file */
+	long next_char_offset;				/* Offset of char data from start of font file */
 	fix15 no_bytes;						/* Number of bytes required for char data */
 
 	if (top_level)						/* Not element of compound char? */
@@ -796,15 +797,15 @@ static ufix8 *sp_get_char_org(ufix16 char_index,	/* Index of character to be acc
 		next_char_offset = sp_read_long(pointer + 3);	/* Read offset to next char */
 	} else
 	{
-		char_offset = (fix31) (0xffff & NEXT_WORD(pointer));	/* Read file offset to char data */
-		next_char_offset = (fix31) (0xffff & NEXT_WORD(pointer));	/* Read offset to next char */
+		char_offset = 0xffffL & NEXT_WORD(pointer);	/* Read file offset to char data */
+		next_char_offset = 0xffffL & NEXT_WORD(pointer);	/* Read offset to next char */
 	}
 
 	no_bytes = next_char_offset - char_offset;
 	if (no_bytes == 0)					/* Character not in directory? */
 		return NULL;
 
-	return sp_globals.pfont->org + char_offset;	/* Return pointer into font buffer */
+	return sp_globals.font.org + char_offset;	/* Return pointer into font buffer */
 }
 #endif
 

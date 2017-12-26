@@ -224,7 +224,6 @@ typedef struct kern_tag {
 
 /* Specs structure for sp_set_specs/fw_set_specs */
 typedef struct specs_tag {
-	buff_t *pfont;              /* Pointer to font data                  */
 	fix31   xxmult;             /* Coeff of X orus to compute X pix      */
 	fix31   xymult;             /* Coeff of Y orus to compute X pix      */
 	fix31   xoffset;            /* Constant to compute X pix             */
@@ -413,9 +412,8 @@ typedef struct speedo_global_data {
 	ufix8    key8;              /* Decryption key 8 */
 
 	/* set_spcs.c data definitions */
-	buff_t   font;
-	buff_t *pfont; /* Pointer to font buffer structure */
-	fix31    font_buff_size;    /* Number of bytes loaded in font buffer */
+	buff_t   font;				/* font buffer structure */
+	long     font_buff_size;    /* Number of bytes loaded in font buffer */
 	ufix8 *pchar_dir; /* Pointer to character directory */
 	fix15    first_char_idx;    /* Index to first character in font */
 	fix15    no_chars_avail;    /* Total characters in font layout */
@@ -451,7 +449,6 @@ typedef struct speedo_global_data {
 	void    (*end_contour)(void); 
 	void    (*end_sub_char)(void);
 	boolean (*end_char)(void);    
-	specs_t *pspecs;            /* Pointer to specifications bundle */
 	specs_t specs;              /* copy specs onto stack */
 	ufix8 *font_org;            /* Pointer to start of font data */
 	ufix8 *hdr2_org;            /* Pointer to start of private header data */
@@ -743,7 +740,7 @@ const ufix8 *sp_get_key(const buff_t *font_buff);
 ufix16 sp_get_cust_no(const buff_t *font_buff);
 
 /* set_spcs.c functions */
-boolean sp_set_specs(specs_t *specsarg);
+boolean sp_set_specs(const specs_t *specsarg, const buff_t *font);
 void sp_type_tcb(tcb_t *ptcb);
 
 fix31 sp_read_long(ufix8 *pointer);
@@ -790,7 +787,7 @@ void sp_close_outline(void);
 
 #if INCL_LCD
 /* Load character data from font file */
-boolean sp_load_char_data(fix31 file_offset, fix15 no_bytes, fix15 cb_offset, buff_t *char_data);
+boolean sp_load_char_data(long file_offset, fix15 no_bytes, fix15 cb_offset, buff_t *char_data);
 #endif
 
 #if INCL_PLAID_OUT               /* Plaid data monitoring included? */

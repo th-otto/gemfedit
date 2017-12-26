@@ -166,8 +166,6 @@ void fw_set_specs(comp_char_desc *pspecs)
 	real res_ver;
 	fix15 mode;
 
-	specsarg.pfont = pspecs->pfont;
-
 	irot = floor(pspecs->rot_angle + 0.5);
 	iobl = floor(pspecs->obl_angle + 0.5);
 	if (iobl > 85)
@@ -352,7 +350,7 @@ void fw_set_specs(comp_char_desc *pspecs)
 
 	specsarg.flags = mode;
 
-	sp_set_specs(&specsarg);
+	sp_set_specs(&specsarg, pspecs->pfont);
 }
 
 bool fw_make_char(ufix16 char_index)
@@ -368,10 +366,10 @@ bool fw_make_char(ufix16 char_index)
  * This is a dummy function that assumes that the entire font has
  * been loaded.
  */
-boolean sp_load_char_data(fix31 file_offset, fix15 no_bytes, fix15 cb_offset, buff_t *char_data)
+boolean sp_load_char_data(long file_offset, fix15 no_bytes, fix15 cb_offset, buff_t *char_data)
 {
 #if DEBUG
-	printf("fw_load_char_data(%d, %d, %d)\n", file_offset, no_bytes, char_offset);
+	printf("fw_load_char_data(%ld, %d, %d)\n", file_offset, no_bytes, char_offset);
 #endif
 	char_data->org = pfont->org + file_offset;
 	char_data->no_bytes = no_bytes;

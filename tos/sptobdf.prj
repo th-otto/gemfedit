@@ -1,4 +1,4 @@
-sptobdf.prg
+sptobdf.ttp
 .C[-A-]		; no ANSI, because we need to use cdecl keyword
 .C[-P]		; use long calls
 .C[-M]		; no string merging

@@ -15,6 +15,7 @@ static _WORD gl_wchar, gl_hchar;
 #define hrelease_objs(a, b)
 #include "s_endian.h"
 #include "fonthdr.h"
+#include "version.h"
 
 #undef SWAP_W
 #undef SWAP_L
@@ -2576,17 +2577,32 @@ static void EnableObjState(OBJECT *tree, _WORD idx, _WORD state, _BOOL enable)
 
 /* -------------------------------------------------------------------------- */
 
+static _WORD do_dialog(_WORD num)
+{
+	OBJECT *tree = rs_tree(num);
+	GRECT gr;
+	_WORD ret;
+
+	form_center_grect(tree, &gr);
+	form_dial_grect(FMD_START, &gr, &gr);
+	objc_draw_grect(tree, ROOT, MAX_DEPTH, &gr);
+	ret = form_do(tree, ROOT);
+	ret &= 0x7fff;
+	tree[ret].ob_state &= ~OS_SELECTED;
+	form_dial_grect(FMD_FINISH, &gr, &gr);
+	return ret;
+}
+
+/* -------------------------------------------------------------------------- */
+
 static void font_info(void)
 {
 	FONT_HDR *hdr = &fonthdr;
 	OBJECT *tree = rs_tree(FONT_PARAMS);
-	GRECT gr;
 	_WORD ret;
 	
 	if (!is_font_loaded())
 		return;
-	form_center_grect(tree, &gr);
-	form_dial_grect(FMD_START, &gr, &gr);
 	
 	strcpy(tree[FONT_NAME].ob_spec.tedinfo->te_ptext, fontname);
 	sprintf(tree[FONT_ID].ob_spec.tedinfo->te_ptext, "%5d", hdr->font_id);
@@ -2607,12 +2623,7 @@ static void font_info(void)
 	EnableObjState(tree, FONT_MONOSPACED, OS_SELECTED, (hdr->flags & FONTF_MONOSPACED) != 0);
 	EnableObjState(tree, FONT_COMPRESSED, OS_SELECTED, (hdr->flags & FONTF_COMPRESSED) != 0);
 	
-	objc_draw_grect(tree, ROOT, MAX_DEPTH, &gr);
-	ret = form_do(tree, ROOT);
-	ret &= 0x7fff;
-	tree[ret].ob_state &= ~OS_SELECTED;
-	
-	form_dial_grect(FMD_FINISH, &gr, &gr);
+	ret = do_dialog(FONT_PARAMS);
 	
 	if (ret == FONT_OK)
 	{
@@ -2635,25 +2646,11 @@ static void font_info(void)
 
 /* -------------------------------------------------------------------------- */
 
-static void do_dialog(_WORD num)
-{
-	OBJECT *tree = rs_tree(num);
-	GRECT gr;
-	_WORD ret;
-
-	form_center_grect(tree, &gr);
-	form_dial_grect(FMD_START, &gr, &gr);
-	objc_draw_grect(tree, ROOT, MAX_DEPTH, &gr);
-	ret = form_do(tree, ROOT);
-	ret &= 0x7fff;
-	tree[ret].ob_state &= ~OS_SELECTED;
-	form_dial_grect(FMD_FINISH, &gr, &gr);
-}
-
-/* -------------------------------------------------------------------------- */
-
 static void do_about(void)
 {
+	OBJECT *tree = rs_tree(ABOUT_DIALOG);
+	tree[ABOUT_VERSION].ob_spec.free_string = PACKAGE_VERSION;
+	tree[ABOUT_DATE].ob_spec.free_string = PACKAGE_DATE;
 	do_dialog(ABOUT_DIALOG);
 }
 

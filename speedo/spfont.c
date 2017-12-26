@@ -263,8 +263,6 @@ sp_open_font(char *fontname,
 
 	/* set up specs */
 
-	specs.pfont = &spmf->font;
-
 	specs.xxmult = (int) (vals->pixel_matrix[0] * (double) (1L << 16));
 	specs.xymult = (int) (vals->pixel_matrix[2] * (double) (1L << 16));
 	specs.yxmult = (int) (vals->pixel_matrix[1] * (double) (1L << 16));
@@ -295,7 +293,7 @@ sp_open_font(char *fontname,
 	/* clobber global state to avoid wrecking future transformed fonts */
 	bzero((char *) &sp_globals, sizeof(sp_globals));
 
-	if (!sp_set_specs(&specs))
+	if (!sp_set_specs(&specs, &spmf->font))
 	{
 		sp_close_font(spf);
 		return BadFontName;

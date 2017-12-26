@@ -74,24 +74,24 @@ static boolean sp_setup_consts(fix15 xmin,	/* Minimum X ORU value in font */
 	fix15 xx = 0, yy = 0;				/* Bounding box corner that produces max pixel value */
 
 	/* Determine numerator and denominator of largest multiplier value */
-	mult = sp_globals.pspecs->xxmult >> 16;
+	mult = sp_globals.specs.xxmult >> 16;
 	if (mult < 0)
 		mult = -mult;
 	num = mult;
 
-	mult = sp_globals.pspecs->xymult >> 16;
+	mult = sp_globals.specs.xymult >> 16;
 	if (mult < 0)
 		mult = -mult;
 	if (mult > num)
 		num = mult;
 
-	mult = sp_globals.pspecs->yxmult >> 16;
+	mult = sp_globals.specs.yxmult >> 16;
 	if (mult < 0)
 		mult = -mult;
 	if (mult > num)
 		num = mult;
 
-	mult = sp_globals.pspecs->yymult >> 16;
+	mult = sp_globals.specs.yymult >> 16;
 	if (mult < 0)
 		mult = -mult;
 	if (mult > num)
@@ -140,16 +140,16 @@ static boolean sp_setup_consts(fix15 xmin,	/* Minimum X ORU value in font */
 	pix_max = (ufix32) (0xffff & sp_read_word_u(sp_globals.hdr2_org + FH_PIXMX));
 
 	num = 0;
-	xmult = ((sp_globals.pspecs->xxmult >> 16) + 1) >> 1;
-	ymult = ((sp_globals.pspecs->xymult >> 16) + 1) >> 1;
-	offset = ((sp_globals.pspecs->xoffset >> 16) + 1) >> 1;
+	xmult = ((sp_globals.specs.xxmult >> 16) + 1) >> 1;
+	ymult = ((sp_globals.specs.xymult >> 16) + 1) >> 1;
+	offset = ((sp_globals.specs.xoffset >> 16) + 1) >> 1;
 	for (i = 0; i < 8; i++)
 	{
 		if (i == 4)
 		{
-			xmult = ((sp_globals.pspecs->yxmult >> 16) + 1) >> 1;
-			ymult = ((sp_globals.pspecs->yymult >> 16) + 1) >> 1;
-			offset = ((sp_globals.pspecs->yoffset >> 16) + 1) >> 1;
+			xmult = ((sp_globals.specs.yxmult >> 16) + 1) >> 1;
+			ymult = ((sp_globals.specs.yymult >> 16) + 1) >> 1;
+			offset = ((sp_globals.specs.yoffset >> 16) + 1) >> 1;
 		}
 		x = (i & BIT1) ? xmin : xmax;
 		y = (i & BIT0) ? ymin : ymax;
@@ -244,12 +244,12 @@ static fix15 sp_setup_mult(fix31 input_mult)	/* Multiplier in input format */
 static void sp_setup_tcb(tcb_t * ptcb)	/* Pointer to transformation control bloxk */
 {
 
-	ptcb->xxmult = sp_setup_mult(sp_globals.pspecs->xxmult);
-	ptcb->xymult = sp_setup_mult(sp_globals.pspecs->xymult);
-	ptcb->xoffset = sp_setup_offset(sp_globals.pspecs->xoffset);
-	ptcb->yxmult = sp_setup_mult(sp_globals.pspecs->yxmult);
-	ptcb->yymult = sp_setup_mult(sp_globals.pspecs->yymult);
-	ptcb->yoffset = sp_setup_offset(sp_globals.pspecs->yoffset);
+	ptcb->xxmult = sp_setup_mult(sp_globals.specs.xxmult);
+	ptcb->xymult = sp_setup_mult(sp_globals.specs.xymult);
+	ptcb->xoffset = sp_setup_offset(sp_globals.specs.xoffset);
+	ptcb->yxmult = sp_setup_mult(sp_globals.specs.yxmult);
+	ptcb->yymult = sp_setup_mult(sp_globals.specs.yymult);
+	ptcb->yoffset = sp_setup_offset(sp_globals.specs.yoffset);
 
 	SHOW(ptcb->xxmult);
 	SHOW(ptcb->xymult);
@@ -265,7 +265,7 @@ static void sp_setup_tcb(tcb_t * ptcb)	/* Pointer to transformation control blox
 /*
  * Called by host software to set character generation specifications
  */
-boolean sp_set_specs(specs_t *specsarg)	/* Bundle of conversion specifications */
+boolean sp_set_specs(const specs_t *specsarg, const buff_t *font)	/* Bundle of conversion specifications */
 {
 	fix31 offcd;						/* Offset to start of character directory */
 	fix31 ofcns;						/* Offset to start of constraint data */
@@ -282,9 +282,7 @@ boolean sp_set_specs(specs_t *specsarg)	/* Bundle of conversion specifications *
 	sp_globals.specs_valid = FALSE;		/* Flag specs not valid */
 
 	sp_globals.specs = *specsarg;		/* copy specs structure into sp_globals */
-	sp_globals.pspecs = &sp_globals.specs;
-	sp_globals.font = *sp_globals.pspecs->pfont;
-	sp_globals.pfont = &sp_globals.font;
+	sp_globals.font = *font;
 	sp_globals.font_org = sp_globals.font.org;
 
 	if (sp_read_word_u(sp_globals.font_org + FH_FMVER + 4) != 0x0d0a)
@@ -298,7 +296,7 @@ boolean sp_set_specs(specs_t *specsarg)	/* Bundle of conversion specifications *
 		return FALSE;
 	}
 
-	if ((key = sp_get_key(specsarg->pfont)) != NULL)
+	if ((key = sp_get_key(font)) != NULL)
 		sp_set_key(key);
 
 	sp_globals.no_chars_avail = sp_read_word_u(sp_globals.font_org + FH_NCHRF);
@@ -344,7 +342,7 @@ boolean sp_set_specs(specs_t *specsarg)	/* Bundle of conversion specifications *
 	no_bytes_min = sp_read_long(sp_globals.hdr2_org + FH_NBYTE);	/* Offset to EOF + 1 */
 #endif
 
-	sp_globals.font_buff_size = sp_globals.pfont->no_bytes;
+	sp_globals.font_buff_size = sp_globals.font.no_bytes;
 	if (sp_globals.font_buff_size < no_bytes_min)	/* Minimum data not loaded? */
 	{
 		sp_report_error(1);				/* Insufficient font data loaded */
@@ -364,7 +362,7 @@ boolean sp_set_specs(specs_t *specsarg)	/* Bundle of conversion specifications *
 		sp_globals.constr.data_valid = FALSE;
 	}
 	sp_globals.constr.org = sp_globals.font_org + ofcns;
-	sp_globals.constr.active = ((sp_globals.pspecs->flags & CONSTR_OFF) == 0);
+	sp_globals.constr.active = ((sp_globals.specs.flags & CONSTR_OFF) == 0);
 #endif
 
 	/* Set up sliding point constants */
@@ -389,10 +387,10 @@ boolean sp_set_specs(specs_t *specsarg)	/* Bundle of conversion specifications *
 
 
 	/* Select output module */
-	sp_globals.output_mode = sp_globals.pspecs->flags & 0x0007;
+	sp_globals.output_mode = sp_globals.specs.flags & 0x0007;
 
 #if INCL_USEROUT
-	if (!sp_init_userout(sp_globals.pspecs))
+	if (!sp_init_userout(&sp_globals.specs))
 #endif
 
 		switch (sp_globals.output_mode)
@@ -458,16 +456,16 @@ boolean sp_set_specs(specs_t *specsarg)	/* Bundle of conversion specifications *
 			return FALSE;
 		}
 
-	if (!fn_init_out(sp_globals.pspecs))
+	if (!fn_init_out(&sp_globals.specs))
 	{
 		sp_report_error(5);				/* Requested specs not compatible with output module */
 		return FALSE;
 	}
 
 
-	sp_globals.curves_out = sp_globals.pspecs->flags & CURVES_OUT;
+	sp_globals.curves_out = sp_globals.specs.flags & CURVES_OUT;
 
-	if (sp_globals.pspecs->flags & BOGUS_MODE)	/* Linear transformation requested? */
+	if (sp_globals.specs.flags & BOGUS_MODE)	/* Linear transformation requested? */
 	{
 		sp_globals.tcb0.xtype = sp_globals.tcb0.ytype = 4;
 	} else								/* Intelligent transformation requested? */
@@ -479,10 +477,10 @@ boolean sp_set_specs(specs_t *specsarg)	/* Bundle of conversion specifications *
 #endif
 	}
 
-	if ((sp_globals.pspecs->flags & SQUEEZE_LEFT) ||
-		(sp_globals.pspecs->flags & SQUEEZE_RIGHT) ||
-		(sp_globals.pspecs->flags & SQUEEZE_TOP) ||
-		(sp_globals.pspecs->flags & SQUEEZE_BOTTOM))
+	if ((sp_globals.specs.flags & SQUEEZE_LEFT) ||
+		(sp_globals.specs.flags & SQUEEZE_RIGHT) ||
+		(sp_globals.specs.flags & SQUEEZE_TOP) ||
+		(sp_globals.specs.flags & SQUEEZE_BOTTOM))
 	{
 #if (INCL_SQUEEZING)
 #else
@@ -491,10 +489,10 @@ boolean sp_set_specs(specs_t *specsarg)	/* Bundle of conversion specifications *
 #endif
 	}
 
-	if ((sp_globals.pspecs->flags & CLIP_LEFT) ||
-		(sp_globals.pspecs->flags & CLIP_RIGHT) ||
-		(sp_globals.pspecs->flags & CLIP_TOP) ||
-		(sp_globals.pspecs->flags & CLIP_BOTTOM))
+	if ((sp_globals.specs.flags & CLIP_LEFT) ||
+		(sp_globals.specs.flags & CLIP_RIGHT) ||
+		(sp_globals.specs.flags & CLIP_TOP) ||
+		(sp_globals.specs.flags & CLIP_BOTTOM))
 	{
 #if (INCL_CLIPPING)
 #else
@@ -561,7 +559,7 @@ void sp_type_tcb(tcb_t * ptcb)	/* Pointer to transformation control bloxk */
 
 	ptcb->mirror = ((((fix31) xx_mult * (fix31) yy_mult) - ((fix31) xy_mult * (fix31) yx_mult)) < 0) ? -1 : 1;
 
-	if (sp_globals.pspecs->flags & BOGUS_MODE)	/* Linear transformation requested? */
+	if (sp_globals.specs.flags & BOGUS_MODE)	/* Linear transformation requested? */
 	{
 		ptcb->xtype = 4;
 		ptcb->ytype = 4;

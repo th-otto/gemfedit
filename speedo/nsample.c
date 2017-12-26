@@ -234,7 +234,6 @@ int main(int argc, char **argv)
 	no_layout_chars = read_2b(font_buffer + FH_NCHRL);
 
 	/* Set specifications for character to be generated */
-	specs.pfont = &font;				/* Pointer to Speedo outline structure */
 	specs.xxmult = 25L << 16;			/* Coeff of X to calculate X pixels */
 	specs.xymult = 0L << 16;			/* Coeff of Y to calculate X pixels */
 	specs.xoffset = 0L << 16;			/* Position of X origin */
@@ -245,7 +244,8 @@ int main(int argc, char **argv)
 	specs.out_info = NULL;
 
 
-	if (!sp_set_specs(&specs))			/* Set character generation specifications */
+	/* Set character generation specifications */
+	if (!sp_set_specs(&specs, &font))
 	{
 		printf("****** Cannot set requested specs\n");
 	} else
@@ -280,7 +280,7 @@ int main(int argc, char **argv)
  */
 #if INCL_LCD
 boolean sp_load_char_data(
-	fix31 file_offset,						/* Offset in bytes from the start of the font file */
+	long file_offset,						/* Offset in bytes from the start of the font file */
 	fix15 no_bytes,							/* Number of bytes to be loaded */
 	fix15 cb_offset,						/* Offset in bytes from start of char buffer */
 	buff_t *char_data)
@@ -288,7 +288,7 @@ boolean sp_load_char_data(
 	int bytes_read;
 
 #if DEBUG
-	printf("\nCharacter data(%d, %d, %d) requested\n", file_offset, no_bytes, cb_offset);
+	printf("\nCharacter data(%ld, %d, %d) requested\n", file_offset, no_bytes, cb_offset);
 #endif
 	if (fseek(fdescr, file_offset, SEEK_SET) != 0)
 	{
@@ -312,7 +312,7 @@ boolean sp_load_char_data(
 	printf("Character data loaded\n");
 #endif
 
-	char_data->org = (ufix8 *) char_buffer + cb_offset;
+	char_data->org = char_buffer + cb_offset;
 	char_data->no_bytes = no_bytes;
 	return TRUE;
 }

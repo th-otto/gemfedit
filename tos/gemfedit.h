@@ -1,11 +1,11 @@
 /*
  * resource set indices for gemfedit
  *
- * created by ORCS 2.15
+ * created by ORCS 2.16
  */
 
 /*
- * Number of Strings:        136
+ * Number of Strings:        137
  * Number of Bitblks:        0
  * Number of Iconblks:       0
  * Number of Color Iconblks: 0
@@ -13,11 +13,11 @@
  * Number of Tedinfos:       13
  * Number of Free Strings:   23
  * Number of Free Images:    0
- * Number of Objects:        100
+ * Number of Objects:        101
  * Number of Trees:          6
  * Number of Userblks:       0
  * Number of Images:         0
- * Total file size:          6010
+ * Total file size:          6036
  */
 
 #undef RSC_NAME
@@ -35,7 +35,7 @@
 # define RSC_STATIC_FILE 0
 #endif
 #if !RSC_STATIC_FILE
-#define NUM_STRINGS 136
+#define NUM_STRINGS 137
 #define NUM_FRSTR 23
 #define NUM_UD 0
 #define NUM_IMAGES 0
@@ -44,7 +44,7 @@
 #define NUM_IB 0
 #define NUM_CIB 0
 #define NUM_TI 13
-#define NUM_OBS 100
+#define NUM_OBS 101
 #define NUM_TREE 6
 #endif
 
@@ -101,8 +101,9 @@
 #define PANEL_LAST                        17 /* STRING in tree PANEL */
 
 #define ABOUT_DIALOG                       4 /* form/dialog */
-#define ABOUT_VERSION                      4 /* STRING in tree ABOUT_DIALOG */
+#define ABOUT_VERSION_LABEL                4 /* STRING in tree ABOUT_DIALOG */
 #define ABOUT_DATE                         5 /* STRING in tree ABOUT_DIALOG */
+#define ABOUT_VERSION                      7 /* STRING in tree ABOUT_DIALOG */
 
 #define HELP_DIALOG                        5 /* form/dialog */
 

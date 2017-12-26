@@ -891,3 +891,77 @@ const char *xbasename(const char *path)
 	return path;
 }
 
+/*** ---------------------------------------------------------------------- ***/
+
+#define CONTINUATION_CHAR                           \
+  if (((unsigned char)*p & 0xc0) != 0x80) /* 10xxxxxx */ \
+    goto error;                                     \
+  val <<= 6;                                        \
+  val |= ((unsigned char)*p) & 0x3f
+
+#define UNICODE_VALID(Char)                   \
+    ((Char) < 0x110000UL &&                     \
+     (((Char) & 0xFFFFF800UL) != 0xD800UL) &&     \
+     ((Char) < 0xFDD0UL || (Char) > 0xFDEFUL) &&  \
+     ((Char) & 0xFFFEUL) != 0xFFFEUL)
+
+const char *x_utf8_getchar(const char *p, wchar_t *ch)
+{
+	const char *last;
+
+	if ((unsigned char)*p < 0x80)
+	{
+		*ch = (unsigned char)*p;
+		return p + 1;
+	}
+	last = p;
+	if (((unsigned char)*p & 0xe0) == 0xc0)	/* 110xxxxx */
+	{
+		if (((unsigned char)*p & 0x1e) == 0)
+			goto error;
+		*ch = ((unsigned char)*p & 0x1f) << 6;
+		p++;
+		if (((unsigned char)*p & 0xc0) != 0x80)	/* 10xxxxxx */
+			goto error;
+		*ch |= ((unsigned char)*p) & 0x3f;
+	} else
+	{
+		uint32_t val = 0;
+		uint32_t min = 0;
+		
+		if (((unsigned char)*p & 0xf0) == 0xe0)	/* 1110xxxx */
+		{
+			min = (1 << 11);
+			val = (unsigned char)*p & 0x0f;
+			goto TWO_REMAINING;
+		} else if (((unsigned char)*p & 0xf8) == 0xf0)	/* 11110xxx */
+		{
+			min = ((uint32_t)1 << 16);
+			val = (unsigned char)*p & 0x07;
+		} else
+		{
+			goto error;
+		}
+		
+		p++;
+		CONTINUATION_CHAR;
+	  TWO_REMAINING:
+		p++;
+		CONTINUATION_CHAR;
+		p++;
+		CONTINUATION_CHAR;
+
+		if (val < min)
+			goto error;
+
+		if (!UNICODE_VALID(val))
+			goto error;
+		*ch = val;
+	}
+
+	return p + 1;
+
+  error:
+    *ch = 0xffff;
+	return last + 1;
+}

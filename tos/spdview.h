@@ -5,19 +5,19 @@
  */
 
 /*
- * Number of Strings:        91
+ * Number of Strings:        95
  * Number of Bitblks:        0
  * Number of Iconblks:       0
  * Number of Color Iconblks: 0
  * Number of Color Icons:    0
- * Number of Tedinfos:       13
+ * Number of Tedinfos:       11
  * Number of Free Strings:   10
  * Number of Free Images:    0
- * Number of Objects:        65
+ * Number of Objects:        74
  * Number of Trees:          4
  * Number of Userblks:       0
  * Number of Images:         0
- * Total file size:          3504
+ * Total file size:          4272
  */
 
 #undef RSC_NAME
@@ -35,7 +35,7 @@
 # define RSC_STATIC_FILE 0
 #endif
 #if !RSC_STATIC_FILE
-#define NUM_STRINGS 91
+#define NUM_STRINGS 95
 #define NUM_FRSTR 10
 #define NUM_UD 0
 #define NUM_IMAGES 0
@@ -43,8 +43,8 @@
 #define NUM_FRIMG 0
 #define NUM_IB 0
 #define NUM_CIB 0
-#define NUM_TI 13
-#define NUM_OBS 65
+#define NUM_TI 11
+#define NUM_OBS 74
 #define NUM_TREE 4
 #endif
 
@@ -53,36 +53,43 @@
 #define MAINMENU                           0 /* menu */
 #define TDESK                              3 /* TITLE in tree MAINMENU */
 #define TFILE                              4 /* TITLE in tree MAINMENU */
-#define ABOUT                              7 /* STRING in tree MAINMENU */
-#define FOPEN                             16 /* STRING in tree MAINMENU */
-#define FINFO                             17 /* STRING in tree MAINMENU */
-#define FQUIT                             19 /* STRING in tree MAINMENU */
+#define ABOUT                              8 /* STRING in tree MAINMENU */
+#define FOPEN                             17 /* STRING in tree MAINMENU */
+#define FINFO                             18 /* STRING in tree MAINMENU */
+#define FQUIT                             20 /* STRING in tree MAINMENU */
+#define POINTS_6                          22 /* STRING in tree MAINMENU */
+#define POINTS_8                          23 /* STRING in tree MAINMENU */
+#define POINTS_9                          24 /* STRING in tree MAINMENU */
+#define POINTS_10                         25 /* STRING in tree MAINMENU */
+#define POINTS_12                         26 /* STRING in tree MAINMENU */
+#define POINTS_14                         27 /* STRING in tree MAINMENU */
+#define POINTS_16                         28 /* STRING in tree MAINMENU */
+#define POINTS_18                         29 /* STRING in tree MAINMENU */
+#define POINTS_24                         30 /* STRING in tree MAINMENU */
+#define POINTS_36                         31 /* STRING in tree MAINMENU */
+#define POINTS_48                         32 /* STRING in tree MAINMENU */
+#define POINTS_64                         33 /* STRING in tree MAINMENU */
+#define POINTS_72                         34 /* STRING in tree MAINMENU */
 
 #define FONT_PARAMS                        1 /* form/dialog */
-#define FONT_NAME                          2 /* FTEXT in tree FONT_PARAMS */ /* max len 32 */
-#define FONT_ID                            3 /* FTEXT in tree FONT_PARAMS */ /* max len 5 */
-#define FONT_POINT                         4 /* FTEXT in tree FONT_PARAMS */ /* max len 5 */
-#define FONT_WIDTH                         5 /* FTEXT in tree FONT_PARAMS */ /* max len 3 */
-#define FONT_HEIGHT                        6 /* FTEXT in tree FONT_PARAMS */ /* max len 3 */
-#define FONT_TOP                           7 /* FTEXT in tree FONT_PARAMS */ /* max len 3 */
-#define FONT_ASCENT                        8 /* FTEXT in tree FONT_PARAMS */ /* max len 3 */
-#define FONT_SYSTEM                        9 /* BUTTON in tree FONT_PARAMS */
-#define FONT_HALF                         10 /* FTEXT in tree FONT_PARAMS */ /* max len 3 */
-#define FONT_HORTABLE                     11 /* BUTTON in tree FONT_PARAMS */
-#define FONT_DESCENT                      12 /* FTEXT in tree FONT_PARAMS */ /* max len 3 */
-#define FONT_BIGENDIAN                    13 /* BUTTON in tree FONT_PARAMS */
-#define FONT_BOTTOM                       14 /* FTEXT in tree FONT_PARAMS */ /* max len 3 */
-#define FONT_MONOSPACED                   15 /* BUTTON in tree FONT_PARAMS */
-#define FONT_COMPRESSED                   16 /* BUTTON in tree FONT_PARAMS */
-#define FONT_FIRST_ADE                    17 /* FTEXT in tree FONT_PARAMS */ /* max len 3 */
-#define FONT_LAST_ADE                     18 /* FTEXT in tree FONT_PARAMS */ /* max len 3 */
-#define FONT_OK                           19 /* BUTTON in tree FONT_PARAMS */
+#define FONT_NAME                          2 /* FTEXT in tree FONT_PARAMS */ /* max len 56 */
+#define FONT_SHORT_NAME                    3 /* FTEXT in tree FONT_PARAMS */ /* max len 56 */
+#define FONT_FACE_NAME                     4 /* FTEXT in tree FONT_PARAMS */ /* max len 56 */
+#define FONT_ID                            5 /* FTEXT in tree FONT_PARAMS */ /* max len 5 */
+#define FONT_OK                            6 /* BUTTON in tree FONT_PARAMS */
+#define FONT_FORM                          7 /* FTEXT in tree FONT_PARAMS */ /* max len 56 */
+#define FONT_DATE                          8 /* FTEXT in tree FONT_PARAMS */ /* max len 56 */
+#define FONT_LAYOUT_NAME                   9 /* FTEXT in tree FONT_PARAMS */ /* max len 56 */
+#define FONT_CHARS_LAYOUT                 10 /* FTEXT in tree FONT_PARAMS */ /* max len 5 */
+#define FONT_CHARS_FONT                   11 /* FTEXT in tree FONT_PARAMS */ /* max len 5 */
+#define FONT_FIRST_INDEX                  12 /* FTEXT in tree FONT_PARAMS */ /* max len 5 */
 
 #define PANEL                              2 /* unknown form */
 
 #define ABOUT_DIALOG                       3 /* form/dialog */
-#define ABOUT_VERSION                      4 /* STRING in tree ABOUT_DIALOG */
-#define ABOUT_DATE                         5 /* STRING in tree ABOUT_DIALOG */
+#define ABOUT_VERSION_LABEL                4 /* STRING in tree ABOUT_DIALOG */
+#define ABOUT_VERSION                      5 /* STRING in tree ABOUT_DIALOG */
+#define ABOUT_DATE                         6 /* STRING in tree ABOUT_DIALOG */
 
 #define AL_NOWINDOW                        0 /* Alert string */
 /* [3][Cannot create window][Abort] */

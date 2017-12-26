@@ -198,9 +198,9 @@ static void sp_calculate_x_pix(ufix8 start_edge, ufix8 end_edge,
 #if INCL_ISW
 	if (!sp_globals.import_setwidth_act)	/* only check left edge if not isw only */
 #endif
-		if ((sp_globals.pspecs->flags & SQUEEZE_LEFT) && (sp_plaid.pix[end_edge] < 0))
+		if ((sp_globals.specs.flags & SQUEEZE_LEFT) && (sp_plaid.pix[end_edge] < 0))
 			sp_plaid.pix[end_edge] = 0;
-	if ((sp_globals.pspecs->flags & SQUEEZE_RIGHT) && (sp_plaid.pix[end_edge] > setwidth_pix))
+	if ((sp_globals.specs.flags & SQUEEZE_RIGHT) && (sp_plaid.pix[end_edge] > setwidth_pix))
 		sp_plaid.pix[end_edge] = setwidth_pix;
 
 }
@@ -525,16 +525,16 @@ static ufix8 *sp_setup_pix_table(ufix8 * pointer,	/* Pointer to first byte in co
 #if INCL_SQUEEZING
 					if (i == 0)			/* in the x direction */
 					{					/* brute force squeeze */
-						if ((sp_globals.pspecs->flags & SQUEEZE_LEFT) && (sp_plaid.pix[end_edge] < 0))
+						if ((sp_globals.specs.flags & SQUEEZE_LEFT) && (sp_plaid.pix[end_edge] < 0))
 							sp_plaid.pix[end_edge] = 0;
-						if ((sp_globals.pspecs->flags & SQUEEZE_RIGHT) && (sp_plaid.pix[end_edge] > setwidth_pix))
+						if ((sp_globals.specs.flags & SQUEEZE_RIGHT) && (sp_plaid.pix[end_edge] > setwidth_pix))
 							sp_plaid.pix[end_edge] = setwidth_pix;
 					}
 					if (i == 1)			/* in the y direction */
 					{					/* brute force squeeze */
-						if ((sp_globals.pspecs->flags & SQUEEZE_TOP) && (sp_plaid.pix[end_edge] > em_top_pix))
+						if ((sp_globals.specs.flags & SQUEEZE_TOP) && (sp_plaid.pix[end_edge] > em_top_pix))
 							sp_plaid.pix[end_edge] = em_top_pix;
-						if ((sp_globals.pspecs->flags & SQUEEZE_BOTTOM) && (sp_plaid.pix[end_edge] < em_bot_pix))
+						if ((sp_globals.specs.flags & SQUEEZE_BOTTOM) && (sp_plaid.pix[end_edge] < em_bot_pix))
 							sp_plaid.pix[end_edge] = em_bot_pix;
 					}
 #endif
@@ -972,9 +972,9 @@ static void sp_calculate_y_pix(ufix8 start_edge, ufix8 end_edge,
 	sp_plaid.pix[end_edge] = sp_plaid.pix[start_edge] + zone_pix;	/* Insert end pixels */
 
 	/* make sure it is in the EM !*/
-	if ((sp_globals.pspecs->flags & SQUEEZE_TOP) && (sp_plaid.pix[end_edge] > em_top_pix))
+	if ((sp_globals.specs.flags & SQUEEZE_TOP) && (sp_plaid.pix[end_edge] > em_top_pix))
 		sp_plaid.pix[end_edge] = em_top_pix;
-	if ((sp_globals.pspecs->flags & SQUEEZE_BOTTOM) && (sp_plaid.pix[end_edge] < em_bot_pix))
+	if ((sp_globals.specs.flags & SQUEEZE_BOTTOM) && (sp_plaid.pix[end_edge] < em_bot_pix))
 		sp_plaid.pix[end_edge] = em_bot_pix;
 }
 
@@ -1001,8 +1001,8 @@ boolean sp_calculate_x_scale(fix31 *x_factor, fix31 *x_offset, fix15 no_X_ctrl_z
 
 
 	/* set up some flags and common calculations */
-	squeeze_left = (sp_globals.pspecs->flags & SQUEEZE_LEFT) ? TRUE : FALSE;
-	squeeze_right = (sp_globals.pspecs->flags & SQUEEZE_RIGHT) ? TRUE : FALSE;
+	squeeze_left = (sp_globals.specs.flags & SQUEEZE_LEFT) ? TRUE : FALSE;
+	squeeze_right = (sp_globals.specs.flags & SQUEEZE_RIGHT) ? TRUE : FALSE;
 	bbox_xmin = sp_globals.bbox_xmin_orus;
 	bbox_xmax = sp_globals.bbox_xmax_orus;
 	set_width = sp_globals.setwidth_orus;
@@ -1132,8 +1132,8 @@ boolean sp_calculate_y_scale(fix31 * top_scale, fix31 * bottom_scale, fix15 firs
 	fix15 i;
 
 	/* set up some flags and common calculations */
-	squeeze_top = (sp_globals.pspecs->flags & SQUEEZE_TOP) ? TRUE : FALSE;
-	squeeze_bottom = (sp_globals.pspecs->flags & SQUEEZE_BOTTOM) ? TRUE : FALSE;
+	squeeze_top = (sp_globals.specs.flags & SQUEEZE_TOP) ? TRUE : FALSE;
+	squeeze_bottom = (sp_globals.specs.flags & SQUEEZE_BOTTOM) ? TRUE : FALSE;
 	bbox_top = sp_globals.bbox_ymax_orus;
 	bbox_bottom = sp_globals.bbox_ymin_orus;
 	bbox_height = bbox_top - bbox_bottom;

@@ -13,6 +13,7 @@ static _WORD gl_wchar, gl_hchar;
 #include "fontdisp.rsh"
 #include "s_endian.h"
 #include "fonthdr.h"
+#include "version.h"
 
 #undef SWAP_W
 #undef SWAP_L
@@ -832,6 +833,8 @@ static void do_about(void)
 	GRECT gr;
 	_WORD ret;
 
+	tree[ABOUT_VERSION].ob_spec.free_string = PACKAGE_VERSION;
+	tree[ABOUT_DATE].ob_spec.free_string = PACKAGE_DATE;
 	form_center_grect(tree, &gr);
 	form_dial_grect(FMD_START, &gr, &gr);
 	objc_draw_grect(tree, ROOT, MAX_DEPTH, &gr);
