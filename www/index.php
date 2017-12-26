@@ -125,6 +125,7 @@ Pointsize:
 <option value="80">8</option>
 <option value="90">9</option>
 <option value="100">10</option>
+<option value="110">11</option>
 <option value="120" selected="selected">12</option>
 <option value="140">14</option>
 <option value="160">16</option>

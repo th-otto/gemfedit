@@ -279,7 +279,7 @@ sp_open_font(char *fontname,
 	   Don't know why this is so, but until we can fix it properly,
 	   return BadFontName for anything smaller than 4 pixels.
 	 */
-#define TINY_FACTOR (16 << 16)
+#define TINY_FACTOR ((fix31)16 << 16)
 	xx8 = specs.xxmult >> 8;
 	xy8 = specs.xymult >> 8;
 	yx8 = specs.yxmult >> 8;

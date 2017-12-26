@@ -57,6 +57,7 @@ static GString *errorout;
 static FILE *errorfile;
 static size_t body_start;
 static gboolean cgi_cached;
+static gboolean hidemenu;
 static gboolean debug;
 
 #define _(x) x
@@ -625,7 +626,8 @@ static gboolean html_out_javascript(GString *out)
 #if 0
 static char *html_cgi_params(void)
 {
-	return g_strdup_printf("%s&amp;quality=%d&amp;points=%ld",
+	return g_strdup_printf("%s%s&amp;quality=%d&amp;points=%ld",
+		hidemenu ? "&amp;hidemenu=1" : "",
 		cgi_cached ? "&amp;cached=1" : "",
 		quality,
 		point_size);
@@ -716,8 +718,15 @@ static void html_out_header(GString *out, const ufix8 *font, const char *title, 
 		g_string_append(out, "<p>\n");
 	} else if (font != NULL)
 	{
-		html_out_nav_toolbar(out, font);
-		g_string_append_printf(out, "<div class=\"%s\" style=\"position:absolute; top:32px;\">\n", html_node_style);
+		if (hidemenu)
+		{
+			g_string_append_printf(out, "<div class=\"%s\">\n", html_node_style);
+		} else
+		{
+			html_out_nav_toolbar(out, font);
+			g_string_append_printf(out, "<div class=\"%s\" style=\"position:absolute; top:32px;\">\n", html_node_style);
+			body_start = out->len;
+		}
 	} else
 	{
 		g_string_append_printf(out, "<div class=\"%s\">\n", html_node_style);
@@ -725,68 +734,71 @@ static void html_out_header(GString *out, const ufix8 *font, const char *title, 
 	
 	if (font != NULL)
 	{
-		/*
-		 * this element is displayed for "Info"
-		 */
-		g_string_append_printf(out, "<span class=\"%s\">", html_dropdown_style);
-		g_string_append_printf(out, "<span class=\"%s\" id=\"%s_content\">\n", html_dropdown_info_style, html_spd_info_id);
-		
-		g_string_append_printf(out, "Font size: %ld<br />\n", (long)read_4b(font + FH_FNTSZ));
-		g_string_append_printf(out, "Minimum font buffer size: %ld<br />\n", (long)read_4b(font + FH_FBFSZ));
-		g_string_append_printf(out, "Minimum character buffer size: %u<br />\n", read_2b(font + FH_CBFSZ));
-		g_string_append_printf(out, "Header size: %u<br />\n", read_2b(font + FH_HEDSZ));
-		g_string_append_printf(out, "Font ID: %u<br />\n", read_2b(font + FH_FNTID));
-		g_string_append_printf(out, "Font version number: %u<br />\n", read_2b(font + FH_SFVNR));
-		str = html_quote_name((const char *)font + FH_FNTNM, QUOTE_UNICODE, 70);
-		g_string_append_printf(out, "Font full name: %s<br />\n", str);
-		g_free(str);
-		str = html_quote_name((const char *)font + FH_SFNTN, QUOTE_UNICODE, 32);
-		g_string_append_printf(out, "Short font name: %s<br />\n", str);
-		g_free(str);
-		str = html_quote_name((const char *)font + FH_SFACN, QUOTE_UNICODE, 16);
-		g_string_append_printf(out, "Short face name: %s<br />\n", str);
-		g_free(str);
-		str = html_quote_name((const char *)font + FH_FNTFM, QUOTE_UNICODE, 14);
-		g_string_append_printf(out, "Font form: %s<br />\n", str);
-		g_free(str);
-		str = html_quote_name((const char *)font + FH_MDATE, QUOTE_UNICODE, 10);
-		g_string_append_printf(out, "Manufacturing date: %s<br />\n", str);
-		g_free(str);
-		str = html_quote_name((const char *)font + FH_LAYNM, QUOTE_UNICODE, 70);
-		g_string_append_printf(out, "Layout name: %s<br />\n", str);
-		g_free(str);
-		g_string_append_printf(out, "Number of chars in layout: %u<br />\n", read_2b(font + FH_NCHRL));
-		g_string_append_printf(out, "Total Number of chars in font: %u<br />\n", read_2b(font + FH_NCHRF));
-		g_string_append_printf(out, "Index of first character: %u<br />\n", read_2b(font + FH_FCHRF));
-		g_string_append_printf(out, "Number of Kerning Tracks: %u<br />\n", read_2b(font + FH_NKTKS));
-		g_string_append_printf(out, "Number of Kerning Pairs: %u<br />\n", read_2b(font + FH_NKPRS));
-		g_string_append_printf(out, "Flags: 0x%x<br />\n", read_1b(font + FH_FLAGS));
-		g_string_append_printf(out, "Classification Flags: 0x%x<br />\n", read_1b(font + FH_CLFGS));
-		g_string_append_printf(out, "Family Classification: 0x%x<br />\n", read_1b(font + FH_FAMCL));
-		g_string_append_printf(out, "Font form classification: 0x%x<br />\n", read_1b(font + FH_FRMCL));
-		g_string_append_printf(out, "Italic angle: %d<br />\n", read_2b(font + FH_ITANG));
-		g_string_append_printf(out, "Number of ORUs per em: %d<br />\n", read_2b(font + FH_ORUPM));
-		g_string_append_printf(out, "Width of Wordspace: %d<br />\n", read_2b(font + FH_WDWTH));
-		g_string_append_printf(out, "Width of Emspace: %d<br />\n", read_2b(font + FH_EMWTH));
-		g_string_append_printf(out, "Width of Enspace: %d<br />\n", read_2b(font + FH_ENWTH));
-		g_string_append_printf(out, "Width of Thinspace: %d<br />\n", read_2b(font + FH_TNWTH));
-		g_string_append_printf(out, "Width of Figspace: %d<br />\n", read_2b(font + FH_FGWTH));
-		g_string_append_printf(out, "Font-wide bounding box: %d %d %d %d<br />\n", read_2b(font + FH_FXMIN), read_2b(font + FH_FYMIN), read_2b(font + FH_FXMAX), read_2b(font + FH_FYMAX));
-		g_string_append_printf(out, "Underline position: %d<br />\n", read_2b(font + FH_ULPOS));
-		g_string_append_printf(out, "Underline thickness: %d<br />\n", read_2b(font + FH_ULTHK));
-		g_string_append_printf(out, "Small caps: %d<br />\n", read_2b(font + FH_SMCTR));
-		g_string_append_printf(out, "Display Superiors: %d %7.2f %7.2f<br />\n", read_2b(font + FH_DPSTR), (real) read_2b(font + FH_DPSTR + 2) / 4096.0, (real) read_2b(font + FH_DPSTR + 4) / 4096.0);
-		g_string_append_printf(out, "Footnote Superiors: %d %7.2f %7.2f<br />\n", read_2b(font + FH_FNSTR), (real) read_2b(font + FH_FNSTR + 2) / 4096.0, (real) read_2b(font + FH_FNSTR + 4) / 4096.0);
-		g_string_append_printf(out, "Alpha Superiors: %d %7.2f %7.2f<br />\n", read_2b(font + FH_ALSTR), (real) read_2b(font + FH_ALSTR + 2) / 4096.0, (real) read_2b(font + FH_ALSTR + 4) / 4096.0);
-		g_string_append_printf(out, "Chemical Inferiors: %d %7.2f %7.2f<br />\n", read_2b(font + FH_CMITR), (real) read_2b(font + FH_CMITR + 2) / 4096.0, (real) read_2b(font + FH_CMITR + 4) / 4096.0);
-		g_string_append_printf(out, "Small Numerators: %d %7.2f %7.2f<br />\n", read_2b(font + FH_SNMTR), (real) read_2b(font + FH_SNMTR + 2) / 4096.0, (real) read_2b(font + FH_SNMTR + 4) / 4096.0);
-		g_string_append_printf(out, "Small Denominators: %d %7.2f %7.2f<br />\n", read_2b(font + FH_SDNTR), (real) read_2b(font + FH_SDNTR + 2) / 4096.0, (real) read_2b(font + FH_SDNTR + 4) / 4096.0);
-		g_string_append_printf(out, "Medium Numerators: %d %7.2f %7.2f<br />\n", read_2b(font + FH_MNMTR), (real) read_2b(font + FH_MNMTR + 2) / 4096.0, (real) read_2b(font + FH_MNMTR + 4) / 4096.0);
-		g_string_append_printf(out, "Medium Denominators: %d %7.2f %7.2f<br />\n", read_2b(font + FH_MDNTR), (real) read_2b(font + FH_MDNTR + 2) / 4096.0, (real) read_2b(font + FH_MDNTR + 4) / 4096.0);
-		g_string_append_printf(out, "Large Numerators: %d %7.2f %7.2f<br />\n", read_2b(font + FH_LNMTR), (real) read_2b(font + FH_LNMTR + 2) / 4096.0, (real) read_2b(font + FH_LNMTR + 4) / 4096.0);
-		g_string_append_printf(out, "Large Denominators: %d %7.2f %7.2f<br />\n", read_2b(font + FH_LDNTR), (real) read_2b(font + FH_LDNTR + 2) / 4096.0, (real) read_2b(font + FH_LDNTR + 4) / 4096.0);
-
-		g_string_append(out, "</span></span>\n");
+		if (!hidemenu)
+		{
+			/*
+			 * this element is displayed for "Info"
+			 */
+			g_string_append_printf(out, "<span class=\"%s\">", html_dropdown_style);
+			g_string_append_printf(out, "<span class=\"%s\" id=\"%s_content\">\n", html_dropdown_info_style, html_spd_info_id);
+			
+			g_string_append_printf(out, "Font size: %ld<br />\n", (long)read_4b(font + FH_FNTSZ));
+			g_string_append_printf(out, "Minimum font buffer size: %ld<br />\n", (long)read_4b(font + FH_FBFSZ));
+			g_string_append_printf(out, "Minimum character buffer size: %u<br />\n", read_2b(font + FH_CBFSZ));
+			g_string_append_printf(out, "Header size: %u<br />\n", read_2b(font + FH_HEDSZ));
+			g_string_append_printf(out, "Font ID: %u<br />\n", read_2b(font + FH_FNTID));
+			g_string_append_printf(out, "Font version number: %u<br />\n", read_2b(font + FH_SFVNR));
+			str = html_quote_name((const char *)font + FH_FNTNM, QUOTE_UNICODE, 70);
+			g_string_append_printf(out, "Font full name: %s<br />\n", str);
+			g_free(str);
+			str = html_quote_name((const char *)font + FH_SFNTN, QUOTE_UNICODE, 32);
+			g_string_append_printf(out, "Short font name: %s<br />\n", str);
+			g_free(str);
+			str = html_quote_name((const char *)font + FH_SFACN, QUOTE_UNICODE, 16);
+			g_string_append_printf(out, "Short face name: %s<br />\n", str);
+			g_free(str);
+			str = html_quote_name((const char *)font + FH_FNTFM, QUOTE_UNICODE, 14);
+			g_string_append_printf(out, "Font form: %s<br />\n", str);
+			g_free(str);
+			str = html_quote_name((const char *)font + FH_MDATE, QUOTE_UNICODE, 10);
+			g_string_append_printf(out, "Manufacturing date: %s<br />\n", str);
+			g_free(str);
+			str = html_quote_name((const char *)font + FH_LAYNM, QUOTE_UNICODE, 70);
+			g_string_append_printf(out, "Layout name: %s<br />\n", str);
+			g_free(str);
+			g_string_append_printf(out, "Number of chars in layout: %u<br />\n", read_2b(font + FH_NCHRL));
+			g_string_append_printf(out, "Total Number of chars in font: %u<br />\n", read_2b(font + FH_NCHRF));
+			g_string_append_printf(out, "Index of first character: %u<br />\n", read_2b(font + FH_FCHRF));
+			g_string_append_printf(out, "Number of Kerning Tracks: %u<br />\n", read_2b(font + FH_NKTKS));
+			g_string_append_printf(out, "Number of Kerning Pairs: %u<br />\n", read_2b(font + FH_NKPRS));
+			g_string_append_printf(out, "Flags: 0x%x<br />\n", read_1b(font + FH_FLAGS));
+			g_string_append_printf(out, "Classification Flags: 0x%x<br />\n", read_1b(font + FH_CLFGS));
+			g_string_append_printf(out, "Family Classification: 0x%x<br />\n", read_1b(font + FH_FAMCL));
+			g_string_append_printf(out, "Font form classification: 0x%x<br />\n", read_1b(font + FH_FRMCL));
+			g_string_append_printf(out, "Italic angle: %d<br />\n", read_2b(font + FH_ITANG));
+			g_string_append_printf(out, "Number of ORUs per em: %d<br />\n", read_2b(font + FH_ORUPM));
+			g_string_append_printf(out, "Width of Wordspace: %d<br />\n", read_2b(font + FH_WDWTH));
+			g_string_append_printf(out, "Width of Emspace: %d<br />\n", read_2b(font + FH_EMWTH));
+			g_string_append_printf(out, "Width of Enspace: %d<br />\n", read_2b(font + FH_ENWTH));
+			g_string_append_printf(out, "Width of Thinspace: %d<br />\n", read_2b(font + FH_TNWTH));
+			g_string_append_printf(out, "Width of Figspace: %d<br />\n", read_2b(font + FH_FGWTH));
+			g_string_append_printf(out, "Font-wide bounding box: %d %d %d %d<br />\n", read_2b(font + FH_FXMIN), read_2b(font + FH_FYMIN), read_2b(font + FH_FXMAX), read_2b(font + FH_FYMAX));
+			g_string_append_printf(out, "Underline position: %d<br />\n", read_2b(font + FH_ULPOS));
+			g_string_append_printf(out, "Underline thickness: %d<br />\n", read_2b(font + FH_ULTHK));
+			g_string_append_printf(out, "Small caps: %d<br />\n", read_2b(font + FH_SMCTR));
+			g_string_append_printf(out, "Display Superiors: %d %7.2f %7.2f<br />\n", read_2b(font + FH_DPSTR), (real) read_2b(font + FH_DPSTR + 2) / 4096.0, (real) read_2b(font + FH_DPSTR + 4) / 4096.0);
+			g_string_append_printf(out, "Footnote Superiors: %d %7.2f %7.2f<br />\n", read_2b(font + FH_FNSTR), (real) read_2b(font + FH_FNSTR + 2) / 4096.0, (real) read_2b(font + FH_FNSTR + 4) / 4096.0);
+			g_string_append_printf(out, "Alpha Superiors: %d %7.2f %7.2f<br />\n", read_2b(font + FH_ALSTR), (real) read_2b(font + FH_ALSTR + 2) / 4096.0, (real) read_2b(font + FH_ALSTR + 4) / 4096.0);
+			g_string_append_printf(out, "Chemical Inferiors: %d %7.2f %7.2f<br />\n", read_2b(font + FH_CMITR), (real) read_2b(font + FH_CMITR + 2) / 4096.0, (real) read_2b(font + FH_CMITR + 4) / 4096.0);
+			g_string_append_printf(out, "Small Numerators: %d %7.2f %7.2f<br />\n", read_2b(font + FH_SNMTR), (real) read_2b(font + FH_SNMTR + 2) / 4096.0, (real) read_2b(font + FH_SNMTR + 4) / 4096.0);
+			g_string_append_printf(out, "Small Denominators: %d %7.2f %7.2f<br />\n", read_2b(font + FH_SDNTR), (real) read_2b(font + FH_SDNTR + 2) / 4096.0, (real) read_2b(font + FH_SDNTR + 4) / 4096.0);
+			g_string_append_printf(out, "Medium Numerators: %d %7.2f %7.2f<br />\n", read_2b(font + FH_MNMTR), (real) read_2b(font + FH_MNMTR + 2) / 4096.0, (real) read_2b(font + FH_MNMTR + 4) / 4096.0);
+			g_string_append_printf(out, "Medium Denominators: %d %7.2f %7.2f<br />\n", read_2b(font + FH_MDNTR), (real) read_2b(font + FH_MDNTR + 2) / 4096.0, (real) read_2b(font + FH_MDNTR + 4) / 4096.0);
+			g_string_append_printf(out, "Large Numerators: %d %7.2f %7.2f<br />\n", read_2b(font + FH_LNMTR), (real) read_2b(font + FH_LNMTR + 2) / 4096.0, (real) read_2b(font + FH_LNMTR + 4) / 4096.0);
+			g_string_append_printf(out, "Large Denominators: %d %7.2f %7.2f<br />\n", read_2b(font + FH_LDNTR), (real) read_2b(font + FH_LDNTR + 2) / 4096.0, (real) read_2b(font + FH_LDNTR + 4) / 4096.0);
+	
+			g_string_append(out, "</span></span>\n");
+		}
 	}
 }
 
@@ -860,6 +872,10 @@ void sp_open_bitmap(fix31 xorg, fix31 yorg, fix15 xsize, fix15 ysize)
 	width = (pix_width * 7200L) / (point_size * y_res);
 
 	sp_get_char_bbox(char_index, &bb);
+	bb.xmin >>= 16;
+	bb.ymin >>= 16;
+	bb.xmax >>= 16;
+	bb.ymax >>= 16;
 
 #if DEBUG
 	{
@@ -869,16 +885,16 @@ void sp_open_bitmap(fix31 xorg, fix31 yorg, fix15 xsize, fix15 ysize)
 		off_horz = (fix15) ((xorg + 32768L) >> 16);
 		off_vert = (fix15) ((yorg + 32768L) >> 16);
 
-		if (((bb.xmax - bb.xmin) >> 16) != bit_width)
+		if (((bb.xmax - bb.xmin)) != bit_width)
 			g_string_append_printf(errorout, "char 0x%x (0x%x): bbox & width mismatch (%ld vs %d)\n",
-					char_index, char_id, (unsigned long)(bb.xmax - bb.xmin) >> 16, bit_width);
-		if (((bb.ymax - bb.ymin) >> 16) != bit_height)
+					char_index, char_id, (unsigned long)(bb.xmax - bb.xmin), bit_width);
+		if (((bb.ymax - bb.ymin)) != bit_height)
 			g_string_append_printf(errorout, "char 0x%x (0x%x): bbox & height mismatch (%ld vs %d)\n",
-					char_index, char_id, (unsigned long)(bb.ymax - bb.ymin) >> 16, bit_height);
-		if ((bb.xmin >> 16) != off_horz)
-			g_string_append_printf(errorout, "char 0x%x (0x%x): x min mismatch (%ld vs %d)\n", char_index, char_id, (unsigned long)bb.xmin >> 16, off_horz);
-		if ((bb.ymin >> 16) != off_vert)
-			g_string_append_printf(errorout, "char 0x%x (0x%x): y min mismatch (%ld vs %d)\n", char_index, char_id, (unsigned long)bb.ymin >> 16, off_vert);
+					char_index, char_id, (unsigned long)(bb.ymax - bb.ymin), bit_height);
+		if ((bb.xmin) != off_horz)
+			g_string_append_printf(errorout, "char 0x%x (0x%x): x min mismatch (%ld vs %d)\n", char_index, char_id, (unsigned long)bb.xmin, off_horz);
+		if ((bb.ymin) != off_vert)
+			g_string_append_printf(errorout, "char 0x%x (0x%x): y min mismatch (%ld vs %d)\n", char_index, char_id, (unsigned long)bb.ymin, off_vert);
 	}
 #endif
 
@@ -1266,7 +1282,7 @@ static gboolean gen_speedo_font(const char *filename, GString *body)
 		{
 			char_index = i + first_char_index;
 			char_id = sp_get_char_id(char_index);
-			if (char_id != 0 && char_id != 0xffff && char_id >= num_ids)
+			if (char_id != SP_UNDEFINED && char_id != UNDEFINED && char_id >= num_ids)
 				num_ids = char_id + 1;
 		}
 		
@@ -1290,7 +1306,7 @@ static gboolean gen_speedo_font(const char *filename, GString *body)
 		for (i = 0; i < num_ids; i++)
 		{
 			infos[i].char_index = 0;
-			infos[i].char_id = 0xffff;
+			infos[i].char_id = UNDEFINED;
 			infos[i].local_filename = NULL;
 			infos[i].url = NULL;
 		}
@@ -1325,11 +1341,11 @@ static gboolean gen_speedo_font(const char *filename, GString *body)
 			{
 				char_index = i + first_char_index;
 				char_id = sp_get_char_id(char_index);
-				if (char_id != 0 && char_id != 0xffff)
+				if (char_id != SP_UNDEFINED && char_id != UNDEFINED)
 				{
 					charinfo *c = &infos[char_id];
 					
-					if (c->char_id != 0xffff)
+					if (c->char_id != UNDEFINED)
 					{
 						g_string_append_printf(errorout, "char 0x%x (0x%x) already defined\n", char_index, char_id);
 					} else
@@ -1374,7 +1390,7 @@ static gboolean gen_speedo_font(const char *filename, GString *body)
 		{
 			char_index = i + first_char_index;
 			char_id = sp_get_char_id(char_index);
-			if (char_id != 0 && char_id != 0xffff)
+			if (char_id != SP_UNDEFINED && char_id != UNDEFINED)
 			{
 				infos[char_id].local_filename = g_strdup_printf("%s/%schr%04x.png", output_dir, basename, char_id);
 				infos[char_id].url = g_strdup_printf("%s/%schr%04x.png", output_url, basename, char_id);
@@ -1415,7 +1431,7 @@ static gboolean gen_speedo_font(const char *filename, GString *body)
 				
 				defined[j] = FALSE;
 				img[j] = NULL;
-				if (c->char_id != 0xffff)
+				if (c->char_id != UNDEFINED)
 				{
 					defined[j] = TRUE;
 					if (c->url != NULL)
@@ -1448,7 +1464,7 @@ static gboolean gen_speedo_font(const char *filename, GString *body)
 					uint16_t unicode;
 					char *debuginfo = NULL;
 					
-					unicode = c->char_index < BICS_COUNT ? Bics2Unicode[c->char_index] : 0xffff;
+					unicode = c->char_index < BICS_COUNT ? Bics2Unicode[c->char_index] : UNDEFINED;
 					if (debug)
 					{
 						debuginfo = g_strdup_printf("Width: %u Height %u&#10;Ascent: %d Descent: %d lb: %d rb: %d&#10;",
@@ -1463,8 +1479,8 @@ static gboolean gen_speedo_font(const char *filename, GString *body)
 						"Xmin: %7.2f Ymin: %7.2f&#10;"
 						"Xmax: %7.2f Ymax: %7.2f&#10;%s"
 						"\"><img alt=\"\" style=\"position: relative; left: %dpx; top: %dpx\" src=\"%s\"></td>",
-						font_bb.width + 2,
-						font_bb.height + 2,
+						font_bb.width,
+						font_bb.height,
 						c->char_index, c->char_index,
 						c->char_id,
 						unicode, unicode,
@@ -1474,7 +1490,7 @@ static gboolean gen_speedo_font(const char *filename, GString *body)
 						(double)c->bbox.xmax / 65536.0,
 						(double)c->bbox.ymax / 65536.0,
 						debuginfo ? debuginfo : "",
-						-font_bb.lbearing + c->bbox.lbearing,
+						-(font_bb.lbearing - c->bbox.lbearing),
 						font_bb.ascent - c->bbox.ascent,
 						img[j]);
 					g_free(debuginfo);
@@ -1920,6 +1936,13 @@ int main(void)
 	if ((val = cgiFormString("yresolution")) != NULL)
 	{
 		y_res = (int)strtol(val, NULL, 10);
+		g_free(val);
+	}
+	
+	hidemenu = FALSE;
+	if ((val = cgiFormString("hidemenu")) != NULL)
+	{
+		hidemenu = strtol(val, NULL, 10) != 0;
 		g_free(val);
 	}
 	

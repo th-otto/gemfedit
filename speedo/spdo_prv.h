@@ -58,7 +58,7 @@ WITH THE SPEEDO SOFTWARE OR THE BITSTREAM CHARTER OUTLINE FONT.
 
 /***** MACRO DEFINITIONS *****/
 
-#define SQUEEZE_MULT(A,B) (((fix31)A * (fix31)B) / (1 << 16))
+#define SQUEEZE_MULT(A,B) (((fix31)A * (fix31)B) / ((fix31)1 << 16))
 
 #define NEXT_BYTE(A) (*(A)++)
 

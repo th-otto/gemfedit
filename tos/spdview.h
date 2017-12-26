@@ -5,7 +5,7 @@
  */
 
 /*
- * Number of Strings:        95
+ * Number of Strings:        80
  * Number of Bitblks:        0
  * Number of Iconblks:       0
  * Number of Color Iconblks: 0
@@ -13,11 +13,11 @@
  * Number of Tedinfos:       11
  * Number of Free Strings:   10
  * Number of Free Images:    0
- * Number of Objects:        74
- * Number of Trees:          4
+ * Number of Objects:        57
+ * Number of Trees:          3
  * Number of Userblks:       0
  * Number of Images:         0
- * Total file size:          4272
+ * Total file size:          3600
  */
 
 #undef RSC_NAME
@@ -35,7 +35,7 @@
 # define RSC_STATIC_FILE 0
 #endif
 #if !RSC_STATIC_FILE
-#define NUM_STRINGS 95
+#define NUM_STRINGS 80
 #define NUM_FRSTR 10
 #define NUM_UD 0
 #define NUM_IMAGES 0
@@ -44,8 +44,8 @@
 #define NUM_IB 0
 #define NUM_CIB 0
 #define NUM_TI 11
-#define NUM_OBS 74
-#define NUM_TREE 4
+#define NUM_OBS 57
+#define NUM_TREE 3
 #endif
 
 
@@ -61,15 +61,16 @@
 #define POINTS_8                          23 /* STRING in tree MAINMENU */
 #define POINTS_9                          24 /* STRING in tree MAINMENU */
 #define POINTS_10                         25 /* STRING in tree MAINMENU */
-#define POINTS_12                         26 /* STRING in tree MAINMENU */
-#define POINTS_14                         27 /* STRING in tree MAINMENU */
-#define POINTS_16                         28 /* STRING in tree MAINMENU */
-#define POINTS_18                         29 /* STRING in tree MAINMENU */
-#define POINTS_24                         30 /* STRING in tree MAINMENU */
-#define POINTS_36                         31 /* STRING in tree MAINMENU */
-#define POINTS_48                         32 /* STRING in tree MAINMENU */
-#define POINTS_64                         33 /* STRING in tree MAINMENU */
-#define POINTS_72                         34 /* STRING in tree MAINMENU */
+#define POINTS_11                         26 /* STRING in tree MAINMENU */
+#define POINTS_12                         27 /* STRING in tree MAINMENU */
+#define POINTS_14                         28 /* STRING in tree MAINMENU */
+#define POINTS_16                         29 /* STRING in tree MAINMENU */
+#define POINTS_18                         30 /* STRING in tree MAINMENU */
+#define POINTS_24                         31 /* STRING in tree MAINMENU */
+#define POINTS_36                         32 /* STRING in tree MAINMENU */
+#define POINTS_48                         33 /* STRING in tree MAINMENU */
+#define POINTS_64                         34 /* STRING in tree MAINMENU */
+#define POINTS_72                         35 /* STRING in tree MAINMENU */
 
 #define FONT_PARAMS                        1 /* form/dialog */
 #define FONT_NAME                          2 /* FTEXT in tree FONT_PARAMS */ /* max len 56 */
@@ -84,9 +85,7 @@
 #define FONT_CHARS_FONT                   11 /* FTEXT in tree FONT_PARAMS */ /* max len 5 */
 #define FONT_FIRST_INDEX                  12 /* FTEXT in tree FONT_PARAMS */ /* max len 5 */
 
-#define PANEL                              2 /* unknown form */
-
-#define ABOUT_DIALOG                       3 /* form/dialog */
+#define ABOUT_DIALOG                       2 /* form/dialog */
 #define ABOUT_VERSION_LABEL                4 /* STRING in tree ABOUT_DIALOG */
 #define ABOUT_VERSION                      5 /* STRING in tree ABOUT_DIALOG */
 #define ABOUT_DATE                         6 /* STRING in tree ABOUT_DIALOG */

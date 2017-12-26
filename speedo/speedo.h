@@ -641,13 +641,13 @@ extern SPEEDO_GLOBALS sp_globals;
  ***********************************************************************************/
 
 /*  do_char.c functions */
+#define SP_UNDEFINED 0
+#define UNDEFINED 0xffff
 ufix16 sp_get_char_id(ufix16 char_index);
 boolean sp_make_char(ufix16 char_index);
 #if INCL_ISW       
 fix31 sp_compute_isw_scale(void);
-static boolean sp_do_make_char(ufix16 char_index);
 boolean sp_make_char_isw(ufix16 char_index, ufix32 imported_width);
-static boolean sp_reset_xmax(fix31 xmax);
 #endif
 
 #if INCL_METRICS
@@ -754,11 +754,7 @@ ufix8 *sp_skip_interpolation_table(ufix8 *pointer, ufix8 format);
 ufix8 *sp_skip_control_zone(ufix8 *pointer, ufix8 format);
 
 ufix8 *sp_read_oru_table(ufix8 *pointer);
-#if INCL_SQUEEZING || INCL_ISW
-static void sp_calculate_x_pix(ufix8 start_edge, ufix8 end_edge, ufix16 constr_nr, fix31 x_scale, fix31 x_offset, fix31 ppo, fix15 setwidth_pix);
-#endif
 #if INCL_SQUEEZING
-static void sp_calculate_y_pix(ufix8 start_edge, ufix8 end_edge, ufix16 constr_nr, fix31 top_scale, fix31 bottom_scale, fix31 ppo, fix15 emtop_pix, fix15 embot_pix);
 boolean sp_calculate_x_scale(fix31 *x_factor, fix31 *x_offset, fix15 no_x_ctrl_zones);
 boolean sp_calculate_y_scale(fix31 *top_scale, fix31 *bottom_scale, fix15 first_y_zone,  fix15 no_Y_ctrl_zones);
 #endif

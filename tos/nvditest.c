@@ -12,7 +12,7 @@ static _WORD app_id = -1;
 static _WORD aeshandle;
 static _WORD vdihandle = 0;
 static _WORD gl_wchar, gl_hchar;
-static _WORD work_in[] = { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2 };
+static _WORD work_in[11] = { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2 };
 static _WORD dummy;
 static _WORD mainwin;
 static _BOOL quit_app;
@@ -121,6 +121,8 @@ static void mainwin_draw(const GRECT *area)
 	wind_get_grect(mainwin, WF_FIRSTXYWH, &gr);
 	while (gr.g_w > 0 && gr.g_h > 0)
 	{
+#define POINT_SIZE 10
+
 		if (rc_intersect(area, &gr))
 		{
 			pxy[0] = gr.g_x;
@@ -136,7 +138,7 @@ static void mainwin_draw(const GRECT *area)
 			vst_font(vdihandle, 1);
 			vst_alignment(vdihandle, ALI_LEFT, ALI_TOP, &dummy, &dummy);
 			vst_color(vdihandle, G_BLACK);
-			vst_point(vdihandle, 10, &dummy, &dummy, &font_cw, &font_ch);
+			vst_point(vdihandle, POINT_SIZE, &dummy, &dummy, &font_cw, &font_ch);
 			xoff = 18 * font_cw;
 
 #undef FONT_ID
@@ -146,14 +148,14 @@ static void mainwin_draw(const GRECT *area)
 #undef FONT_ID
 #define FONT_ID 5043 /* American Garamond */
 #undef FONT_ID
+#define FONT_ID 15040 /* Arial fVDI */
+#undef FONT_ID
 #define FONT_ID 9908 /* Arial */
 #undef FONT_ID
 #define FONT_ID 5003 /* Swiss 721 */
-#undef FONT_ID
-#define FONT_ID 15040 /* Arial fVDI */
 
 			vst_font(vdihandle, FONT_ID);
-			vst_point(vdihandle, 10, &dummy, &dummy, &dummy, &font_ch2);
+			vst_point(vdihandle, POINT_SIZE, &dummy, &dummy, &dummy, &font_ch2);
 			if (font_ch2 > font_ch)
 				font_ch = font_ch2;
 			vst_font(vdihandle, 1);
@@ -171,7 +173,7 @@ static void mainwin_draw(const GRECT *area)
 			vst_font(vdihandle, FONT_ID);
 			vst_alignment(vdihandle, ALI_LEFT, ALI_TOP, &dummy, &dummy);
 			vst_color(vdihandle, G_BLACK);
-			vst_point(vdihandle, 10, &dummy, &dummy, &dummy, &dummy);
+			vst_point(vdihandle, POINT_SIZE, &dummy, &dummy, &dummy, &dummy);
 			font_cw = 8;
 
 #define USE_UNICODE 1
@@ -180,7 +182,7 @@ static void mainwin_draw(const GRECT *area)
 #else
 			vst_map_mode(vdihandle, 1);
 #endif
-			v_gtext(vdihandle, work.g_x + xoff, work.g_y + font_ch *  0, "Hello, world");
+			v_gtext(vdihandle, work.g_x + xoff, work.g_y + font_ch *  0, "0123456789 Hello, world");
 			for (y = 0; y < 16; y++)
 			{
 				for (x = 0; x < 16; x++)
@@ -223,7 +225,7 @@ static void mainwin_draw(const GRECT *area)
 					nf_debugprintf("\n");
 			}
 #endif
-#if 1
+#if 0
 			{
 				unsigned short unicode;
 				unsigned short i, x;
@@ -262,7 +264,7 @@ static void mainwin_draw(const GRECT *area)
 				mode = vst_map_mode(vdihandle, 2);
 				minade = maxade = 0;
 				vqt_fontinfo(vdihandle, &minade, &maxade, distances, max_width, effects);
-				nf_debugprintf("mapping 0 -> 2 (%u-%u) ($%x-$%x), %d\n", minade, maxade, minade, maxade, mode);
+				nf_debugprintf("mapping 2 (%u-%u) ($%x-$%x), %d\n", minade, maxade, minade, maxade, mode);
 			}
 #endif
 			vst_map_mode(vdihandle, 1);
@@ -325,7 +327,7 @@ int main(void)
 	aeshandle = graf_handle(&gl_wchar, &gl_hchar, &dummy, &dummy);
 
 	vdihandle = aeshandle;
-	(void) v_opnvwk(work_in, &vdihandle, workout);	/* VDI workstation needed */
+	v_opnvwk(work_in, &vdihandle, workout);	/* VDI workstation needed */
 	list_fonts();
 	
 	nf_debugprintf("mapmode(0): %d\n", vst_map_mode(vdihandle, 0));

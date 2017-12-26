@@ -20,6 +20,9 @@ li {
 }
 /* style used for error messages */
 .spdview_error_note {
+  margin: 0px;
+  padding: 0px;
+  border-spacing: 0px;
 }
 .vertical_line { width: 1px; margin: 0px; padding: 0px; background: black; }
 .horizontal_line { height: 1px; margin: 0px; padding: 0px; background: black; }

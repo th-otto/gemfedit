@@ -254,7 +254,7 @@ int main(int argc, char **argv)
 		{
 			char_index = i + first_char_index;
 			char_id = sp_get_char_id(char_index);
-			if (char_id != 0)
+			if (char_id != SP_UNDEFINED && char_id != UNDEFINED)
 			{
 				if (!sp_make_char(char_index))
 				{

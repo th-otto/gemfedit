@@ -361,7 +361,7 @@ boolean sp_make_char_isw(ufix16 char_index, ufix32 imported_setwidth)
 	fix15 xmax;							/* Maximum X ORU value in font */
 	fix15 ymin;							/* Minimum Y ORU value in font */
 	fix15 ymax;							/* Maximum Y ORU value in font */
-	ufix16 return_value;
+	boolean return_value;
 
 	sp_globals.import_setwidth_act = TRUE;
 	/* convert imported width to orus */
@@ -373,9 +373,9 @@ boolean sp_make_char_isw(ufix16 char_index, ufix32 imported_setwidth)
 		/* reset fixed point constants */
 		xmin = sp_read_word_u(sp_globals.font_org + FH_FXMIN);
 		ymin = sp_read_word_u(sp_globals.font_org + FH_FYMIN);
+		xmax = sp_read_word_u(sp_globals.font_org + FH_FXMAX);
 		ymax = sp_read_word_u(sp_globals.font_org + FH_FYMAX);
 		sp_globals.constr.data_valid = FALSE;
-		xmax = sp_read_word_u(sp_globals.font_org + FH_FXMAX);
 		if (!sp_setup_consts(xmin, xmax, ymin, ymax))
 		{
 			sp_report_error(3);		/* Requested specs out of range */
@@ -384,6 +384,42 @@ boolean sp_make_char_isw(ufix16 char_index, ufix32 imported_setwidth)
 	}
 	return return_value;
 }
+
+
+static boolean sp_reset_xmax(fix31 xmax)
+{
+	fix15 xmin;							/* Minimum X ORU value in font */
+	fix15 ymin;							/* Minimum Y ORU value in font */
+	fix15 ymax;							/* Maximum Y ORU value in font */
+
+	sp_globals.isw_modified_constants = TRUE;
+	xmin = sp_read_word_u(sp_globals.font_org + FH_FXMIN);
+	ymin = sp_read_word_u(sp_globals.font_org + FH_FYMIN);
+	ymax = sp_read_word_u(sp_globals.font_org + FH_FYMAX);
+
+	if (!sp_setup_consts(xmin, xmax, ymin, ymax))
+	{
+		sp_report_error(3);				/* Requested specs out of range */
+		return FALSE;
+	}
+	sp_globals.constr.data_valid = FALSE;
+	/* recompute setwidth */
+	sp_globals.Psw.x = (fix15) ((fix31) (((fix31) sp_globals.imported_width * (sp_globals.specs.xxmult >> 16) +
+										  (((fix31) sp_globals.imported_width *
+											(sp_globals.specs.xxmult & 0xffffL)) >> 16)) << sp_globals.pixshift) /
+								sp_globals.metric_resolution);
+	sp_globals.Psw.y =
+		(fix15) ((fix31)
+				 (((fix31) sp_globals.imported_width * (sp_globals.specs.yxmult >> 16) +
+				   (((fix31) sp_globals.imported_width *
+					 (sp_globals.specs.yxmult & 0xffffL)) >> 16)) << sp_globals.pixshift) /
+				 sp_globals.metric_resolution);
+
+	return TRUE;
+}
+
+
+static boolean sp_do_make_char(ufix16 char_index);
 
 boolean sp_make_char(ufix16 char_index)	/* Index to character in char directory */
 {
@@ -846,38 +882,3 @@ static fix15 sp_get_scale_arg(ufix8 * * ppointer,	/* Pointer to first byte of po
 		return NEXT_WORD(*ppointer);
 	return ONE_SCALE;
 }
-
-
-#if INCL_ISW
-static boolean sp_reset_xmax(fix31 xmax)
-{
-	fix15 xmin;							/* Minimum X ORU value in font */
-	fix15 ymin;							/* Minimum Y ORU value in font */
-	fix15 ymax;							/* Maximum Y ORU value in font */
-
-	sp_globals.isw_modified_constants = TRUE;
-	xmin = sp_read_word_u(sp_globals.font_org + FH_FXMIN);
-	ymin = sp_read_word_u(sp_globals.font_org + FH_FYMIN);
-	ymax = sp_read_word_u(sp_globals.font_org + FH_FYMAX);
-
-	if (!sp_setup_consts(xmin, xmax, ymin, ymax))
-	{
-		sp_report_error(3);				/* Requested specs out of range */
-		return FALSE;
-	}
-	sp_globals.constr.data_valid = FALSE;
-	/* recompute setwidth */
-	sp_globals.Psw.x = (fix15) ((fix31) (((fix31) sp_globals.imported_width * (sp_globals.specs.xxmult >> 16) +
-										  (((fix31) sp_globals.imported_width *
-											(sp_globals.specs.xxmult & 0xffffL)) >> 16)) << sp_globals.pixshift) /
-								sp_globals.metric_resolution);
-	sp_globals.Psw.y =
-		(fix15) ((fix31)
-				 (((fix31) sp_globals.imported_width * (sp_globals.specs.yxmult >> 16) +
-				   (((fix31) sp_globals.imported_width *
-					 (sp_globals.specs.yxmult & 0xffffL)) >> 16)) << sp_globals.pixshift) /
-				 sp_globals.metric_resolution);
-
-	return TRUE;
-}
-#endif

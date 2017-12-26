@@ -359,6 +359,304 @@ static ufix8 *sp_setup_int_table(ufix8 * pointer,	/* Pointer to first byte in in
 }
 
 
+#if INCL_SQUEEZING
+/*
+ * Called by sp_setup_pix_table() when Y squeezing is necessary
+ * to insert the correct edge in the global pix array
+ */
+static void sp_calculate_y_pix(ufix8 start_edge, ufix8 end_edge,
+									 ufix16 constr_nr,
+									 fix31 top_scale, fix31 bottom_scale, fix31 ppo, fix15 em_top_pix, fix15 em_bot_pix)
+{
+	fix15 zone_pix;
+	fix15 start_oru, end_oru;
+	fix31 zone_width, above_base, below_base;
+
+	/* check whether edge is above or below the baseline                */
+	/* and apply appropriate scale factor to get scaled oru coordinates */
+	if (sp_plaid.orus[start_edge] < 0)
+		start_oru = (fix15) (SQUEEZE_MULT(sp_plaid.orus[start_edge], bottom_scale));
+	else
+		start_oru = (fix15) (SQUEEZE_MULT(sp_plaid.orus[start_edge], top_scale));
+
+	if (sp_plaid.orus[end_edge] < 0)
+		end_oru = (fix15) (SQUEEZE_MULT(sp_plaid.orus[end_edge], bottom_scale));
+	else
+		end_oru = (fix15) (SQUEEZE_MULT(sp_plaid.orus[end_edge], top_scale));
+
+	if (!sp_globals.c_act[constr_nr])	/* Constraint inactive? */
+	{
+		/* calculate zone width */
+		zone_pix = (fix15) (((((fix31) end_oru - (fix31) start_oru) * ppo)
+							 >> sp_globals.mpshift) + sp_globals.pixrnd) & sp_globals.pixfix;
+		/* check minimum */
+		if ((ABS(zone_pix)) >= sp_globals.c_pix[constr_nr])
+			goto Ly;
+	}
+
+	/* Use zone size from constr table */
+	if ((end_oru >= 0) && (start_oru >= 0))
+		/* all above baseline */
+		zone_pix = (fix15) (SQUEEZE_MULT(top_scale, sp_globals.c_pix[constr_nr]));
+	else if ((end_oru <= 0) && (start_oru <= 0))
+		/* all below baseline */
+		zone_pix = (fix15) (SQUEEZE_MULT(bottom_scale, sp_globals.c_pix[constr_nr]));
+	else
+	{
+		/* mixture */
+		if (start_oru > 0)
+		{
+			zone_width = start_oru - end_oru;
+			/* get % above baseline in 16.16 fixed point */
+			above_base = (((fix31) start_oru) << 16) / ((fix31) zone_width);
+			/* get % below baseline in 16.16 fixed point */
+			below_base = (((fix31) - end_oru) << 16) / ((fix31) zone_width);
+		} else
+		{
+			zone_width = end_oru - start_oru;
+			/* get % above baseline in 16.16 fixed point */
+			above_base = (((fix31) - start_oru) << 16) / ((fix31) zone_width);
+			/* get % below baseline in 16.16 fixed point */
+			below_base = (((fix31) end_oru) << 16) / ((fix31) zone_width);
+		}
+		/* % above baseline * total zone * top_scale +  */
+		/* % below baseline * total zone * bottom_scale */
+		zone_pix = ((((above_base * (fix31) sp_globals.c_pix[constr_nr]) >> 16) *
+					 top_scale) + (((below_base * (fix31) sp_globals.c_pix[constr_nr]) >> 16) * bottom_scale)) >> 16;
+	}
+
+	/* make this zone pix fall on a pixel boundary */
+	zone_pix = (zone_pix + sp_globals.pixrnd) & sp_globals.pixfix;
+
+	/* if minimum is in effect make the zone one pixel */
+	if ((sp_globals.c_pix[constr_nr] != 0) && (zone_pix < sp_globals.onepix))
+		zone_pix = sp_globals.onepix;
+
+	if (start_edge > end_edge)
+	{
+		zone_pix = -zone_pix;			/* Use negatve zone size */
+	}
+  Ly:
+	/* assign global pix value */
+	sp_plaid.pix[end_edge] = sp_plaid.pix[start_edge] + zone_pix;	/* Insert end pixels */
+
+	/* make sure it is in the EM !*/
+	if ((sp_globals.specs.flags & SQUEEZE_TOP) && (sp_plaid.pix[end_edge] > em_top_pix))
+		sp_plaid.pix[end_edge] = em_top_pix;
+	if ((sp_globals.specs.flags & SQUEEZE_BOTTOM) && (sp_plaid.pix[end_edge] < em_bot_pix))
+		sp_plaid.pix[end_edge] = em_bot_pix;
+}
+
+
+/*
+ * Called by sp_setup_pix_table() when squeezing is included
+ * to determine whether X scaling is necessary.  If it is, the
+ * scale factor and offset are computed.  This function returns
+ * a boolean value TRUE = X squeezind is necessary, FALSE = no
+ * X squeezing is necessary.
+ */
+boolean sp_calculate_x_scale(fix31 *x_factor, fix31 *x_offset, fix15 no_X_ctrl_zones)
+{
+	boolean squeeze_left, squeeze_right;
+	boolean out_on_right, out_on_left;
+	fix15 bbox_width, set_width;
+	fix15 bbox_xmin, bbox_xmax;
+	fix15 x_offset_pix;
+	fix15 i;
+
+#if INCL_ISW
+	fix31 isw_scale;
+	fix15 shift;
+#endif
+
+
+	/* set up some flags and common calculations */
+	squeeze_left = (sp_globals.specs.flags & SQUEEZE_LEFT) ? TRUE : FALSE;
+	squeeze_right = (sp_globals.specs.flags & SQUEEZE_RIGHT) ? TRUE : FALSE;
+	bbox_xmin = sp_globals.bbox_xmin_orus;
+	bbox_xmax = sp_globals.bbox_xmax_orus;
+	set_width = sp_globals.setwidth_orus;
+
+	if (bbox_xmax > set_width)
+		out_on_right = TRUE;
+	else
+		out_on_right = FALSE;
+	if (bbox_xmin < 0)
+		out_on_left = TRUE;
+	else
+		out_on_left = FALSE;
+	bbox_width = bbox_xmax - bbox_xmin;
+
+	/*
+	 * don't need X squeezing if:
+	 *     - X squeezing not enabled
+	 *     - bbox doesn't violate on left or right
+	 *     - left squeezing only is enabled and char isn't out on left
+	 *     - right squeezing only is enabled and char isn't out on right
+	 */
+	if ((!squeeze_left && !squeeze_right) ||
+		(!out_on_right && !out_on_left) ||
+		(squeeze_left && !squeeze_right && !out_on_left) || (squeeze_right && !squeeze_left && !out_on_right))
+		return FALSE;
+
+#if INCL_ISW
+	if (sp_globals.import_setwidth_act)
+	{
+		/* if both isw and squeezing is going on - let the imported */
+		/* setwidth factor be factored in with the squeeze          */
+		isw_scale = sp_compute_isw_scale();
+		/*sp_globals.setwidth_orus = sp_globals.imported_width; */
+	} else
+	{
+		isw_scale = 0x10000L;			/* 1 in 16.16 notation */
+	}
+#endif
+
+	/* squeezing on left and right ?  */
+	if (squeeze_left && squeeze_right)
+	{
+		/* calculate scale factor */
+		if (bbox_width < set_width)
+			*x_factor = 0x10000L;		/* 1 in 16.16 notation */
+		else
+			*x_factor = ((fix31) set_width << 16) / (fix31) bbox_width;
+		IMPORT_FACTOR;
+		/* calculate offset */
+		if (out_on_left)			/* fall out on left ? */
+			*x_offset = -(fix31) * x_factor * (fix31) bbox_xmin;
+		/* fall out on right and I am shifting only ? */
+		else if (out_on_right && (*x_factor == 0x10000L))
+			*x_offset = -(fix31) * x_factor * (fix31) (bbox_xmax - set_width);
+		else
+			*x_offset = 0x0L;			/* 0 in 16.16 notation */
+	}
+	/* squeezing on left only and violates left */
+	else if (squeeze_left)
+	{
+		if (bbox_width < set_width)		/* will it fit if I shift it ? */
+			*x_factor = 0x10000L;		/* 1 in 16.16 notation */
+		else if (out_on_right)
+			*x_factor = ((fix31) set_width << 16) / (fix31) bbox_width;
+		else
+			*x_factor = ((fix31) set_width << 16) / (fix31) (bbox_width - (bbox_xmax - set_width));
+		IMPORT_FACTOR;
+		*x_offset = (fix31) - *x_factor * (fix31) bbox_xmin;
+	}
+
+	/* I must be squeezing on right, and violates right */
+	else
+	{
+		if (bbox_width < set_width)		/* will it fit if I shift it ? */
+		{								/* just shift it left - it will fit in the bbox */
+			*x_factor = 0x10000L;		/* 1 in 16.16 notation */
+			IMPORT_FACTOR;
+			*x_offset = (fix31) - *x_factor * (fix31) bbox_xmin;
+		} else if (out_on_left)
+		{
+			*x_factor = ((fix31) set_width << 16) / (fix31) bbox_width;
+			IMPORT_FACTOR;
+			*x_offset = 0x0L;		/* 0 in 16.16 notation */
+		} else
+		{
+			*x_factor = ((fix31) set_width << 16) / (fix31) bbox_xmax;
+			IMPORT_FACTOR;
+			*x_offset = 0x0L;		/* 0 in 16.16 notation */
+		}
+	}
+
+	x_offset_pix = (fix15) (((*x_offset >> 16) * sp_globals.tcb0.xppo) / (1 << sp_globals.mpshift));
+
+	if ((x_offset_pix > 0) && (x_offset_pix < sp_globals.onepix))
+		x_offset_pix = sp_globals.onepix;
+
+	/* look for the first non-negative oru value, scale and add the offset    */
+	/* to the corresponding pixel value - note that the pixel value           */
+	/* is set in sp_read_oru_table.                                              */
+	
+	/* look at all the X edges */
+	for (i = 0; i < (no_X_ctrl_zones + 1); i++)
+		if (sp_plaid.orus[i] >= 0)
+		{
+			sp_plaid.pix[i] = (SQUEEZE_MULT(sp_plaid.pix[i], *x_factor)
+							   + sp_globals.pixrnd + x_offset_pix) & sp_globals.pixfix;
+			break;
+		}
+
+	return TRUE;
+}
+
+
+/*
+ * Called by sp_setup_pix_table() when squeezing is included
+ * to determine whether Y scaling is necessary.  If it is, 
+ * two scale factors are computed, one for above the baseline,
+ * and one for below the basline.
+ * This function returns a boolean value TRUE = Y squeezind is necessary, 
+ * FALSE = no Y squeezing is necessary.
+ */
+boolean sp_calculate_y_scale(fix31 * top_scale, fix31 * bottom_scale, fix15 first_Y_zone, fix15 no_Y_ctrl_zones)
+{
+	boolean squeeze_top, squeeze_bottom;
+	boolean out_on_top, out_on_bottom;
+	fix15 bbox_top, bbox_bottom;
+	fix15 bbox_height;
+	fix15 i;
+
+	/* set up some flags and common calculations */
+	squeeze_top = (sp_globals.specs.flags & SQUEEZE_TOP) ? TRUE : FALSE;
+	squeeze_bottom = (sp_globals.specs.flags & SQUEEZE_BOTTOM) ? TRUE : FALSE;
+	bbox_top = sp_globals.bbox_ymax_orus;
+	bbox_bottom = sp_globals.bbox_ymin_orus;
+	bbox_height = bbox_top - bbox_bottom;
+
+	if (bbox_top > EM_TOP)
+		out_on_top = TRUE;
+	else
+		out_on_top = FALSE;
+
+	if (bbox_bottom < EM_BOT)
+		out_on_bottom = TRUE;
+	else
+		out_on_bottom = FALSE;
+
+	/*
+	 * don't need Y squeezing if:
+	 *     - Y squeezing not enabled
+	 *     - bbox doesn't violate on top or bottom
+	 *     - top squeezing only is enabled and char isn't out on top
+	 *     - bottom squeezing only is enabled and char isn't out on bottom
+	 */
+	if ((!squeeze_top && !squeeze_bottom) ||
+		(!out_on_top && !out_on_bottom) ||
+		(squeeze_top && !squeeze_bottom && !out_on_top) ||
+		(squeeze_bottom && !squeeze_top && !out_on_bottom))
+		return FALSE;
+
+	if (squeeze_top && (bbox_top > EM_TOP))
+		*top_scale = ((fix31) EM_TOP << 16) / (fix31) (bbox_top);
+	else
+		*top_scale = 0x10000L;			/* 1 in 16.16 fixed point */
+
+	if (squeeze_bottom && (bbox_bottom < EM_BOT))
+		*bottom_scale = ((fix31) - (EM_BOT) << 16) / (fix31) - bbox_bottom;
+	else
+		*bottom_scale = 0x10000L;
+
+	if (sp_globals.squeezing_compound)
+	{
+		for (i = first_Y_zone; i < (first_Y_zone + no_Y_ctrl_zones + 1); i++)
+		{
+			if (sp_plaid.orus[i] >= 0)
+				sp_plaid.pix[i] = (SQUEEZE_MULT(sp_plaid.pix[i], *top_scale) + sp_globals.pixrnd) & sp_globals.pixfix;
+			else
+				sp_plaid.pix[i] = (SQUEEZE_MULT(sp_plaid.pix[i], *bottom_scale) + sp_globals.pixrnd) & sp_globals.pixfix;
+		}
+	}
+	return TRUE;
+}
+#endif
+
+
 /*
  * Called by sp_plaid_tcb() to read the control zone table from the
  * character data in the font.
@@ -888,302 +1186,6 @@ ufix8 *sp_read_oru_table(ufix8 * pointer)	/* Pointer to first byte in controlled
 
 	return pointer;						/* Update pointer */
 }
-
-
-#if INCL_SQUEEZING
-/*
- * Called by sp_setup_pix_table() when Y squeezing is necessary
- * to insert the correct edge in the global pix array
- */
-static void sp_calculate_y_pix(ufix8 start_edge, ufix8 end_edge,
-									 ufix16 constr_nr,
-									 fix31 top_scale, fix31 bottom_scale, fix31 ppo, fix15 em_top_pix, fix15 em_bot_pix)
-{
-	fix15 zone_pix;
-	fix15 start_oru, end_oru;
-	fix31 zone_width, above_base, below_base;
-
-	/* check whether edge is above or below the baseline                */
-	/* and apply appropriate scale factor to get scaled oru coordinates */
-	if (sp_plaid.orus[start_edge] < 0)
-		start_oru = (fix15) (SQUEEZE_MULT(sp_plaid.orus[start_edge], bottom_scale));
-	else
-		start_oru = (fix15) (SQUEEZE_MULT(sp_plaid.orus[start_edge], top_scale));
-
-	if (sp_plaid.orus[end_edge] < 0)
-		end_oru = (fix15) (SQUEEZE_MULT(sp_plaid.orus[end_edge], bottom_scale));
-	else
-		end_oru = (fix15) (SQUEEZE_MULT(sp_plaid.orus[end_edge], top_scale));
-
-	if (!sp_globals.c_act[constr_nr])	/* Constraint inactive? */
-	{
-		/* calculate zone width */
-		zone_pix = (fix15) (((((fix31) end_oru - (fix31) start_oru) * ppo)
-							 >> sp_globals.mpshift) + sp_globals.pixrnd) & sp_globals.pixfix;
-		/* check minimum */
-		if ((ABS(zone_pix)) >= sp_globals.c_pix[constr_nr])
-			goto Ly;
-	}
-
-	/* Use zone size from constr table */
-	if ((end_oru >= 0) && (start_oru >= 0))
-		/* all above baseline */
-		zone_pix = (fix15) (SQUEEZE_MULT(top_scale, sp_globals.c_pix[constr_nr]));
-	else if ((end_oru <= 0) && (start_oru <= 0))
-		/* all below baseline */
-		zone_pix = (fix15) (SQUEEZE_MULT(bottom_scale, sp_globals.c_pix[constr_nr]));
-	else
-	{
-		/* mixture */
-		if (start_oru > 0)
-		{
-			zone_width = start_oru - end_oru;
-			/* get % above baseline in 16.16 fixed point */
-			above_base = (((fix31) start_oru) << 16) / ((fix31) zone_width);
-			/* get % below baseline in 16.16 fixed point */
-			below_base = (((fix31) - end_oru) << 16) / ((fix31) zone_width);
-		} else
-		{
-			zone_width = end_oru - start_oru;
-			/* get % above baseline in 16.16 fixed point */
-			above_base = (((fix31) - start_oru) << 16) / ((fix31) zone_width);
-			/* get % below baseline in 16.16 fixed point */
-			below_base = (((fix31) end_oru) << 16) / ((fix31) zone_width);
-		}
-		/* % above baseline * total zone * top_scale +  */
-		/* % below baseline * total zone * bottom_scale */
-		zone_pix = ((((above_base * (fix31) sp_globals.c_pix[constr_nr]) >> 16) *
-					 top_scale) + (((below_base * (fix31) sp_globals.c_pix[constr_nr]) >> 16) * bottom_scale)) >> 16;
-	}
-
-	/* make this zone pix fall on a pixel boundary */
-	zone_pix = (zone_pix + sp_globals.pixrnd) & sp_globals.pixfix;
-
-	/* if minimum is in effect make the zone one pixel */
-	if ((sp_globals.c_pix[constr_nr] != 0) && (zone_pix < sp_globals.onepix))
-		zone_pix = sp_globals.onepix;
-
-	if (start_edge > end_edge)
-	{
-		zone_pix = -zone_pix;			/* Use negatve zone size */
-	}
-  Ly:
-	/* assign global pix value */
-	sp_plaid.pix[end_edge] = sp_plaid.pix[start_edge] + zone_pix;	/* Insert end pixels */
-
-	/* make sure it is in the EM !*/
-	if ((sp_globals.specs.flags & SQUEEZE_TOP) && (sp_plaid.pix[end_edge] > em_top_pix))
-		sp_plaid.pix[end_edge] = em_top_pix;
-	if ((sp_globals.specs.flags & SQUEEZE_BOTTOM) && (sp_plaid.pix[end_edge] < em_bot_pix))
-		sp_plaid.pix[end_edge] = em_bot_pix;
-}
-
-/*
- * Called by sp_setup_pix_table() when squeezing is included
- * to determine whether X scaling is necessary.  If it is, the
- * scale factor and offset are computed.  This function returns
- * a boolean value TRUE = X squeezind is necessary, FALSE = no
- * X squeezing is necessary.
- */
-boolean sp_calculate_x_scale(fix31 *x_factor, fix31 *x_offset, fix15 no_X_ctrl_zones)
-{
-	boolean squeeze_left, squeeze_right;
-	boolean out_on_right, out_on_left;
-	fix15 bbox_width, set_width;
-	fix15 bbox_xmin, bbox_xmax;
-	fix15 x_offset_pix;
-	fix15 i;
-
-#if INCL_ISW
-	fix31 isw_scale;
-	fix15 shift;
-#endif
-
-
-	/* set up some flags and common calculations */
-	squeeze_left = (sp_globals.specs.flags & SQUEEZE_LEFT) ? TRUE : FALSE;
-	squeeze_right = (sp_globals.specs.flags & SQUEEZE_RIGHT) ? TRUE : FALSE;
-	bbox_xmin = sp_globals.bbox_xmin_orus;
-	bbox_xmax = sp_globals.bbox_xmax_orus;
-	set_width = sp_globals.setwidth_orus;
-
-	if (bbox_xmax > set_width)
-		out_on_right = TRUE;
-	else
-		out_on_right = FALSE;
-	if (bbox_xmin < 0)
-		out_on_left = TRUE;
-	else
-		out_on_left = FALSE;
-	bbox_width = bbox_xmax - bbox_xmin;
-
-	/*
-	 * don't need X squeezing if:
-	 *     - X squeezing not enabled
-	 *     - bbox doesn't violate on left or right
-	 *     - left squeezing only is enabled and char isn't out on left
-	 *     - right squeezing only is enabled and char isn't out on right
-	 */
-	if ((!squeeze_left && !squeeze_right) ||
-		(!out_on_right && !out_on_left) ||
-		(squeeze_left && !squeeze_right && !out_on_left) || (squeeze_right && !squeeze_left && !out_on_right))
-		return FALSE;
-
-#if INCL_ISW
-	if (sp_globals.import_setwidth_act)
-	{
-		/* if both isw and squeezing is going on - let the imported */
-		/* setwidth factor be factored in with the squeeze          */
-		isw_scale = sp_compute_isw_scale();
-		/*sp_globals.setwidth_orus = sp_globals.imported_width; */
-	} else
-	{
-		isw_scale = 0x10000L;			/* 1 in 16.16 notation */
-	}
-#endif
-
-	/* squeezing on left and right ?  */
-	if (squeeze_left && squeeze_right)
-	{
-		/* calculate scale factor */
-		if (bbox_width < set_width)
-			*x_factor = 0x10000L;		/* 1 in 16.16 notation */
-		else
-			*x_factor = ((fix31) set_width << 16) / (fix31) bbox_width;
-		IMPORT_FACTOR;
-		/* calculate offset */
-		if (out_on_left)			/* fall out on left ? */
-			*x_offset = -(fix31) * x_factor * (fix31) bbox_xmin;
-		/* fall out on right and I am shifting only ? */
-		else if (out_on_right && (*x_factor == 0x10000L))
-			*x_offset = -(fix31) * x_factor * (fix31) (bbox_xmax - set_width);
-		else
-			*x_offset = 0x0L;			/* 0 in 16.16 notation */
-	}
-	/* squeezing on left only and violates left */
-	else if (squeeze_left)
-	{
-		if (bbox_width < set_width)		/* will it fit if I shift it ? */
-			*x_factor = 0x10000L;		/* 1 in 16.16 notation */
-		else if (out_on_right)
-			*x_factor = ((fix31) set_width << 16) / (fix31) bbox_width;
-		else
-			*x_factor = ((fix31) set_width << 16) / (fix31) (bbox_width - (bbox_xmax - set_width));
-		IMPORT_FACTOR;
-		*x_offset = (fix31) - *x_factor * (fix31) bbox_xmin;
-	}
-
-	/* I must be squeezing on right, and violates right */
-	else
-	{
-		if (bbox_width < set_width)		/* will it fit if I shift it ? */
-		{								/* just shift it left - it will fit in the bbox */
-			*x_factor = 0x10000L;		/* 1 in 16.16 notation */
-			IMPORT_FACTOR;
-			*x_offset = (fix31) - *x_factor * (fix31) bbox_xmin;
-		} else if (out_on_left)
-		{
-			*x_factor = ((fix31) set_width << 16) / (fix31) bbox_width;
-			IMPORT_FACTOR;
-			*x_offset = 0x0L;		/* 0 in 16.16 notation */
-		} else
-		{
-			*x_factor = ((fix31) set_width << 16) / (fix31) bbox_xmax;
-			IMPORT_FACTOR;
-			*x_offset = 0x0L;		/* 0 in 16.16 notation */
-		}
-	}
-
-	x_offset_pix = (fix15) (((*x_offset >> 16) * sp_globals.tcb0.xppo) / (1 << sp_globals.mpshift));
-
-	if ((x_offset_pix > 0) && (x_offset_pix < sp_globals.onepix))
-		x_offset_pix = sp_globals.onepix;
-
-	/* look for the first non-negative oru value, scale and add the offset    */
-	/* to the corresponding pixel value - note that the pixel value           */
-	/* is set in sp_read_oru_table.                                              */
-	
-	/* look at all the X edges */
-	for (i = 0; i < (no_X_ctrl_zones + 1); i++)
-		if (sp_plaid.orus[i] >= 0)
-		{
-			sp_plaid.pix[i] = (SQUEEZE_MULT(sp_plaid.pix[i], *x_factor)
-							   + sp_globals.pixrnd + x_offset_pix) & sp_globals.pixfix;
-			break;
-		}
-
-	return TRUE;
-}
-
-/*
- * Called by sp_setup_pix_table() when squeezing is included
- * to determine whether Y scaling is necessary.  If it is, 
- * two scale factors are computed, one for above the baseline,
- * and one for below the basline.
- * This function returns a boolean value TRUE = Y squeezind is necessary, 
- * FALSE = no Y squeezing is necessary.
- */
-boolean sp_calculate_y_scale(fix31 * top_scale, fix31 * bottom_scale, fix15 first_Y_zone, fix15 no_Y_ctrl_zones)
-{
-	boolean squeeze_top, squeeze_bottom;
-	boolean out_on_top, out_on_bottom;
-	fix15 bbox_top, bbox_bottom;
-	fix15 bbox_height;
-	fix15 i;
-
-	/* set up some flags and common calculations */
-	squeeze_top = (sp_globals.specs.flags & SQUEEZE_TOP) ? TRUE : FALSE;
-	squeeze_bottom = (sp_globals.specs.flags & SQUEEZE_BOTTOM) ? TRUE : FALSE;
-	bbox_top = sp_globals.bbox_ymax_orus;
-	bbox_bottom = sp_globals.bbox_ymin_orus;
-	bbox_height = bbox_top - bbox_bottom;
-
-	if (bbox_top > EM_TOP)
-		out_on_top = TRUE;
-	else
-		out_on_top = FALSE;
-
-	if (bbox_bottom < EM_BOT)
-		out_on_bottom = TRUE;
-	else
-		out_on_bottom = FALSE;
-
-	/*
-	 * don't need Y squeezing if:
-	 *     - Y squeezing not enabled
-	 *     - bbox doesn't violate on top or bottom
-	 *     - top squeezing only is enabled and char isn't out on top
-	 *     - bottom squeezing only is enabled and char isn't out on bottom
-	 */
-	if ((!squeeze_top && !squeeze_bottom) ||
-		(!out_on_top && !out_on_bottom) ||
-		(squeeze_top && !squeeze_bottom && !out_on_top) || (squeeze_bottom && !squeeze_top && !out_on_bottom))
-		return FALSE;
-
-	if (squeeze_top && (bbox_top > EM_TOP))
-		*top_scale = ((fix31) EM_TOP << 16) / (fix31) (bbox_top);
-	else
-		*top_scale = 0x10000L;			/* 1 in 16.16 fixed point */
-
-	if (squeeze_bottom && (bbox_bottom < EM_BOT))
-		*bottom_scale = ((fix31) - (EM_BOT) << 16) / (fix31) - bbox_bottom;
-	else
-		*bottom_scale = 0x10000L;
-
-	if (sp_globals.squeezing_compound)
-	{
-		for (i = first_Y_zone; i < (first_Y_zone + no_Y_ctrl_zones + 1); i++)
-		{
-			if (sp_plaid.orus[i] >= 0)
-				sp_plaid.pix[i] = (SQUEEZE_MULT(sp_plaid.pix[i], *top_scale) + sp_globals.pixrnd) & sp_globals.pixfix;
-			else
-				sp_plaid.pix[i] = (SQUEEZE_MULT(sp_plaid.pix[i], *bottom_scale)
-								   + sp_globals.pixrnd) & sp_globals.pixfix;
-		}
-	}
-	return TRUE;
-}
-#endif
 
 
 #if INCL_ISW

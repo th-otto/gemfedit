@@ -288,7 +288,7 @@ extern _VOID *hfix_objs(RSHDR *_hdr, OBJECT *_ob, _WORD _num_objs);
 #undef NUM_OBS
 #undef NUM_TREE
 #undef NUM_UD
-#define NUM_STRINGS 95
+#define NUM_STRINGS 80
 #define NUM_BB		0
 #define NUM_IB		0
 #define NUM_CIB     0
@@ -296,8 +296,8 @@ extern _VOID *hfix_objs(RSHDR *_hdr, OBJECT *_ob, _WORD _num_objs);
 #define NUM_TI		11
 #define NUM_FRSTR	10
 #define NUM_FRIMG	0
-#define NUM_OBS     74
-#define NUM_TREE	4
+#define NUM_OBS     57
+#define NUM_TREE	3
 #define NUM_UD		0
 #endif
 
@@ -321,110 +321,95 @@ static char spdview_string_15[] = "  6 Points";
 static char spdview_string_16[] = "  8 Points";
 static char spdview_string_17[] = "  9 Points";
 static char spdview_string_18[] = "  10 Points";
-static char spdview_string_19[] = "  12 Points";
-static char spdview_string_20[] = "  14 Points";
-static char spdview_string_21[] = "  16 Points";
-static char spdview_string_22[] = "  18 Points";
-static char spdview_string_23[] = "  24 Points";
-static char spdview_string_24[] = "  36 Points";
-static char spdview_string_25[] = "  48 Points";
-static char spdview_string_26[] = "  64 Points";
-static char spdview_string_27[] = "  72 Points";
-static char spdview_string_28[] = "FONT PARAMETERS";
-static char spdview_string_29[] = "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@";
-static char spdview_string_30[] = "Font name        : ________________________________________________________";
-static char spdview_string_31[] = "X";
-static char spdview_string_32[] = "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@";
-static char spdview_string_33[] = "Short name       : ________________________________________________________";
-static char spdview_string_34[] = "X";
-static char spdview_string_35[] = "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@";
-static char spdview_string_36[] = "Face name        : ________________________________________________________";
-static char spdview_string_37[] = "X";
-static char spdview_string_38[] = "@@@@@";
-static char spdview_string_39[] = "Font ID          : _____";
-static char spdview_string_40[] = "X";
-static char spdview_string_41[] = "OK";
-static char spdview_string_42[] = "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@";
-static char spdview_string_43[] = "Font form        : ________________________________________________________";
-static char spdview_string_44[] = "X";
-static char spdview_string_45[] = "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@";
-static char spdview_string_46[] = "Date             : ________________________________________________________";
-static char spdview_string_47[] = "X";
-static char spdview_string_48[] = "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@";
-static char spdview_string_49[] = "Layout name      : ________________________________________________________";
-static char spdview_string_50[] = "X";
-static char spdview_string_51[] = "@@@@@";
-static char spdview_string_52[] = "Chars in layout  : _____";
-static char spdview_string_53[] = "X";
-static char spdview_string_54[] = "@@@@@";
-static char spdview_string_55[] = "Chars in font    : _____";
-static char spdview_string_56[] = "X";
-static char spdview_string_57[] = "@@@@@";
-static char spdview_string_58[] = "First char index : _____";
-static char spdview_string_59[] = "X";
-static char spdview_string_60[] = " \001\002\003\004\005\006\007\b\t\n\013\f\r\016\017";
-static char spdview_string_61[] = "\020\021\022\023\024\025\026\027\030\031\032\033\034\035\036\037";
-static char spdview_string_62[] = " !\"#$%&\'()*+,-./";
-static char spdview_string_63[] = "0123456789:;<=>?";
-static char spdview_string_64[] = "@ABCDEFGHIJKLMNO";
-static char spdview_string_65[] = "PQRSTUVWXYZ[\\]^_";
-static char spdview_string_66[] = "`abcdefghijklmno";
-static char spdview_string_67[] = "pqrstuvwxyz{|}~\177";
-static char spdview_string_68[] = "\200\201\202\203\204\205\206\207\210\211\212\213\214\215\216\217";
-static char spdview_string_69[] = "\220\221\222\223\224\225\226\227\230\231\232\233\234\235\236\237";
-static char spdview_string_70[] = "\240\241\242\243\244\245\246\247\250\251\252\253\254\255\256\257";
-static char spdview_string_71[] = "\260\261\262\263\264\265\266\267\270\271\272\273\274\275\276\277";
-static char spdview_string_72[] = "\300\301\302\303\304\305\306\307\310\311\312\313\314\315\316\317";
-static char spdview_string_73[] = "\320\321\322\323\324\325\326\327\330\331\332\333\334\335\336\337";
-static char spdview_string_74[] = "\340\341\342\343\344\345\346\347\350\351\352\353\354\355\356\357";
-static char spdview_string_75[] = "\360\361\362\363\364\365\366\367\370\371\372\373\374\375\376\377";
-static char spdview_string_76[] = "SpeedoFont Displayer";
-static char spdview_string_77[] = "For Atari ST/TT/Falcon";
-static char spdview_string_78[] = "";
-static char spdview_string_79[] = "";
-static char spdview_string_80[] = "Written by Thorsten Otto";
-static char spdview_string_81[] = "Version";
-static char spdview_string_82[] = "1.99";
-static char spdview_string_83[] = "Apr 20 2017";
-static char spdview_string_84[] = "OK";
-static char spdview_string_85[] = "[3][Cannot create window][Abort]";
-static char spdview_string_86[] = "[3][Can\'t open|%s][Abort]";
-static char spdview_string_87[] = "[3][Not a GEM font.][Abort]";
-static char spdview_string_88[] = "[3][Not enough memory.][Abort]";
-static char spdview_string_89[] = "Select Font";
-static char spdview_string_90[] = "[1][Warning:|File may be truncated.][Continue]";
-static char spdview_string_91[] = "[1][Warning:|Flag for horizontal table set,|but there is none.][Continue]";
-static char spdview_string_92[] = "[1][Warning:|Horizontal offset table present,|but flag not set.][Continue]";
-static char spdview_string_93[] = "[3][Read error on file.][Abort]";
-static char spdview_string_94[] = "[3][No characters defined in font.][Abort]";
+static char spdview_string_19[] = "  11 Points";
+static char spdview_string_20[] = "  12 Points";
+static char spdview_string_21[] = "  14 Points";
+static char spdview_string_22[] = "  16 Points";
+static char spdview_string_23[] = "  18 Points";
+static char spdview_string_24[] = "  24 Points";
+static char spdview_string_25[] = "  36 Points";
+static char spdview_string_26[] = "  48 Points";
+static char spdview_string_27[] = "  64 Points";
+static char spdview_string_28[] = "  72 Points";
+static char spdview_string_29[] = "FONT PARAMETERS";
+static char spdview_string_30[] = "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@";
+static char spdview_string_31[] = "Font name        : ________________________________________________________";
+static char spdview_string_32[] = "X";
+static char spdview_string_33[] = "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@";
+static char spdview_string_34[] = "Short name       : ________________________________________________________";
+static char spdview_string_35[] = "X";
+static char spdview_string_36[] = "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@";
+static char spdview_string_37[] = "Face name        : ________________________________________________________";
+static char spdview_string_38[] = "X";
+static char spdview_string_39[] = "@@@@@";
+static char spdview_string_40[] = "Font ID          : _____";
+static char spdview_string_41[] = "X";
+static char spdview_string_42[] = "OK";
+static char spdview_string_43[] = "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@";
+static char spdview_string_44[] = "Font form        : ________________________________________________________";
+static char spdview_string_45[] = "X";
+static char spdview_string_46[] = "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@";
+static char spdview_string_47[] = "Date             : ________________________________________________________";
+static char spdview_string_48[] = "X";
+static char spdview_string_49[] = "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@";
+static char spdview_string_50[] = "Layout name      : ________________________________________________________";
+static char spdview_string_51[] = "X";
+static char spdview_string_52[] = "@@@@@";
+static char spdview_string_53[] = "Chars in layout  : _____";
+static char spdview_string_54[] = "X";
+static char spdview_string_55[] = "@@@@@";
+static char spdview_string_56[] = "Chars in font    : _____";
+static char spdview_string_57[] = "X";
+static char spdview_string_58[] = "@@@@@";
+static char spdview_string_59[] = "First char index : _____";
+static char spdview_string_60[] = "X";
+static char spdview_string_61[] = "SpeedoFont Displayer";
+static char spdview_string_62[] = "For Atari ST/TT/Falcon";
+static char spdview_string_63[] = "";
+static char spdview_string_64[] = "";
+static char spdview_string_65[] = "Written by Thorsten Otto";
+static char spdview_string_66[] = "Version";
+static char spdview_string_67[] = "1.99";
+static char spdview_string_68[] = "Apr 20 2017";
+static char spdview_string_69[] = "OK";
+static char spdview_string_70[] = "[3][Cannot create window][Abort]";
+static char spdview_string_71[] = "[3][Can\'t open|%s][Abort]";
+static char spdview_string_72[] = "[3][Not a GEM font.][Abort]";
+static char spdview_string_73[] = "[3][Not enough memory.][Abort]";
+static char spdview_string_74[] = "Select Font";
+static char spdview_string_75[] = "[1][Warning:|File may be truncated.][Continue]";
+static char spdview_string_76[] = "[1][Warning:|Flag for horizontal table set,|but there is none.][Continue]";
+static char spdview_string_77[] = "[1][Warning:|Horizontal offset table present,|but flag not set.][Continue]";
+static char spdview_string_78[] = "[3][Read error on file.][Abort]";
+static char spdview_string_79[] = "[3][No characters defined in font.][Abort]";
 
 
 static char *rs_frstr[NUM_FRSTR] = {
-	spdview_string_85,
-	spdview_string_86,
-	spdview_string_87,
-	spdview_string_88,
-	spdview_string_89,
-	spdview_string_90,
-	spdview_string_91,
-	spdview_string_92,
-	spdview_string_93,
-	spdview_string_94
+	spdview_string_70,
+	spdview_string_71,
+	spdview_string_72,
+	spdview_string_73,
+	spdview_string_74,
+	spdview_string_75,
+	spdview_string_76,
+	spdview_string_77,
+	spdview_string_78,
+	spdview_string_79
 };
 
 
 static TEDINFO rs_tedinfo[NUM_TI] = {
-	{ spdview_string_29, spdview_string_30, spdview_string_31, IBM, 0, TE_LEFT, 0x1180, 0x0, -1, 57,76 }, /* FONT_NAME */
-	{ spdview_string_32, spdview_string_33, spdview_string_34, IBM, 0, TE_LEFT, 0x1180, 0x0, -1, 57,76 }, /* FONT_SHORT_NAME */
-	{ spdview_string_35, spdview_string_36, spdview_string_37, IBM, 0, TE_LEFT, 0x1180, 0x0, -1, 57,76 }, /* FONT_FACE_NAME */
-	{ spdview_string_38, spdview_string_39, spdview_string_40, IBM, 0, TE_LEFT, 0x1180, 0x0, -1, 6,25 }, /* FONT_ID */
-	{ spdview_string_42, spdview_string_43, spdview_string_44, IBM, 0, TE_LEFT, 0x1180, 0x0, -1, 57,76 }, /* FONT_FORM */
-	{ spdview_string_45, spdview_string_46, spdview_string_47, IBM, 0, TE_LEFT, 0x1180, 0x0, -1, 57,76 }, /* FONT_DATE */
-	{ spdview_string_48, spdview_string_49, spdview_string_50, IBM, 0, TE_LEFT, 0x1180, 0x0, -1, 57,76 }, /* FONT_LAYOUT_NAME */
-	{ spdview_string_51, spdview_string_52, spdview_string_53, IBM, 0, TE_LEFT, 0x1180, 0x0, -1, 6,25 }, /* FONT_CHARS_LAYOUT */
-	{ spdview_string_54, spdview_string_55, spdview_string_56, IBM, 0, TE_LEFT, 0x1180, 0x0, -1, 6,25 }, /* FONT_CHARS_FONT */
-	{ spdview_string_57, spdview_string_58, spdview_string_59, IBM, 0, TE_LEFT, 0x1180, 0x0, -1, 6,25 }, /* FONT_FIRST_INDEX */
-	{ spdview_string_77, spdview_string_78, spdview_string_79, SMALL, 0, TE_LEFT, 0x1B00, 0x0, -1, 23,1 }
+	{ spdview_string_30, spdview_string_31, spdview_string_32, IBM, 0, TE_LEFT, 0x1180, 0x0, -1, 57,76 }, /* FONT_NAME */
+	{ spdview_string_33, spdview_string_34, spdview_string_35, IBM, 0, TE_LEFT, 0x1180, 0x0, -1, 57,76 }, /* FONT_SHORT_NAME */
+	{ spdview_string_36, spdview_string_37, spdview_string_38, IBM, 0, TE_LEFT, 0x1180, 0x0, -1, 57,76 }, /* FONT_FACE_NAME */
+	{ spdview_string_39, spdview_string_40, spdview_string_41, IBM, 0, TE_LEFT, 0x1180, 0x0, -1, 6,25 }, /* FONT_ID */
+	{ spdview_string_43, spdview_string_44, spdview_string_45, IBM, 0, TE_LEFT, 0x1180, 0x0, -1, 57,76 }, /* FONT_FORM */
+	{ spdview_string_46, spdview_string_47, spdview_string_48, IBM, 0, TE_LEFT, 0x1180, 0x0, -1, 57,76 }, /* FONT_DATE */
+	{ spdview_string_49, spdview_string_50, spdview_string_51, IBM, 0, TE_LEFT, 0x1180, 0x0, -1, 57,76 }, /* FONT_LAYOUT_NAME */
+	{ spdview_string_52, spdview_string_53, spdview_string_54, IBM, 0, TE_LEFT, 0x1180, 0x0, -1, 6,25 }, /* FONT_CHARS_LAYOUT */
+	{ spdview_string_55, spdview_string_56, spdview_string_57, IBM, 0, TE_LEFT, 0x1180, 0x0, -1, 6,25 }, /* FONT_CHARS_FONT */
+	{ spdview_string_58, spdview_string_59, spdview_string_60, IBM, 0, TE_LEFT, 0x1180, 0x0, -1, 6,25 }, /* FONT_FIRST_INDEX */
+	{ spdview_string_62, spdview_string_63, spdview_string_64, SMALL, 0, TE_LEFT, 0x1B00, 0x0, -1, 23,1 }
 };
 
 
@@ -452,30 +437,31 @@ static OBJECT rs_object[NUM_OBS] = {
 	{ 19, -1, -1, G_STRING, OF_NONE, OS_NORMAL, C_UNION(spdview_string_12), 0,1, 11,1 }, /* FINFO */
 	{ 20, -1, -1, G_STRING, OF_NONE, OS_DISABLED, C_UNION(spdview_string_13), 0,2, 11,1 },
 	{ 16, -1, -1, G_STRING, OF_NONE, OS_NORMAL, C_UNION(spdview_string_14), 0,3, 11,1 }, /* FQUIT */
-	{ 6, 22, 34, G_BOX, OF_NONE, OS_NORMAL, C_UNION(0xFF1100L), 14,0, 12,13 },
+	{ 6, 22, 35, G_BOX, OF_NONE, OS_NORMAL, C_UNION(0xFF1100L), 14,0, 12,14 },
 	{ 23, -1, -1, G_STRING, OF_NONE, OS_NORMAL, C_UNION(spdview_string_15), 0,0, 12,1 }, /* POINTS_6 */
 	{ 24, -1, -1, G_STRING, OF_NONE, OS_NORMAL, C_UNION(spdview_string_16), 0,1, 12,1 }, /* POINTS_8 */
 	{ 25, -1, -1, G_STRING, OF_NONE, OS_NORMAL, C_UNION(spdview_string_17), 0,2, 12,1 }, /* POINTS_9 */
 	{ 26, -1, -1, G_STRING, OF_NONE, OS_NORMAL, C_UNION(spdview_string_18), 0,3, 12,1 }, /* POINTS_10 */
-	{ 27, -1, -1, G_STRING, OF_NONE, OS_NORMAL, C_UNION(spdview_string_19), 0,4, 12,1 }, /* POINTS_12 */
-	{ 28, -1, -1, G_STRING, OF_NONE, OS_NORMAL, C_UNION(spdview_string_20), 0,5, 12,1 }, /* POINTS_14 */
-	{ 29, -1, -1, G_STRING, OF_NONE, OS_NORMAL, C_UNION(spdview_string_21), 0,6, 12,1 }, /* POINTS_16 */
-	{ 30, -1, -1, G_STRING, OF_NONE, OS_NORMAL, C_UNION(spdview_string_22), 0,7, 12,1 }, /* POINTS_18 */
-	{ 31, -1, -1, G_STRING, OF_NONE, OS_NORMAL, C_UNION(spdview_string_23), 0,8, 12,1 }, /* POINTS_24 */
-	{ 32, -1, -1, G_STRING, OF_NONE, OS_NORMAL, C_UNION(spdview_string_24), 0,9, 12,1 }, /* POINTS_36 */
-	{ 33, -1, -1, G_STRING, OF_NONE, OS_NORMAL, C_UNION(spdview_string_25), 0,10, 12,1 }, /* POINTS_48 */
-	{ 34, -1, -1, G_STRING, OF_NONE, OS_NORMAL, C_UNION(spdview_string_26), 0,11, 12,1 }, /* POINTS_64 */
-	{ 21, -1, -1, G_STRING, OF_LASTOB, OS_NORMAL, C_UNION(spdview_string_27), 0,12, 12,1 }, /* POINTS_72 */
+	{ 27, -1, -1, G_STRING, OF_NONE, OS_NORMAL, C_UNION(spdview_string_19), 0,4, 12,1 }, /* POINTS_11 */
+	{ 28, -1, -1, G_STRING, OF_NONE, OS_NORMAL, C_UNION(spdview_string_20), 0,5, 12,1 }, /* POINTS_12 */
+	{ 29, -1, -1, G_STRING, OF_NONE, OS_NORMAL, C_UNION(spdview_string_21), 0,6, 12,1 }, /* POINTS_14 */
+	{ 30, -1, -1, G_STRING, OF_NONE, OS_NORMAL, C_UNION(spdview_string_22), 0,7, 12,1 }, /* POINTS_16 */
+	{ 31, -1, -1, G_STRING, OF_NONE, OS_NORMAL, C_UNION(spdview_string_23), 0,8, 12,1 }, /* POINTS_18 */
+	{ 32, -1, -1, G_STRING, OF_NONE, OS_NORMAL, C_UNION(spdview_string_24), 0,9, 12,1 }, /* POINTS_24 */
+	{ 33, -1, -1, G_STRING, OF_NONE, OS_NORMAL, C_UNION(spdview_string_25), 0,10, 12,1 }, /* POINTS_36 */
+	{ 34, -1, -1, G_STRING, OF_NONE, OS_NORMAL, C_UNION(spdview_string_26), 0,11, 12,1 }, /* POINTS_48 */
+	{ 35, -1, -1, G_STRING, OF_NONE, OS_NORMAL, C_UNION(spdview_string_27), 0,12, 12,1 }, /* POINTS_64 */
+	{ 21, -1, -1, G_STRING, OF_LASTOB, OS_NORMAL, C_UNION(spdview_string_28), 0,13, 12,1 }, /* POINTS_72 */
 
 /* FONT_PARAMS */
 
 	{ -1, 1, 12, G_BOX, OF_FL3DBAK, OS_OUTLINED, C_UNION(0x21100L), 2,1, 79,16 },
-	{ 2, -1, -1, G_STRING, OF_NONE, OS_NORMAL, C_UNION(spdview_string_28), 20,1, 15,1 },
+	{ 2, -1, -1, G_STRING, OF_NONE, OS_NORMAL, C_UNION(spdview_string_29), 20,1, 15,1 },
 	{ 3, -1, -1, G_FTEXT, OF_NONE, OS_NORMAL, C_UNION(&rs_tedinfo[0]), 2,3, 75,1 }, /* FONT_NAME */
 	{ 4, -1, -1, G_FTEXT, OF_NONE, OS_NORMAL, C_UNION(&rs_tedinfo[1]), 2,4, 75,1 }, /* FONT_SHORT_NAME */
 	{ 5, -1, -1, G_FTEXT, OF_NONE, OS_NORMAL, C_UNION(&rs_tedinfo[2]), 2,5, 75,1 }, /* FONT_FACE_NAME */
 	{ 6, -1, -1, G_FTEXT, OF_NONE, OS_NORMAL, C_UNION(&rs_tedinfo[3]), 2,9, 24,1 }, /* FONT_ID */
-	{ 7, -1, -1, G_BUTTON, 0x607, OS_NORMAL, C_UNION(spdview_string_41), 44,14, 8,1 }, /* FONT_OK */
+	{ 7, -1, -1, G_BUTTON, 0x607, OS_NORMAL, C_UNION(spdview_string_42), 44,14, 8,1 }, /* FONT_OK */
 	{ 8, -1, -1, G_FTEXT, OF_NONE, OS_NORMAL, C_UNION(&rs_tedinfo[4]), 2,6, 75,1 }, /* FONT_FORM */
 	{ 9, -1, -1, G_FTEXT, OF_NONE, OS_NORMAL, C_UNION(&rs_tedinfo[5]), 2,7, 75,1 }, /* FONT_DATE */
 	{ 10, -1, -1, G_FTEXT, OF_NONE, OS_NORMAL, C_UNION(&rs_tedinfo[6]), 2,8, 75,1 }, /* FONT_LAYOUT_NAME */
@@ -483,45 +469,23 @@ static OBJECT rs_object[NUM_OBS] = {
 	{ 12, -1, -1, G_FTEXT, OF_NONE, OS_NORMAL, C_UNION(&rs_tedinfo[8]), 2,11, 24,1 }, /* FONT_CHARS_FONT */
 	{ 0, -1, -1, G_FTEXT, OF_LASTOB, OS_NORMAL, C_UNION(&rs_tedinfo[9]), 2,12, 24,1 }, /* FONT_FIRST_INDEX */
 
-/* PANEL */
-
-	{ -1, 1, 1, G_BOX, OF_FL3DBAK, OS_NORMAL, C_UNION(0x74001100L), 0,0, 24,20 },
-	{ 0, 2, 17, G_BOX, OF_NONE, OS_OUTLINED, C_UNION(0x21100L), 2,1, 20,18 },
-	{ 3, -1, -1, G_STRING, OF_NONE, OS_NORMAL, C_UNION(spdview_string_60), 2,1, 16,1 },
-	{ 4, -1, -1, G_STRING, OF_NONE, OS_NORMAL, C_UNION(spdview_string_61), 2,2, 16,1 },
-	{ 5, -1, -1, G_STRING, OF_NONE, OS_NORMAL, C_UNION(spdview_string_62), 2,3, 16,1 },
-	{ 6, -1, -1, G_STRING, OF_NONE, OS_NORMAL, C_UNION(spdview_string_63), 2,4, 16,1 },
-	{ 7, -1, -1, G_STRING, OF_NONE, OS_NORMAL, C_UNION(spdview_string_64), 2,5, 16,1 },
-	{ 8, -1, -1, G_STRING, OF_NONE, OS_NORMAL, C_UNION(spdview_string_65), 2,6, 16,1 },
-	{ 9, -1, -1, G_STRING, OF_NONE, OS_NORMAL, C_UNION(spdview_string_66), 2,7, 16,1 },
-	{ 10, -1, -1, G_STRING, OF_NONE, OS_NORMAL, C_UNION(spdview_string_67), 2,8, 16,1 },
-	{ 11, -1, -1, G_STRING, OF_NONE, OS_NORMAL, C_UNION(spdview_string_68), 2,9, 16,1 },
-	{ 12, -1, -1, G_STRING, OF_NONE, OS_NORMAL, C_UNION(spdview_string_69), 2,10, 16,1 },
-	{ 13, -1, -1, G_STRING, OF_NONE, OS_NORMAL, C_UNION(spdview_string_70), 2,11, 16,1 },
-	{ 14, -1, -1, G_STRING, OF_NONE, OS_NORMAL, C_UNION(spdview_string_71), 2,12, 16,1 },
-	{ 15, -1, -1, G_STRING, OF_NONE, OS_NORMAL, C_UNION(spdview_string_72), 2,13, 16,1 },
-	{ 16, -1, -1, G_STRING, OF_NONE, OS_NORMAL, C_UNION(spdview_string_73), 2,14, 16,1 },
-	{ 17, -1, -1, G_STRING, OF_NONE, OS_NORMAL, C_UNION(spdview_string_74), 2,15, 16,1 },
-	{ 1, -1, -1, G_STRING, OF_LASTOB, OS_NORMAL, C_UNION(spdview_string_75), 2,16, 16,1 },
-
 /* ABOUT_DIALOG */
 
 	{ -1, 1, 7, G_BOX, OF_FL3DBAK, OS_OUTLINED, C_UNION(0x21100L), 0,0, 32,13 },
-	{ 2, -1, -1, G_STRING, OF_NONE, OS_NORMAL, C_UNION(spdview_string_76), 3,1, 20,1 },
+	{ 2, -1, -1, G_STRING, OF_NONE, OS_NORMAL, C_UNION(spdview_string_61), 3,1, 20,1 },
 	{ 3, -1, -1, G_TEXT, OF_NONE, OS_NORMAL, C_UNION(&rs_tedinfo[10]), 3,2, 1040,1 },
-	{ 4, -1, -1, G_STRING, OF_NONE, OS_NORMAL, C_UNION(spdview_string_80), 3,4, 24,1 },
-	{ 5, -1, -1, G_STRING, OF_NONE, OS_NORMAL, C_UNION(spdview_string_81), 3,6, 7,1 }, /* ABOUT_VERSION_LABEL */
-	{ 6, -1, -1, G_STRING, OF_NONE, OS_NORMAL, C_UNION(spdview_string_82), 11,6, 4,1 }, /* ABOUT_VERSION */
-	{ 7, -1, -1, G_STRING, OF_NONE, OS_NORMAL, C_UNION(spdview_string_83), 3,8, 11,1 }, /* ABOUT_DATE */
-	{ 0, -1, -1, G_BUTTON, 0x627, OS_NORMAL, C_UNION(spdview_string_84), 22,11, 8,1 }
+	{ 4, -1, -1, G_STRING, OF_NONE, OS_NORMAL, C_UNION(spdview_string_65), 3,4, 24,1 },
+	{ 5, -1, -1, G_STRING, OF_NONE, OS_NORMAL, C_UNION(spdview_string_66), 3,6, 7,1 }, /* ABOUT_VERSION_LABEL */
+	{ 6, -1, -1, G_STRING, OF_NONE, OS_NORMAL, C_UNION(spdview_string_67), 11,6, 4,1 }, /* ABOUT_VERSION */
+	{ 7, -1, -1, G_STRING, OF_NONE, OS_NORMAL, C_UNION(spdview_string_68), 3,8, 11,1 }, /* ABOUT_DATE */
+	{ 0, -1, -1, G_BUTTON, 0x627, OS_NORMAL, C_UNION(spdview_string_69), 22,11, 8,1 }
 };
 
 
 static OBJECT *rs_trindex[NUM_TREE] = {
 	&rs_object[0], /* MAINMENU */
-	&rs_object[35], /* FONT_PARAMS */
-	&rs_object[48], /* PANEL */
-	&rs_object[66] /* ABOUT_DIALOG */
+	&rs_object[36], /* FONT_PARAMS */
+	&rs_object[49] /* ABOUT_DIALOG */
 };
 
 
@@ -718,7 +682,7 @@ _WORD spdview_rsc_free()
 #endif /* RSC_NAMED_FUNCTIONS */
 
 #else /* !RSC_STATIC_FILE */
-int rs_numstrings = 95;
+int rs_numstrings = 80;
 int rs_numfrstr = 10;
 
 int rs_nuser = 0;
@@ -728,8 +692,8 @@ int rs_numfrimg = 0;
 int rs_numib = 0;
 int rs_numcib = 0;
 int rs_numti = 11;
-int rs_numobs = 74;
-int rs_numtree = 4;
+int rs_numobs = 57;
+int rs_numtree = 3;
 
 char rs_name[] = "spdview.rsc";
 

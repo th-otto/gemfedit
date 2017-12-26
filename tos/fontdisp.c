@@ -265,11 +265,15 @@ static void panelwin_draw(const GRECT *area)
 
 static _BOOL open_screen(void)
 {
-	_WORD work_in[] = { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2 };
+	_WORD work_in[11];
 	_WORD work_out[57];
+	_WORD i;
 
 	vdihandle = aeshandle;
-	(void) v_opnvwk(work_in, &vdihandle, work_out);	/* VDI workstation needed */
+	for (i = 0; i < 10; i++)
+		work_in[i] = 1;
+	work_in[10] = 2;
+	v_opnvwk(work_in, &vdihandle, work_out);	/* VDI workstation needed */
 	
 	return TRUE;
 }

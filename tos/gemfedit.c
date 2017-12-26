@@ -646,11 +646,15 @@ static void mainwin_click(_WORD x, _WORD y)
 
 static _BOOL open_screen(void)
 {
-	_WORD work_in[] = { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2 };
+	_WORD work_in[11];
 	_WORD dummy;
+	_WORD i;
 	
 	vdihandle = aeshandle;
-	(void) v_opnvwk(work_in, &vdihandle, workout);	/* VDI workstation needed */
+	for (i = 0; i < 10; i++)
+		work_in[i] = 1;
+	work_in[10] = 2;
+	v_opnvwk(work_in, &vdihandle, workout);	/* VDI workstation needed */
 	screen_fdb.fd_addr = 0;
 	screen_fdb.fd_w = workout[0] + 1;
 	screen_fdb.fd_h = workout[1] + 1;

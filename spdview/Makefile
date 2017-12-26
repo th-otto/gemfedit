@@ -1,6 +1,6 @@
 CC = gcc
-CFLAGS = -O0 -g -Wall -I../include -I../speedo
-LDFLAGS = 
+CFLAGS = -O2 -g -Wall -I../include -I../speedo
+LDFLAGS = -s
 LIBS= -lcurl -lpng12 -lz
 
 SPDLIB = reset.o do_char.o do_trns.o set_spcs.o set_trns.o \

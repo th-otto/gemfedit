@@ -28,17 +28,17 @@ static _WORD gl_wchar, gl_hchar;
 #define SWAP_W(s) s = cpu_swab16(s)
 #define SWAP_L(s) s = cpu_swab32(s)
 
-#define PANEL_Y_MARGIN 20
-#define PANEL_X_MARGIN 20
-#define PANEL_WKIND (NAME | CLOSER | MOVER)
+#define PREVIEW_X_MARGIN 10
+#define PREVIEW_Y_MARGIN 10
+#define PREVIEW_WKIND (NAME | CLOSER | MOVER)
 
-#define MAIN_Y_MARGIN 10
 #define MAIN_X_MARGIN 10
+#define MAIN_Y_MARGIN 10
 #define MAIN_WKIND (NAME | CLOSER | MOVER | SIZER | UPARROW | DNARROW | VSLIDE | LFARROW | RTARROW | HSLIDE)
 
 static _WORD app_id = -1;
 static _WORD mainwin = -1;
-static _WORD panelwin = -1;
+static _WORD previewwin = -1;
 static _WORD aeshandle;
 static _WORD vdihandle = 0;
 static MFDB screen_fdb;
@@ -46,7 +46,10 @@ static _WORD workout[57];
 static _WORD xworkout[57];
 static _BOOL quit_app;
 static OBJECT *menu;
-static const int scaled_margin = 1;
+static const int mainwin_gridsize = 1;
+static const int preview_gridsize = 1;
+static _WORD scalex = 5;
+static _WORD scaley = 5;
 
 static _WORD font_cw;
 static _WORD font_ch;
@@ -66,11 +69,12 @@ static long top_row;
 static long left_col;
 static _WORD row_height = 1;
 static _WORD col_width = 1;
+static uint16_t cur_char = 0x41;
 
 static long point_size = 240;
 static int x_res = 72;
 static int y_res = 72;
-static int quality = 0;
+static int quality = 1;
 static specs_t specs;
 static ufix16 char_index, char_id;
 #define	MAX_BITS	1024
@@ -85,7 +89,7 @@ typedef struct {
 	uint16_t char_index;
 	uint16_t char_id;
 	glyphinfo_t bbox;
-	MFDB bitmap;
+	uint16_t *bitmap;
 } charinfo;
 static charinfo *infos;
 
@@ -178,11 +182,11 @@ static void destroy_win(void)
 		wind_delete(mainwin);
 		mainwin = -1;
 	}
-	if (panelwin > 0)
+	if (previewwin > 0)
 	{
-		wind_close(panelwin);
-		wind_delete(panelwin);
-		panelwin = -1;
+		wind_close(previewwin);
+		wind_delete(previewwin);
+		previewwin = -1;
 	}
 	if (vdihandle > 0)
 	{
@@ -194,34 +198,43 @@ static void destroy_win(void)
 /* ------------------------------------------------------------------------- */
 
 #define ror(x) (((x) >> 1) | ((x) & 1 ? 0x80 : 0))
+#define rorw(x) (((x) >> 1) | ((x) & 1 ? 0x8000 : 0))
 
 static void draw_char(uint16_t ch, _WORD x0, _WORD y0)
 {
 	_WORD pxy[8];
 	_WORD colors[2];
 	charinfo *c;
+	MFDB src;
 	
 	if (!is_font_loaded())
 		return;
 	if (ch >= num_ids)
 		return;
 	c = &infos[ch];
-	if (c->bitmap.fd_addr == NULL || c->bbox.width == 0 || c->bbox.height == 0)
+	if (c->bitmap == NULL || c->bbox.width == 0 || c->bbox.height == 0)
 		return;
+	src.fd_addr = c->bitmap;
+	src.fd_wdwidth = (c->bbox.width + 15) >> 4;
+	src.fd_w = c->bbox.width;
+	src.fd_h = c->bbox.height;
+	src.fd_nplanes = 1;
+	src.fd_stand = 1;
+	src.fd_r1 = src.fd_r2 = src.fd_r3 = 0;
 	colors[0] = G_BLACK;
 	colors[1] = G_WHITE;
 	pxy[0] = 0;
 	pxy[1] = 0;
 	pxy[2] = c->bbox.width - 1;
 	pxy[3] = c->bbox.height - 1;
-	pxy[4] = x0 - font_bb.lbearing + c->bbox.lbearing;
+	pxy[4] = x0 - (font_bb.lbearing - c->bbox.lbearing);
 	pxy[5] = y0 + font_bb.ascent - c->bbox.ascent;
 	pxy[6] = pxy[4] + pxy[2];
 	pxy[7] = pxy[5] + pxy[3];
 	if (screen_fdb.fd_nplanes == 1)
-		vro_cpyfm(vdihandle, S_OR_D, pxy, &c->bitmap, &screen_fdb);
+		vro_cpyfm(vdihandle, S_OR_D, pxy, &src, &screen_fdb);
 	else
-		vrt_cpyfm(vdihandle, MD_TRANS, pxy, &c->bitmap, &screen_fdb, colors);
+		vrt_cpyfm(vdihandle, MD_TRANS, pxy, &src, &screen_fdb, colors);
 }
 
 /* ------------------------------------------------------------------------- */
@@ -237,8 +250,8 @@ static void mainwin_draw(const GRECT *area)
 	
 	v_hide_c(vdihandle);
 	wind_get_grect(mainwin, WF_WORKXYWH, &work);
-	scaled_w = col_width * (CHAR_COLUMNS - left_col) + scaled_margin;
-	scaled_h = row_height * (char_rows - top_row) + scaled_margin;
+	scaled_w = col_width * (CHAR_COLUMNS - left_col) + mainwin_gridsize;
+	scaled_h = row_height * (char_rows - top_row) + mainwin_gridsize;
 	if (scaled_w > work.g_w)
 		scaled_w = work.g_w;
 	if (scaled_h > work.g_h)
@@ -258,53 +271,56 @@ static void mainwin_draw(const GRECT *area)
 			vsf_perimeter(vdihandle, 0);
 			vsf_interior(vdihandle, FIS_SOLID);
 			vr_recfl(vdihandle, pxy);
-	
-			vsf_color(vdihandle, G_RED);
-			/*
-			 * draw the horizontal grid lines
-			 */
-			for (y = 0; y < (char_rows + 1); y++)
+			
+			if (mainwin_gridsize > 0)
 			{
-				long yy = MAIN_Y_MARGIN + (y - top_row) * row_height;
-				if ((yy + row_height) < 0)
-					continue;
-				if (yy >= work.g_h)
-					break;
-				pxy[0] = work.g_x + MAIN_X_MARGIN;
-				pxy[1] = work.g_y + (_WORD)yy;
-				pxy[2] = pxy[0] + (_WORD)scaled_w - 1;
-				pxy[3] = pxy[1] + scaled_margin - 1;
-				vr_recfl(vdihandle, pxy);
-			}
-			/*
-			 * draw the vertical grid lines
-			 */
-			for (x = 0; x < (CHAR_COLUMNS + 1); x++)
-			{
-				long xx = MAIN_X_MARGIN + (x - left_col) * col_width;
-				if ((xx + col_width) < 0)
-					continue;
-				if (xx >= work.g_w)
-					break;
-				pxy[0] = work.g_x + (_WORD)xx;
-				pxy[1] = work.g_y + MAIN_Y_MARGIN;
-				pxy[2] = pxy[0] + scaled_margin - 1;
-				pxy[3] = pxy[1] + (_WORD)scaled_h - 1;
-				vr_recfl(vdihandle, pxy);
+				vsf_color(vdihandle, G_RED);
+				/*
+				 * draw the horizontal grid lines
+				 */
+				for (y = 0; y < (char_rows + 1); y++)
+				{
+					long yy = MAIN_Y_MARGIN + (y - top_row) * row_height;
+					if ((yy + row_height) < 0)
+						continue;
+					if (yy >= work.g_h)
+						break;
+					pxy[0] = work.g_x + MAIN_X_MARGIN;
+					pxy[1] = work.g_y + (_WORD)yy;
+					pxy[2] = pxy[0] + (_WORD)scaled_w - 1;
+					pxy[3] = pxy[1] + mainwin_gridsize - 1;
+					vr_recfl(vdihandle, pxy);
+				}
+				/*
+				 * draw the vertical grid lines
+				 */
+				for (x = 0; x < (CHAR_COLUMNS + 1); x++)
+				{
+					long xx = MAIN_X_MARGIN + (x - left_col) * col_width;
+					if ((xx + col_width) < 0)
+						continue;
+					if (xx >= work.g_w)
+						break;
+					pxy[0] = work.g_x + (_WORD)xx;
+					pxy[1] = work.g_y + MAIN_Y_MARGIN;
+					pxy[2] = pxy[0] + mainwin_gridsize - 1;
+					pxy[3] = pxy[1] + (_WORD)scaled_h - 1;
+					vr_recfl(vdihandle, pxy);
+				}
 			}
 			
 			for (y = 0; y < char_rows; y++)
 			{
-				long yy = MAIN_Y_MARGIN + (y - top_row) * row_height + scaled_margin;
-				if ((yy + row_height) <= (MAIN_Y_MARGIN + scaled_margin))
+				long yy = MAIN_Y_MARGIN + (y - top_row) * row_height + mainwin_gridsize;
+				if ((yy + row_height) <= (MAIN_Y_MARGIN + mainwin_gridsize))
 					continue;
 				if (yy >= work.g_h)
 					break;
 				for (x = 0; x < CHAR_COLUMNS; x++)
 				{
 					uint16_t c = y * CHAR_COLUMNS + x;
-					long xx = MAIN_X_MARGIN + (x - left_col) * col_width + scaled_margin;
-					if ((xx + col_width) <= (MAIN_X_MARGIN + scaled_margin))
+					long xx = MAIN_X_MARGIN + (x - left_col) * col_width + mainwin_gridsize;
+					if ((xx + col_width) <= (MAIN_X_MARGIN + mainwin_gridsize))
 						continue;
 					if (xx >= work.g_w)
 						break;
@@ -320,40 +336,197 @@ static void mainwin_draw(const GRECT *area)
 
 /* ------------------------------------------------------------------------- */
 
-static void panelwin_draw(const GRECT *area)
+static void redraw_win(_WORD win)
+{
+	_WORD message[8];
+	
+	message[0] = WM_REDRAW;
+	message[1] = gl_apid;
+	message[2] = 0;
+	message[3] = win;
+	wind_get_grect(win, WF_WORKXYWH, (GRECT *)&message[4]);
+	appl_write(gl_apid, 16, message);
+}
+
+/* ------------------------------------------------------------------------- */
+
+static void mainwin_click(_WORD mox, _WORD moy)
+{
+	long x, y;
+	GRECT work;
+	
+	wind_get_grect(mainwin, WF_WORKXYWH, &work);
+	x = (mox - work.g_x - MAIN_X_MARGIN) / col_width + left_col;
+	y = (moy - work.g_y - MAIN_Y_MARGIN) / row_height + top_row;
+	if (x >= 0 && x < CHAR_COLUMNS && y >= 0 && y < char_rows)
+	{
+		cur_char = (uint16_t)(y * CHAR_COLUMNS + x);
+	} else
+	{
+		cur_char = UNDEFINED;
+	}
+	redraw_win(previewwin);
+}
+
+/* ------------------------------------------------------------------------- */
+
+static void preview_line(const GRECT *work, _WORD x, _WORD y, _WORD w, _WORD h)
+{
+	_WORD pxy[4];
+	
+	pxy[0] = work->g_x + PREVIEW_X_MARGIN + x * (scalex + preview_gridsize);
+	pxy[1] = work->g_y + PREVIEW_Y_MARGIN + y * (scaley + preview_gridsize);
+	pxy[2] = pxy[0] + w * (scalex + preview_gridsize) + preview_gridsize - 1;
+	pxy[3] = pxy[1] + h * (scaley + preview_gridsize) + preview_gridsize - 1;
+	vr_recfl(vdihandle, pxy);
+}
+
+/* -------------------------------------------------------------------------- */
+
+static void draw_preview(const GRECT *work, uint16_t ch)
+{
+	charinfo *c;
+	uint16_t *dat, *p;
+	_WORD x0, y0;
+	_WORD x, y;
+	_UWORD mask;
+	_UWORD wdwidth;
+	
+	if (!is_font_loaded())
+		return;
+	if (ch >= num_ids)
+		return;
+	c = &infos[ch];
+	if (c->bitmap == NULL || c->bbox.width == 0 || c->bbox.height == 0)
+		return;
+	x0 = work->g_x + PREVIEW_X_MARGIN + preview_gridsize;
+	y0 = work->g_y + PREVIEW_Y_MARGIN + preview_gridsize;
+	x0 -= (font_bb.lbearing - c->bbox.lbearing) * (scalex + preview_gridsize);
+	y0 += (font_bb.ascent - c->bbox.ascent) * (scaley + preview_gridsize);
+	vsf_color(vdihandle, G_BLACK);
+	dat = c->bitmap;
+	wdwidth = (c->bbox.width + 15) >> 4;
+	for (y = 0; y < c->bbox.height; y++, dat += wdwidth)
+	{
+		mask = 0x8000;
+		p = dat;
+		for (x = 0; x < c->bbox.width; x++)
+		{
+			if (*p & mask)
+			{
+				_WORD pxy[4];
+				
+				pxy[0] = x0 + x * (scalex + preview_gridsize);
+				pxy[1] = y0 + y * (scaley + preview_gridsize);
+				pxy[2] = pxy[0] + scalex - 1;
+				pxy[3] = pxy[1] + scaley - 1;
+				vr_recfl(vdihandle, pxy);
+			}
+			mask = rorw(mask);
+			if (mask == 0x8000)
+				p++;
+		}
+	}
+
+	if (preview_gridsize > 0)
+	{
+		/*
+		 * draw the bounding box
+		 */
+		vsf_color(vdihandle, screen_fdb.fd_nplanes == 1 ? G_WHITE : G_GREEN);
+		x0 = -(font_bb.lbearing - c->bbox.lbearing);
+		y0 = (font_bb.ascent - c->bbox.ascent);
+		preview_line(work, x0, y0, c->bbox.width, 0);
+		preview_line(work, x0, y0, 0, c->bbox.height);
+		preview_line(work, x0, y0 + c->bbox.height, c->bbox.width, 0);
+		preview_line(work, x0 + c->bbox.width, y0, 0, c->bbox.height);
+		/*
+		 * draw the baseline
+		 */
+		vsf_color(vdihandle, screen_fdb.fd_nplanes == 1 ? G_WHITE : G_BLUE);
+		y0 = font_bb.ascent;
+		preview_line(work, 0, y0, font_cw, 0);
+	}
+}
+
+/* ------------------------------------------------------------------------- */
+
+static void previewwin_draw(const GRECT *area)
 {
 	GRECT gr;
-	OBJECT *panel = rs_tree(PANEL);
+	GRECT work;
+	_WORD pxy[4];
+	_WORD x, y;
 	
-	wind_get_grect(panelwin, WF_WORKXYWH, &gr);
-	panel[ROOT].ob_x = gr.g_x;
-	panel[ROOT].ob_y = gr.g_y;
+	wind_get_grect(previewwin, WF_WORKXYWH, &work);
 	v_hide_c(vdihandle);
-	wind_get_grect(panelwin, WF_FIRSTXYWH, &gr);
+	wind_get_grect(previewwin, WF_FIRSTXYWH, &gr);
 	while (gr.g_w > 0 && gr.g_h > 0)
 	{
 		if (rc_intersect(area, &gr))
 		{
-			objc_draw_grect(panel, ROOT, MAX_DEPTH, &gr);
+			pxy[0] = gr.g_x;
+			pxy[1] = gr.g_y;
+			pxy[2] = gr.g_x + gr.g_w - 1;
+			pxy[3] = gr.g_y + gr.g_h - 1;
+			vs_clip(vdihandle, 1, pxy);
+			vswr_mode(vdihandle, MD_REPLACE);
+			vsf_color(vdihandle, G_WHITE);
+			vsf_perimeter(vdihandle, 0);
+			vsf_interior(vdihandle, FIS_SOLID);
+			vr_recfl(vdihandle, pxy);
+
+			if (preview_gridsize > 0)
+			{
+				vsf_color(vdihandle, G_RED);
+				/*
+				 * draw the horizontal grid lines
+				 */
+				for (y = 0; y < (font_ch + 1); y++)
+				{
+					preview_line(&work, 0, y, font_cw, 0);
+				}
+				/*
+				 * draw the vertical grid lines
+				 */
+				for (x = 0; x < (font_cw + 1); x++)
+				{
+					preview_line(&work, x, 0, 0, font_ch);
+				}
+			}
+			draw_preview(&work, cur_char);
 		}
-		wind_get_grect(panelwin, WF_NEXTXYWH, &gr);
+		wind_get_grect(previewwin, WF_NEXTXYWH, &gr);
 	}
 	v_show_c(vdihandle, 1);
 }
 
 /* ------------------------------------------------------------------------- */
 
+static void preview_click(_WORD mox, _WORD moy)
+{
+	UNUSED(mox);
+	UNUSED(moy);
+	/* nothing to do for now */
+}
+
+/* ------------------------------------------------------------------------- */
+
 static _BOOL open_screen(void)
 {
-	_WORD work_in[] = { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2 };
+	_WORD work_in[11];
 	_WORD dummy;
+	_WORD i;
 	
 	vdihandle = aeshandle;
-	(void) v_opnvwk(work_in, &vdihandle, workout);	/* VDI workstation needed */
+	for (i = 0; i < 10; i++)
+		work_in[i] = 1;
+	work_in[10] = 2;
+	v_opnvwk(work_in, &vdihandle, workout);	/* VDI workstation needed */
 	screen_fdb.fd_addr = 0;
 	screen_fdb.fd_w = workout[0] + 1;
 	screen_fdb.fd_h = workout[1] + 1;
-	screen_fdb.fd_wdwidth = screen_fdb.fd_w >> 4;
+	screen_fdb.fd_wdwidth = (screen_fdb.fd_w + 15) >> 4;
 	vq_extnd(vdihandle, 1, xworkout);
 	screen_fdb.fd_nplanes = xworkout[4];
 	screen_fdb.fd_stand = FALSE;
@@ -387,31 +560,31 @@ static void do_alert1(_WORD num)
 
 /* ------------------------------------------------------------------------- */
 
-static _BOOL create_panel_window(void)
+static _BOOL create_preview_window(void)
 {
 	GRECT gr, desk;
 	_WORD wkind;
-	OBJECT *panel = rs_tree(PANEL);
 	
 	/* create a window */
-	form_center_grect(panel, &gr);
 	gr.g_x = 100;
 	gr.g_y = 100;
+	gr.g_w = PREVIEW_X_MARGIN * 2 + (scalex + preview_gridsize) * font_cw + preview_gridsize;
+	gr.g_h = PREVIEW_Y_MARGIN * 2 + (scaley + preview_gridsize) * font_ch + preview_gridsize;
 	wind_get_grect(DESK, WF_WORKXYWH, &desk);
-	wkind = PANEL_WKIND;
+	wkind = PREVIEW_WKIND;
 	wind_calc_grect(WC_BORDER, wkind, &gr, &gr);
 	gr.g_x = 20;
 	gr.g_y = 20;
 	rc_intersect(&desk, &gr);
-	panelwin = wind_create_grect(wkind, &desk);
-	if (panelwin < 0)
+	previewwin = wind_create_grect(wkind, &desk);
+	if (previewwin < 0)
 	{
 		do_alert1(AL_NOWINDOW);
 		return FALSE;
 	}
 
-	wind_set_str(panelwin, WF_NAME, "System Font");
-	wind_open_grect(panelwin, &gr);
+	wind_set_str(previewwin, WF_NAME, "");
+	wind_open_grect(previewwin, &gr);
 	
 	return TRUE;
 }
@@ -486,15 +659,15 @@ static void calc_hslider(void)
 
 static _BOOL create_window(void)
 {
-	GRECT gr, desk, panel;
+	GRECT gr, desk, preview;
 	_WORD wkind;
 	_WORD width;
 	long height;
 	
 	wind_get_grect(DESK, WF_WORKXYWH, &desk);
 
-	width = MAIN_X_MARGIN * 2 + col_width * CHAR_COLUMNS + scaled_margin;
-	height = MAIN_Y_MARGIN * 2 + row_height * char_rows + scaled_margin;
+	width = MAIN_X_MARGIN * 2 + col_width * CHAR_COLUMNS + mainwin_gridsize;
+	height = MAIN_Y_MARGIN * 2 + row_height * char_rows + mainwin_gridsize;
 	if (height > desk.g_h)
 		height = desk.g_h;
 	
@@ -505,9 +678,9 @@ static _BOOL create_window(void)
 	gr.g_h = (_WORD)height;
 	wkind = MAIN_WKIND;
 	wind_calc_grect(WC_BORDER, wkind, &gr, &gr);
-	wind_get_grect(panelwin, WF_CURRXYWH, &panel);
-	gr.g_x = panel.g_x + panel.g_w + 20;
-	gr.g_y = panel.g_y;
+	wind_get_grect(previewwin, WF_CURRXYWH, &preview);
+	gr.g_x = preview.g_x + preview.g_w + 20;
+	gr.g_y = preview.g_y;
 	rc_intersect(&desk, &gr);
 	mainwin = wind_create_grect(wkind, &desk);
 	if (mainwin < 0)
@@ -536,13 +709,26 @@ static _BOOL resize_window(void)
 	long height;
 	
 	wind_get_grect(DESK, WF_WORKXYWH, &desk);
-	width = MAIN_X_MARGIN * 2 + col_width * CHAR_COLUMNS + scaled_margin;
-	height = MAIN_Y_MARGIN * 2 + row_height * char_rows + scaled_margin;
+
+	wind_get_grect(previewwin, WF_CURRXYWH, &gr);
+	wkind = PREVIEW_WKIND;
+	wind_calc_grect(WC_WORK, wkind, &gr, &gr);
+	gr.g_w = PREVIEW_X_MARGIN * 2 + (scalex + preview_gridsize) * font_cw + preview_gridsize;
+	gr.g_h = PREVIEW_Y_MARGIN * 2 + (scaley + preview_gridsize) * font_ch + preview_gridsize;
+	wind_calc_grect(WC_BORDER, wkind, &gr, &gr);
+	rc_intersect(&desk, &gr);
+	wind_set_grect(previewwin, WF_CURRXYWH, &gr);
+	
+	width = MAIN_X_MARGIN * 2 + col_width * CHAR_COLUMNS + mainwin_gridsize;
+	height = MAIN_Y_MARGIN * 2 + row_height * char_rows + mainwin_gridsize;
 	if (height > desk.g_h)
 		height = desk.g_h;
 	
 	wind_get_grect(mainwin, WF_CURRXYWH, &gr);
 	wkind = MAIN_WKIND;
+	wind_get_grect(previewwin, WF_CURRXYWH, &gr);
+	gr.g_x = gr.g_x + gr.g_w + 20;
+	gr.g_y = gr.g_y;
 	wind_calc_grect(WC_WORK, wkind, &gr, &gr);
 	gr.g_w = width;
 	gr.g_h = (_WORD)height;
@@ -553,20 +739,6 @@ static _BOOL resize_window(void)
 	calc_hslider();
 	
 	return TRUE;
-}
-
-/* ------------------------------------------------------------------------- */
-
-static void redraw_win(_WORD win)
-{
-	_WORD message[8];
-	
-	message[0] = WM_REDRAW;
-	message[1] = gl_apid;
-	message[2] = 0;
-	message[3] = win;
-	wind_get_grect(win, WF_WORKXYWH, (GRECT *)&message[4]);
-	appl_write(gl_apid, 16, message);
 }
 
 /*****************************************************************************/
@@ -648,27 +820,6 @@ void sp_open_bitmap(fix31 xorg, fix31 yorg, fix15 xsize, fix15 ysize)
 	width = (pix_width * 7200L) / (point_size * y_res);
 
 	sp_get_char_bbox(char_index, &bb);
-
-#if DEBUG
-	{
-		fix15 off_horz;
-		fix15 off_vert;
-		
-		off_horz = (fix15) ((xorg + 32768L) >> 16);
-		off_vert = (fix15) ((yorg + 32768L) >> 16);
-	
-		if (((bb.xmax - bb.xmin) >> 16) != bit_width)
-			nf_debugprintf("char 0x%x (0x%x): bbox & width mismatch (%ld vs %d)\n",
-					char_index, char_id, (unsigned long)(bb.xmax - bb.xmin) >> 16, bit_width);
-		if (((bb.ymax - bb.ymin) >> 16) != bit_height)
-			nf_debugprintf("char 0x%x (0x%x): bbox & height mismatch (%ld vs %d)\n",
-					char_index, char_id, (unsigned long)(bb.ymax - bb.ymin) >> 16, bit_height);
-		if ((bb.xmin >> 16) != off_horz)
-			nf_debugprintf("char 0x%x (0x%x): x min mismatch (%ld vs %d)\n", char_index, char_id, (unsigned long)bb.xmin >> 16, off_horz);
-		if ((bb.ymin >> 16) != off_vert)
-			nf_debugprintf("char 0x%x (0x%x): y min mismatch (%ld vs %d)\n", char_index, char_id, (unsigned long)bb.ymin >> 16, off_vert);
-	}
-#endif
 
 	c = &infos[char_id];
 	bit_width = c->bbox.width;
@@ -771,32 +922,20 @@ void sp_close_bitmap(void)
 {
 	charinfo *c = &infos[char_id];
 	fix15 y;
-	_UWORD *bitmap;
+	uint16_t *bitmap;
 	
-	c->bitmap.fd_wdwidth = (bit_width + 15) >> 4;
-	c->bitmap.fd_w = bit_width;
-	c->bitmap.fd_h = bit_height;
-	c->bitmap.fd_nplanes = 1;
-	c->bitmap.fd_stand = 1;
-	c->bitmap.fd_r1 = c->bitmap.fd_r2 = c->bitmap.fd_r3 = 0;
-	if (bit_width != 0 && bit_height != 0)
+	if (c->bbox.width != 0 && c->bbox.height != 0)
 	{
-		_UWORD words = c->bitmap.fd_wdwidth * c->bitmap.fd_h;
-		if (((size_t)c->bitmap.fd_wdwidth * c->bitmap.fd_h) != words)
-		{
-			nf_debugprintf("16bit overflow %x: %u != %lu\n", c->char_id, words, (size_t)c->bitmap.fd_wdwidth * c->bitmap.fd_h);
-			bitmap = NULL;
-		} else
-		{
-			bitmap = g_new(_UWORD, words);
-		}
-		c->bitmap.fd_addr = bitmap;
+		_UWORD wdwidth = (c->bbox.width + 15) >> 4;
+		size_t words = (size_t)wdwidth * c->bbox.height;
+		bitmap = g_new(uint16_t, words);
+		c->bitmap = bitmap;
 		if (bitmap != NULL)
 		{
-			for (y = 0; y < c->bitmap.fd_h; y++)
+			for (y = 0; y < c->bbox.height; y++)
 			{
-				memcpy(bitmap, &framebuffer[y][0], c->bitmap.fd_wdwidth << 1);
-				bitmap += c->bitmap.fd_wdwidth;
+				memcpy(bitmap, &framebuffer[y][0], wdwidth << 1);
+				bitmap += wdwidth;
 			}
 		}
 	}
@@ -883,8 +1022,8 @@ static void update_bbox(charinfo *c, glyphinfo_t *box)
 	box->ymax = MIN(box->ymax, c->bbox.ymax);
 	c->bbox.width = ((bb.xmax - bb.xmin) + 32768L) >> 16;
 	c->bbox.height = ((bb.ymax - bb.ymin) + 32768L) >> 16;
-	c->bbox.lbearing = bb.xmin >> 16;
-	c->bbox.off_vert = bb.ymin >> 16;
+	c->bbox.lbearing = (bb.xmin + 32768L) >> 16;
+	c->bbox.off_vert = (bb.ymin + 32768L) >> 16;
 	box->lbearing = MIN(box->lbearing, c->bbox.lbearing);
 	c->bbox.rbearing = c->bbox.width + c->bbox.lbearing;
 	box->rbearing = MAX(box->rbearing, c->bbox.rbearing);
@@ -975,7 +1114,7 @@ static _BOOL font_gen_speedo_font(void)
 		{
 			char_index = i + first_char_index;
 			char_id = sp_get_char_id(char_index);
-			if (char_id != 0 && char_id != 0xffff && char_id >= num_ids)
+			if (char_id != SP_UNDEFINED && char_id != UNDEFINED && char_id >= num_ids)
 				num_ids = char_id + 1;
 		}
 		
@@ -996,8 +1135,8 @@ static _BOOL font_gen_speedo_font(void)
 		for (i = 0; i < num_ids; i++)
 		{
 			infos[i].char_index = 0;
-			infos[i].char_id = 0xffff;
-			infos[i].bitmap.fd_addr = NULL;
+			infos[i].char_id = UNDEFINED;
+			infos[i].bitmap = NULL;
 		}
 
 		/*
@@ -1030,11 +1169,11 @@ static _BOOL font_gen_speedo_font(void)
 			{
 				char_index = i + first_char_index;
 				char_id = sp_get_char_id(char_index);
-				if (char_id != 0 && char_id != 0xffff)
+				if (char_id != SP_UNDEFINED && char_id != UNDEFINED)
 				{
 					charinfo *c = &infos[char_id];
 					
-					if (c->char_id != 0xffff)
+					if (c->char_id != UNDEFINED)
 					{
 						nf_debugprintf("char 0x%x (0x%x) already defined\n", char_index, char_id);
 					} else
@@ -1067,8 +1206,8 @@ static _BOOL font_gen_speedo_font(void)
 				read_2b(font_buffer + FH_FXMAX), read_2b(font_buffer + FH_FYMAX));
 			font_ch = max_bb.height;
 			font_cw = max_bb.width;
-			row_height = font_ch + scaled_margin;
-			col_width = font_cw + scaled_margin;
+			row_height = font_ch + mainwin_gridsize;
+			col_width = font_cw + mainwin_gridsize;
 			font_bb = max_bb;
 		}
 		
@@ -1076,7 +1215,7 @@ static _BOOL font_gen_speedo_font(void)
 		{
 			char_index = i + first_char_index;
 			char_id = sp_get_char_id(char_index);
-			if (char_id != 0 && char_id != 0xffff)
+			if (char_id != SP_UNDEFINED && char_id != UNDEFINED)
 			{
 				if (!sp_make_char(char_index))
 				{
@@ -1160,7 +1299,9 @@ static _BOOL font_load_speedo_font(const char *filename)
 		left_col = 0;
 		resize_window();
 		wind_set_str(mainwin, WF_NAME, fontname);
+		wind_set_str(previewwin, WF_NAME, xbasename(font_filename));
 		redraw_win(mainwin);
+		redraw_win(previewwin);
 	} else
 	{
 		font_filename = NULL;
@@ -1171,6 +1312,7 @@ static _BOOL font_load_speedo_font(const char *filename)
 		g_free(infos);
 		infos = NULL;
 		num_ids = 0;
+		cur_char = UNDEFINED;
 		char_rows = 0;
 	}
 
@@ -1186,6 +1328,7 @@ static void set_pointsize(long size)
 	menu_icheck(menu, POINTS_8, size == 80);
 	menu_icheck(menu, POINTS_9, size == 90);
 	menu_icheck(menu, POINTS_10, size == 100);
+	menu_icheck(menu, POINTS_11, size == 110);
 	menu_icheck(menu, POINTS_12, size == 120);
 	menu_icheck(menu, POINTS_14, size == 140);
 	menu_icheck(menu, POINTS_16, size == 160);
@@ -1386,6 +1529,203 @@ static void hscroll_to(long xx)
 
 /* ------------------------------------------------------------------------- */
 
+static void handle_message(_WORD *message, _WORD mox, _WORD moy)
+{
+	wind_update(BEG_UPDATE);
+	switch (message[0])
+	{
+	case WM_CLOSED:
+		quit_app = TRUE;
+		break;
+
+	case AP_TERM:
+		quit_app = TRUE;
+		break;
+
+	case WM_SIZED:
+		if (message[3] == mainwin)
+		{
+			wind_set_grect(message[3], WF_CURRXYWH, (GRECT *)&message[4]);
+			calc_vslider();
+			calc_hslider();
+		}
+		break;
+
+	case WM_MOVED:
+		if (message[3] == mainwin || message[3] == previewwin)
+		{
+			wind_set_grect(message[3], WF_CURRXYWH, (GRECT *)&message[4]);
+		}
+		break;
+
+	case WM_TOPPED:
+		if (message[3] == mainwin)
+		{
+			wind_set_int(message[3], WF_TOP, 0);
+		} else if (message[3] == previewwin)
+		{
+			preview_click(mox, moy);
+		}
+		break;
+
+	case WM_REDRAW:
+		if (message[3] == mainwin)
+			mainwin_draw((const GRECT *)&message[4]);
+		else if (message[3] == previewwin)
+			previewwin_draw((const GRECT *)&message[4]);
+		break;
+	
+	case WM_ARROWED:
+		if (message[3] == mainwin)
+		{
+			long amount;
+			GRECT gr;
+			long yy, xx;
+			long page_h;
+			long page_w;
+			
+			wind_get_grect(mainwin, WF_WORKXYWH, &gr);
+
+			amount = 0;
+			page_h = ((gr.g_h - MAIN_Y_MARGIN) / row_height) * row_height;
+			switch (message[4])
+			{
+			case WA_UPLINE:
+				amount = -row_height;
+				break;
+			case WA_DNLINE:
+				amount = row_height;
+				break;
+			case WA_UPPAGE:
+				amount = -page_h;
+				break;
+			case WA_DNPAGE:
+				amount = page_h;
+				break;
+			}
+			yy = top_row * row_height + amount;
+			vscroll_to(yy);
+
+			amount = 0;
+			page_w = ((gr.g_w - MAIN_X_MARGIN) / col_width) * col_width;
+			switch (message[4])
+			{
+			case WA_LFLINE:
+				amount = -col_width;
+				break;
+			case WA_RTLINE:
+				amount = col_width;
+				break;
+			case WA_LFPAGE:
+				amount = -page_w;
+				break;
+			case WA_RTPAGE:
+				amount = page_w;
+				break;
+			}
+			xx = left_col * col_width + amount;
+			hscroll_to(xx);
+		}
+		break;
+		
+	case WM_VSLID:
+		if (message[3] == mainwin)
+		{
+			GRECT gr;
+			long hh;
+			long page_h;
+			long yy;
+			
+			wind_get_grect(mainwin, WF_WORKXYWH, &gr);
+			hh = row_height * char_rows;
+			page_h = ((gr.g_h - MAIN_Y_MARGIN) / row_height) * row_height;
+			yy = ((long)message[4] * (hh - page_h)) / 1000;
+			vscroll_to(yy);
+		}
+		break;
+		
+	case WM_HSLID:
+		if (message[3] == mainwin)
+		{
+			GRECT gr;
+			long ww;
+			long page_w;
+			long xx;
+			
+			wind_get_grect(mainwin, WF_WORKXYWH, &gr);
+			ww = col_width * CHAR_COLUMNS;
+			page_w = ((gr.g_w - MAIN_X_MARGIN) / col_width) * col_width;
+			xx = ((long)message[4] * (ww - page_w)) / 1000;
+			hscroll_to(xx);
+		}
+		break;
+		
+	case MN_SELECTED:
+		switch (message[4])
+		{
+		case ABOUT:
+			do_about();
+			break;
+		case FOPEN:
+			select_font();
+			break;
+		case FINFO:
+			font_info();
+			break;
+		case POINTS_6:
+			set_pointsize(60);
+			break;
+		case POINTS_8:
+			set_pointsize(80);
+			break;
+		case POINTS_9:
+			set_pointsize(90);
+			break;
+		case POINTS_10:
+			set_pointsize(100);
+			break;
+		case POINTS_11:
+			set_pointsize(110);
+			break;
+		case POINTS_12:
+			set_pointsize(120);
+			break;
+		case POINTS_14:
+			set_pointsize(140);
+			break;
+		case POINTS_16:
+			set_pointsize(160);
+			break;
+		case POINTS_18:
+			set_pointsize(180);
+			break;
+		case POINTS_24:
+			set_pointsize(240);
+			break;
+		case POINTS_36:
+			set_pointsize(360);
+			break;
+		case POINTS_48:
+			set_pointsize(480);
+			break;
+		case POINTS_64:
+			set_pointsize(640);
+			break;
+		case POINTS_72:
+			set_pointsize(720);
+			break;
+		case FQUIT:
+			quit_app = TRUE;
+			break;
+		}
+		menu_tnormal(menu, message[3], TRUE);
+		break;
+	}
+	wind_update(END_UPDATE);
+}
+
+/* ------------------------------------------------------------------------- */
+
 static void mainloop(void)
 {
 	_WORD event;
@@ -1402,6 +1742,7 @@ static void mainloop(void)
 		menu_ienable(menu, POINTS_8, is_font_loaded());
 		menu_ienable(menu, POINTS_9, is_font_loaded());
 		menu_ienable(menu, POINTS_10, is_font_loaded());
+		menu_ienable(menu, POINTS_11, is_font_loaded());
 		menu_ienable(menu, POINTS_12, is_font_loaded());
 		menu_ienable(menu, POINTS_14, is_font_loaded());
 		menu_ienable(menu, POINTS_16, is_font_loaded());
@@ -1494,189 +1835,19 @@ static void mainloop(void)
 		
 		if (event & MU_MESAG)
 		{
-			wind_update(BEG_UPDATE);
-			switch (message[0])
+			handle_message(message, mox, moy);
+		}
+		
+		if (event & MU_BUTTON)
+		{
+			_WORD win = wind_find(mox, moy);
+			if (win == mainwin)
 			{
-			case WM_CLOSED:
-				quit_app = TRUE;
-				break;
-
-			case AP_TERM:
-				quit_app = TRUE;
-				break;
-
-			case WM_SIZED:
-				if (message[3] == mainwin)
-				{
-					wind_set_grect(message[3], WF_CURRXYWH, (GRECT *)&message[4]);
-					calc_vslider();
-					calc_hslider();
-				}
-				break;
-
-			case WM_MOVED:
-				if (message[3] == mainwin || message[3] == panelwin)
-				{
-					wind_set_grect(message[3], WF_CURRXYWH, (GRECT *)&message[4]);
-				}
-				break;
-
-			case WM_TOPPED:
-				if (message[3] == mainwin)
-					wind_set_int(message[3], WF_TOP, 0);
-				break;
-
-			case WM_REDRAW:
-				if (message[3] == mainwin)
-					mainwin_draw((const GRECT *)&message[4]);
-				else if (message[3] == panelwin)
-					panelwin_draw((const GRECT *)&message[4]);
-				break;
-			
-			case WM_ARROWED:
-				if (message[3] == mainwin)
-				{
-					long amount;
-					GRECT gr;
-					long yy, xx;
-					long page_h;
-					long page_w;
-					
-					wind_get_grect(mainwin, WF_WORKXYWH, &gr);
-
-					amount = 0;
-					page_h = ((gr.g_h - MAIN_Y_MARGIN) / row_height) * row_height;
-					switch (message[4])
-					{
-					case WA_UPLINE:
-						amount = -row_height;
-						break;
-					case WA_DNLINE:
-						amount = row_height;
-						break;
-					case WA_UPPAGE:
-						amount = -page_h;
-						break;
-					case WA_DNPAGE:
-						amount = page_h;
-						break;
-					}
-					yy = top_row * row_height + amount;
-					vscroll_to(yy);
-
-					amount = 0;
-					page_w = ((gr.g_w - MAIN_X_MARGIN) / col_width) * col_width;
-					switch (message[4])
-					{
-					case WA_LFLINE:
-						amount = -col_width;
-						break;
-					case WA_RTLINE:
-						amount = col_width;
-						break;
-					case WA_LFPAGE:
-						amount = -page_w;
-						break;
-					case WA_RTPAGE:
-						amount = page_w;
-						break;
-					}
-					xx = left_col * col_width + amount;
-					hscroll_to(xx);
-				}
-				break;
-				
-			case WM_VSLID:
-				if (message[3] == mainwin)
-				{
-					GRECT gr;
-					long hh;
-					long page_h;
-					long yy;
-					
-					wind_get_grect(mainwin, WF_WORKXYWH, &gr);
-					hh = row_height * char_rows;
-					page_h = ((gr.g_h - MAIN_Y_MARGIN) / row_height) * row_height;
-					yy = ((long)message[4] * (hh - page_h)) / 1000;
-					vscroll_to(yy);
-				}
-				break;
-				
-			case WM_HSLID:
-				if (message[3] == mainwin)
-				{
-					GRECT gr;
-					long ww;
-					long page_w;
-					long xx;
-					
-					wind_get_grect(mainwin, WF_WORKXYWH, &gr);
-					ww = col_width * CHAR_COLUMNS;
-					page_w = ((gr.g_w - MAIN_X_MARGIN) / col_width) * col_width;
-					xx = ((long)message[4] * (ww - page_w)) / 1000;
-					hscroll_to(xx);
-				}
-				break;
-				
-			case MN_SELECTED:
-				switch (message[4])
-				{
-				case ABOUT:
-					do_about();
-					break;
-				case FOPEN:
-					select_font();
-					break;
-				case FINFO:
-					font_info();
-					break;
-				case POINTS_6:
-					set_pointsize(60);
-					break;
-				case POINTS_8:
-					set_pointsize(80);
-					break;
-				case POINTS_9:
-					set_pointsize(90);
-					break;
-				case POINTS_10:
-					set_pointsize(100);
-					break;
-				case POINTS_12:
-					set_pointsize(120);
-					break;
-				case POINTS_14:
-					set_pointsize(140);
-					break;
-				case POINTS_16:
-					set_pointsize(160);
-					break;
-				case POINTS_18:
-					set_pointsize(180);
-					break;
-				case POINTS_24:
-					set_pointsize(240);
-					break;
-				case POINTS_36:
-					set_pointsize(360);
-					break;
-				case POINTS_48:
-					set_pointsize(480);
-					break;
-				case POINTS_64:
-					set_pointsize(640);
-					break;
-				case POINTS_72:
-					set_pointsize(720);
-					break;
-				case FQUIT:
-					quit_app = TRUE;
-					break;
-				}
-				menu_tnormal(menu, message[3], TRUE);
-				break;
+				mainwin_click(mox, moy);
+			} else if (win == previewwin)
+			{
+				preview_click(mox, moy);
 			}
-			wind_update(END_UPDATE);
 		}
 	}
 }
@@ -1717,7 +1888,7 @@ int main(int argc, char **argv)
 	if (!quit_app)
 	{
 		if (!open_screen() ||
-			!create_panel_window() ||
+			!create_preview_window() ||
 			!create_window())
 		{
 			quit_app = TRUE;

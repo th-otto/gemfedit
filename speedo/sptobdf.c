@@ -553,7 +553,7 @@ int main(int argc, char **argv)
 			{
 				c.char_index = char_index = iso_map[i + 1];
 				c.char_id = char_id = iso_map[i];
-				if (char_id != 0 && char_id != 0xffff)
+				if (char_id != SP_UNDEFINED && char_id != UNDEFINED)
 				{
 					real_num_chars++;
 					update_bbox(&c, &font_bbox);
@@ -566,7 +566,7 @@ int main(int argc, char **argv)
 			{
 				c.char_index = char_index = i + first_char_index;
 				c.char_id = char_id = sp_get_char_id(char_index);
-				if (char_id != 0 && char_id != 0xffff)
+				if (char_id != SP_UNDEFINED && char_id != UNDEFINED)
 				{
 					real_num_chars++;
 					update_bbox(&c, &font_bbox);
@@ -593,7 +593,7 @@ int main(int argc, char **argv)
 			{
 				char_index = i + first_char_index;
 				char_id = sp_get_char_id(char_index);
-				if (char_id)
+				if (char_id != SP_UNDEFINED && char_id != UNDEFINED)
 				{
 					if (!sp_make_char(char_index))
 					{
