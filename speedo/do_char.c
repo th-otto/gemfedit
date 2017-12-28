@@ -39,27 +39,119 @@ WITH THE SPEEDO SOFTWARE OR THE BITSTREAM CHARTER OUTLINE FONT.
 #define SHOW(X)
 #endif
 
-/***** GLOBAL VARIABLES *****/
 
-/*****  GLOBAL FUNCTIONS *****/
+#if INCL_LCD
+/*
+ * Called by sp_get_char_id(), sp_get_char_width(), sp_make_char() and
+ * sp_make_comp_char() to get a pointer to the start of the character data
+ * for the specified character index.
+ * Version for configuration supporting dynamic character data loading.
+ * Calls sp_load_char_data() to load character data if not already loaded
+ * as part of the original font buffer.
+ * Returns NULL if character data not available
+ */
+static ufix8 *sp_get_char_org(ufix16 char_index,	/* Index of character to be accessed */
+											   boolean top_level)	/* Not a compound character element */
+{
+	buff_t char_data;					/* Buffer descriptor requested */
+	ufix8 *pointer;						/* Pointer into character directory */
+	ufix8 format;						/* Character directory format byte */
+	long char_offset;					/* Offset of char data from start of font file */
+	long next_char_offset;				/* Offset of char data from start of font file */
+	fix15 no_bytes;						/* Number of bytes required for char data */
 
-/***** EXTERNAL VARIABLES *****/
+	if (top_level)						/* Not element of compound char? */
+	{
+		if (char_index < sp_globals.first_char_idx)	/* Before start of character set? */
+			return NULL;
+		char_index -= sp_globals.first_char_idx;
+		if (char_index >= sp_globals.no_chars_avail)	/* Beyond end of character set? */
+			return NULL;
+		sp_globals.cb_offset = 0;		/* Reset char buffer offset */
+	}
 
-/***** EXTERNAL FUNCTIONS *****/
+	pointer = sp_globals.pchar_dir;
+	format = NEXT_BYTE(pointer);		/* Read character directory format byte */
+	pointer += char_index << 1;			/* Point to indexed character entry */
+	if (format)							/* 3-byte entries in char directory? */
+	{
+		pointer += char_index;			/* Adjust for 3-byte entries */
+		char_offset = sp_read_long(pointer);	/* Read file offset to char data */
+		next_char_offset = sp_read_long(pointer + 3);	/* Read offset to next char */
+	} else
+	{
+		char_offset = 0xffffL & NEXT_WORD(pointer);	/* Read file offset to char data */
+		next_char_offset = 0xffffL & NEXT_WORD(pointer);	/* Read offset to next char */
+	}
 
-/***** STATIC VARIABLES *****/
+	no_bytes = next_char_offset - char_offset;
+	if (no_bytes == 0)					/* Character not in directory? */
+		return NULL;
 
-/***** STATIC FUNCTIONS *****/
+	if (next_char_offset <= sp_globals.font_buff_size)	/* Character data already in font buffer? */
+		return sp_globals.font.org + char_offset;	/* Return pointer into font buffer */
 
-static boolean sp_make_simp_char(ufix8 * pointer, ufix8 format);
+	/* Request char data load */
+	if (sp_load_char_data(char_offset, no_bytes, sp_globals.cb_offset, &char_data) == FALSE ||
+		char_data.no_bytes < no_bytes)
+		return NULL;
 
-static boolean sp_make_comp_char(ufix8 * pointer);
+	if (top_level)						/* Not element of compound char? */
+	{
+		sp_globals.cb_offset = no_bytes;
+	}
 
-static ufix8 *sp_get_char_org(ufix16 char_index, boolean top_level);
+	return char_data.org;				/* Return pointer into character data buffer */
+}
 
-static fix15 sp_get_posn_arg(ufix8 * * ppointer, ufix8 format);
+#else
 
-static fix15 sp_get_scale_arg(ufix8 * * ppointer, ufix8 format);
+/*
+ * Called by sp_get_char_id(), sp_get_char_width(), sp_make_char() and
+ * sp_make_comp_char() to get a pointer to the start of the character data
+ * for the specified character index.
+ * Version for configuration not supporting dynamic character data loading.
+ * Returns NULL if character data not available
+ */
+static ufix8 *sp_get_char_org(ufix16 char_index,	/* Index of character to be accessed */
+											   boolean top_level)	/* Not a compound character element */
+{
+	ufix8 *pointer;						/* Pointer into character directory */
+	ufix8 format;						/* Character directory format byte */
+	long char_offset;					/* Offset of char data from start of font file */
+	long next_char_offset;				/* Offset of char data from start of font file */
+	fix15 no_bytes;						/* Number of bytes required for char data */
+
+	if (top_level)						/* Not element of compound char? */
+	{
+		if (char_index < sp_globals.first_char_idx)	/* Before start of character set? */
+			return NULL;
+		char_index -= sp_globals.first_char_idx;
+		if (char_index >= sp_globals.no_chars_avail)	/* Beyond end of character set? */
+			return NULL;
+	}
+
+	pointer = sp_globals.pchar_dir;
+	format = NEXT_BYTE(pointer);		/* Read character directory format byte */
+	pointer += char_index << 1;			/* Point to indexed character entry */
+	if (format)							/* 3-byte entries in char directory? */
+	{
+		pointer += char_index;			/* Adjust for 3-byte entries */
+		char_offset = sp_read_long(pointer);	/* Read file offset to char data */
+		next_char_offset = sp_read_long(pointer + 3);	/* Read offset to next char */
+	} else
+	{
+		char_offset = 0xffffL & NEXT_WORD(pointer);	/* Read file offset to char data */
+		next_char_offset = 0xffffL & NEXT_WORD(pointer);	/* Read offset to next char */
+	}
+
+	no_bytes = next_char_offset - char_offset;
+	if (no_bytes == 0)					/* Character not in directory? */
+		return NULL;
+
+	return sp_globals.font.org + char_offset;	/* Return pointer into font buffer */
+}
+#endif
 
 
 /*
@@ -354,168 +446,6 @@ boolean sp_get_char_bbox(ufix16 char_index, bbox_t * bbox)
 #endif
 
 
-#if INCL_ISW
-boolean sp_make_char_isw(ufix16 char_index, ufix32 imported_setwidth)
-{
-	fix15 xmin;							/* Minimum X ORU value in font */
-	fix15 xmax;							/* Maximum X ORU value in font */
-	fix15 ymin;							/* Minimum Y ORU value in font */
-	fix15 ymax;							/* Maximum Y ORU value in font */
-	boolean return_value;
-
-	sp_globals.import_setwidth_act = TRUE;
-	/* convert imported width to orus */
-	sp_globals.imported_width = (sp_globals.metric_resolution * imported_setwidth) >> 16;
-	return_value = sp_do_make_char(char_index);
-
-	if (sp_globals.isw_modified_constants)
-	{
-		/* reset fixed point constants */
-		xmin = sp_read_word_u(sp_globals.font_org + FH_FXMIN);
-		ymin = sp_read_word_u(sp_globals.font_org + FH_FYMIN);
-		xmax = sp_read_word_u(sp_globals.font_org + FH_FXMAX);
-		ymax = sp_read_word_u(sp_globals.font_org + FH_FYMAX);
-		sp_globals.constr.data_valid = FALSE;
-		if (!sp_setup_consts(xmin, xmax, ymin, ymax))
-		{
-			sp_report_error(3);		/* Requested specs out of range */
-			return FALSE;
-		}
-	}
-	return return_value;
-}
-
-
-static boolean sp_reset_xmax(fix31 xmax)
-{
-	fix15 xmin;							/* Minimum X ORU value in font */
-	fix15 ymin;							/* Minimum Y ORU value in font */
-	fix15 ymax;							/* Maximum Y ORU value in font */
-
-	sp_globals.isw_modified_constants = TRUE;
-	xmin = sp_read_word_u(sp_globals.font_org + FH_FXMIN);
-	ymin = sp_read_word_u(sp_globals.font_org + FH_FYMIN);
-	ymax = sp_read_word_u(sp_globals.font_org + FH_FYMAX);
-
-	if (!sp_setup_consts(xmin, xmax, ymin, ymax))
-	{
-		sp_report_error(3);				/* Requested specs out of range */
-		return FALSE;
-	}
-	sp_globals.constr.data_valid = FALSE;
-	/* recompute setwidth */
-	sp_globals.Psw.x = (fix15) ((fix31) (((fix31) sp_globals.imported_width * (sp_globals.specs.xxmult >> 16) +
-										  (((fix31) sp_globals.imported_width *
-											(sp_globals.specs.xxmult & 0xffffL)) >> 16)) << sp_globals.pixshift) /
-								sp_globals.metric_resolution);
-	sp_globals.Psw.y =
-		(fix15) ((fix31)
-				 (((fix31) sp_globals.imported_width * (sp_globals.specs.yxmult >> 16) +
-				   (((fix31) sp_globals.imported_width *
-					 (sp_globals.specs.yxmult & 0xffffL)) >> 16)) << sp_globals.pixshift) /
-				 sp_globals.metric_resolution);
-
-	return TRUE;
-}
-
-
-static boolean sp_do_make_char(ufix16 char_index);
-
-boolean sp_make_char(ufix16 char_index)	/* Index to character in char directory */
-{
-	sp_globals.import_setwidth_act = FALSE;
-	return sp_do_make_char(char_index);
-}
-
-static boolean sp_do_make_char(ufix16 char_index)
-#else
-/*
- * Outputs specified character using the currently selected font and
- * scaling and output specifications.
- * Reports Error 10 and returns FALSE if no font specifications 
- * previously set.
- * Reports Error 12 and returns FALSE if character data not available.
- */
-boolean sp_make_char(ufix16 char_index)
-#endif
-{
-	ufix8 *pointer;				/* Pointer to character data */
-	fix15 x_orus;
-	fix15 tmpfix15;
-	ufix8 format;
-
-#if INCL_ISW
-	sp_globals.isw_modified_constants = FALSE;
-#endif
-
-	if (!sp_globals.specs_valid)		/* Font specs not defined? */
-	{
-		sp_report_error(10);				/* Report font not specified */
-		return FALSE;					/* Error return */
-	}
-#if INCL_MULTIDEV
-#if INCL_OUTLINE
-	if (sp_globals.output_mode == MODE_OUTLINE && !sp_globals.outline_device_set)
-	{
-		sp_report_error(2);				/* Transformation matrix out of range */
-		return FALSE;
-	} else
-#endif
-	if (!sp_globals.bitmap_device_set)
-	{
-		sp_report_error(2);				/* Transformation matrix out of range */
-		return FALSE;
-	}
-#endif
-
-
-	sp_init_tcb();						/* Initialize transformation control block */
-
-	pointer = sp_get_char_org(char_index, TRUE);	/* Point to start of character data */
-	SHOW(pointer);
-	if (pointer == NULL)				/* Character data not available? */
-	{
-		sp_report_error(12);			/* Character data not available */
-		return FALSE;					/* Error return */
-	}
-
-	pointer += 2;						/* Skip over character id */
-	x_orus = NEXT_WORD(pointer);		/* Read set width */
-#if INCL_SQUEEZING || INCL_ISW
-	sp_globals.setwidth_orus = x_orus;
-#endif
-
-#if INCL_ISW
-	if (sp_globals.import_setwidth_act)
-		x_orus = sp_globals.imported_width;
-#endif
-	sp_globals.Psw.x = (fix15) ((fix31)
-								(((fix31) x_orus * (sp_globals.specs.xxmult >> 16) +
-								  (((fix31) x_orus *
-									(sp_globals.specs.xxmult & 0xffffL)) >> 16)) << sp_globals.pixshift) /
-								sp_globals.metric_resolution);
-
-	sp_globals.Psw.y = (fix15) ((fix31) (((fix31) x_orus * (sp_globals.specs.yxmult >> 16) +
-										  (((fix31) x_orus *
-											(sp_globals.specs.yxmult & 0xffffL)) >> 16)) << sp_globals.pixshift) /
-								sp_globals.metric_resolution);
-
-	format = NEXT_BYTE(pointer);
-	if (format & BIT1)					/* Optional data in header? */
-	{
-		tmpfix15 = (ufix8) NEXT_BYTE(pointer);	/* Read size of optional data */
-		pointer += tmpfix15;			/* Skip optional data */
-	}
-	if (format & BIT0)
-	{
-		return sp_make_comp_char(pointer);	/* Output compound character */
-	} else
-	{
-		return sp_make_simp_char(pointer, format);	/* Output simple character */
-	}
-}
-
-
 #if INCL_ISW || INCL_SQUEEZING
 static void sp_preview_bounding_box(ufix8 * pointer,	/* Pointer to first byte of position argument */
 										  ufix8 format)	/* Character format byte */
@@ -533,8 +463,7 @@ static void sp_preview_bounding_box(ufix8 * pointer,	/* Pointer to first byte of
 	pointer = sp_skip_interpolation_table(pointer, format);
 	/* sp_get_args has a pathological need for this value to be set */
 	sp_globals.Y_edge_org = sp_globals.no_X_orus;
-	pointer = sp_read_bbox(pointer, &Pmin, &Pmax, TRUE);	/* Read bounding bo
-														   x */
+	pointer = sp_read_bbox(pointer, &Pmin, &Pmax, TRUE);	/* Read bounding box */
 
 }
 #endif
@@ -598,6 +527,45 @@ static boolean sp_make_simp_char(ufix8 * pointer,	/* Pointer to first byte of po
 	}
 	return TRUE;
 }
+
+
+/*
+ * Called by sp_make_comp_char() to read a position argument from the
+ * specified point in the font/char buffer.
+ * Updates pointer to byte following position argument.
+ * Returns value of position argument in outline resolution units
+ */
+static fix15 sp_get_posn_arg(ufix8 * * ppointer,	/* Pointer to first byte of position argument */
+									  ufix8 format)	/* Format of DOCH arguments */
+{
+	switch (format & 0x03)
+	{
+	case 1:
+		return NEXT_WORD(*ppointer);
+
+	case 2:
+		return (fix7) NEXT_BYTE(*ppointer);
+
+	default:
+		return 0;
+	}
+}
+
+
+/*
+ * Called by sp_make_comp_char() to read a scale argument from the
+ * specified point in the font/char buffer.
+ * Updates pointer to byte following scale argument.
+ * Returns value of scale argument in scale units (normally 1/4096)
+ */
+static fix15 sp_get_scale_arg(ufix8 * * ppointer,	/* Pointer to first byte of position argument */
+									   ufix8 format)	/* Format of DOCH arguments */
+{
+	if (format)
+		return NEXT_WORD(*ppointer);
+	return ONE_SCALE;
+}
+
 
 /*
  * Called by sp_make_char() to output a compound character.
@@ -732,153 +700,163 @@ static boolean sp_make_comp_char(ufix8 * pointer)	/* Pointer to first byte of po
 }
 
 
-#if INCL_LCD
 /*
- * Called by sp_get_char_id(), sp_get_char_width(), sp_make_char() and
- * sp_make_comp_char() to get a pointer to the start of the character data
- * for the specified character index.
- * Version for configuration supporting dynamic character data loading.
- * Calls sp_load_char_data() to load character data if not already loaded
- * as part of the original font buffer.
- * Returns NULL if character data not available
+ * Outputs specified character using the currently selected font and
+ * scaling and output specifications.
+ * Reports Error 10 and returns FALSE if no font specifications 
+ * previously set.
+ * Reports Error 12 and returns FALSE if character data not available.
  */
-static ufix8 *sp_get_char_org(ufix16 char_index,	/* Index of character to be accessed */
-											   boolean top_level)	/* Not a compound character element */
-{
-	buff_t char_data;					/* Buffer descriptor requested */
-	ufix8 *pointer;						/* Pointer into character directory */
-	ufix8 format;						/* Character directory format byte */
-	long char_offset;					/* Offset of char data from start of font file */
-	long next_char_offset;				/* Offset of char data from start of font file */
-	fix15 no_bytes;						/* Number of bytes required for char data */
-
-	if (top_level)						/* Not element of compound char? */
-	{
-		if (char_index < sp_globals.first_char_idx)	/* Before start of character set? */
-			return NULL;
-		char_index -= sp_globals.first_char_idx;
-		if (char_index >= sp_globals.no_chars_avail)	/* Beyond end of character set? */
-			return NULL;
-		sp_globals.cb_offset = 0;		/* Reset char buffer offset */
-	}
-
-	pointer = sp_globals.pchar_dir;
-	format = NEXT_BYTE(pointer);		/* Read character directory format byte */
-	pointer += char_index << 1;			/* Point to indexed character entry */
-	if (format)							/* 3-byte entries in char directory? */
-	{
-		pointer += char_index;			/* Adjust for 3-byte entries */
-		char_offset = sp_read_long(pointer);	/* Read file offset to char data */
-		next_char_offset = sp_read_long(pointer + 3);	/* Read offset to next char */
-	} else
-	{
-		char_offset = 0xffffL & NEXT_WORD(pointer);	/* Read file offset to char data */
-		next_char_offset = 0xffffL & NEXT_WORD(pointer);	/* Read offset to next char */
-	}
-
-	no_bytes = next_char_offset - char_offset;
-	if (no_bytes == 0)					/* Character not in directory? */
-		return NULL;
-
-	if (next_char_offset <= sp_globals.font_buff_size)	/* Character data already in font buffer? */
-		return sp_globals.font.org + char_offset;	/* Return pointer into font buffer */
-
-	/* Request char data load */
-	if (sp_load_char_data(char_offset, no_bytes, sp_globals.cb_offset, &char_data) == FALSE ||
-		char_data.no_bytes < no_bytes)
-		return NULL;
-
-	if (top_level)						/* Not element of compound char? */
-	{
-		sp_globals.cb_offset = no_bytes;
-	}
-
-	return char_data.org;				/* Return pointer into character data buffer */
-}
-
+#if INCL_ISW
+static boolean sp_do_make_char(ufix16 char_index)
 #else
-
-/*
- * Called by sp_get_char_id(), sp_get_char_width(), sp_make_char() and
- * sp_make_comp_char() to get a pointer to the start of the character data
- * for the specified character index.
- * Version for configuration not supporting dynamic character data loading.
- * Returns NULL if character data not available
- */
-static ufix8 *sp_get_char_org(ufix16 char_index,	/* Index of character to be accessed */
-											   boolean top_level)	/* Not a compound character element */
+boolean sp_make_char(ufix16 char_index)
+#endif
 {
-	ufix8 *pointer;						/* Pointer into character directory */
-	ufix8 format;						/* Character directory format byte */
-	long char_offset;					/* Offset of char data from start of font file */
-	long next_char_offset;				/* Offset of char data from start of font file */
-	fix15 no_bytes;						/* Number of bytes required for char data */
+	ufix8 *pointer;				/* Pointer to character data */
+	fix15 x_orus;
+	fix15 tmpfix15;
+	ufix8 format;
 
-	if (top_level)						/* Not element of compound char? */
+#if INCL_ISW
+	sp_globals.isw_modified_constants = FALSE;
+#endif
+
+	if (!sp_globals.specs_valid)		/* Font specs not defined? */
 	{
-		if (char_index < sp_globals.first_char_idx)	/* Before start of character set? */
-			return NULL;
-		char_index -= sp_globals.first_char_idx;
-		if (char_index >= sp_globals.no_chars_avail)	/* Beyond end of character set? */
-			return NULL;
+		sp_report_error(10);			/* Report font not specified */
+		return FALSE;					/* Error return */
 	}
-
-	pointer = sp_globals.pchar_dir;
-	format = NEXT_BYTE(pointer);		/* Read character directory format byte */
-	pointer += char_index << 1;			/* Point to indexed character entry */
-	if (format)							/* 3-byte entries in char directory? */
+#if INCL_MULTIDEV
+#if INCL_OUTLINE
+	if (sp_globals.output_mode == MODE_OUTLINE && !sp_globals.outline_device_set)
 	{
-		pointer += char_index;			/* Adjust for 3-byte entries */
-		char_offset = sp_read_long(pointer);	/* Read file offset to char data */
-		next_char_offset = sp_read_long(pointer + 3);	/* Read offset to next char */
+		sp_report_error(2);				/* Transformation matrix out of range */
+		return FALSE;
 	} else
+#endif
+	if (!sp_globals.bitmap_device_set)
 	{
-		char_offset = 0xffffL & NEXT_WORD(pointer);	/* Read file offset to char data */
-		next_char_offset = 0xffffL & NEXT_WORD(pointer);	/* Read offset to next char */
+		sp_report_error(2);				/* Transformation matrix out of range */
+		return FALSE;
 	}
-
-	no_bytes = next_char_offset - char_offset;
-	if (no_bytes == 0)					/* Character not in directory? */
-		return NULL;
-
-	return sp_globals.font.org + char_offset;	/* Return pointer into font buffer */
-}
 #endif
 
 
-/*
- * Called by sp_make_comp_char() to read a position argument from the
- * specified point in the font/char buffer.
- * Updates pointer to byte following position argument.
- * Returns value of position argument in outline resolution units
- */
-static fix15 sp_get_posn_arg(ufix8 * * ppointer,	/* Pointer to first byte of position argument */
-									  ufix8 format)	/* Format of DOCH arguments */
-{
-	switch (format & 0x03)
+	sp_init_tcb();						/* Initialize transformation control block */
+
+	pointer = sp_get_char_org(char_index, TRUE);	/* Point to start of character data */
+	SHOW(pointer);
+	if (pointer == NULL)				/* Character data not available? */
 	{
-	case 1:
-		return NEXT_WORD(*ppointer);
+		sp_report_error(12);			/* Character data not available */
+		return FALSE;					/* Error return */
+	}
 
-	case 2:
-		return (fix7) NEXT_BYTE(*ppointer);
+	pointer += 2;						/* Skip over character id */
+	x_orus = NEXT_WORD(pointer);		/* Read set width */
+#if INCL_SQUEEZING || INCL_ISW
+	sp_globals.setwidth_orus = x_orus;
+#endif
 
-	default:
-		return 0;
+#if INCL_ISW
+	if (sp_globals.import_setwidth_act)
+		x_orus = sp_globals.imported_width;
+#endif
+	sp_globals.Psw.x = (fix15) ((fix31)
+								(((fix31) x_orus * (sp_globals.specs.xxmult >> 16) +
+								  (((fix31) x_orus *
+									(sp_globals.specs.xxmult & 0xffffL)) >> 16)) << sp_globals.pixshift) /
+								sp_globals.metric_resolution);
+
+	sp_globals.Psw.y = (fix15) ((fix31) (((fix31) x_orus * (sp_globals.specs.yxmult >> 16) +
+										  (((fix31) x_orus *
+											(sp_globals.specs.yxmult & 0xffffL)) >> 16)) << sp_globals.pixshift) /
+								sp_globals.metric_resolution);
+
+	format = NEXT_BYTE(pointer);
+	if (format & BIT1)					/* Optional data in header? */
+	{
+		tmpfix15 = (ufix8) NEXT_BYTE(pointer);	/* Read size of optional data */
+		pointer += tmpfix15;			/* Skip optional data */
+	}
+	if (format & BIT0)
+	{
+		return sp_make_comp_char(pointer);	/* Output compound character */
+	} else
+	{
+		return sp_make_simp_char(pointer, format);	/* Output simple character */
 	}
 }
 
 
-/*
- * Called by sp_make_comp_char() to read a scale argument from the
- * specified point in the font/char buffer.
- * Updates pointer to byte following scale argument.
- * Returns value of scale argument in scale units (normally 1/4096)
- */
-static fix15 sp_get_scale_arg(ufix8 * * ppointer,	/* Pointer to first byte of position argument */
-									   ufix8 format)	/* Format of DOCH arguments */
+#if INCL_ISW
+boolean sp_make_char_isw(ufix16 char_index, ufix32 imported_setwidth)
 {
-	if (format)
-		return NEXT_WORD(*ppointer);
-	return ONE_SCALE;
+	fix15 xmin;							/* Minimum X ORU value in font */
+	fix15 xmax;							/* Maximum X ORU value in font */
+	fix15 ymin;							/* Minimum Y ORU value in font */
+	fix15 ymax;							/* Maximum Y ORU value in font */
+	boolean return_value;
+
+	sp_globals.import_setwidth_act = TRUE;
+	/* convert imported width to orus */
+	sp_globals.imported_width = (sp_globals.metric_resolution * imported_setwidth) >> 16;
+	return_value = sp_do_make_char(char_index);
+
+	if (sp_globals.isw_modified_constants)
+	{
+		/* reset fixed point constants */
+		xmin = sp_read_word_u(sp_globals.font_org + FH_FXMIN);
+		ymin = sp_read_word_u(sp_globals.font_org + FH_FYMIN);
+		xmax = sp_read_word_u(sp_globals.font_org + FH_FXMAX);
+		ymax = sp_read_word_u(sp_globals.font_org + FH_FYMAX);
+		sp_globals.constr.data_valid = FALSE;
+		if (!sp_setup_consts(xmin, xmax, ymin, ymax))
+		{
+			sp_report_error(3);		/* Requested specs out of range */
+			return FALSE;
+		}
+	}
+	return return_value;
 }
+
+
+static boolean sp_reset_xmax(fix31 xmax)
+{
+	fix15 xmin;							/* Minimum X ORU value in font */
+	fix15 ymin;							/* Minimum Y ORU value in font */
+	fix15 ymax;							/* Maximum Y ORU value in font */
+
+	sp_globals.isw_modified_constants = TRUE;
+	xmin = sp_read_word_u(sp_globals.font_org + FH_FXMIN);
+	ymin = sp_read_word_u(sp_globals.font_org + FH_FYMIN);
+	ymax = sp_read_word_u(sp_globals.font_org + FH_FYMAX);
+
+	if (!sp_setup_consts(xmin, xmax, ymin, ymax))
+	{
+		sp_report_error(3);				/* Requested specs out of range */
+		return FALSE;
+	}
+	sp_globals.constr.data_valid = FALSE;
+	/* recompute setwidth */
+	sp_globals.Psw.x = (fix15) ((fix31) (((fix31) sp_globals.imported_width * (sp_globals.specs.xxmult >> 16) +
+										  (((fix31) sp_globals.imported_width *
+											(sp_globals.specs.xxmult & 0xffffL)) >> 16)) << sp_globals.pixshift) /
+								sp_globals.metric_resolution);
+	sp_globals.Psw.y =
+		(fix15) ((fix31)
+				 (((fix31) sp_globals.imported_width * (sp_globals.specs.yxmult >> 16) +
+				   (((fix31) sp_globals.imported_width *
+					 (sp_globals.specs.yxmult & 0xffffL)) >> 16)) << sp_globals.pixshift) /
+				 sp_globals.metric_resolution);
+
+	return TRUE;
+}
+
+boolean sp_make_char(ufix16 char_index)	/* Index to character in char directory */
+{
+	sp_globals.import_setwidth_act = FALSE;
+	return sp_do_make_char(char_index);
+}
+#endif

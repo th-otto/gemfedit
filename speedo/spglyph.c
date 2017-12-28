@@ -50,8 +50,8 @@ from The Open Group.
 */
 
 #include "linux/libcwrap.h"
-#include	"spint.h"
-#include	"fonts/fontutil.h"
+#include "spint.h"
+#include "fonts/fontutil.h"
 
 #undef	CLIP_BBOX_NOISE
 

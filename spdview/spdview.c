@@ -1374,13 +1374,29 @@ static gboolean gen_speedo_font(const char *filename, GString *body)
 
 			if (debug)
 			{
+				fix15 xmin, ymin, xmax, ymax;
+				long fwidth, fheight;
+				long pixel_size = (point_size * x_res + 360) / 720;
+				
+				xmin = read_2b(font_buffer + FH_FXMIN);
+				ymin = read_2b(font_buffer + FH_FYMIN);
+				xmax = read_2b(font_buffer + FH_FXMAX);
+				ymax = read_2b(font_buffer + FH_FYMAX);
+				fwidth = xmax - xmin;
+				fwidth = fwidth * pixel_size / sp_globals.orus_per_em;
+				fheight = ymax - ymin;
+				fheight = fheight * pixel_size / sp_globals.orus_per_em;
 				g_string_append_printf(errorout, "bbox: %d %d ascent %d descent %d lb %d rb %d\n",
 					max_bb.width, max_bb.height,
 					max_bb.ascent, max_bb.descent,
 					max_bb.lbearing, max_bb.rbearing);
-				g_string_append_printf(errorout, "bbox (header): %d %d %d %d\n",
-					read_2b(font_buffer + FH_FXMIN), read_2b(font_buffer + FH_FYMIN),
-					read_2b(font_buffer + FH_FXMAX), read_2b(font_buffer + FH_FYMAX));
+				g_string_append_printf(errorout, "bbox (header): %d %d %d %d; %ld %ld %ld %ld\n",
+					xmin, ymin,
+					xmax, ymax,
+					xmin * pixel_size / sp_globals.orus_per_em,
+					ymin * pixel_size / sp_globals.orus_per_em,
+					xmax * pixel_size / sp_globals.orus_per_em,
+					ymax * pixel_size / sp_globals.orus_per_em);
 			}
 			
 			font_bb = max_bb;

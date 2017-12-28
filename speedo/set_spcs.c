@@ -153,7 +153,7 @@ static boolean sp_setup_consts(fix15 xmin,	/* Minimum X ORU value in font */
 		}
 		x = (i & BIT1) ? xmin : xmax;
 		y = (i & BIT0) ? ymin : ymax;
-		pixval = (fix31) x *xmult + (fix31) y *ymult + offset * denom;
+		pixval = (fix31)x * xmult + (fix31)y * ymult + offset * denom;
 
 		if (pixval < 0)
 			pixval = -pixval;
@@ -378,7 +378,7 @@ boolean sp_set_specs(const specs_t *specsarg, const buff_t *font)	/* Bundle of c
 		return FALSE;
 	}
 #if INCL_ISW
-	/* save the value of the max x oru that the fixed point constants are based on*/
+	/* save the value of the max x oru that the fixed point constants are based on */
 	sp_globals.isw_xmax = xmax;
 #endif
 

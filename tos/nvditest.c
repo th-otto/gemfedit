@@ -72,14 +72,47 @@ static void destroy_win(void)
 }
 
 
+#undef FONT_ID
+#define FONT_ID 1 /* System font */
+#undef FONT_ID
+#define FONT_ID 5031 /* Baskerville */
+#undef FONT_ID
+#define FONT_ID 5043 /* American Garamond */
+#undef FONT_ID
+#define FONT_ID 15040 /* Arial fVDI */
+#undef FONT_ID
+#define FONT_ID 9908 /* Arial */
+#undef FONT_ID
+#define FONT_ID 5003 /* Swiss 721 */
+
+#define POINT_SIZE 24
+
 static _BOOL create_window(void)
 {
 	GRECT gr, desk;
 	_WORD wkind;
 	_WORD width, height;
+	_WORD cw, ch;
+	_WORD cw2, ch2;
+	_WORD xoff;
+	_WORD extent[8];
 	
-	width = 400;
-	height = 300;
+	vst_font(vdihandle, 1);
+	vst_point(vdihandle, POINT_SIZE, &dummy, &dummy, &cw, &ch);
+	xoff = 18 * cw;
+	vst_font(vdihandle, FONT_ID);
+	vst_point(vdihandle, POINT_SIZE, &dummy, &dummy, &cw2, &ch2);
+	if (ch2 > ch)
+		ch = ch2;
+
+	vqt_extent(vdihandle, "m", extent);
+	cw = extent[2] - extent[0];
+	width = xoff + 32 * cw;
+	height = 16 * ch;
+	vqt_extent(vdihandle, "0", extent);
+	nf_debugprintf("0: %d %d %d %d %d %d %d %d\n", extent[0], extent[1], extent[2], extent[3], extent[4], extent[5], extent[6], extent[7]);
+	vqt_extent(vdihandle, "1", extent);
+	nf_debugprintf("1: %d %d %d %d %d %d %d %d\n", extent[0], extent[1], extent[2], extent[3], extent[4], extent[5], extent[6], extent[7]);
 	
 	/* create a window */
 	gr.g_x = 100;
@@ -115,14 +148,13 @@ static void mainwin_draw(const GRECT *area)
 	_WORD font_ch, font_ch2;
 	_WORD xoff;
 	int x, y;
+	_WORD extent[8];
 	
 	v_hide_c(vdihandle);
 	wind_get_grect(mainwin, WF_WORKXYWH, &work);
 	wind_get_grect(mainwin, WF_FIRSTXYWH, &gr);
 	while (gr.g_w > 0 && gr.g_h > 0)
 	{
-#define POINT_SIZE 10
-
 		if (rc_intersect(area, &gr))
 		{
 			pxy[0] = gr.g_x;
@@ -140,19 +172,6 @@ static void mainwin_draw(const GRECT *area)
 			vst_color(vdihandle, G_BLACK);
 			vst_point(vdihandle, POINT_SIZE, &dummy, &dummy, &font_cw, &font_ch);
 			xoff = 18 * font_cw;
-
-#undef FONT_ID
-#define FONT_ID 1 /* System font */
-#undef FONT_ID
-#define FONT_ID 5031 /* Baskerville */
-#undef FONT_ID
-#define FONT_ID 5043 /* American Garamond */
-#undef FONT_ID
-#define FONT_ID 15040 /* Arial fVDI */
-#undef FONT_ID
-#define FONT_ID 9908 /* Arial */
-#undef FONT_ID
-#define FONT_ID 5003 /* Swiss 721 */
 
 			vst_font(vdihandle, FONT_ID);
 			vst_point(vdihandle, POINT_SIZE, &dummy, &dummy, &dummy, &font_ch2);
@@ -174,7 +193,8 @@ static void mainwin_draw(const GRECT *area)
 			vst_alignment(vdihandle, ALI_LEFT, ALI_TOP, &dummy, &dummy);
 			vst_color(vdihandle, G_BLACK);
 			vst_point(vdihandle, POINT_SIZE, &dummy, &dummy, &dummy, &dummy);
-			font_cw = 8;
+			vqt_extent(vdihandle, "m", extent);
+			font_cw = extent[2] - extent[0];
 
 #define USE_UNICODE 1
 #if USE_UNICODE

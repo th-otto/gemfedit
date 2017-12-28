@@ -789,15 +789,15 @@ static ufix8 *sp_setup_pix_table(ufix8 * pointer,	/* Pointer to first byte in co
 				sp_calculate_y_pix(start_edge, end_edge, constr_nr,
 								y_top_scale, y_bottom_scale, ppo, em_top_pix, em_bot_pix);
 			} else
-			{
 #endif
+			{
 #if INCL_ISW
 				if (i == 0 && imported_width)
 				{
 					sp_calculate_x_pix(start_edge, end_edge, constr_nr, isw_scale, 0, ppo, isw_setwidth_pix);
 				} else
-				{
 #endif
+				{
 					if (!sp_globals.c_act[constr_nr])	/* Constraint inactive? */
 					{
 						zone_pix = ((fix15) ((((fix31) sp_plaid.orus[end_edge] -
@@ -836,12 +836,8 @@ static ufix8 *sp_setup_pix_table(ufix8 * pointer,	/* Pointer to first byte in co
 							sp_plaid.pix[end_edge] = em_bot_pix;
 					}
 #endif
-#if INCL_SQUEEZING
 				}
-#endif
-#if INCL_ISW
 			}
-#endif
 #if INCL_PLAID_OUT						/* Plaid data monitoring included? */
 			record_ctrl_zone((fix31) sp_plaid.pix[start_edge] << (16 - sp_globals.pixshift),
 							 (fix31) sp_plaid.pix[end_edge] << (16 - sp_globals.pixshift),
@@ -1077,7 +1073,7 @@ ufix8 *sp_plaid_tcb(ufix8 * pointer,	/* Pointer to next byte in char data */
 
 	return pointer;
 }
-#else
+#else /* !INCL_RULES */
 /* 
  * Called by sp_make_simp_char() and sp_make_comp_char() to set up the controlled
  * coordinate table and skip all other intelligent scaling rules embedded
@@ -1103,7 +1099,7 @@ ufix8 *sp_plaid_tcb(ufix8 * pointer,	/* Pointer to next byte in char data */
 	pointer = sp_skip_interpolation_table(pointer, format);
 	return pointer;
 }
-#endif
+#endif /* INCL_RULES */
 
 
 /*

@@ -29,6 +29,9 @@ WITH THE SPEEDO SOFTWARE OR THE BITSTREAM CHARTER OUTLINE FONT.
 
 #include "linux/libcwrap.h"
 #include "spdo_prv.h"					/* General definitions for Speedo   */
+#if defined(__PUREC__) || defined(__mc68000__)
+#include <mint/arch/nf_ops.h>
+#endif
 
 #if INCL_SCREEN /* whole file */
 
@@ -75,6 +78,24 @@ boolean sp_begin_char_screen(fix31 x, fix31 y, fix31 minx, fix31 miny, fix31 max
 
 	sp_init_char_out(x, y, minx, miny, maxx, maxy);
 
+#if defined(__PUREC__) || defined(__mc68000__)
+	{
+		static int done = 0;
+		if (!done)
+		{
+			done = 1;
+			nf_debugprintf("multshift: %d\n", sp_globals.multshift);
+			nf_debugprintf("pixshift: %d\n", sp_globals.pixshift);
+			nf_debugprintf("mpshift: %d\n", sp_globals.mpshift);
+			nf_debugprintf("multrnd: $%lx\n", (long)sp_globals.multrnd);
+			nf_debugprintf("pixrnd: $%x\n", sp_globals.pixrnd);
+			nf_debugprintf("mprnd: $%lx\n", (long)sp_globals.mprnd);
+			nf_debugprintf("onepix: $%x\n", sp_globals.onepix);
+			nf_debugprintf("pixfix: $%x\n", sp_globals.pixfix);
+			nf_debugprintf("fracpix: $%x\n", sp_globals.fracpix);
+		}
+	}
+#endif
 	return TRUE;
 }
 

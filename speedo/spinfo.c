@@ -242,7 +242,6 @@ void sp_compute_bounds(SpeedoFontPtr spf, FontInfoPtr pinfo, unsigned long flags
 
 		if (!(flags & ComputeBoundsOnly))
 		{
-
 			width = sp_get_char_width(index);
 
 			/* convert to pixel coords */

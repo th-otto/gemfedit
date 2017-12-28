@@ -50,6 +50,7 @@ static const int mainwin_gridsize = 1;
 static const int preview_gridsize = 1;
 static _WORD scalex = 5;
 static _WORD scaley = 5;
+static _WORD small_cw, small_ch;
 
 static _WORD font_cw;
 static _WORD font_ch;
@@ -72,8 +73,8 @@ static _WORD col_width = 1;
 static uint16_t cur_char = 0x41;
 
 static long point_size = 240;
-static int x_res = 72;
-static int y_res = 72;
+static int x_res = 95;
+static int y_res = 95;
 static int quality = 1;
 static specs_t specs;
 static ufix16 char_index, char_id;
@@ -206,6 +207,7 @@ static void draw_char(uint16_t ch, _WORD x0, _WORD y0)
 	_WORD colors[2];
 	charinfo *c;
 	MFDB src;
+	char buf[20];
 	
 	if (!is_font_loaded())
 		return;
@@ -214,6 +216,16 @@ static void draw_char(uint16_t ch, _WORD x0, _WORD y0)
 	c = &infos[ch];
 	if (c->bitmap == NULL || c->bbox.width == 0 || c->bbox.height == 0)
 		return;
+	/*
+	 * draw the label
+	 */
+	sprintf(buf, "%04x", ch);
+	vswr_mode(vdihandle, MD_TRANS);
+	v_gtext(vdihandle, x0 + (col_width - 4 * small_cw) / 2, y0, buf);
+	/*
+	 * draw the char
+	 */
+	y0 += small_ch + mainwin_gridsize;
 	src.fd_addr = c->bitmap;
 	src.fd_wdwidth = (c->bbox.width + 15) >> 4;
 	src.fd_w = c->bbox.width;
@@ -289,6 +301,9 @@ static void mainwin_draw(const GRECT *area)
 					pxy[1] = work.g_y + (_WORD)yy;
 					pxy[2] = pxy[0] + (_WORD)scaled_w - 1;
 					pxy[3] = pxy[1] + mainwin_gridsize - 1;
+					vr_recfl(vdihandle, pxy);
+					pxy[1] += small_ch + mainwin_gridsize;
+					pxy[3] += small_ch + mainwin_gridsize;
 					vr_recfl(vdihandle, pxy);
 				}
 				/*
@@ -539,6 +554,11 @@ static _BOOL open_screen(void)
 	 */
 	vst_color(vdihandle, G_BLACK);
 	vst_alignment(vdihandle, TA_LEFT, TA_TOP, &dummy, &dummy);
+	
+	/*
+	 * get size of small font
+	 */
+	vst_height(vdihandle, 5, &dummy, &dummy, &small_cw, &small_ch);
 	
 	return TRUE;
 }
@@ -1201,13 +1221,35 @@ static _BOOL font_gen_speedo_font(void)
 				max_bb.width, max_bb.height,
 				max_bb.ascent, max_bb.descent,
 				max_bb.lbearing, max_bb.rbearing);
-			nf_debugprintf("bbox (header): %d %d %d %d\n",
-				read_2b(font_buffer + FH_FXMIN), read_2b(font_buffer + FH_FYMIN),
-				read_2b(font_buffer + FH_FXMAX), read_2b(font_buffer + FH_FYMAX));
+			{
+				fix15 xmin, ymin, xmax, ymax;
+				long fwidth, fheight;
+				long pixel_size = (point_size * x_res + 360) / 720;
+				
+				xmin = read_2b(font_buffer + FH_FXMIN);
+				ymin = read_2b(font_buffer + FH_FYMIN);
+				xmax = read_2b(font_buffer + FH_FXMAX);
+				ymax = read_2b(font_buffer + FH_FYMAX);
+				fwidth = xmax - xmin;
+				fwidth = fwidth * pixel_size / sp_globals.orus_per_em;
+				fheight = ymax - ymin;
+				fheight = fheight * pixel_size / sp_globals.orus_per_em;
+				nf_debugprintf("bbox (header): %d %d %d %d; %ld %ld %ld %ld\n",
+					xmin, ymin,
+					xmax, ymax,
+					xmin * pixel_size / sp_globals.orus_per_em,
+					ymin * pixel_size / sp_globals.orus_per_em,
+					xmax * pixel_size / sp_globals.orus_per_em,
+					ymax * pixel_size / sp_globals.orus_per_em);
+			}
+			
 			font_ch = max_bb.height;
 			font_cw = max_bb.width;
-			row_height = font_ch + mainwin_gridsize;
-			col_width = font_cw + mainwin_gridsize;
+			row_height = small_ch + mainwin_gridsize + font_ch + mainwin_gridsize;
+			col_width = font_cw;
+			if (col_width < (4 * small_cw))
+				col_width = 4 * small_cw;
+			col_width += mainwin_gridsize;
 			font_bb = max_bb;
 		}
 		
@@ -1531,6 +1573,8 @@ static void hscroll_to(long xx)
 
 static void handle_message(_WORD *message, _WORD mox, _WORD moy)
 {
+	UNUSED(mox);
+	UNUSED(moy);
 	wind_update(BEG_UPDATE);
 	switch (message[0])
 	{
@@ -1564,7 +1608,7 @@ static void handle_message(_WORD *message, _WORD mox, _WORD moy)
 			wind_set_int(message[3], WF_TOP, 0);
 		} else if (message[3] == previewwin)
 		{
-			preview_click(mox, moy);
+			wind_set_int(message[3], WF_TOP, 0);
 		}
 		break;
 
@@ -1879,9 +1923,6 @@ int main(int argc, char **argv)
 		return 1;
 	}
 	aeshandle = graf_handle(&gl_wchar, &gl_hchar, &dummy, &dummy);
-	
-	font_cw = gl_wchar;
-	font_ch = gl_hchar;
 	
 	spdview_rsc_load();
 	

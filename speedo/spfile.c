@@ -128,26 +128,15 @@ struct speedo_encoding
 static int find_encoding(const char *fontname, const char *filename, int **enc, int *enc_size)
 {
 	static struct speedo_encoding *known_encodings = 0;
-
 	static int number_known_encodings = 0;
-
 	static int known_encodings_size = 0;
 
 	char *encoding_name;
-
 	int iso8859_1;
-
 	FontMapPtr mapping;
-
-	int i,
-	 j,
-	 k,
-	 size;
-
+	int i, j, k, size;
 	struct speedo_encoding *temp;
-
 	int *new_enc;
-
 	char *new_name;
 
 	iso8859_1 = 0;

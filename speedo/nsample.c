@@ -60,17 +60,6 @@ int main(int argc, char *argv[]);
 
 #define MAX_BITS  256					/* Max line length of generated bitmap */
 
-/***** GLOBAL FUNCTIONS *****/
-
-/***** EXTERNAL FUNCTIONS *****/
-
-/***** STATIC FUNCTIONS *****/
-
-fix31 read_4b(ufix8 * ptr);
-
-fix15 read_2b(ufix8 * ptr);
-
-/***** STATIC VARIABLES *****/
 static char pathname[100];				/* Name of font file to be output */
 
 static ufix8 *font_buffer;		/* Pointer to allocated Font buffer */
@@ -101,10 +90,10 @@ static char line_of_bits[2 * MAX_BITS + 1];	/* Buffer for row of generated bits 
 
 #if INCL_MULTIDEV
 #if INCL_BLACK || INCL_SCREEN || INCL_2D
-bitmap_t bfuncs = { sp_open_bitmap, sp_set_bitmap_bits, sp_close_bitmap };
+static bitmap_t bfuncs = { sp_open_bitmap, sp_set_bitmap_bits, sp_close_bitmap };
 #endif
 #if INCL_OUTLINE
-outline_t ofuncs = {
+static outline_t ofuncs = {
 	sp_open_outline,
 	sp_start_new_char,
 	sp_start_contour,
@@ -117,7 +106,32 @@ outline_t ofuncs = {
 #endif
 
 
-ufix8 temp[16];							/* temp buffer for first 16 bytes of font */
+/*
+ * Reads 2-byte field from font buffer 
+ */
+static fix15 read_2b(ufix8 *pointer)
+{
+	fix15 temp;
+
+	temp = *pointer++;
+	temp = (temp << 8) + *(pointer);
+	return temp;
+}
+
+
+/*
+ * Reads 4-byte field from font buffer 
+ */
+static fix31 read_4b(ufix8 *pointer)
+{
+	fix31 temp;
+
+	temp = *pointer++;
+	temp = (temp << 8) + *(pointer++);
+	temp = (temp << 8) + *(pointer++);
+	temp = (temp << 8) + *(pointer);
+	return temp;
+}
 
 
 int main(int argc, char **argv)
@@ -129,6 +143,7 @@ int main(int argc, char **argv)
 	ufix32 i;
 	ufix32 minbufsz;					/* minimum font buffer size to allocate */
 	const ufix8 *key;
+	ufix8 temp[FH_FBFSZ + 4];							/* temp buffer for first 16 bytes of font */
 	
 	if (argc != 2)
 	{
@@ -149,9 +164,9 @@ int main(int argc, char **argv)
 	/* get minimum font buffer size - read first 16 bytes to get the minimum
    size field from the header, then allocate buffer dynamically  */
 
-	bytes_read = fread(temp, sizeof(ufix8), 16, fdescr);
+	bytes_read = fread(temp, sizeof(ufix8), sizeof(temp), fdescr);
 
-	if (bytes_read != 16)
+	if (bytes_read != sizeof(temp))
 	{
 		printf("****** Error on reading %s: %x\n", pathname, bytes_read);
 		fclose(fdescr);
@@ -223,10 +238,10 @@ int main(int argc, char **argv)
 
 #if INCL_MULTIDEV
 #if INCL_BLACK || INCL_SCREEN || INCL_2D
-	sp_set_bitmap_device(&bfuncs, sizeof(bfuncs));	/* Set decryption key */
+	sp_set_bitmap_device(&bfuncs, sizeof(bfuncs));
 #endif
 #if INCL_OUTLINE
-	sp_set_outline_device(&ofuncs, sizeof(ofuncs));	/* Set decryption key */
+	sp_set_outline_device(&ofuncs, sizeof(ofuncs));
 #endif
 #endif
 
@@ -268,6 +283,7 @@ int main(int argc, char **argv)
 	
 	return 0;
 }
+
 
 /*
  * Called by Speedo character generator to request that character
@@ -450,6 +466,7 @@ void sp_start_new_char(void)
 	printf("start_new_char()\n");
 }
 
+
 /*
  * Called by Speedo character generator at the start of each contour
  * in the outline data of the character.
@@ -512,30 +529,3 @@ void sp_close_outline(void)
 }
 
 #endif
-
-/*
- * Reads 2-byte field from font buffer 
- */
-fix15 read_2b(ufix8 *pointer)
-{
-	fix15 temp;
-
-	temp = *pointer++;
-	temp = (temp << 8) + *(pointer);
-	return temp;
-}
-
-
-/*
- * Reads 4-byte field from font buffer 
- */
-fix31 read_4b(ufix8 *pointer)
-{
-	fix31 temp;
-
-	temp = *pointer++;
-	temp = (temp << 8) + *(pointer++);
-	temp = (temp << 8) + *(pointer++);
-	temp = (temp << 8) + *(pointer);
-	return temp;
-}

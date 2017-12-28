@@ -216,7 +216,7 @@ static void dump_header(uint16_t num_chars, const glyphinfo_t *box)
 	const char *weight;
 	const char *width;
 	
-	pixel_size = point_size * x_res / 720;
+	pixel_size = (point_size * x_res + 360) / 720;
 
 	printf("STARTFONT 2.1\n");
 	printf("COMMENT\n");
@@ -319,7 +319,6 @@ static void dump_header(uint16_t num_chars, const glyphinfo_t *box)
 
 #if 0
 	{
-		fix15 orus_per_em;
 		fix15 xmin, ymin, xmax, ymax;
 		long fwidth, fheight;
 		
@@ -327,12 +326,11 @@ static void dump_header(uint16_t num_chars, const glyphinfo_t *box)
 		ymin = read_2b(font_buffer + FH_FYMIN);
 		xmax = read_2b(font_buffer + FH_FXMAX);
 		ymax = read_2b(font_buffer + FH_FYMAX);
-		orus_per_em = read_2b(font_buffer + FH_ORUPM);
 		fwidth = xmax - xmin;
-		fwidth = fwidth * pixel_size / orus_per_em;
+		fwidth = fwidth * pixel_size / sp_globals.orus_per_em;
 		fheight = ymax - ymin;
-		fheight = fheight * pixel_size / orus_per_em;
-		printf("FONTBOUNDINGBOX %ld %ld %ld %ld\n", fwidth, fheight, xmin * pixel_size / orus_per_em, ymin * pixel_size / orus_per_em);
+		fheight = fheight * pixel_size / sp_globals.orus_per_em;
+		printf("FONTBOUNDINGBOX %ld %ld %ld %ld\n", fwidth, fheight, xmin * pixel_size / sp_globals.orus_per_em, ymin * pixel_size / sp_globals.orus_per_em);
 		UNUSED(box);
 	}
 #else
