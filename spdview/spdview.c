@@ -862,7 +862,8 @@ void sp_open_bitmap(fix31 xorg, fix31 yorg, fix15 xsize, fix15 ysize)
 
 	if (bit_width > MAX_BITS)
 	{
-		g_string_append_printf(errorout, "char 0x%x (0x%x): wider than max bits (%d vs %d)\n", char_index, char_id, bit_width, MAX_BITS);
+		if (debug)
+			g_string_append_printf(errorout, "char 0x%x (0x%x): wider than max bits (%d vs %d)\n", char_index, char_id, bit_width, MAX_BITS);
 		bit_width = MAX_BITS;
 	}
 	width = sp_get_char_width(char_index);
@@ -911,13 +912,15 @@ void sp_open_bitmap(fix31 xorg, fix31 yorg, fix15 xsize, fix15 ysize)
 
 	if (bit_width > MAX_BITS)
 	{
-		g_string_append_printf(errorout, "char 0x%x (0x%x): width too large (%d vs %d)\n", char_index, char_id, bit_width, MAX_BITS);
+		if (debug)
+			g_string_append_printf(errorout, "char 0x%x (0x%x): width too large (%d vs %d)\n", char_index, char_id, bit_width, MAX_BITS);
 		bit_width = MAX_BITS;
 	}
 	
 	if (bit_height > MAX_BITS)
 	{
-		g_string_append_printf(errorout, "char 0x%x (0x%x): height too large (%d vs %d)\n", char_index, char_id, bit_width, MAX_BITS);
+		if (debug)
+			g_string_append_printf(errorout, "char 0x%x (0x%x): height too large (%d vs %d)\n", char_index, char_id, bit_width, MAX_BITS);
 		bit_height = MAX_BITS;
 	}
 	
@@ -934,20 +937,23 @@ void sp_set_bitmap_bits(fix15 y, fix15 xbit1, fix15 xbit2)
 
 	if (xbit1 < 0 || xbit1 >= bit_width)
 	{
-		g_string_append_printf(errorout, "char 0x%x (0x%x): bit1 %d wider than max bits %u -- truncated\n", char_index, char_id, xbit1, bit_width);
+		if (debug)
+			g_string_append_printf(errorout, "char 0x%x (0x%x): bit1 %d wider than max bits %u -- truncated\n", char_index, char_id, xbit1, bit_width);
 		xbit1 = MAX_BITS;
 		trunc = 1;
 	}
 	if (xbit2 < 0 || xbit2 > bit_width)
 	{
-		g_string_append_printf(errorout, "char 0x%x (0x%x): bit2 %d wider than max bits %u -- truncated\n", char_index, char_id, xbit2, bit_width);
+		if (debug)
+			g_string_append_printf(errorout, "char 0x%x (0x%x): bit2 %d wider than max bits %u -- truncated\n", char_index, char_id, xbit2, bit_width);
 		xbit2 = MAX_BITS;
 		trunc = 1;
 	}
 
 	if (y < 0 || y >= bit_height)
 	{
-		g_string_append_printf(errorout, "char 0x%x (0x%x): y value %d is larger than height %u -- truncated\n", char_index, char_id, y, bit_height);
+		if (debug)
+			g_string_append_printf(errorout, "char 0x%x (0x%x): y value %d is larger than height %u -- truncated\n", char_index, char_id, y, bit_height);
 		trunc = 1;
 		return;
 	}
@@ -1357,7 +1363,8 @@ static gboolean gen_speedo_font(const char *filename, GString *body)
 					
 					if (c->char_id != UNDEFINED)
 					{
-						g_string_append_printf(errorout, "char 0x%x (0x%x) already defined\n", char_index, char_id);
+						if (debug)
+							g_string_append_printf(errorout, "char 0x%x (0x%x) already defined\n", char_index, char_id);
 					} else
 					{
 						c->char_index = char_index;
