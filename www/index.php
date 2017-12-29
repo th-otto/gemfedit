@@ -71,7 +71,7 @@ Some features will not work without JavaScript enabled.
 <tr style="vertical-align: top;">
 <td>
 <fieldset>
-Type in URL of a SpeedoFont file (it must be remotely accessible from that URL<br />
+Type in URL of a font file (it must be remotely accessible from that URL<br />
 for example <a href="javascript: submitUrl(&quot;<?php echo dirname($_SERVER['SCRIPT_NAME']) . "/$btfontdir/" ?>bx000003.spd&quot;);">http://www.tho-otto.de<?php echo dirname($_SERVER['SCRIPT_NAME']) . "/$btfontdir/" ?>bx000003.spd</a>:
 <br />
 <input type="text" id="url" name="url" size="60" tabindex="1" style="margin-top: 1ex;" />
@@ -88,7 +88,7 @@ document.getElementById('submiturl').style.visibility="visible";
 <b>OR</b><br />
 <br />
 <fieldset>
-Choose a SpeedoFont file for upload <br />
+Choose a font file for upload <br />
 <input type="file" id="file" name="file" size="60" accept=".spd,.SPD" style="margin-top: 1ex;" />
 <input id="submitfile" style="background-color: #cccccc; font-weight: bold;" type="button" value="View" onclick="submitFile();" /><br />
 </fieldset>
@@ -102,9 +102,7 @@ document.getElementById('uploadbox').style.display="block";
 <fieldset>
 <table>
 <tr>
-<td colspan="2">
-Quality:
-</td>
+<td>Quality:</td>
 <td>
 <select id="quality" name="quality">
 <option value="0">Normal</option>
@@ -116,9 +114,7 @@ Quality:
 </tr>
 
 <tr>
-<td colspan="2">
-Pointsize:
-</td>
+<td>Pointsize:</td>
 <td>
 <select id="points" name="points">
 <option value="60">6</option>

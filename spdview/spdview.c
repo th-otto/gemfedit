@@ -786,16 +786,16 @@ static void html_out_header(GString *out, const ufix8 *font, const char *title, 
 			g_string_append_printf(out, "Underline position: %d<br />\n", read_2b(font + FH_ULPOS));
 			g_string_append_printf(out, "Underline thickness: %d<br />\n", read_2b(font + FH_ULTHK));
 			g_string_append_printf(out, "Small caps: %d<br />\n", read_2b(font + FH_SMCTR));
-			g_string_append_printf(out, "Display Superiors: %d %7.2f %7.2f<br />\n", read_2b(font + FH_DPSTR), (real) read_2b(font + FH_DPSTR + 2) / 4096.0, (real) read_2b(font + FH_DPSTR + 4) / 4096.0);
-			g_string_append_printf(out, "Footnote Superiors: %d %7.2f %7.2f<br />\n", read_2b(font + FH_FNSTR), (real) read_2b(font + FH_FNSTR + 2) / 4096.0, (real) read_2b(font + FH_FNSTR + 4) / 4096.0);
-			g_string_append_printf(out, "Alpha Superiors: %d %7.2f %7.2f<br />\n", read_2b(font + FH_ALSTR), (real) read_2b(font + FH_ALSTR + 2) / 4096.0, (real) read_2b(font + FH_ALSTR + 4) / 4096.0);
-			g_string_append_printf(out, "Chemical Inferiors: %d %7.2f %7.2f<br />\n", read_2b(font + FH_CMITR), (real) read_2b(font + FH_CMITR + 2) / 4096.0, (real) read_2b(font + FH_CMITR + 4) / 4096.0);
-			g_string_append_printf(out, "Small Numerators: %d %7.2f %7.2f<br />\n", read_2b(font + FH_SNMTR), (real) read_2b(font + FH_SNMTR + 2) / 4096.0, (real) read_2b(font + FH_SNMTR + 4) / 4096.0);
-			g_string_append_printf(out, "Small Denominators: %d %7.2f %7.2f<br />\n", read_2b(font + FH_SDNTR), (real) read_2b(font + FH_SDNTR + 2) / 4096.0, (real) read_2b(font + FH_SDNTR + 4) / 4096.0);
-			g_string_append_printf(out, "Medium Numerators: %d %7.2f %7.2f<br />\n", read_2b(font + FH_MNMTR), (real) read_2b(font + FH_MNMTR + 2) / 4096.0, (real) read_2b(font + FH_MNMTR + 4) / 4096.0);
-			g_string_append_printf(out, "Medium Denominators: %d %7.2f %7.2f<br />\n", read_2b(font + FH_MDNTR), (real) read_2b(font + FH_MDNTR + 2) / 4096.0, (real) read_2b(font + FH_MDNTR + 4) / 4096.0);
-			g_string_append_printf(out, "Large Numerators: %d %7.2f %7.2f<br />\n", read_2b(font + FH_LNMTR), (real) read_2b(font + FH_LNMTR + 2) / 4096.0, (real) read_2b(font + FH_LNMTR + 4) / 4096.0);
-			g_string_append_printf(out, "Large Denominators: %d %7.2f %7.2f<br />\n", read_2b(font + FH_LDNTR), (real) read_2b(font + FH_LDNTR + 2) / 4096.0, (real) read_2b(font + FH_LDNTR + 4) / 4096.0);
+			g_string_append_printf(out, "Display Superiors: %d %7.2f %7.2f<br />\n", read_2b(font + FH_DPSTR), (double) read_2b(font + FH_DPSTR + 2) / 4096.0, (double) read_2b(font + FH_DPSTR + 4) / 4096.0);
+			g_string_append_printf(out, "Footnote Superiors: %d %7.2f %7.2f<br />\n", read_2b(font + FH_FNSTR), (double) read_2b(font + FH_FNSTR + 2) / 4096.0, (double) read_2b(font + FH_FNSTR + 4) / 4096.0);
+			g_string_append_printf(out, "Alpha Superiors: %d %7.2f %7.2f<br />\n", read_2b(font + FH_ALSTR), (double) read_2b(font + FH_ALSTR + 2) / 4096.0, (double) read_2b(font + FH_ALSTR + 4) / 4096.0);
+			g_string_append_printf(out, "Chemical Inferiors: %d %7.2f %7.2f<br />\n", read_2b(font + FH_CMITR), (double) read_2b(font + FH_CMITR + 2) / 4096.0, (double) read_2b(font + FH_CMITR + 4) / 4096.0);
+			g_string_append_printf(out, "Small Numerators: %d %7.2f %7.2f<br />\n", read_2b(font + FH_SNMTR), (double) read_2b(font + FH_SNMTR + 2) / 4096.0, (double) read_2b(font + FH_SNMTR + 4) / 4096.0);
+			g_string_append_printf(out, "Small Denominators: %d %7.2f %7.2f<br />\n", read_2b(font + FH_SDNTR), (double) read_2b(font + FH_SDNTR + 2) / 4096.0, (double) read_2b(font + FH_SDNTR + 4) / 4096.0);
+			g_string_append_printf(out, "Medium Numerators: %d %7.2f %7.2f<br />\n", read_2b(font + FH_MNMTR), (double) read_2b(font + FH_MNMTR + 2) / 4096.0, (double) read_2b(font + FH_MNMTR + 4) / 4096.0);
+			g_string_append_printf(out, "Medium Denominators: %d %7.2f %7.2f<br />\n", read_2b(font + FH_MDNTR), (double) read_2b(font + FH_MDNTR + 2) / 4096.0, (double) read_2b(font + FH_MDNTR + 4) / 4096.0);
+			g_string_append_printf(out, "Large Numerators: %d %7.2f %7.2f<br />\n", read_2b(font + FH_LNMTR), (double) read_2b(font + FH_LNMTR + 2) / 4096.0, (double) read_2b(font + FH_LNMTR + 4) / 4096.0);
+			g_string_append_printf(out, "Large Denominators: %d %7.2f %7.2f<br />\n", read_2b(font + FH_LDNTR), (double) read_2b(font + FH_LDNTR + 2) / 4096.0, (double) read_2b(font + FH_LDNTR + 4) / 4096.0);
 	
 			g_string_append(out, "</span></span>\n");
 		}
@@ -1779,7 +1779,7 @@ static char *curl_download(CURL *curl, GString *body, const char *filename)
 	curl_easy_getinfo(curl, CURLINFO_CONDITION_UNMET, &unmet);
 	curl_easy_getinfo(curl, CURLINFO_SIZE_DOWNLOAD, &size);
 	curl_easy_getinfo(curl, CURLINFO_CONTENT_TYPE, &content_type);
-	fprintf(errorfile, "%s: GET from %s, url=%s, curl=%d, resp=%ld, size=%ld, content=%s\n", currdate(), fixnull(cgiRemoteHost), filename, curlcode, respcode, (long)size, printnull(content_type));
+	fprintf(errorfile, "%s: GET from %s, url=%s, curl=%d, resp=%ld, size=%ld, content=%s, local=%s\n", currdate(), fixnull(cgiRemoteHost), filename, curlcode, respcode, (long)size, printnull(content_type), local_filename);
 	
 	if (parms.fp)
 	{
@@ -1787,7 +1787,7 @@ static char *curl_download(CURL *curl, GString *body, const char *filename)
 		parms.fp = NULL;
 	}
 	
-	if (curlcode != CURLE_OK)
+	if (curlcode != CURLE_OK || stat(local_filename, &st) != 0)
 	{
 		html_out_header(body, NULL, err, TRUE);
 		g_string_append_printf(body, "%s:\n%s", _("Download error"), err);
@@ -1796,7 +1796,7 @@ static char *curl_download(CURL *curl, GString *body, const char *filename)
 		g_free(local_filename);
 		local_filename = NULL;
 	} else if ((respcode != 200 && respcode != 304) ||
-		(respcode == 200 && (content_type == NULL || strcmp(content_type, "text/plain") == 0)))
+		(respcode == 200 && content_type != NULL && strcmp(content_type, "text/plain") == 0))
 	{
 		/* most likely the downloaded data will contain the error page */
 		parms.fp = fopen(local_filename, "rb");
@@ -1942,16 +1942,22 @@ int main(void)
 	if ((val = cgiFormString("resolution")) != NULL)
 	{
 		x_res = y_res = (int)strtol(val, NULL, 10);
+		if (x_res < 10 || x_res > 10000)
+			x_res = y_res = 72;
 		g_free(val);
 	}
 	if ((val = cgiFormString("xresolution")) != NULL)
 	{
 		x_res = (int)strtol(val, NULL, 10);
+		if (x_res < 10 || x_res > 10000)
+			x_res = 72;
 		g_free(val);
 	}
 	if ((val = cgiFormString("yresolution")) != NULL)
 	{
 		y_res = (int)strtol(val, NULL, 10);
+		if (y_res < 10 || y_res > 10000)
+			y_res = 72;
 		g_free(val);
 	}
 	
