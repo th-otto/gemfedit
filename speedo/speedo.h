@@ -653,7 +653,7 @@ boolean sp_make_char_isw(ufix16 char_index, ufix32 imported_width);
 fix31 sp_get_char_width(ufix16 char_index);
 fix15 sp_get_track_kern(fix15 track, fix15 point_size);
 fix31 sp_get_pair_kern(ufix16 char_index1, ufix16 char_index2);
-boolean sp_get_char_bbox(ufix16 char_index, bbox_t *bbox);
+boolean sp_get_char_bbox(ufix16 char_index, bbox_t *bbox, boolean no_adj);
 #endif
 
 /* do_trns.c functions */

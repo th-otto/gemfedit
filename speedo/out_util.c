@@ -67,7 +67,7 @@ void sp_init_char_out(fix31 x, fix31 y, fix31 minx, fix31 miny, fix31 maxx, fix3
 void sp_begin_sub_char_out(fix31 x, fix31 y, fix31 minx, fix31 miny, fix31 maxx, fix31 maxy)
 {
 #if DEBUG
-	printf("BEGIN_SUB_CHAR_out(%3.1f, %3.1f, %3.1f, %3.1f, %3.1f, %3.1f\n",
+	printf("BEGIN_SUB_CHAR_OUT(%3.1f, %3.1f, %3.1f, %3.1f, %3.1f, %3.1f\n",
 		   (double) x / (double) sp_globals.onepix, (double) y / (double) sp_globals.onepix,
 		   (double) minx / (double) sp_globals.onepix, (double) miny / (double) sp_globals.onepix,
 		   (double) maxx / (double) sp_globals.onepix, (double) maxy / (double) sp_globals.onepix);

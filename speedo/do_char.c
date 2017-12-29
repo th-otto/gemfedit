@@ -385,7 +385,7 @@ fix31 sp_get_pair_kern(ufix16 char_index1,	/* Index to first character in char d
  *	conservative in the event that the transformation is not
  *	normal or the character is compound.
  */
-boolean sp_get_char_bbox(ufix16 char_index, bbox_t * bbox)
+boolean sp_get_char_bbox(ufix16 char_index, bbox_t *bbox, boolean no_adj)
 {
 	ufix8 *pointer;
 	fix15 tmp;
@@ -418,7 +418,7 @@ boolean sp_get_char_bbox(ufix16 char_index, bbox_t * bbox)
 		pointer += tmp;					/* Skip optional data */
 	}
 
-	if (format & BIT0)
+	if ((format & BIT0) && !no_adj)
 	{
 		pix_adj = sp_globals.onepix << 1;	/* Allow 2 pixel expansion ... */
 	} else

@@ -249,7 +249,7 @@ void sp_compute_bounds(SpeedoFontPtr spf, FontInfoPtr pinfo, unsigned long flags
 				((int) width * (spf->specs.xxmult % 65536L)) / 65536L;
 			pix_width /= 65536L;
 
-			(void) sp_get_char_bbox(index, &bbox);
+			sp_get_char_bbox(index, &bbox, FALSE);
 			bbox.ymax = (bbox.ymax + 32768L) >> 16;
 			bbox.ymin = (bbox.ymin + 32768L) >> 16;
 			bbox.xmin = (bbox.xmin + 32768L) >> 16;

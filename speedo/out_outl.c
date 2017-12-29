@@ -28,6 +28,7 @@ WITH THE SPEEDO SOFTWARE OR THE BITSTREAM CHARTER OUTLINE FONT.
  ****************************************************************************/
 
 #include "linux/libcwrap.h"
+#include <stdio.h>
 #include "spdo_prv.h"					/* General definitions for Speedo     */
 
 
@@ -85,9 +86,9 @@ boolean sp_begin_char_outline(
 
 #if DEBUG
 	printf("BEGIN_CHAR_2(%3.1f, %3.1f, %3.1f, %3.1f, %3.1f, %3.1f\n",
-		   (double) x / (double) onepix, (double) y / (double) onepix,
-		   (double) minx / (double) onepix, (double) miny / (double) onepix,
-		   (double) maxx / (double) onepix, (double) maxy / (double) onepix);
+		   (double) x / (double) sp_globals.onepix, (double) y / (double) sp_globals.onepix,
+		   (double) minx / (double) sp_globals.onepix, (double) miny / (double) sp_globals.onepix,
+		   (double) maxx / (double) sp_globals.onepix, (double) maxy / (double) sp_globals.onepix);
 #endif
 	sp_globals.poshift = 16 - sp_globals.pixshift;
 	set_width_x = (fix31) x << sp_globals.poshift;
@@ -117,10 +118,10 @@ void sp_begin_sub_char_outline(
 	fix31 maxx, fix31 maxy)							/* Top right corner of sub-char bounding box */
 {
 #if DEBUG
-	printf("BEGIN_SUB_CHAR_2(%3.1f, %3.1f, %3.1f, %3.1f, %3.1f, %3.1f\n",
-		   (double) x / (double) onepix, (double) y / (double) onepix,
-		   (double) minx / (double) onepix, (double) miny / (double) onepix,
-		   (double) maxx / (double) onepix, (double) maxy / (double) onepix);
+	printf("BEGIN_SUB_CHAR_2(%3.1f, %3.1f, %3.1f, %3.1f, %3.1f, %3.1f)\n",
+		   (double) x / (double) sp_globals.onepix, (double) y / (double) sp_globals.onepix,
+		   (double) minx / (double) sp_globals.onepix, (double) miny / (double) sp_globals.onepix,
+		   (double) maxx / (double) sp_globals.onepix, (double) maxy / (double) sp_globals.onepix);
 #endif
 	UNUSED(x);
 	UNUSED(y);
@@ -128,6 +129,14 @@ void sp_begin_sub_char_outline(
 	UNUSED(miny);
 	UNUSED(maxx);
 	UNUSED(maxy);
+	printf("BEGIN_SUB_CHAR_2(%3.1f, %3.1f, %3.1f, %3.1f, %3.1f, %3.1f)\n",
+		   (double) x / (double) sp_globals.onepix, (double) y / (double) sp_globals.onepix,
+		   (double) minx / (double) sp_globals.onepix, (double) miny / (double) sp_globals.onepix,
+		   (double) maxx / (double) sp_globals.onepix, (double) maxy / (double) sp_globals.onepix);
+	x <<= sp_globals.poshift;
+	y <<= sp_globals.poshift;
+	printf("BEGIN_SUB_CHAR_2(%3.1f, %3.1f)\n",
+		   (double) x / 65536.0, (double) y / (double) 65536.0);
 	start_sub_char();
 }
 
@@ -148,7 +157,7 @@ void sp_begin_contour_outline(
 
 #if DEBUG
 	printf("BEGIN_CONTOUR_2(%3.1f, %3.1f, %s)\n",
-		   (double) x1 / (double) onepix, (double) y1 / (double) onepix, outside ? "outside" : "inside");
+		   (double) x1 / (double) sp_globals.onepix, (double) y1 / (double) sp_globals.onepix, outside ? "outside" : "inside");
 #endif
 	x = RANGECHECK(x1, sp_globals.xmin, sp_globals.xmax);
 	y = RANGECHECK(y1, sp_globals.ymin, sp_globals.ymax);
@@ -172,9 +181,9 @@ void sp_curve_outline(
 {
 #if DEBUG
 	printf("CURVE_2(%3.1f, %3.1f, %3.1f, %3.1f, %3.1f, %3.1f)\n",
-		   (double) x1 / (double) onepix, (double) y1 / (double) onepix,
-		   (double) x2 / (double) onepix, (double) y2 / (double) onepix,
-		   (double) x3 / (double) onepix, (double) y3 / (double) onepix);
+		   (double) x1 / (double) sp_globals.onepix, (double) y1 / (double) sp_globals.onepix,
+		   (double) x2 / (double) sp_globals.onepix, (double) y2 / (double) sp_globals.onepix,
+		   (double) x3 / (double) sp_globals.onepix, (double) y3 / (double) sp_globals.onepix);
 #endif
 	UNUSED(depth);
 	x1 = RANGECHECK(x1, sp_globals.xmin, sp_globals.xmax);
@@ -202,7 +211,7 @@ void sp_curve_outline(
 void sp_line_outline(fix31 x1, fix31 y1)	/* End point of vector */
 {
 #if DEBUG
-	printf("LINE_2(%3.1f, %3.1f)\n", (double) x1 / (double) onepix, (double) y1 / (double) onepix);
+	printf("LINE_2(%3.1f, %3.1f)\n", (double) x1 / (double) sp_globals.onepix, (double) y1 / (double) sp_globals.onepix);
 #endif
 	x1 = RANGECHECK(x1, sp_globals.xmin, sp_globals.xmax);
 	y1 = RANGECHECK(y1, sp_globals.ymin, sp_globals.ymax);

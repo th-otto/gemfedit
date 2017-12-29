@@ -871,7 +871,7 @@ void sp_open_bitmap(fix31 xorg, fix31 yorg, fix15 xsize, fix15 ysize)
 
 	width = (pix_width * 7200L) / (point_size * y_res);
 
-	sp_get_char_bbox(char_index, &bb);
+	sp_get_char_bbox(char_index, &bb, TRUE);
 	bb.xmin >>= 16;
 	bb.ymin >>= 16;
 	bb.xmax >>= 16;
@@ -1154,7 +1154,7 @@ static void update_bbox(charinfo *c, glyphinfo_t *box)
 {
 	bbox_t bb;
 	
-	sp_get_char_bbox(c->char_index, &bb);
+	sp_get_char_bbox(c->char_index, &bb, TRUE);
 	c->bbox.xmin = bb.xmin;
 	c->bbox.ymin = bb.ymin;
 	c->bbox.xmax = bb.xmax;
@@ -1165,7 +1165,7 @@ static void update_bbox(charinfo *c, glyphinfo_t *box)
 	box->ymax = MIN(box->ymax, c->bbox.ymax);
 	c->bbox.width = ((bb.xmax - bb.xmin) + 32768L) >> 16;
 	c->bbox.height = ((bb.ymax - bb.ymin) + 32768L) >> 16;
-	c->bbox.lbearing = bb.xmin >> 16;
+	c->bbox.lbearing = (bb.xmin + 32768L) >> 16;
 	c->bbox.off_vert = bb.ymin >> 16;
 	box->lbearing = MIN(box->lbearing, c->bbox.lbearing);
 	c->bbox.rbearing = c->bbox.width + c->bbox.lbearing;

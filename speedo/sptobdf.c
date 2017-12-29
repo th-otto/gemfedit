@@ -403,7 +403,7 @@ static void update_bbox(charinfo *c, glyphinfo_t *box)
 {
 	bbox_t bb;
 	
-	sp_get_char_bbox(c->char_index, &bb);
+	sp_get_char_bbox(c->char_index, &bb, TRUE);
 	c->bbox.xmin = bb.xmin;
 	c->bbox.ymin = bb.ymin;
 	c->bbox.xmax = bb.xmax;
@@ -695,7 +695,7 @@ void sp_open_bitmap(fix31 xorg, fix31 yorg, fix15 xsize, fix15 ysize)
 
 	width = (pix_width * 720000L) / (point_size * x_res);
 
-	sp_get_char_bbox(char_index, &bb);
+	sp_get_char_bbox(char_index, &bb, TRUE);
 
 #if DEBUG
 	if (((bb.xmax - bb.xmin) >> 16) != bit_width)
