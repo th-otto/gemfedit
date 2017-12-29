@@ -12,5 +12,6 @@ dist::
 	: $(MAKE) -C tos
 	$(MAKE) -C win32
 	$(MAKE) -C unix
+	rm -f */*.o
 	rm -f gemfedit-$(VERSION)-src.zip
 	zip -r gemfedit-$(VERSION)-src.zip $(EXTRA_DIST) $(SUBDIRS)
