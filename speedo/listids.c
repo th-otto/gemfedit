@@ -298,7 +298,11 @@ void sp_open_outline(fix31 x_set_width, fix31 y_set_width, fix31 xmin, fix31 xma
 	UNUSED(ymax);
 }
 
-void sp_start_new_char(void)
+void sp_start_sub_char(void)
+{
+}
+
+void sp_end_sub_char(void)
 {
 }
 

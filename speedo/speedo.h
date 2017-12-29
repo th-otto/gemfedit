@@ -318,7 +318,8 @@ typedef struct bitmap_tag {
 
 typedef struct outline_tag {
 	void (*p_open_outline)(fix31 x_set_width, fix31 y_set_width, fix31 xmin, fix31 xmax, fix31 ymin, fix31 ymax);
-	void (*p_start_char)(void);
+	void (*p_start_sub_char)(void);
+	void (*p_end_sub_char)(void);
 	void (*p_start_contour)(fix31 x, fix31 y, boolean outside);
 	void (*p_curve)(fix31 x1, fix31 y1, fix31 x2, fix31 y2, fix31 x3, fix31 y3);
 	void (*p_line)(fix31 x, fix31 y);
@@ -771,7 +772,8 @@ void sp_close_bitmap(void);
 
 #if INCL_OUTLINE
 void sp_open_outline(fix31 x_set_width, fix31 y_set_width, fix31 xmin, fix31 xmax, fix31 ymin, fix31 ymax);
-void sp_start_new_char(void);
+void sp_start_sub_char(void);
+void sp_end_sub_char(void);
 void sp_start_contour(fix31 x, fix31 y, boolean outside);
 void sp_curve_to(fix31 x1, fix31 y1, fix31 x2, fix31 y2, fix31 x3, fix31 y3);
 void sp_line_to(fix31 x, fix31 y);

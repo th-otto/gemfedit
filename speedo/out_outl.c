@@ -128,7 +128,7 @@ void sp_begin_sub_char_outline(
 	UNUSED(miny);
 	UNUSED(maxx);
 	UNUSED(maxy);
-	start_new_char();
+	start_sub_char();
 }
 
 
@@ -237,6 +237,7 @@ void sp_end_sub_char_outline(void)
 #if DEBUG
 	printf("END_SUB_CHAR_2()\n");
 #endif
+	end_sub_char();
 }
 
 

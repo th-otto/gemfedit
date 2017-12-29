@@ -448,13 +448,22 @@ void sp_open_outline(
  * outputting scaled outline data for a sub-character in a compound
  * character.
  */
-void sp_start_new_char(void)
+void sp_start_sub_char(void)
 {
 #if DEBUG
-	printf("start_new_char()\n");
+	printf("start_sub_char()\n");
 #endif
 
-	(*sp_globals.outline_device.p_start_char)();
+	(*sp_globals.outline_device.p_start_sub_char)();
+}
+
+void sp_end_sub_char(void)
+{
+#if DEBUG
+	printf("end_sub_char()\n");
+#endif
+
+	(*sp_globals.outline_device.p_end_sub_char)();
 }
 
 /*

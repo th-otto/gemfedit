@@ -837,15 +837,22 @@ void sp_close_bitmap(void)
 #if INCL_OUTLINE
 void sp_open_outline(fix31 x_set_width, fix31 y_set_width, fix31 xmin, fix31 xmax, fix31 ymin, fix31 ymax)
 {
-	printf("\nopen_outline(%3.1f, %3.1f, %3.1f, %3.1f, %3.1f, %3.1f)\n",
+	printf("\n");
+	printf("/* char_index: %d id: %04x */\n", char_index, char_id);
+	printf("open_outline(%3.1f, %3.1f, %3.1f, %3.1f, %3.1f, %3.1f)\n",
 		   (double) x_set_width / 65536.0, (double) y_set_width / 65536.0,
 		   (double) xmin / 65536.0, (double) xmax / 65536.0,
 		   (double) ymin / 65536.0, (double) ymax / 65536.0);
 }
 
-void sp_start_new_char(void)
+void sp_start_sub_char(void)
 {
-	printf("start_new_char()\n");
+	printf("start_sub_char()\n");
+}
+
+void sp_end_sub_char(void)
+{
+	printf("end_sub_char()\n");
 }
 
 void sp_start_contour(fix31 x, fix31 y, boolean outside)

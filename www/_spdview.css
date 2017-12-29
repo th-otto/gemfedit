@@ -24,8 +24,8 @@ li {
   padding: 0px;
   border-spacing: 0px;
 }
-.vertical_line { width: 1px; margin: 0px; padding: 0px; background: black; }
-.horizontal_line { height: 1px; margin: 0px; padding: 0px; background: black; }
+.vertical_line { width: 1px; min-width: 1px; margin: 0px; padding: 0px; background: black; }
+.horizontal_line { height: 1px; min-height: 1px; margin: 0px; padding: 0px; background: black; }
 .spd_glyph_defined {
   border: 1px solid white;
   margin: 0px;

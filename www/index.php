@@ -135,6 +135,13 @@ document.getElementById('uploadbox').style.display="block";
 </td>
 </tr>
 
+<tr>
+<td>Resolution:</td>
+<td>
+<input type="number" id="resolution" name="resolution" value="72" />
+</td>
+</tr>
+
 </table>
 </fieldset>
 

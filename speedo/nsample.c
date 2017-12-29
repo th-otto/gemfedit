@@ -95,7 +95,8 @@ static bitmap_t bfuncs = { sp_open_bitmap, sp_set_bitmap_bits, sp_close_bitmap }
 #if INCL_OUTLINE
 static outline_t ofuncs = {
 	sp_open_outline,
-	sp_start_new_char,
+	sp_start_sub_char,
+	sp_start_end_char,
 	sp_start_contour,
 	sp_curve_to,
 	sp_line_to,
@@ -462,9 +463,14 @@ void sp_open_outline(
  * outputting scaled outline data for a sub-character in a compound
  * character.
  */
-void sp_start_new_char(void)
+void sp_start_sub_char(void)
 {
-	printf("start_new_char()\n");
+	printf("start_sub_char()\n");
+}
+
+void sp_end_sub_char(void)
+{
+	printf("end_sub_char()\n");
 }
 
 

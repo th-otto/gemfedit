@@ -1069,7 +1069,13 @@ void sp_open_outline(fix31 x_set_width, fix31 y_set_width, fix31 xmin, fix31 xma
 
 /* ------------------------------------------------------------------------- */
 
-void sp_start_new_char(void)
+void sp_start_sub_char(void)
+{
+}
+
+/* ------------------------------------------------------------------------- */
+
+void sp_end_sub_char(void)
 {
 }
 
@@ -1133,8 +1139,12 @@ static void gen_hor_line(GString *body, int columns)
 	int i;
 	
 	g_string_append(body, "<tr>\n");
-	for (i = 0; i < (columns * 2 + 1); i++)
+	for (i = 0; i < columns; i++)
+	{
+		g_string_append(body, "<td class=\"horizontal_line\" style=\"min-width: 1px;\"></td>\n");
 		g_string_append(body, "<td class=\"horizontal_line\"></td>\n");
+	}
+	g_string_append(body, "<td class=\"horizontal_line\" style=\"min-width: 1px;\"></td>\n");
 	g_string_append(body, "</tr>\n");
 }
 
@@ -1487,16 +1497,16 @@ static gboolean gen_speedo_font(const char *filename, GString *body)
 							c->bbox.width, c->bbox.height, c->bbox.ascent, c->bbox.descent, c->bbox.lbearing, c->bbox.rbearing);
 					}
 					g_string_append_printf(body,
-						"<td class=\"spd_glyph_image\" style=\"width: %dpx; height: %dpx;\" title=\""
+						"<td class=\"spd_glyph_image\" style=\"width: %dpx; height: %dpx; min-width: %dpx; min-height: %dpx;\" title=\""
 						"Index: 0x%x (%u)&#10;"
 						"ID: 0x%04x&#10;"
 						"Unicode: 0x%04x &#%u;&#10;"
 						"%s&#10;"
 						"Xmin: %7.2f Ymin: %7.2f&#10;"
 						"Xmax: %7.2f Ymax: %7.2f&#10;%s"
-						"\"><img alt=\"\" style=\"position: relative; left: %dpx; top: %dpx\" src=\"%s\"></td>",
-						font_bb.width,
-						font_bb.height,
+						"\"><img alt=\"\" style=\"text-align: left; vertical-align: top; position: relative; left: %dpx; top: %dpx\" src=\"%s\"></td>",
+						font_bb.width, font_bb.height,
+						font_bb.width, font_bb.height,
 						c->char_index, c->char_index,
 						c->char_id,
 						unicode, unicode,
@@ -1556,9 +1566,11 @@ static gboolean load_speedo_font(const char *filename, GString *body)
 	{
 		if (fread(tmp, sizeof(tmp), 1, fp) != 1)
 		{
-			fclose(fp);
 			g_string_append_printf(errorout, "%s: read error\n", filename);
 			ret = FALSE;
+		} else if (read_4b(tmp + FH_FMVER + 4) != 0x0d0a0000L)
+		{
+			sp_report_error(4);
 		} else
 		{
 			g_free(font_buffer);
@@ -1568,7 +1580,6 @@ static gboolean load_speedo_font(const char *filename, GString *body)
 			font_buffer = g_new(ufix8, minbufsize);
 			if (font_buffer == NULL)
 			{
-				fclose(fp);
 				g_string_append_printf(errorout, "%s\n", strerror(errno));
 				ret = FALSE;
 			} else
@@ -1576,7 +1587,6 @@ static gboolean load_speedo_font(const char *filename, GString *body)
 				fseek(fp, 0, SEEK_SET);
 				if (fread(font_buffer, minbufsize, 1, fp) != 1)
 				{
-					fclose(fp);
 					g_free(font_buffer);
 					font_buffer = NULL;
 					g_string_append_printf(errorout, "%s: read error\n", filename);
@@ -1588,7 +1598,6 @@ static gboolean load_speedo_font(const char *filename, GString *body)
 					c_buffer = g_new(ufix8, mincharsize);
 					if (c_buffer == NULL)
 					{
-						fclose(fp);
 						g_free(font_buffer);
 						font_buffer = NULL;
 						g_string_append_printf(errorout, "%s\n", strerror(errno));
@@ -1600,7 +1609,6 @@ static gboolean load_speedo_font(const char *filename, GString *body)
 					
 						title = fontname;
 						ret = gen_speedo_font(filename, body);
-						fclose(fp);
 					
 						g_free(font_buffer);
 						font_buffer = NULL;
@@ -1610,8 +1618,9 @@ static gboolean load_speedo_font(const char *filename, GString *body)
 				}
 			}
 		}
+		fclose(fp);
 	}
-		
+	
 	if (title == NULL)
 		html_out_header(body, NULL, xbasename(filename), FALSE);
 	html_out_trailer(body, FALSE);

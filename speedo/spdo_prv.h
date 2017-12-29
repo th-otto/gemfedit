@@ -124,7 +124,8 @@ WITH THE SPEEDO SOFTWARE OR THE BITSTREAM CHARTER OUTLINE FONT.
 #define close_bitmap() (*sp_globals.bitmap_device.p_close_bitmap)()
 
 #define open_outline(x_set_width, y_set_width, xmin, xmax, ymin, ymax) (*sp_globals.outline_device.p_open_outline)(x_set_width, y_set_width, xmin, xmax, ymin, ymax)
-#define start_new_char() (*sp_globals.outline_device.p_start_char)()
+#define start_sub_char() (*sp_globals.outline_device.p_start_sub_char)()
+#define end_sub_char() (*sp_globals.outline_device.p_end_sub_char)()
 #define start_contour(x,y,outside) (*sp_globals.outline_device.p_start_contour)(x,y,outside)
 #define curve_to(x1,y1,x2,y2,x3,y3) (*sp_globals.outline_device.p_curve)(x1,y1,x2,y2,x3,y3)
 #define line_to(x,y) (*sp_globals.outline_device.p_line)(x,y)
@@ -138,7 +139,8 @@ WITH THE SPEEDO SOFTWARE OR THE BITSTREAM CHARTER OUTLINE FONT.
 #define close_bitmap() sp_close_bitmap()
 
 #define open_outline(x_set_width, y_set_width, xmin, xmax, ymin, ymax) sp_open_outline(x_set_width, y_set_width, xmin, xmax, ymin, ymax)
-#define start_new_char() sp_start_new_char()
+#define start_sub_char() sp_start_sub_char()
+#define end_sub_char() sp_end_sub_char()
 #define start_contour(x,y,outside) sp_start_contour(x,y,outside)
 #define curve_to(x1,y1,x2,y2,x3,y3) sp_curve_to(x1,y1,x2,y2,x3,y3)
 #define line_to(x,y) sp_line_to(x,y)

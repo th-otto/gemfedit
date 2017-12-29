@@ -982,7 +982,13 @@ void sp_open_outline(fix31 x_set_width, fix31 y_set_width, fix31 xmin, fix31 xma
 
 /* ------------------------------------------------------------------------- */
 
-void sp_start_new_char(void)
+void sp_start_sub_char(void)
+{
+}
+
+/* ------------------------------------------------------------------------- */
+
+void sp_end_sub_char(void)
 {
 }
 
@@ -1295,6 +1301,12 @@ static _BOOL font_load_speedo_font(const char *filename)
 	{
 		fclose(fp);
 		do_alert1(AL_READERROR);
+		return FALSE;
+	}
+	if (read_4b(tmp + FH_FMVER + 4) != 0x0d0a0000L)
+	{
+		fclose(fp);
+		sp_report_error(4);
 		return FALSE;
 	}
 	free(font_buffer);
