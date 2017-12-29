@@ -68,9 +68,9 @@ void sp_begin_sub_char_out(fix31 x, fix31 y, fix31 minx, fix31 miny, fix31 maxx,
 {
 #if DEBUG
 	printf("BEGIN_SUB_CHAR_out(%3.1f, %3.1f, %3.1f, %3.1f, %3.1f, %3.1f\n",
-		   (real) x / (real) sp_globals.onepix, (real) y / (real) sp_globals.onepix,
-		   (real) minx / (real) sp_globals.onepix, (real) miny / (real) sp_globals.onepix,
-		   (real) maxx / (real) sp_globals.onepix, (real) maxy / (real) sp_globals.onepix);
+		   (double) x / (double) sp_globals.onepix, (double) y / (double) sp_globals.onepix,
+		   (double) minx / (double) sp_globals.onepix, (double) miny / (double) sp_globals.onepix,
+		   (double) maxx / (double) sp_globals.onepix, (double) maxy / (double) sp_globals.onepix);
 #endif
 	UNUSED(x);
 	UNUSED(y);
@@ -95,9 +95,9 @@ void sp_curve_out(fix31 x1, fix31 y1, fix31 x2, fix31 y2, fix31 x3, fix31 y3, fi
 {
 #if DEBUG
 	printf("CURVE_OUT(%3.1f, %3.1f, %3.1f, %3.1f, %3.1f, %3.1f)\n",
-		   (real) x1 / (real) sp_globals.onepix, (real) y1 / (real) sp_globals.onepix,
-		   (real) x2 / (real) sp_globals.onepix, (real) y2 / (real) sp_globals.onepix,
-		   (real) x3 / (real) sp_globals.onepix, (real) y3 / (real) sp_globals.onepix);
+		   (double) x1 / (double) sp_globals.onepix, (double) y1 / (double) sp_globals.onepix,
+		   (double) x2 / (double) sp_globals.onepix, (double) y2 / (double) sp_globals.onepix,
+		   (double) x3 / (double) sp_globals.onepix, (double) y3 / (double) sp_globals.onepix);
 #endif
 	UNUSED(x1); UNUSED(y1);
 	UNUSED(x2); UNUSED(y2);

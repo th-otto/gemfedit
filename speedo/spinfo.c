@@ -128,10 +128,10 @@ void sp_make_standard_props(void)
 	int i;
 	fontProp *t;
 
-	i = sizeof(fontNamePropTable) / sizeof(fontProp);
+	i = NNAMEPROPS;
 	for (t = fontNamePropTable; i; i--, t++)
 		t->atom = MakeAtom(t->name, (unsigned) strlen(t->name), TRUE);
-	i = sizeof(extraProps) / sizeof(fontProp);
+	i = NEXTRAPROPS;
 	for (t = extraProps; i; i--, t++)
 		t->atom = MakeAtom(t->name, (unsigned) strlen(t->name), TRUE);
 }
@@ -273,8 +273,10 @@ void sp_compute_bounds(SpeedoFontPtr spf, FontInfoPtr pinfo, unsigned long flags
 
 			tmpchar.attributes = (int) ((double) (int) width / 65.536 + .5);
 		} else
+		{
 			tmpchar = spf->encoding[char_id - firstChar].metrics;
-
+		}
+		
 		adjust_min_max(&minchar, &maxchar, &tmpchar);
 		overlap = tmpchar.rightSideBearing - tmpchar.characterWidth;
 		if (maxOverlap < overlap)

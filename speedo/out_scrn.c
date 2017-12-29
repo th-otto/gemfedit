@@ -67,9 +67,9 @@ boolean sp_begin_char_screen(fix31 x, fix31 y, fix31 minx, fix31 miny, fix31 max
 {
 #if DEBUG
 	printf("BEGIN_CHAR_SCREEN(%3.1f, %3.1f, %3.1f, %3.1f, %3.1f, %3.1f\n",
-		   (real) x / (real) sp_globals.onepix, (real) y / (real) sp_globals.onepix,
-		   (real) minx / (real) sp_globals.onepix, (real) miny / (real) sp_globals.onepix,
-		   (real) maxx / (real) sp_globals.onepix, (real) maxy / (real) sp_globals.onepix);
+		   (double) x / (double) sp_globals.onepix, (double) y / (double) sp_globals.onepix,
+		   (double) minx / (double) sp_globals.onepix, (double) miny / (double) sp_globals.onepix,
+		   (double) maxx / (double) sp_globals.onepix, (double) maxy / (double) sp_globals.onepix);
 #endif
 	if (sp_globals.pixshift > 8)
 		sp_intercepts.fracpix = sp_globals.onepix << (8 - sp_globals.pixshift);
@@ -168,7 +168,7 @@ static void sp_vert_line_screen(fix31 x, fix15 y1, fix15 y2)
 
 #ifdef DBGCRV
 	printf("VERT_LINE_SCREEN(%6.4f, %6.4f, %6.4f)\n",
-		   (real) (x - 32768L) / 65536.0, (real) (y1 - 32768L) / 65536.0, (real) (y2 - 32768L) / 65536.0);
+		   (double) (x - 32768L) / 65536.0, (double) (y1 - 32768L) / 65536.0, (double) (y2 - 32768L) / 65536.0);
 #endif
 
 	if (sp_globals.intercept_oflo)
@@ -219,10 +219,10 @@ static void sp_scan_curve_screen(fix31 X0, fix31 Y0, fix31 X1, fix31 Y1, fix31 X
 
 #ifdef DBGCRV
 	printf("SCAN_CURVE_SCREEN(%6.4f, %6.4f, %6.4f, %6.4f, %6.4f, %6.4f, %6.4f, %6.4f)\n",
-		   (real) (X0 - 32768L) / 65536.0, (real) (Y0 - 32768L) / 65536.0,
-		   (real) (X1 - 32768L) / 65536.0, (real) (Y1 - 32768L) / 65536.0,
-		   (real) (X2 - 32768L) / 65536.0, (real) (Y2 - 32768L) / 65536.0,
-		   (real) (X3 - 32768L) / 65536.0, (real) (Y3 - 32768L) / 65536.0);
+		   (double) (X0 - 32768L) / 65536.0, (double) (Y0 - 32768L) / 65536.0,
+		   (double) (X1 - 32768L) / 65536.0, (double) (Y1 - 32768L) / 65536.0,
+		   (double) (X2 - 32768L) / 65536.0, (double) (Y2 - 32768L) / 65536.0,
+		   (double) (X3 - 32768L) / 65536.0, (double) (Y3 - 32768L) / 65536.0);
 #endif
 
 	if (((Y3 >> 16)) == (Y0 >> 16) || (Y3 + 1) == Y0 || Y3 == (Y0 + 1))
@@ -258,7 +258,7 @@ void sp_begin_contour_screen(fix31 x1, fix31 y1, boolean outside)
 {
 #if DEBUG
 	printf("BEGIN_CONTOUR_SCREEN(%3.1f, %3.1f, %s)\n",
-		   (real) x1 / (real) sp_globals.onepix, (real) y1 / (real) sp_globals.onepix,
+		   (double) x1 / (double) sp_globals.onepix, (double) y1 / (double) sp_globals.onepix,
 		   outside ? "outside" : "inside");
 #endif
 	UNUSED(outside);
@@ -281,9 +281,9 @@ void sp_curve_screen(fix31 x1, fix31 y1, fix31 x2, fix31 y2, fix31 x3, fix31 y3,
 
 #if DEBUG
 	printf("CURVE_SCREEN(%6.4f, %6.4f, %6.4f, %6.4f, %6.4f, %6.4f)\n",
-		   (real) x1 / (real) sp_globals.onepix, (real) y1 / (real) sp_globals.onepix,
-		   (real) x2 / (real) sp_globals.onepix, (real) y2 / (real) sp_globals.onepix,
-		   (real) x3 / (real) sp_globals.onepix, (real) y3 / (real) sp_globals.onepix);
+		   (double) x1 / (double) sp_globals.onepix, (double) y1 / (double) sp_globals.onepix,
+		   (double) x2 / (double) sp_globals.onepix, (double) y2 / (double) sp_globals.onepix,
+		   (double) x3 / (double) sp_globals.onepix, (double) y3 / (double) sp_globals.onepix);
 #endif
 	UNUSED(depth);
 
@@ -346,7 +346,7 @@ void sp_line_screen(fix31 x1, fix31 y1)
 
 #if DEBUG
 	printf("LINE_SCREEN(%3.4f, %3.4f)\n",
-		   (real) x1 / (real) sp_globals.onepix, (real) y1 / (real) sp_globals.onepix);
+		   (double) x1 / (double) sp_globals.onepix, (double) y1 / (double) sp_globals.onepix);
 #endif
 
 	if (sp_globals.extents_running)

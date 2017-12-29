@@ -85,9 +85,9 @@ boolean sp_begin_char_outline(
 
 #if DEBUG
 	printf("BEGIN_CHAR_2(%3.1f, %3.1f, %3.1f, %3.1f, %3.1f, %3.1f\n",
-		   (real) x / (real) onepix, (real) y / (real) onepix,
-		   (real) minx / (real) onepix, (real) miny / (real) onepix,
-		   (real) maxx / (real) onepix, (real) maxy / (real) onepix);
+		   (double) x / (double) onepix, (double) y / (double) onepix,
+		   (double) minx / (double) onepix, (double) miny / (double) onepix,
+		   (double) maxx / (double) onepix, (double) maxy / (double) onepix);
 #endif
 	sp_globals.poshift = 16 - sp_globals.pixshift;
 	set_width_x = (fix31) x << sp_globals.poshift;
@@ -118,9 +118,9 @@ void sp_begin_sub_char_outline(
 {
 #if DEBUG
 	printf("BEGIN_SUB_CHAR_2(%3.1f, %3.1f, %3.1f, %3.1f, %3.1f, %3.1f\n",
-		   (real) x / (real) onepix, (real) y / (real) onepix,
-		   (real) minx / (real) onepix, (real) miny / (real) onepix,
-		   (real) maxx / (real) onepix, (real) maxy / (real) onepix);
+		   (double) x / (double) onepix, (double) y / (double) onepix,
+		   (double) minx / (double) onepix, (double) miny / (double) onepix,
+		   (double) maxx / (double) onepix, (double) maxy / (double) onepix);
 #endif
 	UNUSED(x);
 	UNUSED(y);
@@ -148,7 +148,7 @@ void sp_begin_contour_outline(
 
 #if DEBUG
 	printf("BEGIN_CONTOUR_2(%3.1f, %3.1f, %s)\n",
-		   (real) x1 / (real) onepix, (real) y1 / (real) onepix, outside ? "outside" : "inside");
+		   (double) x1 / (double) onepix, (double) y1 / (double) onepix, outside ? "outside" : "inside");
 #endif
 	x = RANGECHECK(x1, sp_globals.xmin, sp_globals.xmax);
 	y = RANGECHECK(y1, sp_globals.ymin, sp_globals.ymax);
@@ -172,9 +172,9 @@ void sp_curve_outline(
 {
 #if DEBUG
 	printf("CURVE_2(%3.1f, %3.1f, %3.1f, %3.1f, %3.1f, %3.1f)\n",
-		   (real) x1 / (real) onepix, (real) y1 / (real) onepix,
-		   (real) x2 / (real) onepix, (real) y2 / (real) onepix,
-		   (real) x3 / (real) onepix, (real) y3 / (real) onepix);
+		   (double) x1 / (double) onepix, (double) y1 / (double) onepix,
+		   (double) x2 / (double) onepix, (double) y2 / (double) onepix,
+		   (double) x3 / (double) onepix, (double) y3 / (double) onepix);
 #endif
 	UNUSED(depth);
 	x1 = RANGECHECK(x1, sp_globals.xmin, sp_globals.xmax);
@@ -202,7 +202,7 @@ void sp_curve_outline(
 void sp_line_outline(fix31 x1, fix31 y1)	/* End point of vector */
 {
 #if DEBUG
-	printf("LINE_2(%3.1f, %3.1f)\n", (real) x1 / (real) onepix, (real) y1 / (real) onepix);
+	printf("LINE_2(%3.1f, %3.1f)\n", (double) x1 / (double) onepix, (double) y1 / (double) onepix);
 #endif
 	x1 = RANGECHECK(x1, sp_globals.xmin, sp_globals.xmax);
 	y1 = RANGECHECK(y1, sp_globals.ymin, sp_globals.ymax);

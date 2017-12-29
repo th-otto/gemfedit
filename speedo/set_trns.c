@@ -341,8 +341,8 @@ static ufix8 *sp_setup_int_table(ufix8 * pointer,	/* Pointer to first byte in in
 	for (i = 0; i < n; i++)
 	{
 		printf("%2d %7.4f %7.4f\n", i,
-			   (real) sp_plaid.mult[i] / (real) (1 << sp_globals.multshift),
-			   (real) sp_plaid.offset[i] / (real) (1 << sp_globals.multshift));
+			   (double) sp_plaid.mult[i] / (double) (1 << sp_globals.multshift),
+			   (double) sp_plaid.offset[i] / (double) (1 << sp_globals.multshift));
 	}
 	printf("\nY INT TABLE\n");
 	n = no_Y_int_zones;
@@ -350,8 +350,8 @@ static ufix8 *sp_setup_int_table(ufix8 * pointer,	/* Pointer to first byte in in
 	{
 		j = i + no_X_int_zones;
 		printf("%2d %7.4f %7.4f\n", i,
-			   (real) sp_plaid.mult[j] / (real) (1 << sp_globals.multshift),
-			   (real) sp_plaid.offset[j] / (real) (1 << sp_globals.multshift));
+			   (double) sp_plaid.mult[j] / (double) (1 << sp_globals.multshift),
+			   (double) sp_plaid.offset[j] / (double) (1 << sp_globals.multshift));
 	}
 #endif
 
@@ -856,13 +856,13 @@ static ufix8 *sp_setup_pix_table(ufix8 * pointer,	/* Pointer to first byte in co
 	printf("\nX PIX TABLE\n");
 	n = no_X_ctrl_zones + 1;
 	for (i = 0; i < n; i++)
-		printf("%2d %6.1f\n", i, (real) sp_plaid.pix[i] / (real) sp_globals.onepix);
+		printf("%2d %6.1f\n", i, (double) sp_plaid.pix[i] / (double) sp_globals.onepix);
 	printf("\nY PIX TABLE\n");
 	n = no_Y_ctrl_zones + 1;
 	for (i = 0; i < n; i++)
 	{
 		j = i + no_X_ctrl_zones + 1;
-		printf("%2d %6.1f\n", i, (real) sp_plaid.pix[j] / (real) sp_globals.onepix);
+		printf("%2d %6.1f\n", i, (double) sp_plaid.pix[j] / (double) sp_globals.onepix);
 	}
 #endif
 
@@ -1004,7 +1004,7 @@ static void sp_constr_update(void)
 		{
 			printf("F ");
 		}
-		printf("%5.1f\n", ((real) sp_globals.c_pix[i] / (real) sp_globals.onepix));
+		printf("%5.1f\n", ((double) sp_globals.c_pix[i] / (double) sp_globals.onepix));
 	}
 	printf("--------------\n");
 	n = no_Y_constr + 2;
@@ -1019,7 +1019,7 @@ static void sp_constr_update(void)
 		{
 			printf("F ");
 		}
-		printf("%5.1f\n", ((real) sp_globals.c_pix[j] / (real) sp_globals.onepix));
+		printf("%5.1f\n", ((double) sp_globals.c_pix[j] / (double) sp_globals.onepix));
 	}
 #endif
 

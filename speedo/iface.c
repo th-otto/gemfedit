@@ -76,12 +76,12 @@ typedef struct
 {
 	buff_t *pfont;						/* Pointer to font data                    */
 	ufix16 mode;						/* what mode is the font generator in      */
-	real point_size_x;					/* Point size in X dimension               */
-	real point_size_y;					/* Point size in Y dimension               */
-	real res_hor;						/* Horizontal resolution of output device  */
-	real res_ver;						/* Vertical resolution of output device    */
-	real rot_angle;						/* Rotation angle in degrees (clockwise)   */
-	real obl_angle;						/* Obliquing angle in degrees (clockwise)  */
+	double point_size_x;				/* Point size in X dimension               */
+	double point_size_y;				/* Point size in Y dimension               */
+	double res_hor;						/* Horizontal resolution of output device  */
+	double res_ver;						/* Vertical resolution of output device    */
+	double rot_angle;					/* Rotation angle in degrees (clockwise)   */
+	double obl_angle;					/* Obliquing angle in degrees (clockwise)  */
 	bool16 whitewrite;					/* if T, generate bitmaps for whitewriters */
 	fix15 thresh;						/* Scan conversion threshold               *
 										 * Thickens characters on each edge by     *
@@ -92,25 +92,15 @@ typedef struct
 	bool16 bogus_mode;					/* if T, ignore plaid data                 */
 } comp_char_desc;						/* character attributes for scan conv      */
 
-/***** GLOBAL VARIABLES *****/
-
-/*****  GLOBAL FUNCTIONS *****/
 void fw_reset(void);								/* Fontware 2.X reset call                 */
-void fw_set_specs(comp_char_desc *pspecs);							/* Fontware 2.X set specs call             */
-bool fw_make_char(ufix16 char_index);					/* Fontware 2.X make character call        */
+void fw_set_specs(comp_char_desc *pspecs);			/* Fontware 2.X set specs call             */
+bool fw_make_char(ufix16 char_index);				/* Fontware 2.X make character call        */
 
-/***** EXTERNAL VARIABLES *****/
-
-/***** EXTERNAL FUNCTIONS *****/
-
-/***** STATIC VARIABLES *****/
 static buff_t *pfont;
 
 static fix15 set_width_x;
 
 static specs_t specsarg;
-
-/***** STATIC FUNCTIONS *****/
 
 
 void fw_reset(void)
@@ -119,9 +109,9 @@ void fw_reset(void)
 }
 
 
-static fix31 make_mult(real point_size, real resolution)
+static fix31 make_mult(double point_size, double resolution)
 {
-	return floor((point_size * resolution * 65536.0) / (real) PTPERINCH + 0.5);
+	return floor((point_size * resolution * 65536.0) / (double) PTPERINCH + 0.5);
 }
 
 
@@ -156,14 +146,14 @@ void fw_set_specs(comp_char_desc *pspecs)
 	fix31 xy_mult;
 	fix31 yx_mult;
 	fix31 yy_mult;
-	real sinrot, cosrot, tanobl;
-	real x_distortion;
-	real pixperem_h;
-	real pixperem_v;
-	real point_size_x;
-	real point_size_y;
-	real res_hor;
-	real res_ver;
+	double sinrot, cosrot, tanobl;
+	double x_distortion;
+	double pixperem_h;
+	double pixperem_v;
+	double point_size_x;
+	double point_size_y;
+	double res_hor;
+	double res_ver;
 	fix15 mode;
 
 	irot = floor(pspecs->rot_angle + 0.5);
@@ -225,11 +215,11 @@ void fw_set_specs(comp_char_desc *pspecs)
 		break;
 
 	default:
-		sinrot = sin((real) irot * PI / 180.);
-		cosrot = cos((real) irot * PI / 180.);
-		tanobl = tan((real) iobl * PI / 180.);
+		sinrot = sin((double) irot * PI / 180.);
+		cosrot = cos((double) irot * PI / 180.);
+		tanobl = tan((double) iobl * PI / 180.);
 		x_distortion = point_size_x / point_size_y;
-		pixperem_h = point_size_y * res_hor / (real) PTPERINCH;	/* this is NOT a bug */
+		pixperem_h = point_size_y * res_hor / (double) PTPERINCH;	/* this is NOT a bug */
 		xx_mult = floor(cosrot * x_distortion * pixperem_h * 65536.0 + 0.5);
 		xy_mult = floor((sinrot + cosrot * tanobl) * pixperem_h * 65536.0 + 0.5);
 		break;
@@ -258,11 +248,11 @@ void fw_set_specs(comp_char_desc *pspecs)
 		break;
 
 	default:
-		sinrot = sin((real) irot * PI / 180.);
-		cosrot = cos((real) irot * PI / 180.);
-		tanobl = tan((real) iobl * PI / 180.);
+		sinrot = sin((double) irot * PI / 180.);
+		cosrot = cos((double) irot * PI / 180.);
+		tanobl = tan((double) iobl * PI / 180.);
 		x_distortion = point_size_x / point_size_y;
-		pixperem_v = point_size_y * res_ver / (real) PTPERINCH;
+		pixperem_v = point_size_y * res_ver / (double) PTPERINCH;
 		yx_mult = floor(-sinrot * x_distortion * pixperem_v * 65536.0 + 0.5);
 		yy_mult = floor((cosrot - sinrot * tanobl) * pixperem_v * 65536.0 + 0.5);
 		break;
@@ -444,8 +434,9 @@ void sp_open_outline(
 {
 #if DEBUG
 	printf("open_outline(%3.1f, %3.1f, %3.1f, %3.1f, %3.1f, %3.1f)\n",
-		   (real) sw_x / 65536.0, (real) sw_y / 65536.0,
-		   (real) xmin / 65536.0, (real) xmax / 65536.0, (real) ymin / 65536.0, (real) ymax / 65536.0);
+		   (double) sw_x / 65536.0, (double) sw_y / 65536.0,
+		   (double) xmin / 65536.0, (double) xmax / 65536.0,
+		   (double) ymin / 65536.0, (double) ymax / 65536.0);
 #endif
 
 	set_width_x = ((sw_x >> 15) + 1) >> 1;
@@ -475,10 +466,10 @@ void sp_start_contour(
 	fix31 y,								/* Y coordinate of start point in 1/65536 pixels */
 	boolean outside)						/* TRUE if curve encloses ink (Counter-clockwise) */
 {
-	real realx, realy;
+	double realx, realy;
 
-	realx = (real) x / 65536.0;
-	realy = (real) y / 65536.0;
+	realx = (double) x / 65536.0;
+	realy = (double) y / 65536.0;
 
 #if DEBUG
 	printf("start_curve(%3.1f, %3.1f, %s)\n", realx, realy, outside ? "outside" : "inside");
@@ -502,8 +493,9 @@ void sp_curve_to(
 {
 #if DEBUG
 	printf("curve_to(%3.1f, %3.1f, %3.1f, %3.1f, %3.1f, %3.1f)\n",
-		   (real) x1 / 65536.0, (real) y1 / 65536.0,
-		   (real) x2 / 65536.0, (real) y2 / 65536.0, (real) x3 / 65536.0, (real) y3 / 65536.0);
+		   (double) x1 / 65536.0, (double) y1 / 65536.0,
+		   (double) x2 / 65536.0, (double) y2 / 65536.0,
+		   (double) x3 / 65536.0, (double) y3 / 65536.0);
 #endif
 	(*sp_globals.outline_device.p_curve)(x1, y1, x2, y2, x3, y3);
 }
@@ -519,10 +511,10 @@ void sp_line_to(
 	fix31 x,								/* X coordinate of vector end point in 1/65536 pixels */
 	fix31 y)								/* Y coordinate of vector end point in 1/65536 pixels */
 {
-	real realx, realy;
+	double realx, realy;
 
-	realx = (real) x / 65536.0;
-	realy = (real) y / 65536.0;
+	realx = (double) x / 65536.0;
+	realy = (double) y / 65536.0;
 
 #if DEBUG
 	printf("line_to(%3.1f, %3.1f)\n", realx, realy);

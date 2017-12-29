@@ -66,9 +66,9 @@ boolean sp_begin_char_black(fix31 x, fix31 y, fix31 minx, fix31 miny, fix31 maxx
 {
 #if DEBUG
 	printf("BEGIN_CHAR_BLACK(%3.1f, %3.1f, %3.1f, %3.1f, %3.1f, %3.1f\n",
-		   (real) x / (real) sp_globals.onepix, (real) y / (real) sp_globals.onepix,
-		   (real) minx / (real) sp_globals.onepix, (real) miny / (real) sp_globals.onepix,
-		   (real) maxx / (real) sp_globals.onepix, (real) maxy / (real) sp_globals.onepix);
+		   (double) x / (double) sp_globals.onepix, (double) y / (double) sp_globals.onepix,
+		   (double) minx / (double) sp_globals.onepix, (double) miny / (double) sp_globals.onepix,
+		   (double) maxx / (double) sp_globals.onepix, (double) maxy / (double) sp_globals.onepix);
 #endif
 	sp_init_char_out(x, y, minx, miny, maxx, maxy);
 	return TRUE;
@@ -81,7 +81,7 @@ void sp_begin_contour_black(fix31 x1, fix31 y1, boolean outside)
 {
 #if DEBUG
 	printf("BEGIN_CONTOUR_BLACK(%3.1f, %3.1f, %s)\n",
-		   (real) x1 / (real) sp_globals.onepix, (real) y1 / (real) sp_globals.onepix,
+		   (double) x1 / (double) sp_globals.onepix, (double) y1 / (double) sp_globals.onepix,
 		   outside ? "outside" : "inside");
 #endif
 	UNUSED(outside);
@@ -172,7 +172,7 @@ void sp_line_black(fix31 x1, fix31 y1)
 
 #if DEBUG
 	printf("LINE_BLACK(%3.4f, %3.4f)\n",
-		   (real) x1 / (real) sp_globals.onepix, (real) y1 / (real) sp_globals.onepix);
+		   (double) x1 / (double) sp_globals.onepix, (double) y1 / (double) sp_globals.onepix);
 #endif
 
 	if (sp_globals.extents_running)

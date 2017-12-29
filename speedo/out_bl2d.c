@@ -70,9 +70,9 @@ boolean sp_begin_char_2d(fix31 x, fix31 y, fix31 minx, fix31 miny, fix31 maxx, f
 {
 #if DEBUG
 	printf("BEGIN_CHAR__2d(%3.1f, %3.1f, %3.1f, %3.1f, %3.1f, %3.1f\n",
-		   (real) x / (real) sp_globals.onepix, (real) y / (real) sp_globals.onepix,
-		   (real) minx / (real) sp_globals.onepix, (real) miny / (real) sp_globals.onepix,
-		   (real) maxx / (real) sp_globals.onepix, (real) maxy / (real) sp_globals.onepix);
+		   (double) x / (double) sp_globals.onepix, (double) y / (double) sp_globals.onepix,
+		   (double) minx / (double) sp_globals.onepix, (double) miny / (double) sp_globals.onepix,
+		   (double) maxx / (double) sp_globals.onepix, (double) maxy / (double) sp_globals.onepix);
 #endif
 /* Convert PIX.FRAC to 16.16 form */
 	sp_globals.x_scan_active = TRUE;	/* Assume x-scanning from the start */
@@ -88,8 +88,8 @@ void sp_begin_contour_2d(fix31 x1, fix31 y1, boolean outside)
 {
 #if DEBUG
 	printf("BEGIN_CONTOUR__2d(%3.4f, %3.4f, %s)\n",
-		   (real) x1 / (real) sp_globals.onepix,
-		   (real) y1 / (real) sp_globals.onepix, outside ? "outside" : "inside");
+		   (double) x1 / (double) sp_globals.onepix,
+		   (double) y1 / (double) sp_globals.onepix, outside ? "outside" : "inside");
 #endif
 	UNUSED(outside);
 	sp_globals.x0_spxl = x1;
@@ -117,7 +117,7 @@ static void sp_add_intercept_2d(fix15 y,	/* Y coordinate in relative pixel units
 	if (y >= sp_globals.no_y_lists)
 	{
 		printf("    Add x intercept(%2d, %f)\n",
-			   y + sp_globals.x_band.band_min - sp_globals.no_y_lists, (real) x / (real) sp_globals.onepix);
+			   y + sp_globals.x_band.band_min - sp_globals.no_y_lists, (double) x / (double) sp_globals.onepix);
 		if (y > (sp_globals.no_x_lists + sp_globals.no_y_lists))
 		{
 			printf(" Intercept too big for band!!!!!\007\n");
@@ -125,7 +125,7 @@ static void sp_add_intercept_2d(fix15 y,	/* Y coordinate in relative pixel units
 		}
 	} else
 	{
-		printf("    Add y intercept(%2d, %f)\n", y + sp_globals.y_band.band_min, (real) x / (real) sp_globals.onepix);
+		printf("    Add y intercept(%2d, %f)\n", y + sp_globals.y_band.band_min, (double) x / (double) sp_globals.onepix);
 	}
 
 	if (y < 0)							/* Y value below bottom of current band? */
@@ -280,7 +280,7 @@ static void sp_draw_vector_to_2d(fix15 x0,	/* X coordinate */
 void sp_line_2d(fix31 x1, fix31 y1)
 {
 #if DEBUG
-	printf("LINE_0(%3.4f, %3.4f)\n", (real) x1 / (real) sp_globals.onepix, (real) y1 / (real) sp_globals.onepix);
+	printf("LINE_0(%3.4f, %3.4f)\n", (double) x1 / (double) sp_globals.onepix, (double) y1 / (double) sp_globals.onepix);
 #endif
 
 	if (sp_globals.extents_running)
@@ -420,7 +420,7 @@ static void sp_proc_intercepts_2d(void)
 				to -= local_bmap_xmin;
 			printf("    Y = %2d (scanline %2d): %3.4f %3.4f:\n",
 				   y + sp_globals.y_band.band_min,
-				   scan_line, (real) from / (real) sp_globals.onepix, (real) to / (real) sp_globals.onepix);
+				   scan_line, (double) from / (double) sp_globals.onepix, (double) to / (double) sp_globals.onepix);
 		}
 	}
 #endif

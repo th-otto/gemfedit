@@ -362,7 +362,7 @@ void sp_open_bitmap(
 
 #if DEBUG
 	printf("open_bitmap(%3.1f, %3.1f, %d, %d)\n",
-		   (real) xorg / 65536.0, (real) yorg / 65536.0, (int) xsize, (int) ysize);
+		   (double) xorg / 65536.0, (double) yorg / 65536.0, (int) xsize, (int) ysize);
 #endif
 	raswid = xsize;
 	rashgt = ysize;
@@ -451,8 +451,9 @@ void sp_open_outline(
 	fix31 ymax)								/* Maximum Y value in outline */
 {
 	printf("\nopen_outline(%3.1f, %3.1f, %3.1f, %3.1f, %3.1f, %3.1f)\n",
-		   (real) x_set_width / 65536.0, (real) y_set_width / 65536.0,
-		   (real) xmin / 65536.0, (real) xmax / 65536.0, (real) ymin / 65536.0, (real) ymax / 65536.0);
+		   (double) x_set_width / 65536.0, (double) y_set_width / 65536.0,
+		   (double) xmin / 65536.0, (double) xmax / 65536.0,
+		   (double) ymin / 65536.0, (double) ymax / 65536.0);
 }
 
 
@@ -476,7 +477,7 @@ void sp_start_contour(
 	fix31 y,								/* Y coordinate of start point in 1/65536 pixels */
 	boolean outside)						/* TRUE if curve encloses ink (Counter-clockwise) */
 {
-	printf("start_contour(%3.1f, %3.1f, %s)\n", (real) x / 65536.0, (real) y / 65536.0, outside ? "outside" : "inside");
+	printf("start_contour(%3.1f, %3.1f, %s)\n", (double) x / 65536.0, (double) y / 65536.0, outside ? "outside" : "inside");
 }
 
 /*
@@ -493,20 +494,21 @@ void sp_curve_to(
 	fix31 y3)								/* Y coordinate of curve end point in 1/65536 pixels */
 {
 	printf("curve_to(%3.1f, %3.1f, %3.1f, %3.1f, %3.1f, %3.1f)\n",
-		   (real) x1 / 65536.0, (real) y1 / 65536.0,
-		   (real) x2 / 65536.0, (real) y2 / 65536.0, (real) x3 / 65536.0, (real) y3 / 65536.0);
+		   (double) x1 / 65536.0, (double) y1 / 65536.0,
+		   (double) x2 / 65536.0, (double) y2 / 65536.0,
+		   (double) x3 / 65536.0, (double) y3 / 65536.0);
 }
 
 
 /*
- * Called by Speedo character generator onece for each vector in the
+ * Called by Speedo character generator once for each vector in the
  * scaled outline data for the character. This include curve data that has
  * been sub-divided into vectors if curve output has not been enabled
  * in the sp_set_specs() call.
  */
-void sp_line_to(fix31 x, fix31 y)
+void sp_line_to(fix31 x1, fix31 y1)
 {
-	printf("line_to(%3.1f, %3.1f)\n", (real) x / 65536.0, (real) y / 65536.0);
+	printf("line_to(%3.1f, %3.1f)\n", (double) x1 / 65536.0, (double) y1 / 65536.0);
 }
 
 

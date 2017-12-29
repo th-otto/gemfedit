@@ -214,17 +214,20 @@ static void draw_char(uint16_t ch, _WORD x0, _WORD y0)
 	if (ch >= num_ids)
 		return;
 	c = &infos[ch];
-	if (c->bitmap == NULL || c->bbox.width == 0 || c->bbox.height == 0)
+	if (c->char_id == UNDEFINED)
 		return;
 	/*
 	 * draw the label
 	 */
 	sprintf(buf, "%04x", ch);
+	vst_color(vdihandle, G_BLACK);
 	vswr_mode(vdihandle, MD_TRANS);
 	v_gtext(vdihandle, x0 + (col_width - 4 * small_cw) / 2, y0, buf);
 	/*
 	 * draw the char
 	 */
+	if (c->bitmap == NULL || c->bbox.width == 0 || c->bbox.height == 0)
+		return;
 	y0 += small_ch + mainwin_gridsize;
 	src.fd_addr = c->bitmap;
 	src.fd_wdwidth = (c->bbox.width + 15) >> 4;

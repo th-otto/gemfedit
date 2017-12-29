@@ -80,8 +80,7 @@ get_font_info(FontInfoPtr pinfo,
 	int err;
 	long sWidth;
 
-	err = sp_open_font(fontname, filename, entry, vals,
-					   (fsBitmapFormat) 0, (fsBitmapFormatMask) 0, (unsigned long) 0, &spf);
+	err = sp_open_font(fontname, filename, entry, vals, 0, 0, 0, &spf);
 
 	if (err != Successful)
 		return err;
@@ -91,7 +90,7 @@ get_font_info(FontInfoPtr pinfo,
 
 	sp_make_header(spf, pinfo);
 
-	sp_compute_bounds(spf, pinfo, (unsigned long) 0, &sWidth);
+	sp_compute_bounds(spf, pinfo, 0, &sWidth);
 
 	sp_compute_props(spf, fontname, pinfo, sWidth);
 

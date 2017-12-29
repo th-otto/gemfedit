@@ -122,8 +122,6 @@ WITH THE SPEEDO SOFTWARE OR THE BITSTREAM CHARTER OUTLINE FONT.
 
 typedef int8_t fix7;
 
-typedef   double   real;
-
 typedef   uint8_t  ufix8;
 #ifndef VFONT
 typedef   uint8_t  boolean;

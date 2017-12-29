@@ -263,10 +263,10 @@ ufix8 *sp_read_bbox(ufix8 * pointer,	/* Pointer to next byte in char data */
 
 #if DEBUG
 	printf("BBOX %6.1f(Xint 0), %6.1f(Yint 0), %6.1f(Xint %d), %6.1f(Yint %d)\n",
-		   (real) pPmin->x / (real) sp_globals.onepix,
-		   (real) pPmin->y / (real) sp_globals.onepix,
-		   (real) pPmax->x / (real) sp_globals.onepix,
-		   (format1 >> 6) & 0x01, (real) pPmax->y / (real) sp_globals.onepix, (format1 >> 7) & 0x01);
+		   (double) pPmin->x / (double) sp_globals.onepix,
+		   (double) pPmin->y / (double) sp_globals.onepix,
+		   (double) pPmax->x / (double) sp_globals.onepix,
+		   (format1 >> 6) & 0x01, (double) pPmax->y / (double) sp_globals.onepix, (format1 >> 7) & 0x01);
 
 #endif
 	return pointer;
@@ -297,9 +297,9 @@ static void sp_split_curve(fix31 x1, fix31 y1, fix31 x2, fix31 y2, fix31 x3, fix
 
 #if DEBUG
 	printf("CRVE(%3.1f, %3.1f, %3.1f, %3.1f, %3.1f, %3.1f)\n",
-		   (real) x1 / (real) sp_globals.onepix, (real) y1 / (real) sp_globals.onepix,
-		   (real) x2 / (real) sp_globals.onepix, (real) y2 / (real) sp_globals.onepix,
-		   (real) x3 / (real) sp_globals.onepix, (real) y3 / (real) sp_globals.onepix);
+		   (double) x1 / (double) sp_globals.onepix, (double) y1 / (double) sp_globals.onepix,
+		   (double) x2 / (double) sp_globals.onepix, (double) y2 / (double) sp_globals.onepix,
+		   (double) x3 / (double) sp_globals.onepix, (double) y3 / (double) sp_globals.onepix);
 #endif
 
 
@@ -362,7 +362,7 @@ void sp_proc_outl_data(ufix8 * pointer)	/* Pointer to next byte in char data */
 			pointer = sp_get_args(pointer, format1, &P1);
 #if DEBUG
 			printf("LINE %6.1f, %6.1f\n",
-				   (real) P1.x / (real) sp_globals.onepix, (real) P1.y / (real) sp_globals.onepix);
+				   (double) P1.x / (double) sp_globals.onepix, (double) P1.y / (double) sp_globals.onepix);
 #endif
 			fn_line(P1);
 			sp_globals.P0 = P1;
@@ -433,8 +433,8 @@ void sp_proc_outl_data(ufix8 * pointer)	/* Pointer to next byte in char data */
 			sp_globals.P0 = P0;
 #if DEBUG
 			printf("MOVE %6.1f, %6.1f\n",
-				   (real) sp_globals.P0.x / (real) sp_globals.onepix,
-				   (real) sp_globals.P0.y / (real) sp_globals.onepix);
+				   (double) sp_globals.P0.x / (double) sp_globals.onepix,
+				   (double) sp_globals.P0.y / (double) sp_globals.onepix);
 #endif
 			fn_begin_contour(sp_globals.P0, (boolean) (format1 & BIT4));
 			continue;
@@ -459,9 +459,9 @@ void sp_proc_outl_data(ufix8 * pointer)	/* Pointer to next byte in char data */
 			depth = (format1 >> 4) & 0x07;
 #if DEBUG
 			printf("CRVE %6.1f, %6.1f, %6.1f, %6.1f, %6.1f, %6.1f, %d\n",
-				   (real) P1.x / (real) sp_globals.onepix, (real) P1.y / (real) sp_globals.onepix,
-				   (real) P2.x / (real) sp_globals.onepix, (real) P2.y / (real) sp_globals.onepix,
-				   (real) P3.x / (real) sp_globals.onepix, (real) P3.y / (real) sp_globals.onepix, depth);
+				   (double) P1.x / (double) sp_globals.onepix, (double) P1.y / (double) sp_globals.onepix,
+				   (double) P2.x / (double) sp_globals.onepix, (double) P2.y / (double) sp_globals.onepix,
+				   (double) P3.x / (double) sp_globals.onepix, (double) P3.y / (double) sp_globals.onepix, depth);
 #endif
 			depth += sp_globals.depth_adj;
 			if (sp_globals.curves_out)

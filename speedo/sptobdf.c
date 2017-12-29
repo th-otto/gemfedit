@@ -210,7 +210,7 @@ static void process_args(int ac, char **av)
 }
 
 
-static void dump_header(uint16_t num_chars, const glyphinfo_t *box)
+static void dump_header(uint16_t num_chars, const glyphinfo_t *box, boolean is_mono)
 {
 	long pixel_size;
 	const char *weight;
@@ -258,35 +258,35 @@ static void dump_header(uint16_t num_chars, const glyphinfo_t *box)
 	printf("COMMENT Underline thickness: %d\n", read_2b(font_buffer + FH_ULTHK));
 	printf("COMMENT Small caps: %d\n", read_2b(font_buffer + FH_SMCTR));
 	printf("COMMENT Display Superiors Y position: %d\n", read_2b(font_buffer + FH_DPSTR));
-	printf("COMMENT Display Superiors X scale: %7.2f\n", (real) read_2b(font_buffer + FH_DPSTR + 2) / 4096.0);
-	printf("COMMENT Display Superiors Y scale: %7.2f\n", (real) read_2b(font_buffer + FH_DPSTR + 4) / 4096.0);
+	printf("COMMENT Display Superiors X scale: %7.2f\n", (double) read_2b(font_buffer + FH_DPSTR + 2) / 4096.0);
+	printf("COMMENT Display Superiors Y scale: %7.2f\n", (double) read_2b(font_buffer + FH_DPSTR + 4) / 4096.0);
 	printf("COMMENT Footnote Superiors Y position: %d\n", read_2b(font_buffer + FH_FNSTR));
-	printf("COMMENT Footnote Superiors X scale: %7.2f\n", (real) read_2b(font_buffer + FH_FNSTR + 2) / 4096.0);
-	printf("COMMENT Footnote Superiors Y scale: %7.2f\n", (real) read_2b(font_buffer + FH_FNSTR + 4) / 4096.0);
+	printf("COMMENT Footnote Superiors X scale: %7.2f\n", (double) read_2b(font_buffer + FH_FNSTR + 2) / 4096.0);
+	printf("COMMENT Footnote Superiors Y scale: %7.2f\n", (double) read_2b(font_buffer + FH_FNSTR + 4) / 4096.0);
 	printf("COMMENT Alpha Superiors Y position: %d\n", read_2b(font_buffer + FH_ALSTR));
-	printf("COMMENT Alpha Superiors X scale: %7.2f\n", (real) read_2b(font_buffer + FH_ALSTR + 2) / 4096.0);
-	printf("COMMENT Alpha Superiors Y scale: %7.2f\n", (real) read_2b(font_buffer + FH_ALSTR + 4) / 4096.0);
+	printf("COMMENT Alpha Superiors X scale: %7.2f\n", (double) read_2b(font_buffer + FH_ALSTR + 2) / 4096.0);
+	printf("COMMENT Alpha Superiors Y scale: %7.2f\n", (double) read_2b(font_buffer + FH_ALSTR + 4) / 4096.0);
 	printf("COMMENT Chemical Inferiors Y position: %d\n", read_2b(font_buffer + FH_CMITR));
-	printf("COMMENT Chemical Inferiors X scale: %7.2f\n", (real) read_2b(font_buffer + FH_CMITR + 2) / 4096.0);
-	printf("COMMENT Chemical Inferiors Y scale: %7.2f\n", (real) read_2b(font_buffer + FH_CMITR + 4) / 4096.0);
+	printf("COMMENT Chemical Inferiors X scale: %7.2f\n", (double) read_2b(font_buffer + FH_CMITR + 2) / 4096.0);
+	printf("COMMENT Chemical Inferiors Y scale: %7.2f\n", (double) read_2b(font_buffer + FH_CMITR + 4) / 4096.0);
 	printf("COMMENT Small Numerators Y position: %d\n", read_2b(font_buffer + FH_SNMTR));
-	printf("COMMENT Small Numerators X scale: %7.2f\n", (real) read_2b(font_buffer + FH_SNMTR + 2) / 4096.0);
-	printf("COMMENT Small Numerators Y scale: %7.2f\n", (real) read_2b(font_buffer + FH_SNMTR + 4) / 4096.0);
+	printf("COMMENT Small Numerators X scale: %7.2f\n", (double) read_2b(font_buffer + FH_SNMTR + 2) / 4096.0);
+	printf("COMMENT Small Numerators Y scale: %7.2f\n", (double) read_2b(font_buffer + FH_SNMTR + 4) / 4096.0);
 	printf("COMMENT Small Denominators Y position: %d\n", read_2b(font_buffer + FH_SDNTR));
-	printf("COMMENT Small Denominators X scale: %7.2f\n", (real) read_2b(font_buffer + FH_SDNTR + 2) / 4096.0);
-	printf("COMMENT Small Denominators Y scale: %7.2f\n", (real) read_2b(font_buffer + FH_SDNTR + 4) / 4096.0);
+	printf("COMMENT Small Denominators X scale: %7.2f\n", (double) read_2b(font_buffer + FH_SDNTR + 2) / 4096.0);
+	printf("COMMENT Small Denominators Y scale: %7.2f\n", (double) read_2b(font_buffer + FH_SDNTR + 4) / 4096.0);
 	printf("COMMENT Medium Numerators Y position: %d\n", read_2b(font_buffer + FH_MNMTR));
-	printf("COMMENT Medium Numerators X scale: %7.2f\n", (real) read_2b(font_buffer + FH_MNMTR + 2) / 4096.0);
-	printf("COMMENT Medium Numerators Y scale: %7.2f\n", (real) read_2b(font_buffer + FH_MNMTR + 4) / 4096.0);
+	printf("COMMENT Medium Numerators X scale: %7.2f\n", (double) read_2b(font_buffer + FH_MNMTR + 2) / 4096.0);
+	printf("COMMENT Medium Numerators Y scale: %7.2f\n", (double) read_2b(font_buffer + FH_MNMTR + 4) / 4096.0);
 	printf("COMMENT Medium Denominators Y position: %d\n", read_2b(font_buffer + FH_MDNTR));
-	printf("COMMENT Medium Denominators X scale: %7.2f\n", (real) read_2b(font_buffer + FH_MDNTR + 2) / 4096.0);
-	printf("COMMENT Medium Denominators Y scale: %7.2f\n", (real) read_2b(font_buffer + FH_MDNTR + 4) / 4096.0);
+	printf("COMMENT Medium Denominators X scale: %7.2f\n", (double) read_2b(font_buffer + FH_MDNTR + 2) / 4096.0);
+	printf("COMMENT Medium Denominators Y scale: %7.2f\n", (double) read_2b(font_buffer + FH_MDNTR + 4) / 4096.0);
 	printf("COMMENT Large Numerators Y position: %d\n", read_2b(font_buffer + FH_LNMTR));
-	printf("COMMENT Large Numerators X scale: %7.2f\n", (real) read_2b(font_buffer + FH_LNMTR + 2) / 4096.0);
-	printf("COMMENT Large Numerators Y scale: %7.2f\n", (real) read_2b(font_buffer + FH_LNMTR + 4) / 4096.0);
+	printf("COMMENT Large Numerators X scale: %7.2f\n", (double) read_2b(font_buffer + FH_LNMTR + 2) / 4096.0);
+	printf("COMMENT Large Numerators Y scale: %7.2f\n", (double) read_2b(font_buffer + FH_LNMTR + 4) / 4096.0);
 	printf("COMMENT Large Denominators Y position: %d\n", read_2b(font_buffer + FH_LDNTR));
-	printf("COMMENT Large Denominators X scale: %7.2f\n", (real) read_2b(font_buffer + FH_LDNTR + 2) / 4096.0);
-	printf("COMMENT Large Denominators Y scale: %7.2f\n", (real) read_2b(font_buffer + FH_LDNTR + 4) / 4096.0);
+	printf("COMMENT Large Denominators X scale: %7.2f\n", (double) read_2b(font_buffer + FH_LDNTR + 2) / 4096.0);
+	printf("COMMENT Large Denominators Y scale: %7.2f\n", (double) read_2b(font_buffer + FH_LDNTR + 4) / 4096.0);
 	printf("COMMENT\n");
 
 	{
@@ -337,12 +337,16 @@ static void dump_header(uint16_t num_chars, const glyphinfo_t *box)
 	printf("FONTBOUNDINGBOX %d %d %d %d\n", box->rbearing - box->lbearing, box->ascent + box->descent, box->lbearing, -box->descent);
 #endif
 	
-	printf("STARTPROPERTIES %d\n", 10);
+	printf("STARTPROPERTIES %d\n", 14);
 
 	printf("RESOLUTION_X %d\n", x_res);
 	printf("RESOLUTION_Y %d\n", y_res);
 	printf("POINT_SIZE %ld\n", point_size);
 	printf("PIXEL_SIZE %ld\n", pixel_size);
+	printf("SPACING \"%s\"\n", is_mono ? "M" : "P");
+	printf("SLANT \"%s\"\n", read_1b(font_buffer + FH_CLFGS) & 0x01 ? "I" : "R");
+	printf("FONT_TYPE \"%s\"\n", "Speedo");
+	printf("RASTERIZER_NAME \"%s\"\n", "X Consortium Speedo Rasterizer");
 	printf("COPYRIGHT \"%.78s\"\n", font_buffer + FH_CPYRT);
 	printf("FACE_NAME \"%.16s\"\n", font_buffer + FH_SFACN);
 	switch (font_buffer[FH_FRMCL] & 0x0f)
@@ -530,6 +534,8 @@ int main(int argc, char **argv)
 	{
 		glyphinfo_t font_bbox;
 		charinfo c;
+		uint16_t monowidth;
+		boolean is_mono;
 		
 		font_bbox.width = 0;
 		font_bbox.height = 0;
@@ -543,6 +549,8 @@ int main(int argc, char **argv)
 		font_bbox.xmax = -(32000L << 16);
 		font_bbox.ymax = -(32000L << 16);
 		
+		monowidth = 0;
+		is_mono = TRUE;
 		if (iso_encoding)
 		{
 			num_chars = num_iso_chars;
@@ -555,6 +563,12 @@ int main(int argc, char **argv)
 				{
 					real_num_chars++;
 					update_bbox(&c, &font_bbox);
+					if (c.bbox.width != 0 && c.bbox.width != monowidth)
+					{
+						if (monowidth != 0)
+							is_mono = FALSE;
+						monowidth = c.bbox.width;
+					}
 				}
 			}
 		} else
@@ -568,11 +582,17 @@ int main(int argc, char **argv)
 				{
 					real_num_chars++;
 					update_bbox(&c, &font_bbox);
+					if (c.bbox.width != 0 && c.bbox.width != monowidth)
+					{
+						if (monowidth != 0)
+							is_mono = FALSE;
+						monowidth = c.bbox.width;
+					}
 				}
 			}
 		}
 		font_bbox.ascent = font_bbox.height - font_bbox.descent;
-		dump_header(real_num_chars, &font_bbox);
+		dump_header(real_num_chars, &font_bbox, is_mono);
 
 		if (iso_encoding)
 		{
@@ -817,46 +837,42 @@ void sp_close_bitmap(void)
 #if INCL_OUTLINE
 void sp_open_outline(fix31 x_set_width, fix31 y_set_width, fix31 xmin, fix31 xmax, fix31 ymin, fix31 ymax)
 {
-	UNUSED(x_set_width);
-	UNUSED(y_set_width);
-	UNUSED(xmin);
-	UNUSED(xmax);
-	UNUSED(ymin);
-	UNUSED(ymax);
+	printf("\nopen_outline(%3.1f, %3.1f, %3.1f, %3.1f, %3.1f, %3.1f)\n",
+		   (double) x_set_width / 65536.0, (double) y_set_width / 65536.0,
+		   (double) xmin / 65536.0, (double) xmax / 65536.0,
+		   (double) ymin / 65536.0, (double) ymax / 65536.0);
 }
 
 void sp_start_new_char(void)
 {
+	printf("start_new_char()\n");
 }
 
 void sp_start_contour(fix31 x, fix31 y, boolean outside)
 {
-	UNUSED(x);
-	UNUSED(y);
-	UNUSED(outside);
+	printf("start_contour(%3.1f, %3.1f, %s)\n", (double) x / 65536.0, (double) y / 65536.0, outside ? "outside" : "inside");
 }
 
 void sp_curve_to(fix31 x1, fix31 y1, fix31 x2, fix31 y2, fix31 x3, fix31 y3)
 {
-	UNUSED(x1);
-	UNUSED(y1);
-	UNUSED(x2);
-	UNUSED(y2);
-	UNUSED(x3);
-	UNUSED(y3);
+	printf("curve_to(%3.1f, %3.1f, %3.1f, %3.1f, %3.1f, %3.1f)\n",
+		   (double) x1 / 65536.0, (double) y1 / 65536.0,
+		   (double) x2 / 65536.0, (double) y2 / 65536.0,
+		   (double) x3 / 65536.0, (double) y3 / 65536.0);
 }
 
 void sp_line_to(fix31 x1, fix31 y1)
 {
-	UNUSED(x1);
-	UNUSED(y1);
+	printf("line_to(%3.1f, %3.1f)\n", (double) x1 / 65536.0, (double) y1 / 65536.0);
 }
 
 void sp_close_contour(void)
 {
+	printf("close_contour()\n");
 }
 
 void sp_close_outline(void)
 {
+	printf("close_outline()\n");
 }
 #endif
