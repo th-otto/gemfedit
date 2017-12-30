@@ -138,7 +138,7 @@ document.getElementById('uploadbox').style.display="block";
 <tr>
 <td>Resolution:</td>
 <td>
-<input type="number" id="resolution" name="resolution" value="72" />
+<input type="number" id="resolution" name="resolution" value="95" />
 </td>
 </tr>
 

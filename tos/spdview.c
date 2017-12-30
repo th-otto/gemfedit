@@ -1283,6 +1283,26 @@ static _BOOL font_gen_speedo_font(void)
 
 /* ------------------------------------------------------------------------- */
 
+static void free_font(void)
+{
+	uint16_t i;
+	
+	if (infos)
+	{
+		for (i = 0; i < num_ids; i++)
+			g_free(infos[i].bitmap);
+	}
+	g_free(font_buffer);
+	font_buffer = NULL;
+	g_free(c_buffer);
+	c_buffer = NULL;
+	g_free(infos);
+	infos = NULL;
+	num_ids = 0;
+}
+
+/* ------------------------------------------------------------------------- */
+
 static _BOOL font_load_speedo_font(const char *filename)
 {
 	_BOOL ret;
@@ -1311,9 +1331,7 @@ static _BOOL font_load_speedo_font(const char *filename)
 		sp_report_error(4);
 		return FALSE;
 	}
-	free(font_buffer);
-	free(c_buffer);
-	c_buffer = NULL;
+	free_font();
 	minbufsize = read_4b(tmp + FH_FBFSZ);
 	font_buffer = g_new(ufix8, minbufsize);
 	if (font_buffer == NULL)
@@ -1363,14 +1381,8 @@ static _BOOL font_load_speedo_font(const char *filename)
 		redraw_win(previewwin);
 	} else
 	{
+		free_font();
 		font_filename = NULL;
-		free(font_buffer);
-		font_buffer = NULL;
-		free(c_buffer);
-		c_buffer = NULL;
-		g_free(infos);
-		infos = NULL;
-		num_ids = 0;
 		cur_char = UNDEFINED;
 		char_rows = 0;
 	}
