@@ -1001,7 +1001,7 @@ boolean sp_load_char_data(long file_offset, fix15 num, fix15 cb_offset, buff_t *
 
 static gboolean write_png(void)
 {
-	const charinfo *cinfo = &infos[char_id];
+	const charinfo *c = &infos[char_id];
 	int i;
 	writepng_info *info;
 	int rc;
@@ -1010,8 +1010,8 @@ static gboolean write_png(void)
 	info->rowbytes = MAX_BITS;
 	info->bpp = 8;
 	info->image_data = &framebuffer[0][0];
-	info->width = cinfo->bbox.width;
-	info->height = cinfo->bbox.height;
+	info->width = c->bbox.width;
+	info->height = c->bbox.height;
 	info->have_bg = vdi_maptab256[0];
 	info->x_res = (x_res * 10000L) / 254;
 	info->y_res = (y_res * 10000L) / 254;
@@ -1022,7 +1022,7 @@ static gboolean write_png(void)
 		info->width = 1;
 	if (info->height == 0)
 		info->height = 1;
-	info->outfile = fopen(cinfo->local_filename, "wb");
+	info->outfile = fopen(c->local_filename, "wb");
 	if (info->outfile == NULL)
 	{
 		rc = errno;
@@ -1064,17 +1064,18 @@ void sp_close_bitmap(void)
 /* outline stubs */
 #if INCL_OUTLINE
 
-#define SWAP_Y(y) (((fix31) sp_globals.ymax << sp_globals.poshift) - (y))
+#define TRANS_X(x) (double)(x) / 65536.0 - font_bb.lbearing
+#define TRANS_Y(y) (double)(((fix31) sp_globals.ymax << sp_globals.poshift) - (y)) / 65536.0 + (font_bb.ascent - c->bbox.ascent)
 
 static FILE *svg_fp;
 
 void sp_open_outline(fix31 x_set_width, fix31 y_set_width, fix31 xmin, fix31 xmax, fix31 ymin, fix31 ymax)
 {
-	const charinfo *cinfo = &infos[char_id];
+	const charinfo *c = &infos[char_id];
 
 	if (svg_fp)
 		fclose(svg_fp);
-	svg_fp = fopen(cinfo->local_filename, "wb");
+	svg_fp = fopen(c->local_filename, "wb");
 	if (svg_fp == NULL)
 		return;
 	UNUSED(x_set_width);
@@ -1084,12 +1085,9 @@ void sp_open_outline(fix31 x_set_width, fix31 y_set_width, fix31 xmin, fix31 xma
 		((fix31) sp_globals.ymin << sp_globals.poshift) / 65536.0,
 		((fix31) sp_globals.xmax << sp_globals.poshift) / 65536.0,
 		((fix31) sp_globals.ymax << sp_globals.poshift) / 65536.0);
-	fprintf(svg_fp, "<svg xmlns=\"http://www.w3.org/2000/svg\" id=\"chr%04x\" viewBox=\"%.2f %.2f %.2f %.2f\">\n",
-		cinfo->char_id,
-		(double) xmin / 65536.0,
-		(double) ymin / 65536.0,
-		(double) (xmax - xmin) / 65536.0,
-		(double) (ymax - ymin) / 65536.0);
+	fprintf(svg_fp, "<svg xmlns=\"http://www.w3.org/2000/svg\" id=\"chr%04x\" viewBox=\"0 0 %d %d\">\n",
+		c->char_id,
+		font_bb.width, font_bb.height);
 }
 
 /* ------------------------------------------------------------------------- */
@@ -1112,34 +1110,35 @@ void sp_end_sub_char(void)
 
 void sp_start_contour(fix31 x, fix31 y, boolean outside)
 {
+	const charinfo *c = &infos[char_id];
+
 	if (svg_fp == NULL)
 		return;
-	fprintf(svg_fp, "<path style=\"fill:%s;fill-opacity:1;stroke:currentColor\" d=\"", outside ? "none" : "none");
-	y = SWAP_Y(y);
-	fprintf(svg_fp, "M %.2f %.2f", (double) x / 65536.0, (double) y / 65536.0);
+	fprintf(svg_fp, "<path style=\"fill:%s;fill-opacity:1;stroke:currentColor\"\n   d=\"", outside ? "none" : "none");
+	fprintf(svg_fp, "M %.2f %.2f", TRANS_X(x), TRANS_Y(y));
 }
 
 /* ------------------------------------------------------------------------- */
 
 void sp_curve_to(fix31 x1, fix31 y1, fix31 x2, fix31 y2, fix31 x3, fix31 y3)
 {
+	const charinfo *c = &infos[char_id];
+
 	if (svg_fp == NULL)
 		return;
-	y1 = SWAP_Y(y1);
-	y2 = SWAP_Y(y2);
-	y3 = SWAP_Y(y3);
-	fprintf(svg_fp, " M %.2f %.2f", (double) x1 / 65536.0, (double) y1 / 65536.0);
-	fprintf(svg_fp, " Q %.2f %.2f %.2f %.2f", (double) x2 / 65536.0, (double) y2 / 65536.0, (double) x3 / 65536.0, (double) y3 / 65536.0);
+	fprintf(svg_fp, " M %.2f %.2f", TRANS_X(x1), TRANS_Y(y1));
+	fprintf(svg_fp, " Q %.2f %.2f %.2f %.2f", TRANS_X(x2), TRANS_Y(y2), TRANS_X(x3), TRANS_Y(y3));
 }
 
 /* ------------------------------------------------------------------------- */
 
 void sp_line_to(fix31 x1, fix31 y1)
 {
+	const charinfo *c = &infos[char_id];
+
 	if (svg_fp == NULL)
 		return;
-	y1 = SWAP_Y(y1);
-	fprintf(svg_fp, " L %.2f %.2f", (double) x1 / 65536.0, (double) y1 / 65536.0);
+	fprintf(svg_fp, " L %.2f %.2f", TRANS_X(x1), TRANS_Y(y1));
 }
 
 /* ------------------------------------------------------------------------- */
@@ -1162,7 +1161,7 @@ void sp_close_outline(void)
 	svg_fp = NULL;
 }
 
-#undef SWAP_Y
+#undef TRANS_Y
 
 #endif
 
@@ -1212,8 +1211,15 @@ static void update_bbox(charinfo *c, glyphinfo_t *box)
 	box->ymax = MIN(box->ymax, c->bbox.ymax);
 	c->bbox.width = ((bb.xmax - bb.xmin) + 32768L) >> 16;
 	c->bbox.height = ((bb.ymax - bb.ymin) + 32768L) >> 16;
-	c->bbox.lbearing = (bb2.xmin + 32768L) >> 16;
-	c->bbox.off_vert = (bb2.ymin - (bb.ymax - bb.ymin) + (bb2.ymax - bb2.ymin) + 3932L) >> 16;
+	if (specs.output_mode == MODE_OUTLINE)
+	{
+		c->bbox.lbearing = (bb2.xmin + 32768L) >> 16;
+		c->bbox.off_vert = (bb2.ymin + ((bb2.ymax - bb2.ymin) - (bb.ymax - bb.ymin)) / 2 + 32768L) >> 16;
+	} else
+	{
+		c->bbox.lbearing = (bb2.xmin + 32768L) >> 16;
+		c->bbox.off_vert = (bb2.ymin - (bb.ymax - bb.ymin) + (bb2.ymax - bb2.ymin) + 3932L) >> 16;
+	}
 	box->lbearing = MIN(box->lbearing, c->bbox.lbearing);
 	c->bbox.rbearing = c->bbox.width + c->bbox.lbearing;
 	box->rbearing = MAX(box->rbearing, c->bbox.rbearing);
@@ -1548,7 +1554,7 @@ static gboolean gen_speedo_font(const char *filename, GString *body)
 							c->bbox.width, c->bbox.height, c->bbox.ascent, c->bbox.descent, c->bbox.lbearing, c->bbox.rbearing);
 					}
 					if (specs.output_mode == MODE_OUTLINE)
- 						src = g_strdup_printf("<svg viewBox=\"0 0 %d %d\"><use xlink:href=\"%s#chr%04x\"></use></svg>",
+ 						src = g_strdup_printf("<svg width=\"%d\" height=\"%d\"><use xlink:href=\"%s#chr%04x\" style=\"text-align: left; vertical-align: top;\"></use></svg>",
  							font_bb.width, font_bb.height,
  							img[j], char_id);
 					else
