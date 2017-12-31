@@ -4,7 +4,9 @@
  * created by ORCS 2.16
  */
 
+#if !defined(__GNUC__) || !defined(__mc68000__)
 #include <portab.h>
+#endif
 
 #ifdef OS_WINDOWS
 #  include <portaes.h>

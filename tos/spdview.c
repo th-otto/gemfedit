@@ -2,7 +2,19 @@
 #include <osbind.h>
 #include <mintbind.h>
 #include <time.h>
+#ifdef __PUREC__
+#include <portab.h>
 #include <mint/arch/nf_ops.h>
+#else
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
+#include <stdarg.h>
+#define nf_debugprintf(s...)
+#define _BOOL int
+#define _WORD short
+#define _UWORD unsigned short
+#endif
 #include <stdint.h>
 #ifdef __PUREC__
 #include <ext.h>
@@ -18,6 +30,11 @@ static _WORD gl_wchar, gl_hchar;
 #include "spdview.rsh"
 #include "speedo.h"
 #include "version.h"
+
+#if defined(__GEMLIB_MAJOR__) && (((__GEMLIB_MAJOR__) * 1000 + __GEMLIB_MINOR__) <= (0 * 1000 + 44))
+# define wind_set_int(h, a, b) wind_set(h, a, b, 0, 0, 0)
+# define form_dial_grect(a, in, out) form_dial(a, (in)->g_x, (in)->g_y, (in)->g_w, (in)->g_h, (out)->g_x, (out)->g_y, (out)->g_w, (out)->g_h)
+#endif
 
 #ifndef K_SHIFT
 #define K_SHIFT			(K_LSHIFT|K_RSHIFT)
@@ -1225,7 +1242,8 @@ static _BOOL font_gen_speedo_font(void)
 			else
 				average_width = (fix15)(total_width / num_glyphs);
 			nf_debugprintf("max height %d max width %d average width %d\n", max_bb.height, max_bb.width, average_width);
-
+			UNUSED(average_width);
+			
 			max_bb.height = max_bb.ascent + max_bb.descent;
 			max_bb.width = max_bb.rbearing - max_bb.lbearing;
 
