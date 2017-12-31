@@ -464,7 +464,7 @@ void sp_proc_outl_data(ufix8 * pointer)	/* Pointer to next byte in char data */
 				   (double) P3.x / (double) sp_globals.onepix, (double) P3.y / (double) sp_globals.onepix, depth);
 #endif
 			depth += sp_globals.depth_adj;
-			if (sp_globals.curves_out)
+			if (sp_globals.specs.flags & CURVES_OUT)
 			{
 				fn_curve(P1, P2, P3, depth);
 				sp_globals.P0 = P3;

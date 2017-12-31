@@ -200,6 +200,7 @@ int main(int argc, char **argv)
 	specs.yymult = 0;
 	specs.yoffset = 0L << 16;
 	specs.flags = 0;
+	specs.output_mode = MODE_BLACK;
 	specs.out_info = NULL;
 
 	if (!sp_set_specs(&specs, &font))

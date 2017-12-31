@@ -41,21 +41,6 @@ WITH THE SPEEDO SOFTWARE OR THE BITSTREAM CHARTER OUTLINE FONT.
 #define  FH_NBYTE   21      /* E   Number of Bytes in File  3 bytes         */
 
 
-/***** MODE FLAGS CONSTANTS *****/
-#define CURVES_OUT     0X0008  /* Output module accepts curves              */
-#define BOGUS_MODE     0X0010  /* Linear scaling mode                       */
-#define CONSTR_OFF     0X0020  /* Inhibit constraint table                  */
-#define IMPORT_WIDTHS  0X0040  /* Imported width mode                       */
-#define SQUEEZE_LEFT   0X0100  /* Squeeze left mode                         */
-#define SQUEEZE_RIGHT  0X0200  /* Squeeze right mode                        */
-#define SQUEEZE_TOP    0X0400  /* Squeeze top mode                          */
-#define SQUEEZE_BOTTOM 0X0800  /* Squeeze bottom mode                       */
-#define CLIP_LEFT      0X1000  /* Clip left mode                            */
-#define CLIP_RIGHT     0X2000  /* Clip right mode                           */
-#define CLIP_TOP       0X4000  /* Clip top mode                             */
-#define CLIP_BOTTOM    0X8000  /* Clip bottom mode                          */
-
-
 /***** MACRO DEFINITIONS *****/
 
 #define SQUEEZE_MULT(A,B) (((fix31)A * (fix31)B) / ((fix31)1 << 16))

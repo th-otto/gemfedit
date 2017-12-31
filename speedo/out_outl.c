@@ -129,15 +129,6 @@ void sp_begin_sub_char_outline(
 	UNUSED(miny);
 	UNUSED(maxx);
 	UNUSED(maxy);
-	printf("BEGIN_SUB_CHAR_2(%3.1f, %3.1f, %3.1f, %3.1f, %3.1f, %3.1f)\n",
-		   (double) x / (double) sp_globals.onepix, (double) y / (double) sp_globals.onepix,
-		   (double) minx / (double) sp_globals.onepix, (double) miny / (double) sp_globals.onepix,
-		   (double) maxx / (double) sp_globals.onepix, (double) maxy / (double) sp_globals.onepix);
-	x <<= sp_globals.poshift;
-	y <<= sp_globals.poshift;
-	printf("BEGIN_SUB_CHAR_2(%3.1f, %3.1f)\n",
-		   (double) x / 65536.0, (double) y / (double) 65536.0);
-	start_sub_char();
 }
 
 

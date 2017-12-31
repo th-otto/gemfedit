@@ -1063,68 +1063,107 @@ void sp_close_bitmap(void)
 
 /* outline stubs */
 #if INCL_OUTLINE
+
+#define SWAP_Y(y) (((fix31) sp_globals.ymax << sp_globals.poshift) - (y))
+
+static FILE *svg_fp;
+
 void sp_open_outline(fix31 x_set_width, fix31 y_set_width, fix31 xmin, fix31 xmax, fix31 ymin, fix31 ymax)
 {
+	const charinfo *cinfo = &infos[char_id];
+
+	if (svg_fp)
+		fclose(svg_fp);
+	svg_fp = fopen(cinfo->local_filename, "wb");
+	if (svg_fp == NULL)
+		return;
 	UNUSED(x_set_width);
 	UNUSED(y_set_width);
-	UNUSED(xmin);
-	UNUSED(xmax);
-	UNUSED(ymin);
-	UNUSED(ymax);
+	fprintf(svg_fp, "<!-- bbox %.2f %.2f %.2f %.2f -->\n",
+		((fix31) sp_globals.xmin << sp_globals.poshift) / 65536.0,
+		((fix31) sp_globals.ymin << sp_globals.poshift) / 65536.0,
+		((fix31) sp_globals.xmax << sp_globals.poshift) / 65536.0,
+		((fix31) sp_globals.ymax << sp_globals.poshift) / 65536.0);
+	fprintf(svg_fp, "<svg xmlns=\"http://www.w3.org/2000/svg\" id=\"chr%04x\" viewBox=\"%.2f %.2f %.2f %.2f\">\n",
+		cinfo->char_id,
+		(double) xmin / 65536.0,
+		(double) ymin / 65536.0,
+		(double) (xmax - xmin) / 65536.0,
+		(double) (ymax - ymin) / 65536.0);
 }
 
 /* ------------------------------------------------------------------------- */
 
 void sp_start_sub_char(void)
 {
+	if (svg_fp == NULL)
+		return;
 }
 
 /* ------------------------------------------------------------------------- */
 
 void sp_end_sub_char(void)
 {
+	if (svg_fp == NULL)
+		return;
 }
 
 /* ------------------------------------------------------------------------- */
 
 void sp_start_contour(fix31 x, fix31 y, boolean outside)
 {
-	UNUSED(x);
-	UNUSED(y);
-	UNUSED(outside);
+	if (svg_fp == NULL)
+		return;
+	fprintf(svg_fp, "<path style=\"fill:%s;fill-opacity:1;stroke:currentColor\" d=\"", outside ? "none" : "none");
+	y = SWAP_Y(y);
+	fprintf(svg_fp, "M %.2f %.2f", (double) x / 65536.0, (double) y / 65536.0);
 }
 
 /* ------------------------------------------------------------------------- */
 
 void sp_curve_to(fix31 x1, fix31 y1, fix31 x2, fix31 y2, fix31 x3, fix31 y3)
 {
-	UNUSED(x1);
-	UNUSED(y1);
-	UNUSED(x2);
-	UNUSED(y2);
-	UNUSED(x3);
-	UNUSED(y3);
+	if (svg_fp == NULL)
+		return;
+	y1 = SWAP_Y(y1);
+	y2 = SWAP_Y(y2);
+	y3 = SWAP_Y(y3);
+	fprintf(svg_fp, " M %.2f %.2f", (double) x1 / 65536.0, (double) y1 / 65536.0);
+	fprintf(svg_fp, " Q %.2f %.2f %.2f %.2f", (double) x2 / 65536.0, (double) y2 / 65536.0, (double) x3 / 65536.0, (double) y3 / 65536.0);
 }
 
 /* ------------------------------------------------------------------------- */
 
 void sp_line_to(fix31 x1, fix31 y1)
 {
-	UNUSED(x1);
-	UNUSED(y1);
+	if (svg_fp == NULL)
+		return;
+	y1 = SWAP_Y(y1);
+	fprintf(svg_fp, " L %.2f %.2f", (double) x1 / 65536.0, (double) y1 / 65536.0);
 }
 
 /* ------------------------------------------------------------------------- */
 
 void sp_close_contour(void)
 {
+	if (svg_fp == NULL)
+		return;
+	fprintf(svg_fp, "\" />\n");
 }
 
 /* ------------------------------------------------------------------------- */
 
 void sp_close_outline(void)
 {
+	if (svg_fp == NULL)
+		return;
+	fprintf(svg_fp, "</svg>\n");
+	fclose(svg_fp);
+	svg_fp = NULL;
 }
+
+#undef SWAP_Y
+
 #endif
 
 /* ------------------------------------------------------------------------- */
@@ -1249,24 +1288,25 @@ static gboolean gen_speedo_font(const char *filename, GString *body)
 	specs.yxmult = 0L << 16;
 	specs.yymult = point_size * y_res / 720 * (1L << 16);
 	specs.yoffset = 0L << 16;
+	specs.flags = 0;
 	switch (quality)
 	{
 	case 0:
-		specs.flags = MODE_BLACK;
+		specs.output_mode = MODE_BLACK;
 		break;
 	case 1:
 	default:
-		specs.flags = MODE_SCREEN;
+		specs.output_mode = MODE_SCREEN;
 		break;
 	case 2:
 #if INCL_OUTLINE
-		specs.flags = MODE_OUTLINE;
+		specs.output_mode = MODE_OUTLINE;
 #else
-		specs.flags = MODE_2D;
+		specs.output_mode = MODE_2D;
 #endif
 		break;
 	case 3:
-		specs.flags = MODE_2D;
+		specs.output_mode = MODE_2D;
 		break;
 	}
 
@@ -1427,8 +1467,9 @@ static gboolean gen_speedo_font(const char *filename, GString *body)
 			char_id = sp_get_char_id(char_index);
 			if (char_id != SP_UNDEFINED && char_id != UNDEFINED)
 			{
-				infos[char_id].local_filename = g_strdup_printf("%s/%schr%04x.png", output_dir, basename, char_id);
-				infos[char_id].url = g_strdup_printf("%s/%schr%04x.png", output_url, basename, char_id);
+				const char *ext = specs.output_mode == MODE_OUTLINE ? ".svg" : ".png";
+				infos[char_id].local_filename = g_strdup_printf("%s/%schr%04x%s", output_dir, basename, char_id, ext);
+				infos[char_id].url = g_strdup_printf("%s/%schr%04x%s", output_url, basename, char_id, ext);
 				if (!sp_make_char(char_index))
 				{
 					g_string_append_printf(errorout, "can't make char 0x%x (0x%x)\n", char_index, char_id);
@@ -1498,6 +1539,7 @@ static gboolean gen_speedo_font(const char *filename, GString *body)
 				{
 					uint16_t unicode;
 					char *debuginfo = NULL;
+					char *src;
 					
 					unicode = c->char_index < BICS_COUNT ? Bics2Unicode[c->char_index] : UNDEFINED;
 					if (debug)
@@ -1505,6 +1547,15 @@ static gboolean gen_speedo_font(const char *filename, GString *body)
 						debuginfo = g_strdup_printf("Width: %u Height %u&#10;Ascent: %d Descent: %d lb: %d rb: %d&#10;",
 							c->bbox.width, c->bbox.height, c->bbox.ascent, c->bbox.descent, c->bbox.lbearing, c->bbox.rbearing);
 					}
+					if (specs.output_mode == MODE_OUTLINE)
+ 						src = g_strdup_printf("<svg viewBox=\"0 0 %d %d\"><use xlink:href=\"%s#chr%04x\"></use></svg>",
+ 							font_bb.width, font_bb.height,
+ 							img[j], char_id);
+					else
+						src = g_strdup_printf("<img alt=\"\" style=\"text-align: left; vertical-align: top; position: relative; left: %dpx; top: %dpx\" src=\"%s\">",
+							-(font_bb.lbearing - c->bbox.lbearing),
+							font_bb.ascent - c->bbox.ascent,
+							img[j]);
 					g_string_append_printf(body,
 						"<td class=\"spd_glyph_image\" style=\"width: %dpx; height: %dpx; min-width: %dpx; min-height: %dpx;\" title=\""
 						"Index: 0x%x (%u)&#10;"
@@ -1513,7 +1564,7 @@ static gboolean gen_speedo_font(const char *filename, GString *body)
 						"%s&#10;"
 						"Xmin: %7.2f Ymin: %7.2f&#10;"
 						"Xmax: %7.2f Ymax: %7.2f&#10;%s"
-						"\"><img alt=\"\" style=\"text-align: left; vertical-align: top; position: relative; left: %dpx; top: %dpx\" src=\"%s\"></td>",
+						"\">%s</td>",
 						font_bb.width, font_bb.height,
 						font_bb.width, font_bb.height,
 						c->char_index, c->char_index,
@@ -1525,10 +1576,9 @@ static gboolean gen_speedo_font(const char *filename, GString *body)
 						(double)c->bbox.xmax / 65536.0,
 						(double)c->bbox.ymax / 65536.0,
 						debuginfo ? debuginfo : "",
-						-(font_bb.lbearing - c->bbox.lbearing),
-						font_bb.ascent - c->bbox.ascent,
-						img[j]);
+						src);
 					g_free(debuginfo);
+					g_free(src);
 				} else
 				{
 					g_string_append_printf(body,
@@ -1916,7 +1966,8 @@ int main(void)
 				
 				if (strcmp(e->d_name, ".") == 0 || strcmp(e->d_name, "..") == 0)
 					continue;
-				if ((p = strrchr(e->d_name, '.')) != NULL && strcmp(p, ".png") == 0)
+				if ((p = strrchr(e->d_name, '.')) != NULL &&
+					(strcmp(p, ".png") == 0 || strcmp(p, ".svg") == 0))
 				{
 					f = g_build_filename(output_dir, e->d_name, NULL);
 					unlink(f);

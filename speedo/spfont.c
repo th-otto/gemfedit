@@ -271,7 +271,8 @@ sp_open_font(char *fontname,
 	specs.xoffset = 0L << 16;			/* XXX tweak? */
 	specs.yoffset = 0L << 16;			/* XXX tweak? */
 
-	specs.flags = MODE_SCREEN;
+	specs.flags = 0;
+	specs.output_mode = MODE_SCREEN;
 	specs.out_info = NULL;
 
 	/* When Speedo tries to generate a very small font bitmap, it

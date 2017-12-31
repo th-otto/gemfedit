@@ -96,7 +96,7 @@ static bitmap_t bfuncs = { sp_open_bitmap, sp_set_bitmap_bits, sp_close_bitmap }
 static outline_t ofuncs = {
 	sp_open_outline,
 	sp_start_sub_char,
-	sp_start_end_char,
+	sp_end_sub_char,
 	sp_start_contour,
 	sp_curve_to,
 	sp_line_to,
@@ -256,6 +256,7 @@ int main(int argc, char **argv)
 	specs.yxmult = 0L << 16;			/* Coeff of X to calculate Y pixels */
 	specs.yymult = 25L << 16;			/* Coeff of Y to calculate Y pixels */
 	specs.yoffset = 0L << 16;			/* Position of Y origin */
+	specs.output_mode = MODE_BLACK;
 	specs.flags = 0;					/* Mode flags */
 	specs.out_info = NULL;
 

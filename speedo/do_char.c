@@ -729,7 +729,7 @@ boolean sp_make_char(ufix16 char_index)
 	}
 #if INCL_MULTIDEV
 #if INCL_OUTLINE
-	if (sp_globals.output_mode == MODE_OUTLINE && !sp_globals.outline_device_set)
+	if (sp_globals.specs.output_mode == MODE_OUTLINE && !sp_globals.outline_device_set)
 	{
 		sp_report_error(2);				/* Transformation matrix out of range */
 		return FALSE;

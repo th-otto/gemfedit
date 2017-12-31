@@ -62,6 +62,7 @@ void sp_init_char_out(fix31 x, fix31 y, fix31 minx, fix31 miny, fix31 maxx, fix3
 	sp_globals.first_pass = TRUE;
 }
 
+
 /* Called at the start of each sub-character in a composite character
  */
 void sp_begin_sub_char_out(fix31 x, fix31 y, fix31 minx, fix31 miny, fix31 maxx, fix31 maxy)
@@ -88,6 +89,7 @@ void sp_begin_sub_char_out(fix31 x, fix31 y, fix31 minx, fix31 miny, fix31 maxx,
 		sp_globals.extents_running = TRUE;
 	}
 }
+
 
 /* Called for each curve in the transformed character if curves out enabled
  */
@@ -145,7 +147,7 @@ void sp_init_intercepts_out(void)
 
 	sp_globals.no_y_lists = sp_globals.y_band.band_max - sp_globals.y_band.band_min + 1;
 #if INCL_2D
-	if (sp_globals.output_mode == MODE_2D)
+	if (sp_globals.specs.output_mode == MODE_2D)
 	{
 		sp_globals.no_x_lists = sp_globals.x_scan_active ?
 			sp_globals.x_band.band_max - sp_globals.x_band.band_min + 1 : 0;
@@ -175,7 +177,7 @@ void sp_init_intercepts_out(void)
 	for (i = 0; i < no_lists; i++)		/* For each active value... */
 	{
 #if INCL_SCREEN
-		if (sp_globals.output_mode == MODE_SCREEN)
+		if (sp_globals.specs.output_mode == MODE_SCREEN)
 			sp_intercepts.inttype[i] = 0;
 #endif
 		sp_intercepts.cdr[i] = 0;		/* Mark each intercept list empty */

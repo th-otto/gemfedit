@@ -1113,23 +1113,24 @@ static _BOOL font_gen_speedo_font(void)
 	specs.yxmult = 0L << 16;
 	specs.yymult = point_size * y_res / 720 * (1L << 16);
 	specs.yoffset = 0L << 16;
+	specs.flags = 0;
 	switch (quality)
 	{
 	case 0:
-		specs.flags = MODE_BLACK;
+		specs.output_mode = MODE_BLACK;
 		break;
 	case 1:
-		specs.flags = MODE_SCREEN;
+		specs.output_mode = MODE_SCREEN;
 		break;
 	case 2:
 #if INCL_OUTLINE
-		specs.flags = MODE_OUTLINE;
+		specs.output_mode = MODE_OUTLINE;
 #else
-		specs.flags = MODE_2D;
+		specs.output_mode = MODE_2D;
 #endif
 		break;
 	case 3:
-		specs.flags = MODE_2D;
+		specs.output_mode = MODE_2D;
 		break;
 	}
 

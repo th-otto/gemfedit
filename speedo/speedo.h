@@ -228,8 +228,9 @@ typedef struct specs_tag {
 	fix31   yxmult;             /* Coeff of X orus to compute Y pix      */
 	fix31   yymult;             /* Coeff of Y orus to compute Y pix      */
 	fix31   yoffset;            /* Constant to compute Y pix             */
+	fix15   output_mode;        /* Output module selector */
 	ufix32  flags;              /* Mode flags:                           */
-                                /*   Bit  0 - 2: Output module selector: */
+                                /*   Bit  0 - 2: not used                */
                                 /*   Bit  3: Send curves to output module*/
                                 /*   Bit  4: Use linear scaling if set   */
                                 /*   Bit  5: Inhibit constraint table    */
@@ -424,8 +425,6 @@ typedef struct speedo_global_data {
 	boolean  specs_valid;       /* TRUE if fw_set_specs() successful */
 	
 	fix15    depth_adj;         /* Curve splitting depth adjustment */
-	boolean  curves_out;        /* Allow curves to output module */
-	fix15    output_mode;       /* Output module selector */
 	fix15    thresh;            /* Scan conversion threshold (sub-pixels) */
 	boolean  normal;            /* TRUE if 0 obl and mult of 90 deg rot  */
 	

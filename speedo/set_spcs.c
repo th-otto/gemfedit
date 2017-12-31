@@ -386,14 +386,11 @@ boolean sp_set_specs(const specs_t *specsarg, const buff_t *font)	/* Bundle of c
 	sp_setup_tcb(&sp_globals.tcb0);
 
 
-	/* Select output module */
-	sp_globals.output_mode = sp_globals.specs.flags & 0x0007;
-
 #if INCL_USEROUT
 	if (!sp_init_userout(&sp_globals.specs))
 #endif
 
-		switch (sp_globals.output_mode)
+		switch (sp_globals.specs.output_mode)
 		{
 #if INCL_BLACK
 		case MODE_BLACK:				/* Output mode 0 (Black writer) */
@@ -462,8 +459,6 @@ boolean sp_set_specs(const specs_t *specsarg, const buff_t *font)	/* Bundle of c
 		return FALSE;
 	}
 
-
-	sp_globals.curves_out = sp_globals.specs.flags & CURVES_OUT;
 
 	if (sp_globals.specs.flags & BOGUS_MODE)	/* Linear transformation requested? */
 	{
