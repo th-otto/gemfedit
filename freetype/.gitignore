@@ -1,0 +1,16 @@
+*.html
+config.guess
+config.sub
+configure
+install-sh
+aclocal.m4
+config.log
+config.status
+freetype-config
+freetype2.pc
+libtool
+unix-cc.mk
+unix-def.mk
+config.mk
+config.h
+objs/ftmodule.h

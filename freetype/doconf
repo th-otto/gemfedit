@@ -1,0 +1,42 @@
+if test "$GTK_INST_DIR" = ""; then
+  echo "GTK_INST_DIR not set; source ../profile first" >&2
+else
+
+# This sets freetype_major, freetype_minor, and freetype_patch.
+eval `sed -nf version.sed include/freetype/freetype.h`
+if test "$freetype_patch" = ".0"; then freetype_patch=""; fi
+
+cd builds/unix
+for i in config.guess config.sub install-sh mkinstalldirs; do
+  $GTK_LN_S /usr/share/automake-$GTK_AMVERSION/$i $i
+done
+	for i in ltmain.sh; do 
+		if test -f /usr/share/libtool/build-aux/$i; then
+		     $GTK_LN_S /usr/share/libtool/build-aux/$i $i
+		elif test -f /usr/share/libtool/config/$i; then
+		     $GTK_LN_S /usr/share/libtool/config/$i $i
+		else
+		     echo "cannot find $i" >&2
+		fi
+	done
+cd m4
+for i in libtool.m4 ltoptions.m4 ltsugar.m4 ltversion.m4 lt~obsolete.m4; do
+  $GTK_LN_S /usr/share/aclocal/$i $i
+done
+for i in silent.m4 substnot.m4; do
+  $GTK_LN_S /usr/share/aclocal-$GTK_AMVERSION/$i $i
+done
+cd ..
+
+sed -e "s;@VERSION@;$freetype_major$freetype_minor$freetype_patch;" \
+  < configure.raw > configure.ac
+
+aclocal-$GTK_AMVERSION -I m4 -I .
+autoconf
+autoheader
+rm -rf autom4te.cache
+cd ../..
+
+CFG="$GTK_INST_CONFIGUREARGS --without-png" make setup unix
+
+fi
