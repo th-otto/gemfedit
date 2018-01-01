@@ -82,6 +82,7 @@ typedef long gssize;
 #define g_ascii_toupper(c) toupper(c)
 int g_ascii_strcasecmp(const char *s1, const char *s2);
 int g_ascii_strncasecmp(const char *s1, const char *s2, size_t n);
+int g_ascii_xdigit_value(char c);
 
 #define STR0TERM ((size_t)-1)
 

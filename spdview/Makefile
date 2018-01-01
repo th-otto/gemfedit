@@ -1,5 +1,6 @@
 CC = gcc
-CFLAGS = -O2 -g -Wall -I../include -I../speedo
+WARN = -fno-common -Wall -W -Wunused -Wundef -Wstrict-prototypes -Wmissing-prototypes -Werror
+CFLAGS = -O2 -g -fomit-frame-pointer $(WARN) -I../include -I../speedo
 LDFLAGS = -s
 LIBS= -lcurl -lpng12 -lz
 

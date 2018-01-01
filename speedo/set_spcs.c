@@ -82,19 +82,19 @@ static boolean sp_setup_consts(fix15 xmin,	/* Minimum X ORU value in font */
 	mult = sp_globals.specs.xymult >> 16;
 	if (mult < 0)
 		mult = -mult;
-	if (mult > num)
+	if (mult > (fix31)num)
 		num = mult;
 
 	mult = sp_globals.specs.yxmult >> 16;
 	if (mult < 0)
 		mult = -mult;
-	if (mult > num)
+	if (mult > (fix31)num)
 		num = mult;
 
 	mult = sp_globals.specs.yymult >> 16;
 	if (mult < 0)
 		mult = -mult;
-	if (mult > num)
+	if (mult > (fix31)num)
 		num = mult;
 	num++;								/* Max absolute pixels per em (rounded up) */
 	denom = (ufix32) sp_globals.orus_per_em;
@@ -157,7 +157,7 @@ static boolean sp_setup_consts(fix15 xmin,	/* Minimum X ORU value in font */
 
 		if (pixval < 0)
 			pixval = -pixval;
-		if (pixval > num)
+		if (pixval > (fix31)num)
 		{
 			num = pixval;
 			xx = x;
@@ -189,7 +189,7 @@ static boolean sp_setup_consts(fix15 xmin,	/* Minimum X ORU value in font */
 
 	sp_globals.onepix = (fix15) 1 << sp_globals.pixshift;
 	sp_globals.pixrnd = sp_globals.onepix >> 1;
-	sp_globals.pixfix = ~0 << sp_globals.pixshift;
+	sp_globals.pixfix = ~0u << sp_globals.pixshift;
 
 	sp_globals.mpshift = sp_globals.multshift - sp_globals.pixshift;
 	if (sp_globals.mpshift < 0)

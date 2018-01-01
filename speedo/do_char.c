@@ -58,7 +58,7 @@ static ufix8 *sp_get_char_org(ufix16 char_index,	/* Index of character to be acc
 	ufix8 format;						/* Character directory format byte */
 	long char_offset;					/* Offset of char data from start of font file */
 	long next_char_offset;				/* Offset of char data from start of font file */
-	fix15 no_bytes;						/* Number of bytes required for char data */
+	ufix16 no_bytes;					/* Number of bytes required for char data */
 
 	if (top_level)						/* Not element of compound char? */
 	{

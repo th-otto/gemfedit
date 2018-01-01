@@ -140,8 +140,8 @@ int main(int argc, char **argv)
 	ufix16 bytes_read;					/* Number of bytes read from font file */
 	specs_t specs;						/* Bundle of character generation specs  */
 	int first_char_index;				/* Index of first character in font */
-	int no_layout_chars;				/* number of characters in layout */
-	ufix32 i;
+	ufix16 no_layout_chars;				/* number of characters in layout */
+	ufix16 i;
 	ufix32 minbufsz;					/* minimum font buffer size to allocate */
 	const ufix8 *key;
 	ufix8 temp[FH_FBFSZ + 4];							/* temp buffer for first 16 bytes of font */

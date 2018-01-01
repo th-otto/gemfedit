@@ -129,7 +129,7 @@ static void process_args(int ac, char **av)
 
 int main(int argc, char **argv)
 {
-	ufix32 i;
+	uint16_t i;
 	ufix8 tmp[FH_FBFSZ + 4];
 	ufix32 minbufsize;
 	const ufix8 *key;
@@ -242,7 +242,7 @@ boolean sp_load_char_data(long file_offset, fix15 num, fix15 cb_offset, buff_t *
 		fprintf(stderr, "char buf overflow\n");
 		return FALSE;
 	}
-	if (fread((c_buffer + cb_offset), sizeof(ufix8), num, fp) != num)
+	if ((long)fread((c_buffer + cb_offset), sizeof(ufix8), num, fp) != num)
 	{
 		fprintf(stderr, "can't get char data\n");
 		return FALSE;

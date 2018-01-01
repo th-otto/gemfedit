@@ -636,7 +636,7 @@ static char *html_cgi_params(void)
 	
 /* ------------------------------------------------------------------------- */
 
-static void html_out_nav_toolbar(GString *out, const ufix8 *font)
+static void html_out_nav_toolbar(GString *out)
 {
 	int xpos = 0;
 	const int button_w = 40;
@@ -723,7 +723,7 @@ static void html_out_header(GString *out, const ufix8 *font, const char *title, 
 			g_string_append_printf(out, "<div class=\"%s\">\n", html_node_style);
 		} else
 		{
-			html_out_nav_toolbar(out, font);
+			html_out_nav_toolbar(out);
 			g_string_append_printf(out, "<div class=\"%s\" style=\"position:absolute; top:32px;\">\n", html_node_style);
 			body_start = out->len;
 		}
@@ -983,7 +983,7 @@ boolean sp_load_char_data(long file_offset, fix15 num, fix15 cb_offset, buff_t *
 		char_data->no_bytes = 0;
 		return FALSE;
 	}
-	if (fread((c_buffer + cb_offset), sizeof(ufix8), num, fp) != num)
+	if ((long)fread((c_buffer + cb_offset), sizeof(ufix8), num, fp) != num)
 	{
 		g_string_append_printf(errorout, "can't get char data\n");
 		char_data->org = c_buffer;
@@ -1080,6 +1080,10 @@ void sp_open_outline(fix31 x_set_width, fix31 y_set_width, fix31 xmin, fix31 xma
 		return;
 	UNUSED(x_set_width);
 	UNUSED(y_set_width);
+	UNUSED(xmin);
+	UNUSED(xmax);
+	UNUSED(ymin);
+	UNUSED(ymax);
 	fprintf(svg_fp, "<!-- bbox %.2f %.2f %.2f %.2f -->\n",
 		((fix31) sp_globals.xmin << sp_globals.poshift) / 65536.0,
 		((fix31) sp_globals.ymin << sp_globals.poshift) / 65536.0,
@@ -1263,6 +1267,7 @@ static gboolean gen_speedo_font(const char *filename, GString *body)
 	uint16_t i, id, j;
 	uint16_t num_ids;
 	
+	UNUSED(filename);
 	/* init */
 	sp_reset();
 

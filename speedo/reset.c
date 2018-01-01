@@ -76,7 +76,7 @@ ufix16 sp_get_cust_no(const buff_t *font_buff)
 	ufix16 private_off;
 
 	private_off = sp_read_word_u(font_buff->org + FH_HEDSZ);
-	if (private_off + FH_CUSNR > font_buff->no_bytes)
+	if ((private_off + FH_CUSNR) > font_buff->no_bytes)
 	{
 		sp_report_error(1);				/* Insufficient font data loaded */
 		return FALSE;

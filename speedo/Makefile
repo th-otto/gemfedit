@@ -1,5 +1,6 @@
 CC = gcc
-CFLAGS = -O2 -Wall -Wstrict-prototypes -Wmissing-prototypes -I../include
+WARN = -fno-common -Wall -W -Wunused -Wundef -Wstrict-prototypes -Wmissing-prototypes -Werror
+CFLAGS = -O2 -g -fomit-frame-pointer $(WARN) -I../include
 LDFLAGS = -s
 LIBS= -lX11
 

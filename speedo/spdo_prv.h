@@ -30,15 +30,15 @@ WITH THE SPEEDO SOFTWARE OR THE BITSTREAM CHARTER OUTLINE FONT.
 
 
 /***** PRIVATE FONT HEADER OFFSET CONSTANTS  *****/
-#define  FH_ORUMX    0      /* U   Max ORU value  2 bytes                   */
-#define  FH_PIXMX    2      /* U   Max Pixel value  2 bytes                 */
-#define  FH_CUSNR    4      /* U   Customer Number  2 bytes                 */
-#define  FH_OFFCD    6      /* E   Offset to Char Directory  3 bytes        */
-#define  FH_OFCNS    9      /* E   Offset to Constraint Data  3 bytes       */
-#define  FH_OFFTK   12      /* E   Offset to Track Kerning  3 bytes         */
-#define  FH_OFFPK   15      /* E   Offset to Pair Kerning  3 bytes          */
-#define  FH_OCHRD   18      /* E   Offset to Character Data  3 bytes        */
-#define  FH_NBYTE   21      /* E   Number of Bytes in File  3 bytes         */
+#define  FH_ORUMX    0u     /* U   Max ORU value  2 bytes                   */
+#define  FH_PIXMX    2u     /* U   Max Pixel value  2 bytes                 */
+#define  FH_CUSNR    4u     /* U   Customer Number  2 bytes                 */
+#define  FH_OFFCD    6u     /* E   Offset to Char Directory  3 bytes        */
+#define  FH_OFCNS    9u     /* E   Offset to Constraint Data  3 bytes       */
+#define  FH_OFFTK   12u     /* E   Offset to Track Kerning  3 bytes         */
+#define  FH_OFFPK   15u     /* E   Offset to Pair Kerning  3 bytes          */
+#define  FH_OCHRD   18u     /* E   Offset to Character Data  3 bytes        */
+#define  FH_NBYTE   21u     /* E   Number of Bytes in File  3 bytes         */
 
 
 /***** MACRO DEFINITIONS *****/
