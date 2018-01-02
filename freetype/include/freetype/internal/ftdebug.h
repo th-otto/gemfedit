@@ -228,7 +228,7 @@ FT_BEGIN_HEADER
   /* print a message */
   FT_BASE( void )
   FT_Message( const char*  fmt,
-              ... );
+              ... ) __attribute__((format(__printf__, 1, 2)));
 
   /* print a message and exit */
   FT_BASE( void )

@@ -630,7 +630,7 @@ ANONYMOUS_STRUCT_DUMMY(FT_IncrementalRec_)
   }
 
 
-  static FT_UInt
+  static FT_UInt32
   fnt_cmap_char_index( FT_CMap   ft_cmap,
                        FT_UInt32  char_code )
   {
@@ -643,16 +643,16 @@ ANONYMOUS_STRUCT_DUMMY(FT_IncrementalRec_)
       /* we artificially increase the glyph index; */
       /* FNT_Load_Glyph reverts to the right one   */
       gindex = char_code + 1;
-    return (FT_UInt) gindex;
+    return gindex;
   }
 
 
-  static FT_UInt
+  static FT_UInt32
   fnt_cmap_char_next( FT_CMap    ft_cmap,
                       FT_UInt32  *pchar_code )
   {
 	FNT_CMap cmap = (FNT_CMap) ft_cmap;
-    FT_UInt    gindex = 0;
+    FT_UInt32  gindex = 0;
     FT_UInt32  result = 0;
     FT_UInt32  char_code = *pchar_code + 1;
 
@@ -668,7 +668,7 @@ ANONYMOUS_STRUCT_DUMMY(FT_IncrementalRec_)
       if ( char_code < cmap->count )
       {
         result = cmap->first + char_code;
-        gindex = (FT_UInt)(char_code + 1);
+        gindex = char_code + 1;
       }
     }
 
@@ -682,7 +682,7 @@ ANONYMOUS_STRUCT_DUMMY(FT_IncrementalRec_)
     sizeof ( FNT_CMapRec ),
 
     fnt_cmap_init,
-    (FT_CMap_DoneFunc)     NULL,
+    NULL,
     fnt_cmap_char_index,
     fnt_cmap_char_next,
 
@@ -864,10 +864,6 @@ ANONYMOUS_STRUCT_DUMMY(FT_IncrementalRec_)
                              NULL );
         if ( error )
           goto Fail;
-
-        /* Select default charmap */
-        if ( root->num_charmaps )
-          root->charmap = root->charmaps[0];
       }
 
       /* set up remaining flags */
@@ -1100,7 +1096,7 @@ ANONYMOUS_STRUCT_DUMMY(FT_IncrementalRec_)
 
       /* note: since glyphs are stored in columns and not in rows we */
       /*       can't use ft_glyphslot_set_bitmap                     */
-      if ( FT_ALLOC_MULT( bitmap->buffer, pitch, bitmap->rows ) )
+      if ( FT_ALLOC_MULT( bitmap->buffer, bitmap->rows, pitch ) )
         goto Exit;
 
       column = (FT_Byte*)bitmap->buffer;

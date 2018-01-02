@@ -60,7 +60,7 @@
   }
 
 
-  FT_CALLBACK_DEF( FT_UInt )
+  FT_CALLBACK_DEF( FT_UInt32 )
   t1_cmap_std_char_index( FT_CMap  ft_cmap,
                           FT_UInt32   char_code )
   {
@@ -97,11 +97,11 @@
   }
 
 
-  FT_CALLBACK_DEF( FT_UInt )
+  FT_CALLBACK_DEF( FT_UInt32 )
   t1_cmap_std_char_next( FT_CMap   ft_cmap,
                          FT_UInt32   *pchar_code )
   {
-    FT_UInt    result    = 0;
+    FT_UInt32    result    = 0;
     FT_UInt32  char_code = *pchar_code + 1;
 
 
@@ -144,11 +144,11 @@
     t1_cmap_std_char_index,  /* char_index */
     t1_cmap_std_char_next,   /* char_next  */
 
-    (FT_CMap_CharVarIndexFunc)    NULL,  /* char_var_index   */
-    (FT_CMap_CharVarIsDefaultFunc)NULL,  /* char_var_default */
-    (FT_CMap_VariantListFunc)     NULL,  /* variant_list     */
-    (FT_CMap_CharVariantListFunc) NULL,  /* charvariant_list */
-    (FT_CMap_VariantCharListFunc) NULL   /* variantchar_list */
+    NULL,  /* FT_CMap_CharVarIndexFunc char_var_index   */
+    NULL,  /* FT_CMap_CharVarIsDefaultFunc char_var_default */
+    NULL,  /* FT_CMap_VariantListFunc variant_list     */
+    NULL,  /* FT_CMap_CharVariantListFunc charvariant_list */
+    NULL   /* FT_CMap_VariantCharListFunc variantchar_list */
   };
 
 
@@ -174,11 +174,11 @@
     t1_cmap_std_char_index,  /* char_index */
     t1_cmap_std_char_next,   /* char_next  */
 
-    (FT_CMap_CharVarIndexFunc)    NULL,  /* char_var_index   */
-    (FT_CMap_CharVarIsDefaultFunc)NULL,  /* char_var_default */
-    (FT_CMap_VariantListFunc)     NULL,  /* variant_list     */
-    (FT_CMap_CharVariantListFunc) NULL,  /* charvariant_list */
-    (FT_CMap_VariantCharListFunc) NULL   /* variantchar_list */
+    NULL,  /* FT_CMap_CharVarIndexFunc char_var_index   */
+    NULL,  /* FT_CMap_CharVarIsDefaultFunc char_var_default */
+    NULL,  /* FT_CMap_VariantListFunc variant_list     */
+    NULL,  /* FT_CMap_CharVariantListFunc charvariant_list */
+    NULL   /* FT_CMap_VariantCharListFunc variantchar_list */
   };
 
 
@@ -223,7 +223,7 @@
   }
 
 
-  FT_CALLBACK_DEF( FT_UInt )
+  FT_CALLBACK_DEF( FT_UInt32 )
   t1_cmap_custom_char_index( FT_CMap  ft_cmap,
                              FT_UInt32      char_code )
   {
@@ -239,7 +239,7 @@
   }
 
 
-  FT_CALLBACK_DEF( FT_UInt )
+  FT_CALLBACK_DEF( FT_UInt32 )
   t1_cmap_custom_char_next( FT_CMap ft_cmap,
                             FT_UInt32     *pchar_code )
   {
@@ -278,11 +278,11 @@
     t1_cmap_custom_char_index,  /* char_index */
     t1_cmap_custom_char_next,   /* char_next  */
 
-    (FT_CMap_CharVarIndexFunc)    NULL,  /* char_var_index   */
-    (FT_CMap_CharVarIsDefaultFunc)NULL,  /* char_var_default */
-    (FT_CMap_VariantListFunc)     NULL,  /* variant_list     */
-    (FT_CMap_CharVariantListFunc) NULL,  /* charvariant_list */
-    (FT_CMap_VariantCharListFunc) NULL   /* variantchar_list */
+    NULL,  /* FT_CMap_CharVarIndexFunc char_var_index   */
+    NULL,  /* FT_CMap_CharVarIsDefaultFunc char_var_default */
+    NULL,  /* FT_CMap_VariantListFunc variant_list     */
+    NULL,  /* FT_CMap_CharVariantListFunc charvariant_list */
+    NULL   /* FT_CMap_VariantCharListFunc variantchar_list */
   };
 
 
@@ -296,7 +296,7 @@
 
   FT_CALLBACK_DEF( const char * )
   psaux_get_glyph_name( FT_Pointer data,
-                        FT_UInt  idx )
+                        FT_UInt32 idx )
   {
     T1_Face face = data;
     return face->type1.glyph_names[idx];
@@ -336,7 +336,7 @@
   }
 
 
-  FT_CALLBACK_DEF( FT_UInt )
+  FT_CALLBACK_DEF( FT_UInt32 )
   t1_cmap_unicode_char_index( FT_CMap ft_cmap,
                               FT_UInt32    char_code )
   {
@@ -349,7 +349,7 @@
   }
 
 
-  FT_CALLBACK_DEF( FT_UInt )
+  FT_CALLBACK_DEF( FT_UInt32 )
   t1_cmap_unicode_char_next( FT_CMap ft_cmap,
                              FT_UInt32   *pchar_code )
   {
@@ -372,11 +372,11 @@
     t1_cmap_unicode_char_index,  /* char_index */
     t1_cmap_unicode_char_next,   /* char_next  */
 
-    (FT_CMap_CharVarIndexFunc)    NULL,  /* char_var_index   */
-    (FT_CMap_CharVarIsDefaultFunc)NULL,  /* char_var_default */
-    (FT_CMap_VariantListFunc)     NULL,  /* variant_list     */
-    (FT_CMap_CharVariantListFunc) NULL,  /* charvariant_list */
-    (FT_CMap_VariantCharListFunc) NULL   /* variantchar_list */
+    NULL,  /* FT_CMap_CharVarIndexFunc char_var_index   */
+    NULL,  /* FT_CMap_CharVarIsDefaultFunc char_var_default */
+    NULL,  /* FT_CMap_VariantListFunc variant_list     */
+    NULL,  /* FT_CMap_CharVariantListFunc charvariant_list */
+    NULL   /* FT_CMap_VariantCharListFunc variantchar_list */
   };
 
 

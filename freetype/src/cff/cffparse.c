@@ -21,6 +21,7 @@
 #include "cffparse.h"
 #include <freetype/internal/ftstream.h>
 #include <freetype/internal/ftdebug.h>
+#include <freetype/internal/ftcalc.h>
 
 #include "cfferrs.h"
 #include "cffpic.h"
@@ -155,6 +156,22 @@
     10000000L,
     100000000L,
     1000000000L
+  };
+
+  /* maximum values allowed for multiplying      */
+  /* with the corresponding `power_tens' element */
+  static const FT_Long power_ten_limits[] =
+  {
+    FT_LONG_MAX / 1L,
+    FT_LONG_MAX / 10L,
+    FT_LONG_MAX / 100L,
+    FT_LONG_MAX / 1000L,
+    FT_LONG_MAX / 10000L,
+    FT_LONG_MAX / 100000L,
+    FT_LONG_MAX / 1000000L,
+    FT_LONG_MAX / 10000000L,
+    FT_LONG_MAX / 100000000L,
+    FT_LONG_MAX / 1000000000L,
   };
 
 
@@ -485,7 +502,15 @@
 
 
       if ( scaling )
+      {
+        if ( FT_ABS( val ) > power_ten_limits[scaling] )
+        {
+          val = val > 0 ? 0x7FFFFFFFL : -0x7FFFFFFFL;
+          goto Overflow;
+        }
+
         val *= power_tens[scaling];
+      }
 
       if ( val > 0x7FFF )
       {
@@ -1588,7 +1613,7 @@
                 val = 0;
                 while ( num_args > 0 )
                 {
-                  val += cff_parse_num( parser, data++ );
+                  val = ADD_LONG( val, cff_parse_num( parser, data++ ) );
                   switch ( field->size )
                   {
                   case (8 / FT_CHAR_BIT):

@@ -305,10 +305,12 @@
       CF2_StemHintRec  stemhint;
 
 
-      stemhint.min  =
-        position   += cf2_stack_getReal( opStack, i );
-      stemhint.max  =
-        position   += cf2_stack_getReal( opStack, i + 1 );
+      stemhint.min =
+      position     = ADD_INT32( position,
+                                cf2_stack_getReal( opStack, i ) );
+      stemhint.max =
+      position     = ADD_INT32( position,
+                                cf2_stack_getReal( opStack, i + 1 ) );
 
       stemhint.used  = FALSE;
       stemhint.maxDS =
@@ -349,7 +351,8 @@
     {
       vals[i + 2] = vals[i];
       if ( readFromStack[i] )
-        vals[i + 2] += cf2_stack_getReal( opStack, idx++ );
+        vals[i + 2] = ADD_INT32( vals[i + 2], cf2_stack_getReal( opStack,
+                                                                 idx++ ) );
     }
 
     if ( isHFlex )
@@ -357,31 +360,34 @@
 
     if ( doConditionalLastRead )
     {
-      FT_Bool    lastIsX = (FT_Bool)( cf2_fixedAbs( vals[10] - *curX ) >
-                                        cf2_fixedAbs( vals[11] - *curY ) );
+      FT_Bool    lastIsX = (FT_Bool)(
+                             cf2_fixedAbs( SUB_INT32( vals[10], *curX ) ) >
+                             cf2_fixedAbs( SUB_INT32( vals[11], *curY ) ) );
       CF2_Fixed  lastVal = cf2_stack_getReal( opStack, idx );
 
 
       if ( lastIsX )
       {
-        vals[12] = vals[10] + lastVal;
+        vals[12] = ADD_INT32( vals[10], lastVal );
         vals[13] = *curY;
       }
       else
       {
         vals[12] = *curX;
-        vals[13] = vals[11] + lastVal;
+        vals[13] = ADD_INT32( vals[11], lastVal );
       }
     }
     else
     {
       if ( readFromStack[10] )
-        vals[12] = vals[10] + cf2_stack_getReal( opStack, idx++ );
+        vals[12] = ADD_INT32( vals[10],
+                              cf2_stack_getReal( opStack, idx++ ) );
       else
         vals[12] = *curX;
 
       if ( readFromStack[11] )
-        vals[13] = vals[11] + cf2_stack_getReal( opStack, idx );
+        vals[13] = ADD_INT32( vals[11],
+                              cf2_stack_getReal( opStack, idx ) );
       else
         vals[13] = *curY;
     }
@@ -427,7 +433,10 @@
 
 
       for ( j = 1; j < blend->lenBV; j++ )
-        sum += FT_MulFix( *weight++, cf2_stack_getReal( opStack, delta++ ) );
+        sum = ADD_INT32( sum,
+                         FT_MulFix( *weight++,
+                                    cf2_stack_getReal( opStack,
+                                                       delta++ ) ) );
 
       /* store blended result  */
       cf2_stack_setReal( opStack, i + base, sum );
@@ -760,7 +769,8 @@
         FT_TRACE4(( " vmoveto\n" ));
 
         if ( cf2_stack_count( opStack ) > 1 && !haveWidth )
-          *width = cf2_stack_getReal( opStack, 0 ) + nominalWidthX;
+          *width = ADD_INT32( cf2_stack_getReal( opStack, 0 ),
+                              nominalWidthX );
 
         /* width is defined or default after this */
         haveWidth = TRUE;
@@ -768,7 +778,7 @@
         if ( font->decoder->width_only )
           goto exit;
 
-        curY += cf2_stack_popFixed( opStack );
+        curY = ADD_INT32( curY, cf2_stack_popFixed( opStack ) );
 
         cf2_glyphpath_moveTo( &glyphPath, curX, curY );
 
@@ -784,8 +794,10 @@
 
           for ( idx = 0; idx < count; idx += 2 )
           {
-            curX += cf2_stack_getReal( opStack, idx + 0 );
-            curY += cf2_stack_getReal( opStack, idx + 1 );
+            curX = ADD_INT32( curX, cf2_stack_getReal( opStack,
+                                                       idx + 0 ) );
+            curY = ADD_INT32( curY, cf2_stack_getReal( opStack,
+                                                       idx + 1 ) );
 
             cf2_glyphpath_lineTo( &glyphPath, curX, curY );
           }
@@ -811,9 +823,9 @@
 
 
             if ( isX )
-              curX += v;
+              curX = ADD_INT32( curX, v );
             else
-              curY += v;
+              curY = ADD_INT32( curY, v );
 
             isX = !isX;
 
@@ -836,13 +848,15 @@
 
           while ( idx + 6 <= count )
           {
-            CF2_Fixed  x1 = cf2_stack_getReal( opStack, idx + 0 ) + curX;
-            CF2_Fixed  y1 = cf2_stack_getReal( opStack, idx + 1 ) + curY;
-            CF2_Fixed  x2 = cf2_stack_getReal( opStack, idx + 2 ) + x1;
-            CF2_Fixed  y2 = cf2_stack_getReal( opStack, idx + 3 ) + y1;
-            CF2_Fixed  x3 = cf2_stack_getReal( opStack, idx + 4 ) + x2;
-            CF2_Fixed  y3 = cf2_stack_getReal( opStack, idx + 5 ) + y2;
+            CF2_Fixed  x1, y1, x2, y2, x3, y3;
 
+
+            x1 = ADD_INT32( cf2_stack_getReal( opStack, idx + 0 ), curX );
+            y1 = ADD_INT32( cf2_stack_getReal( opStack, idx + 1 ), curY );
+            x2 = ADD_INT32( cf2_stack_getReal( opStack, idx + 2 ), x1 );
+            y2 = ADD_INT32( cf2_stack_getReal( opStack, idx + 3 ), y1 );
+            x3 = ADD_INT32( cf2_stack_getReal( opStack, idx + 4 ), x2 );
+            y3 = ADD_INT32( cf2_stack_getReal( opStack, idx + 5 ), y2 );
 
             cf2_glyphpath_curveTo( &glyphPath, x1, y1, x2, y2, x3, y3 );
 
@@ -853,8 +867,10 @@
 
           if ( op1 == cf2_cmdRCURVELINE )
           {
-            curX += cf2_stack_getReal( opStack, idx + 0 );
-            curY += cf2_stack_getReal( opStack, idx + 1 );
+            curX = ADD_INT32( curX, cf2_stack_getReal( opStack,
+                                                       idx + 0 ) );
+            curY = ADD_INT32( curY, cf2_stack_getReal( opStack,
+                                                       idx + 1 ) );
 
             cf2_glyphpath_lineTo( &glyphPath, curX, curY );
           }
@@ -1130,7 +1146,10 @@
 
                     arg = cf2_stack_popFixed( opStack );
 
-                    cf2_stack_pushFixed( opStack, FT_ABS( arg ) );
+                    if ( arg < -CF2_FIXED_MAX )
+                      cf2_stack_pushFixed( opStack, CF2_FIXED_MAX );
+                    else
+                      cf2_stack_pushFixed( opStack, FT_ABS( arg ) );
                   }
                   continue; /* do not clear the stack */
 
@@ -1145,7 +1164,9 @@
                     summand2 = cf2_stack_popFixed( opStack );
                     summand1 = cf2_stack_popFixed( opStack );
 
-                    cf2_stack_pushFixed( opStack, summand1 + summand2 );
+                    cf2_stack_pushFixed( opStack,
+                                         ADD_INT32( summand1,
+                                                    summand2 ) );
                   }
                   continue; /* do not clear the stack */
 
@@ -1160,7 +1181,8 @@
                     subtrahend = cf2_stack_popFixed( opStack );
                     minuend    = cf2_stack_popFixed( opStack );
 
-                    cf2_stack_pushFixed( opStack, minuend - subtrahend );
+                    cf2_stack_pushFixed( opStack,
+                                         SUB_INT32( minuend, subtrahend ) );
                   }
                   continue; /* do not clear the stack */
 
@@ -1175,7 +1197,8 @@
                     divisor  = cf2_stack_popFixed( opStack );
                     dividend = cf2_stack_popFixed( opStack );
 
-                    cf2_stack_pushFixed( opStack, FT_DivFix( dividend, divisor ) );
+                    cf2_stack_pushFixed( opStack,
+                                         FT_DivFix( dividend, divisor ) );
                   }
                   continue; /* do not clear the stack */
 
@@ -1188,7 +1211,10 @@
 
                     arg = cf2_stack_popFixed( opStack );
 
-                    cf2_stack_pushFixed( opStack, -arg );
+                    if ( arg < -CF2_FIXED_MAX )
+                      cf2_stack_pushFixed( opStack, CF2_FIXED_MAX );
+                    else
+                      cf2_stack_pushFixed( opStack, -arg );
                   }
                   continue; /* do not clear the stack */
 
@@ -1258,7 +1284,8 @@
                     arg2  = cf2_stack_popFixed( opStack );
                     arg1  = cf2_stack_popFixed( opStack );
 
-                    cf2_stack_pushFixed( opStack, cond1 <= cond2 ? arg1 : arg2 );
+                    cf2_stack_pushFixed( opStack,
+                                         cond1 <= cond2 ? arg1 : arg2 );
                   }
                   continue; /* do not clear the stack */
 
@@ -1292,7 +1319,8 @@
                     factor2 = cf2_stack_popFixed( opStack );
                     factor1 = cf2_stack_popFixed( opStack );
 
-                    cf2_stack_pushFixed( opStack, FT_MulFix( factor1, factor2 ) );
+                    cf2_stack_pushFixed( opStack,
+                                         FT_MulFix( factor1, factor2 ) );
                   }
                   continue; /* do not clear the stack */
 
@@ -1306,7 +1334,9 @@
                     arg = cf2_stack_popFixed( opStack );
                     if ( arg > 0 )
                     {
-                      FT_Fixed  root = arg;
+                      /* use a start value that doesn't make */
+                      /* the algorithm's addition overflow   */
+                      FT_Fixed  root = arg < 10 ? arg : arg >> 1;
                       FT_Fixed  new_root;
 
 
@@ -1370,7 +1400,8 @@
 
                     if ( size > 0 )
                     {
-                      /* for `cf2_stack_getReal', index 0 is bottom of stack */
+                      /* for `cf2_stack_getReal',   */
+                      /* index 0 is bottom of stack */
                       CF2_UInt  gr_idx;
 
 
@@ -1382,7 +1413,8 @@
                         gr_idx = size - 1 - (CF2_UInt)idx;
 
                       cf2_stack_pushFixed( opStack,
-                                           cf2_stack_getReal( opStack, gr_idx ) );
+                                           cf2_stack_getReal( opStack,
+                                                              gr_idx ) );
                     }
                   }
                   continue; /* do not clear the stack */
@@ -1417,7 +1449,8 @@
              cf2_stack_count( opStack ) == 5 )
         {
           if ( !haveWidth )
-            *width = cf2_stack_getReal( opStack, 0 ) + nominalWidthX;
+            *width = ADD_INT32( cf2_stack_getReal( opStack, 0 ),
+                                nominalWidthX );
         }
 
         /* width is defined or default after this */
@@ -1565,7 +1598,8 @@
         FT_TRACE4(( " rmoveto\n" ));
 
         if ( cf2_stack_count( opStack ) > 2 && !haveWidth )
-          *width = cf2_stack_getReal( opStack, 0 ) + nominalWidthX;
+          *width = ADD_INT32( cf2_stack_getReal( opStack, 0 ),
+                              nominalWidthX );
 
         /* width is defined or default after this */
         haveWidth = TRUE;
@@ -1573,8 +1607,8 @@
         if ( font->decoder->width_only )
           goto exit;
 
-        curY += cf2_stack_popFixed( opStack );
-        curX += cf2_stack_popFixed( opStack );
+        curY = ADD_INT32( curY, cf2_stack_popFixed( opStack ) );
+        curX = ADD_INT32( curX, cf2_stack_popFixed( opStack ) );
 
         cf2_glyphpath_moveTo( &glyphPath, curX, curY );
 
@@ -1584,7 +1618,8 @@
         FT_TRACE4(( " hmoveto\n" ));
 
         if ( cf2_stack_count( opStack ) > 1 && !haveWidth )
-          *width = cf2_stack_getReal( opStack, 0 ) + nominalWidthX;
+          *width = ADD_INT32( cf2_stack_getReal( opStack, 0 ),
+                              nominalWidthX );
 
         /* width is defined or default after this */
         haveWidth = TRUE;
@@ -1592,7 +1627,7 @@
         if ( font->decoder->width_only )
           goto exit;
 
-        curX += cf2_stack_popFixed( opStack );
+        curX = ADD_INT32( curX, cf2_stack_popFixed( opStack ) );
 
         cf2_glyphpath_moveTo( &glyphPath, curX, curY );
 
@@ -1608,8 +1643,10 @@
 
           while ( idx + 6 < count )
           {
-            curX += cf2_stack_getReal( opStack, idx + 0 );
-            curY += cf2_stack_getReal( opStack, idx + 1 );
+            curX = ADD_INT32( curX, cf2_stack_getReal( opStack,
+                                                       idx + 0 ) );
+            curY = ADD_INT32( curY, cf2_stack_getReal( opStack,
+                                                       idx + 1 ) );
 
             cf2_glyphpath_lineTo( &glyphPath, curX, curY );
             idx += 2;
@@ -1617,13 +1654,15 @@
 
           while ( idx < count )
           {
-            CF2_Fixed  x1 = cf2_stack_getReal( opStack, idx + 0 ) + curX;
-            CF2_Fixed  y1 = cf2_stack_getReal( opStack, idx + 1 ) + curY;
-            CF2_Fixed  x2 = cf2_stack_getReal( opStack, idx + 2 ) + x1;
-            CF2_Fixed  y2 = cf2_stack_getReal( opStack, idx + 3 ) + y1;
-            CF2_Fixed  x3 = cf2_stack_getReal( opStack, idx + 4 ) + x2;
-            CF2_Fixed  y3 = cf2_stack_getReal( opStack, idx + 5 ) + y2;
+            CF2_Fixed  x1, y1, x2, y2, x3, y3;
 
+
+            x1 = ADD_INT32( cf2_stack_getReal( opStack, idx + 0 ), curX );
+            y1 = ADD_INT32( cf2_stack_getReal( opStack, idx + 1 ), curY );
+            x2 = ADD_INT32( cf2_stack_getReal( opStack, idx + 2 ), x1 );
+            y2 = ADD_INT32( cf2_stack_getReal( opStack, idx + 3 ), y1 );
+            x3 = ADD_INT32( cf2_stack_getReal( opStack, idx + 4 ), x2 );
+            y3 = ADD_INT32( cf2_stack_getReal( opStack, idx + 5 ), y2 );
 
             cf2_glyphpath_curveTo( &glyphPath, x1, y1, x2, y2, x3, y3 );
 
@@ -1657,18 +1696,18 @@
 
             if ( ( count - idx ) & 1 )
             {
-              x1 = cf2_stack_getReal( opStack, idx ) + curX;
+              x1 = ADD_INT32( cf2_stack_getReal( opStack, idx ), curX );
 
               idx++;
             }
             else
               x1 = curX;
 
-            y1 = cf2_stack_getReal( opStack, idx + 0 ) + curY;
-            x2 = cf2_stack_getReal( opStack, idx + 1 ) + x1;
-            y2 = cf2_stack_getReal( opStack, idx + 2 ) + y1;
+            y1 = ADD_INT32( cf2_stack_getReal( opStack, idx + 0 ), curY );
+            x2 = ADD_INT32( cf2_stack_getReal( opStack, idx + 1 ), x1 );
+            y2 = ADD_INT32( cf2_stack_getReal( opStack, idx + 2 ), y1 );
             x3 = x2;
-            y3 = cf2_stack_getReal( opStack, idx + 3 ) + y2;
+            y3 = ADD_INT32( cf2_stack_getReal( opStack, idx + 3 ), y2 );
 
             cf2_glyphpath_curveTo( &glyphPath, x1, y1, x2, y2, x3, y3 );
 
@@ -1702,17 +1741,17 @@
 
             if ( ( count - idx ) & 1 )
             {
-              y1 = cf2_stack_getReal( opStack, idx ) + curY;
+              y1 = ADD_INT32( cf2_stack_getReal( opStack, idx ), curY );
 
               idx++;
             }
             else
               y1 = curY;
 
-            x1 = cf2_stack_getReal( opStack, idx + 0 ) + curX;
-            x2 = cf2_stack_getReal( opStack, idx + 1 ) + x1;
-            y2 = cf2_stack_getReal( opStack, idx + 2 ) + y1;
-            x3 = cf2_stack_getReal( opStack, idx + 3 ) + x2;
+            x1 = ADD_INT32( cf2_stack_getReal( opStack, idx + 0 ), curX );
+            x2 = ADD_INT32( cf2_stack_getReal( opStack, idx + 1 ), x1 );
+            y2 = ADD_INT32( cf2_stack_getReal( opStack, idx + 2 ), y1 );
+            x3 = ADD_INT32( cf2_stack_getReal( opStack, idx + 3 ), x2 );
             y3 = y2;
 
             cf2_glyphpath_curveTo( &glyphPath, x1, y1, x2, y2, x3, y3 );
@@ -1751,15 +1790,15 @@
 
             if ( alternate )
             {
-              x1 = cf2_stack_getReal( opStack, idx + 0 ) + curX;
+              x1 = ADD_INT32( cf2_stack_getReal( opStack, idx + 0 ), curX );
               y1 = curY;
-              x2 = cf2_stack_getReal( opStack, idx + 1 ) + x1;
-              y2 = cf2_stack_getReal( opStack, idx + 2 ) + y1;
-              y3 = cf2_stack_getReal( opStack, idx + 3 ) + y2;
+              x2 = ADD_INT32( cf2_stack_getReal( opStack, idx + 1 ), x1 );
+              y2 = ADD_INT32( cf2_stack_getReal( opStack, idx + 2 ), y1 );
+              y3 = ADD_INT32( cf2_stack_getReal( opStack, idx + 3 ), y2 );
 
               if ( count - idx == 5 )
               {
-                x3 = cf2_stack_getReal( opStack, idx + 4 ) + x2;
+                x3 = ADD_INT32( cf2_stack_getReal( opStack, idx + 4 ), x2 );
 
                 idx++;
               }
@@ -1771,14 +1810,14 @@
             else
             {
               x1 = curX;
-              y1 = cf2_stack_getReal( opStack, idx + 0 ) + curY;
-              x2 = cf2_stack_getReal( opStack, idx + 1 ) + x1;
-              y2 = cf2_stack_getReal( opStack, idx + 2 ) + y1;
-              x3 = cf2_stack_getReal( opStack, idx + 3 ) + x2;
+              y1 = ADD_INT32( cf2_stack_getReal( opStack, idx + 0 ), curY );
+              x2 = ADD_INT32( cf2_stack_getReal( opStack, idx + 1 ), x1 );
+              y2 = ADD_INT32( cf2_stack_getReal( opStack, idx + 2 ), y1 );
+              x3 = ADD_INT32( cf2_stack_getReal( opStack, idx + 3 ), x2 );
 
               if ( count - idx == 5 )
               {
-                y3 = cf2_stack_getReal( opStack, idx + 4 ) + y2;
+                y3 = ADD_INT32( cf2_stack_getReal( opStack, idx + 4 ), y2 );
 
                 idx++;
               }

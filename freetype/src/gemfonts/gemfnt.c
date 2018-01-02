@@ -469,24 +469,24 @@ static FT_Error fnt_cmap_init(FT_CMap ft_cmap, FT_Pointer data)
 }
 
 
-static FT_UInt fnt_cmap_char_index(FT_CMap ft_cmap, FT_UInt32 char_code)
+static FT_UInt32 fnt_cmap_char_index(FT_CMap ft_cmap, FT_UInt32 char_code)
 {
 	FNT_CMap cmap = (FNT_CMap) ft_cmap;
-	FT_UInt gindex = 0;
+	FT_UInt32 gindex = 0;
 
 	char_code -= cmap->first;
 	if (char_code < cmap->count)
 		/* we artificially increase the glyph index; */
 		/* FNT_Load_Glyph reverts to the right one   */
-		gindex = (FT_UInt)(char_code + 1);
+		gindex = char_code + 1;
 	return gindex;
 }
 
 
-static FT_UInt fnt_cmap_char_next(FT_CMap ft_cmap, FT_UInt32 *pchar_code)
+static FT_UInt32 fnt_cmap_char_next(FT_CMap ft_cmap, FT_UInt32 *pchar_code)
 {
 	FNT_CMap cmap = (FNT_CMap) ft_cmap;
-	FT_UInt gindex = 0;
+	FT_UInt32 gindex = 0;
 	FT_UInt32 result = 0;
 	FT_UInt32 char_code = *pchar_code + 1;
 
@@ -500,7 +500,7 @@ static FT_UInt fnt_cmap_char_next(FT_CMap ft_cmap, FT_UInt32 *pchar_code)
 		if (char_code < cmap->count)
 		{
 			result = cmap->first + char_code;
-			gindex = (FT_UInt)(char_code + 1);
+			gindex = char_code + 1;
 		}
 	}
 

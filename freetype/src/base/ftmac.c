@@ -1006,7 +1006,7 @@
   /*    accepts an FSRef instead of a path.                                */
   /*                                                                       */
   /* This function is deprecated because Carbon data types (FSRef)         */
-  /* are not cross-platform, and thus not suitable for the freetype API.   */
+  /* are not cross-platform, and thus not suitable for the FreeType API.   */
   FT_EXPORT_DEF( FT_Error )
   FT_New_Face_From_FSRef( FT_Library    library,
                           const FSRef*  ref,

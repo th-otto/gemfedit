@@ -576,34 +576,42 @@ ANONYMOUS_STRUCT_DUMMY(GX_BlendRec_)
     if ( vertical )
     {
       metrics->horiBearingX = FT_PIX_FLOOR( metrics->horiBearingX );
-      metrics->horiBearingY = FT_PIX_CEIL ( metrics->horiBearingY );
+      metrics->horiBearingY = FT_PIX_CEIL_LONG( metrics->horiBearingY );
 
-      right  = FT_PIX_CEIL( metrics->vertBearingX + metrics->width );
-      bottom = FT_PIX_CEIL( metrics->vertBearingY + metrics->height );
+      right  = FT_PIX_CEIL_LONG( ADD_LONG( metrics->vertBearingX,
+                                           metrics->width ) );
+      bottom = FT_PIX_CEIL_LONG( ADD_LONG( metrics->vertBearingY,
+                                           metrics->height ) );
 
       metrics->vertBearingX = FT_PIX_FLOOR( metrics->vertBearingX );
       metrics->vertBearingY = FT_PIX_FLOOR( metrics->vertBearingY );
 
-      metrics->width  = right - metrics->vertBearingX;
-      metrics->height = bottom - metrics->vertBearingY;
+      metrics->width  = SUB_LONG( right,
+                                  metrics->vertBearingX );
+      metrics->height = SUB_LONG( bottom,
+                                  metrics->vertBearingY );
     }
     else
     {
       metrics->vertBearingX = FT_PIX_FLOOR( metrics->vertBearingX );
       metrics->vertBearingY = FT_PIX_FLOOR( metrics->vertBearingY );
 
-      right  = FT_PIX_CEIL ( metrics->horiBearingX + metrics->width );
-      bottom = FT_PIX_FLOOR( metrics->horiBearingY - metrics->height );
+      right  = FT_PIX_CEIL_LONG( ADD_LONG( metrics->horiBearingX,
+                                           metrics->width ) );
+      bottom = FT_PIX_FLOOR( SUB_LONG( metrics->horiBearingY,
+                                       metrics->height ) );
 
       metrics->horiBearingX = FT_PIX_FLOOR( metrics->horiBearingX );
-      metrics->horiBearingY = FT_PIX_CEIL ( metrics->horiBearingY );
+      metrics->horiBearingY = FT_PIX_CEIL_LONG( metrics->horiBearingY );
 
-      metrics->width  = right - metrics->horiBearingX;
-      metrics->height = metrics->horiBearingY - bottom;
+      metrics->width  = SUB_LONG( right,
+                                  metrics->horiBearingX );
+      metrics->height = SUB_LONG( metrics->horiBearingY,
+                                  bottom );
     }
 
-    metrics->horiAdvance = FT_PIX_ROUND( metrics->horiAdvance );
-    metrics->vertAdvance = FT_PIX_ROUND( metrics->vertAdvance );
+    metrics->horiAdvance = FT_PIX_ROUND_LONG( metrics->horiAdvance );
+    metrics->vertAdvance = FT_PIX_ROUND_LONG( metrics->vertAdvance );
   }
 #endif /* GRID_FIT_METRICS */
 
@@ -3545,7 +3553,7 @@ ANONYMOUS_STRUCT_DUMMY(GX_BlendRec_)
         FT_TRACE1(( " 0x%x is truncated\n", charcode ));
       }
 
-      result = cmap->clazz->char_index( cmap, (FT_UInt32)charcode );
+      result = (FT_UInt)cmap->clazz->char_index( cmap, (FT_UInt32)charcode );
       if ( result >= (FT_UInt)face->num_glyphs )
         result = 0;
     }
@@ -3587,7 +3595,7 @@ ANONYMOUS_STRUCT_DUMMY(GX_BlendRec_)
                     FT_UInt  *agindex )
   {
     FT_ULong  result = 0;
-    FT_UInt   gindex = 0;
+    FT_UInt32 gindex = 0;
 
 
     if ( face && face->charmap && face->num_glyphs )
@@ -3606,7 +3614,7 @@ ANONYMOUS_STRUCT_DUMMY(GX_BlendRec_)
     }
 
     if ( agindex )
-      *agindex = gindex;
+      *agindex = (FT_UInt)gindex;
 
     return result;
   }
@@ -3703,7 +3711,7 @@ ANONYMOUS_STRUCT_DUMMY(GX_BlendRec_)
                                FT_ULong  charcode,
                                FT_ULong  variantSelector )
   {
-    FT_UInt  result = 0;
+    FT_UInt32  result = 0;
 
 
     if ( face                                           &&
@@ -3738,7 +3746,7 @@ ANONYMOUS_STRUCT_DUMMY(GX_BlendRec_)
       }
     }
 
-    return result;
+    return (FT_UInt)result;
   }
 
 
@@ -4555,7 +4563,7 @@ ANONYMOUS_STRUCT_DUMMY(GX_BlendRec_)
     if ( !clazz )
       return FT_THROW( Invalid_Argument );
 
-    /* check freetype version */
+    /* check FreeType version */
     if ( clazz->module_requires > FREETYPE_VER_FIXED )
       return FT_THROW( Invalid_Version );
 
@@ -4978,10 +4986,6 @@ ANONYMOUS_STRUCT_DUMMY(GX_BlendRec_)
     if ( error )
       goto Fail;
 #endif
-
-    /* we don't use raster_pool anymore. */
-    library->raster_pool_size = 0;
-    library->raster_pool      = NULL;
 
     library->version_major = FREETYPE_MAJOR;
     library->version_minor = FREETYPE_MINOR;

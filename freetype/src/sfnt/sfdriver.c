@@ -1091,7 +1091,7 @@
   FT_DEFINE_SERVICE_TTCMAPSREC(
     tt_service_get_cmap_info,
 
-    (TT_CMap_Info_GetFunc)tt_get_cmap_info    /* get_cmap_info */
+    tt_get_cmap_info    /* TT_CMap_Info_GetFunc get_cmap_info */
   )
 
 

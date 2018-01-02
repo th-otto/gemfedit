@@ -24,8 +24,21 @@
 
 #include "psmodule.h"
 
+  /*
+   *  The file `pstables.h' with its arrays and its function
+   *  `ft_get_adobe_glyph_index' is useful for other projects also (for
+   *  example, `pdfium' is using it).  However, if used as a C++ header,
+   *  including it in two different source files makes it necessary to use
+   *  `extern const' for the declaration of its arrays, otherwise the data
+   *  would be duplicated as mandated by the C++ standard.
+   *
+   *  For this reason, we use `DEFINE_PS_TABLES' to guard the function
+   *  definitions, and `DEFINE_PS_TABLES_DATA' to provide both proper array
+   *  declarations and definitions.
+   */
 #include "pstables.h"
 #define  DEFINE_PS_TABLES
+#define  DEFINE_PS_TABLES_DATA
 #include "pstables.h"
 
 #include "psnamerr.h"
@@ -532,13 +545,13 @@ ANONYMOUS_STRUCT_DUMMY(FT_IncrementalRec_)
   FT_DEFINE_SERVICE_PSCMAPSREC(
     pscmaps_interface,
 
-    (PS_Unicode_ValueFunc)     ps_unicode_value,        /* unicode_value         */
-    (PS_Unicodes_InitFunc)     ps_unicodes_init,        /* unicodes_init         */
-    (PS_Unicodes_CharIndexFunc)ps_unicodes_char_index,  /* unicodes_char_index   */
-    (PS_Unicodes_CharNextFunc) ps_unicodes_char_next,   /* unicodes_char_next    */
+    ps_unicode_value,        /* unicode_value         */
+    ps_unicodes_init,        /* unicodes_init         */
+    ps_unicodes_char_index,  /* unicodes_char_index   */
+    ps_unicodes_char_next,   /* unicodes_char_next    */
 
-    (PS_Macintosh_NameFunc)    ps_get_macintosh_name,   /* macintosh_name        */
-    (PS_Adobe_Std_StringsFunc) ps_get_standard_strings, /* adobe_std_strings     */
+    ps_get_macintosh_name,   /* macintosh_name        */
+    ps_get_standard_strings, /* adobe_std_strings     */
 
     t1_standard_encoding,                               /* adobe_std_encoding    */
     t1_expert_encoding                                  /* adobe_expert_encoding */
@@ -554,8 +567,8 @@ ANONYMOUS_STRUCT_DUMMY(FT_IncrementalRec_)
     NULL,                                               /* unicodes_char_index   */
     NULL,                                               /* unicodes_char_next    */
 
-    (PS_Macintosh_NameFunc)    ps_get_macintosh_name,   /* macintosh_name        */
-    (PS_Adobe_Std_StringsFunc) ps_get_standard_strings, /* adobe_std_strings     */
+    ps_get_macintosh_name,   /* macintosh_name        */
+    ps_get_standard_strings, /* adobe_std_strings     */
 
     t1_standard_encoding,                               /* adobe_std_encoding    */
     t1_expert_encoding                                  /* adobe_expert_encoding */

@@ -34,9 +34,10 @@
   /*************************************************************************/
 
   FT_CALLBACK_DEF( FT_Error )
-  cff_cmap_encoding_init( CFF_CMapStd  cmap,
+  cff_cmap_encoding_init( FT_CMap  cmap_,
                           FT_Pointer   pointer )
   {
+    CFF_CMapStd  cmap = (CFF_CMapStd)cmap_;
     TT_Face       face     = (TT_Face)FT_CMAP_FACE( cmap );
     CFF_Font      cff      = (CFF_Font)face->extra.data;
     CFF_Encoding  encoding = &cff->encoding;
@@ -51,16 +52,18 @@
 
 
   FT_CALLBACK_DEF( void )
-  cff_cmap_encoding_done( CFF_CMapStd  cmap )
+  cff_cmap_encoding_done( FT_CMap  cmap_ )
   {
+    CFF_CMapStd  cmap = (CFF_CMapStd)cmap_;
     cmap->gids  = NULL;
   }
 
 
-  FT_CALLBACK_DEF( FT_UInt )
-  cff_cmap_encoding_char_index( CFF_CMapStd  cmap,
+  FT_CALLBACK_DEF( FT_UInt32 )
+  cff_cmap_encoding_char_index( FT_CMap cmap_,
                                 FT_UInt32    char_code )
   {
+    CFF_CMapStd  cmap = (CFF_CMapStd)cmap_;
     FT_UInt  result = 0;
 
 
@@ -72,9 +75,10 @@
 
 
   FT_CALLBACK_DEF( FT_UInt32 )
-  cff_cmap_encoding_char_next( CFF_CMapStd   cmap,
+  cff_cmap_encoding_char_next( FT_CMap   cmap_,
                                FT_UInt32    *pchar_code )
   {
+    CFF_CMapStd  cmap = (CFF_CMapStd)cmap_;
     FT_UInt    result    = 0;
     FT_UInt32  char_code = *pchar_code;
 
@@ -110,16 +114,16 @@
 
     sizeof ( CFF_CMapStdRec ),
 
-    (FT_CMap_InitFunc)     cff_cmap_encoding_init,        /* init       */
-    (FT_CMap_DoneFunc)     cff_cmap_encoding_done,        /* done       */
-    (FT_CMap_CharIndexFunc)cff_cmap_encoding_char_index,  /* char_index */
-    (FT_CMap_CharNextFunc) cff_cmap_encoding_char_next,   /* char_next  */
+    cff_cmap_encoding_init,        /* FT_CMap_InitFunc init       */
+    cff_cmap_encoding_done,        /* FT_CMap_DoneFunc done       */
+    cff_cmap_encoding_char_index,  /* FT_CMap_CharIndexFunc char_index */
+    cff_cmap_encoding_char_next,   /* FT_CMap_CharNextFunc char_next  */
 
-    (FT_CMap_CharVarIndexFunc)    NULL,  /* char_var_index   */
-    (FT_CMap_CharVarIsDefaultFunc)NULL,  /* char_var_default */
-    (FT_CMap_VariantListFunc)     NULL,  /* variant_list     */
-    (FT_CMap_CharVariantListFunc) NULL,  /* charvariant_list */
-    (FT_CMap_VariantCharListFunc) NULL   /* variantchar_list */
+    NULL,  /* FT_CMap_CharVarIndexFunc char_var_index   */
+    NULL,  /* FT_CMap_CharVarIsDefaultFunc char_var_default */
+    NULL,  /* FT_CMap_VariantListFunc variant_list     */
+    NULL,  /* FT_CMap_CharVariantListFunc charvariant_list */
+    NULL   /* FT_CMap_VariantCharListFunc variantchar_list */
   )
 
 
@@ -133,7 +137,7 @@
 
   FT_CALLBACK_DEF( const char* )
   cff_sid_to_glyph_name( FT_Pointer data,
-                         FT_UInt  idx )
+                         FT_UInt32 idx )
   {
     TT_Face face = data;
     CFF_Font     cff     = (CFF_Font)face->extra.data;
@@ -146,9 +150,10 @@
 
 
   FT_CALLBACK_DEF( FT_Error )
-  cff_cmap_unicode_init( PS_Unicodes  unicodes,
+  cff_cmap_unicode_init( FT_CMap cmap_,
                          FT_Pointer   pointer )
   {
+    PS_Unicodes  unicodes = (PS_Unicodes)cmap_;
     TT_Face             face    = (TT_Face)FT_CMAP_FACE( unicodes );
     FT_Memory           memory  = FT_FACE_MEMORY( face );
     CFF_Font            cff     = (CFF_Font)face->extra.data;
@@ -173,8 +178,9 @@
 
 
   FT_CALLBACK_DEF( void )
-  cff_cmap_unicode_done( PS_Unicodes  unicodes )
+  cff_cmap_unicode_done( FT_CMap cmap_ )
   {
+    PS_Unicodes  unicodes = (PS_Unicodes)cmap_;
     FT_Face    face   = FT_CMAP_FACE( unicodes );
     FT_Memory  memory = FT_FACE_MEMORY( face );
 
@@ -184,10 +190,11 @@
   }
 
 
-  FT_CALLBACK_DEF( FT_UInt )
-  cff_cmap_unicode_char_index( PS_Unicodes  unicodes,
+  FT_CALLBACK_DEF( FT_UInt32 )
+  cff_cmap_unicode_char_index( FT_CMap cmap_,
                                FT_UInt32    char_code )
   {
+    PS_Unicodes  unicodes = (PS_Unicodes)cmap_;
     TT_Face             face    = (TT_Face)FT_CMAP_FACE( unicodes );
     CFF_Font            cff     = (CFF_Font)face->extra.data;
     FT_Service_PsCMaps  psnames = (FT_Service_PsCMaps)cff->psnames;
@@ -198,9 +205,10 @@
 
 
   FT_CALLBACK_DEF( FT_UInt32 )
-  cff_cmap_unicode_char_next( PS_Unicodes  unicodes,
+  cff_cmap_unicode_char_next( FT_CMap cmap_,
                               FT_UInt32   *pchar_code )
   {
+    PS_Unicodes  unicodes = (PS_Unicodes)cmap_;
     TT_Face             face    = (TT_Face)FT_CMAP_FACE( unicodes );
     CFF_Font            cff     = (CFF_Font)face->extra.data;
     FT_Service_PsCMaps  psnames = (FT_Service_PsCMaps)cff->psnames;
@@ -215,16 +223,16 @@
 
     sizeof ( PS_UnicodesRec ),
 
-    (FT_CMap_InitFunc)     cff_cmap_unicode_init,        /* init       */
-    (FT_CMap_DoneFunc)     cff_cmap_unicode_done,        /* done       */
-    (FT_CMap_CharIndexFunc)cff_cmap_unicode_char_index,  /* char_index */
-    (FT_CMap_CharNextFunc) cff_cmap_unicode_char_next,   /* char_next  */
+    cff_cmap_unicode_init,        /* FT_CMap_InitFunc init       */
+    cff_cmap_unicode_done,        /* FT_CMap_DoneFunc done       */
+    cff_cmap_unicode_char_index,  /* FT_CMap_CharIndexFunc char_index */
+    cff_cmap_unicode_char_next,   /* FT_CMap_CharNextFunc char_next  */
 
-    (FT_CMap_CharVarIndexFunc)    NULL,  /* char_var_index   */
-    (FT_CMap_CharVarIsDefaultFunc)NULL,  /* char_var_default */
-    (FT_CMap_VariantListFunc)     NULL,  /* variant_list     */
-    (FT_CMap_CharVariantListFunc) NULL,  /* charvariant_list */
-    (FT_CMap_VariantCharListFunc) NULL   /* variantchar_list */
+    NULL,  /* FT_CMap_CharVarIndexFunc char_var_index   */
+    NULL,  /* FT_CMap_CharVarIsDefaultFunc char_var_default */
+    NULL,  /* FT_CMap_VariantListFunc variant_list     */
+    NULL,  /* FT_CMap_CharVariantListFunc charvariant_list */
+    NULL   /* FT_CMap_VariantCharListFunc variantchar_list */
   )
 
 

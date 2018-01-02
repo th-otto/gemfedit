@@ -24,8 +24,10 @@
 
 #include <freetype/internal/ftvalid.h>
 #include <freetype/internal/ftstream.h>
+#include <freetype/internal/services/svpscmap.h>
 #include "ttload.h"
 #include "ttcmap.h"
+#include "ttpost.h"
 #include "sfntpic.h"
 
 
@@ -60,9 +62,10 @@
 
 
   FT_CALLBACK_DEF( FT_Error )
-  tt_cmap_init( TT_CMap   cmap,
-                FT_Byte*  table )
+  tt_cmap_init( FT_CMap   cmap_,
+                FT_Pointer  table )
   {
+    TT_CMap   cmap = (TT_CMap)cmap_;
     cmap->data = table;
     return FT_Err_Ok;
   }
@@ -128,10 +131,11 @@
   }
 
 
-  FT_CALLBACK_DEF( FT_UInt )
-  tt_cmap0_char_index( TT_CMap    cmap,
+  FT_CALLBACK_DEF( FT_UInt32 )
+  tt_cmap0_char_index( FT_CMap    cmap_,
                        FT_UInt32  char_code )
   {
+    TT_CMap   cmap = (TT_CMap)cmap_;
     FT_Byte*  table = cmap->data;
 
 
@@ -140,9 +144,10 @@
 
 
   FT_CALLBACK_DEF( FT_UInt32 )
-  tt_cmap0_char_next( TT_CMap     cmap,
+  tt_cmap0_char_next( FT_CMap     cmap_,
                       FT_UInt32  *pchar_code )
   {
+    TT_CMap   cmap = (TT_CMap)cmap_;
     FT_Byte*   table    = cmap->data;
     FT_UInt32  charcode = *pchar_code;
     FT_UInt32  result   = 0;
@@ -166,9 +171,10 @@
 
 
   FT_CALLBACK_DEF( FT_Error )
-  tt_cmap0_get_info( TT_CMap       cmap,
+  tt_cmap0_get_info( FT_CharMap       charmap,
                      TT_CMapInfo  *cmap_info )
   {
+    TT_CMap   cmap = (TT_CMap)FT_CMAP( charmap );
     FT_Byte*  p = cmap->data + 4;
 
 
@@ -184,20 +190,20 @@
 
       sizeof ( TT_CMapRec ),
 
-      (FT_CMap_InitFunc)     tt_cmap_init,         /* init       */
-      (FT_CMap_DoneFunc)     NULL,                 /* done       */
-      (FT_CMap_CharIndexFunc)tt_cmap0_char_index,  /* char_index */
-      (FT_CMap_CharNextFunc) tt_cmap0_char_next,   /* char_next  */
+      tt_cmap_init,         /* FT_CMap_InitFunc init       */
+      NULL,                 /* FT_CMap_DoneFunc done       */
+      tt_cmap0_char_index,  /* FT_CMap_CharIndexFunc char_index */
+      tt_cmap0_char_next,   /* FT_CMap_CharNextFunc char_next  */
 
-      (FT_CMap_CharVarIndexFunc)    NULL,  /* char_var_index   */
-      (FT_CMap_CharVarIsDefaultFunc)NULL,  /* char_var_default */
-      (FT_CMap_VariantListFunc)     NULL,  /* variant_list     */
-      (FT_CMap_CharVariantListFunc) NULL,  /* charvariant_list */
-      (FT_CMap_VariantCharListFunc) NULL,  /* variantchar_list */
+      NULL,  /* FT_CMap_CharVarIndexFunc char_var_index   */
+      NULL,  /* FT_CMap_CharVarIsDefaultFunc char_var_default */
+      NULL,  /* FT_CMap_VariantListFunc variant_list     */
+      NULL,  /* FT_CMap_CharVariantListFunc charvariant_list */
+      NULL,  /* FT_CMap_VariantCharListFunc variantchar_list */
 
     0,
-    (TT_CMap_ValidateFunc)tt_cmap0_validate,  /* validate      */
-    (TT_CMap_Info_GetFunc)tt_cmap0_get_info   /* get_cmap_info */
+    tt_cmap0_validate,  /* TT_CMap_ValidateFunc validate      */
+    tt_cmap0_get_info   /* TT_CMap_Info_GetFunc get_cmap_info */
   )
 
 #endif /* TT_CONFIG_CMAP_FORMAT_0 */
@@ -452,10 +458,11 @@
   }
 
 
-  FT_CALLBACK_DEF( FT_UInt )
-  tt_cmap2_char_index( TT_CMap    cmap,
+  FT_CALLBACK_DEF( FT_UInt32 )
+  tt_cmap2_char_index( FT_CMap    cmap_,
                        FT_UInt32  char_code )
   {
+    TT_CMap   cmap = (TT_CMap)cmap_;
     FT_Byte*  table   = cmap->data;
     FT_UInt   result  = 0;
     FT_Byte*  subheader;
@@ -492,9 +499,10 @@
 
 
   FT_CALLBACK_DEF( FT_UInt32 )
-  tt_cmap2_char_next( TT_CMap     cmap,
+  tt_cmap2_char_next( FT_CMap     cmap_,
                       FT_UInt32  *pcharcode )
   {
+    TT_CMap   cmap = (TT_CMap)cmap_;
     FT_Byte*   table    = cmap->data;
     FT_UInt    gindex   = 0;
     FT_UInt32  result   = 0;
@@ -559,9 +567,10 @@
 
 
   FT_CALLBACK_DEF( FT_Error )
-  tt_cmap2_get_info( TT_CMap       cmap,
+  tt_cmap2_get_info( FT_CharMap       charmap,
                      TT_CMapInfo  *cmap_info )
   {
+    TT_CMap   cmap = (TT_CMap)FT_CMAP( charmap );
     FT_Byte*  p = cmap->data + 4;
 
 
@@ -577,20 +586,20 @@
 
       sizeof ( TT_CMapRec ),
 
-      (FT_CMap_InitFunc)     tt_cmap_init,         /* init       */
-      (FT_CMap_DoneFunc)     NULL,                 /* done       */
-      (FT_CMap_CharIndexFunc)tt_cmap2_char_index,  /* char_index */
-      (FT_CMap_CharNextFunc) tt_cmap2_char_next,   /* char_next  */
+      tt_cmap_init,         /* FT_CMap_InitFunc init       */
+      NULL,                 /* FT_CMap_DoneFunc done       */
+      tt_cmap2_char_index,  /* FT_CMap_CharIndexFunc char_index */
+      tt_cmap2_char_next,   /* FT_CMap_CharNextFunc char_next  */
 
-      (FT_CMap_CharVarIndexFunc)    NULL,  /* char_var_index   */
-      (FT_CMap_CharVarIsDefaultFunc)NULL,  /* char_var_default */
-      (FT_CMap_VariantListFunc)     NULL,  /* variant_list     */
-      (FT_CMap_CharVariantListFunc) NULL,  /* charvariant_list */
-      (FT_CMap_VariantCharListFunc) NULL,  /* variantchar_list */
+      NULL,  /* FT_CMap_CharVarIndexFunc char_var_index   */
+      NULL,  /* FT_CMap_CharVarIsDefaultFunc char_var_default */
+      NULL,  /* FT_CMap_VariantListFunc variant_list     */
+      NULL,  /* FT_CMap_CharVariantListFunc charvariant_list */
+      NULL,  /* FT_CMap_VariantCharListFunc variantchar_list */
 
     2,
-    (TT_CMap_ValidateFunc)tt_cmap2_validate,  /* validate      */
-    (TT_CMap_Info_GetFunc)tt_cmap2_get_info   /* get_cmap_info */
+    tt_cmap2_validate,  /* TT_CMap_ValidateFunc validate      */
+    tt_cmap2_get_info   /* TT_CMap_Info_GetFunc get_cmap_info */
   )
 
 #endif /* TT_CONFIG_CMAP_FORMAT_2 */
@@ -686,15 +695,16 @@
 
 
   FT_CALLBACK_DEF( FT_Error )
-  tt_cmap4_init( TT_CMap4  cmap,
-                 FT_Byte*  table )
+  tt_cmap4_init( FT_CMap  cmap_,
+                 FT_Pointer  table )
   {
+    TT_CMap4   cmap = (TT_CMap4)cmap_;
     FT_Byte*  p;
 
 
     cmap->cmap.data    = table;
 
-    p                  = table + 6;
+    p                  = (FT_Byte*)table + 6;
     cmap->num_ranges   = FT_PEEK_USHORT( p ) >> 1;
     cmap->cur_charcode = (FT_UInt32)0xFFFFFFFFUL;
     cmap->cur_gindex   = 0;
@@ -1458,10 +1468,11 @@
   }
 
 
-  FT_CALLBACK_DEF( FT_UInt )
-  tt_cmap4_char_index( TT_CMap    cmap,
+  FT_CALLBACK_DEF( FT_UInt32 )
+  tt_cmap4_char_index( FT_CMap    cmap_,
                        FT_UInt32  char_code )
   {
+    TT_CMap   cmap = (TT_CMap)cmap_;
     if ( char_code >= 0x10000UL )
       return 0;
 
@@ -1473,9 +1484,10 @@
 
 
   FT_CALLBACK_DEF( FT_UInt32 )
-  tt_cmap4_char_next( TT_CMap     cmap,
+  tt_cmap4_char_next( FT_CMap     cmap_,
                       FT_UInt32  *pchar_code )
   {
+    TT_CMap   cmap = (TT_CMap)cmap_;
     FT_UInt  gindex;
 
 
@@ -1506,9 +1518,10 @@
 
 
   FT_CALLBACK_DEF( FT_Error )
-  tt_cmap4_get_info( TT_CMap       cmap,
+  tt_cmap4_get_info( FT_CharMap       charmap,
                      TT_CMapInfo  *cmap_info )
   {
+    TT_CMap   cmap = (TT_CMap)FT_CMAP( charmap );
     FT_Byte*  p = cmap->data + 4;
 
 
@@ -1524,20 +1537,20 @@
 
       sizeof ( TT_CMap4Rec ),
 
-      (FT_CMap_InitFunc)     tt_cmap4_init,        /* init       */
-      (FT_CMap_DoneFunc)     NULL,                 /* done       */
-      (FT_CMap_CharIndexFunc)tt_cmap4_char_index,  /* char_index */
-      (FT_CMap_CharNextFunc) tt_cmap4_char_next,   /* char_next  */
+      tt_cmap4_init,        /* FT_CMap_InitFunc init       */
+      NULL,                 /* FT_CMap_DoneFunc done       */
+      tt_cmap4_char_index,  /* FT_CMap_CharIndexFunc char_index */
+      tt_cmap4_char_next,   /* FT_CMap_CharNextFunc char_next  */
 
-      (FT_CMap_CharVarIndexFunc)    NULL,  /* char_var_index   */
-      (FT_CMap_CharVarIsDefaultFunc)NULL,  /* char_var_default */
-      (FT_CMap_VariantListFunc)     NULL,  /* variant_list     */
-      (FT_CMap_CharVariantListFunc) NULL,  /* charvariant_list */
-      (FT_CMap_VariantCharListFunc) NULL,  /* variantchar_list */
+      NULL,  /* FT_CMap_CharVarIndexFunc char_var_index   */
+      NULL,  /* FT_CMap_CharVarIsDefaultFunc char_var_default */
+      NULL,  /* FT_CMap_VariantListFunc variant_list     */
+      NULL,  /* FT_CMap_CharVariantListFunc charvariant_list */
+      NULL,  /* FT_CMap_VariantCharListFunc variantchar_list */
 
     4,
-    (TT_CMap_ValidateFunc)tt_cmap4_validate,  /* validate      */
-    (TT_CMap_Info_GetFunc)tt_cmap4_get_info   /* get_cmap_info */
+    tt_cmap4_validate,  /* TT_CMap_ValidateFunc validate      */
+    tt_cmap4_get_info   /* TT_CMap_Info_GetFunc get_cmap_info */
   )
 
 #endif /* TT_CONFIG_CMAP_FORMAT_4 */
@@ -1609,10 +1622,11 @@
   }
 
 
-  FT_CALLBACK_DEF( FT_UInt )
-  tt_cmap6_char_index( TT_CMap    cmap,
+  FT_CALLBACK_DEF( FT_UInt32 )
+  tt_cmap6_char_index( FT_CMap    cmap_,
                        FT_UInt32  char_code )
   {
+    TT_CMap   cmap = (TT_CMap)cmap_;
     FT_Byte*  table  = cmap->data;
     FT_UInt   result = 0;
     FT_Byte*  p      = table + 6;
@@ -1632,9 +1646,10 @@
 
 
   FT_CALLBACK_DEF( FT_UInt32 )
-  tt_cmap6_char_next( TT_CMap     cmap,
+  tt_cmap6_char_next( FT_CMap     cmap_,
                       FT_UInt32  *pchar_code )
   {
+    TT_CMap   cmap = (TT_CMap)cmap_;
     FT_Byte*   table     = cmap->data;
     FT_UInt32  result    = 0;
     FT_UInt32  char_code = *pchar_code + 1;
@@ -1676,9 +1691,10 @@
 
 
   FT_CALLBACK_DEF( FT_Error )
-  tt_cmap6_get_info( TT_CMap       cmap,
+  tt_cmap6_get_info( FT_CharMap       charmap,
                      TT_CMapInfo  *cmap_info )
   {
+    TT_CMap   cmap = (TT_CMap)FT_CMAP( charmap );
     FT_Byte*  p = cmap->data + 4;
 
 
@@ -1694,20 +1710,20 @@
 
       sizeof ( TT_CMapRec ),
 
-      (FT_CMap_InitFunc)     tt_cmap_init,         /* init       */
-      (FT_CMap_DoneFunc)     NULL,                 /* done       */
-      (FT_CMap_CharIndexFunc)tt_cmap6_char_index,  /* char_index */
-      (FT_CMap_CharNextFunc) tt_cmap6_char_next,   /* char_next  */
+      tt_cmap_init,         /* FT_CMap_InitFunc init       */
+      NULL,                 /* FT_CMap_DoneFunc done       */
+      tt_cmap6_char_index,  /* FT_CMap_CharIndexFunc char_index */
+      tt_cmap6_char_next,   /* FT_CMap_CharNextFunc char_next  */
 
-      (FT_CMap_CharVarIndexFunc)    NULL,  /* char_var_index   */
-      (FT_CMap_CharVarIsDefaultFunc)NULL,  /* char_var_default */
-      (FT_CMap_VariantListFunc)     NULL,  /* variant_list     */
-      (FT_CMap_CharVariantListFunc) NULL,  /* charvariant_list */
-      (FT_CMap_VariantCharListFunc) NULL,  /* variantchar_list */
+      NULL,  /* FT_CMap_CharVarIndexFunc char_var_index   */
+      NULL,  /* FT_CMap_CharVarIsDefaultFunc char_var_default */
+      NULL,  /* FT_CMap_VariantListFunc variant_list     */
+      NULL,  /* FT_CMap_CharVariantListFunc charvariant_list */
+      NULL,  /* FT_CMap_VariantCharListFunc variantchar_list */
 
     6,
-    (TT_CMap_ValidateFunc)tt_cmap6_validate,  /* validate      */
-    (TT_CMap_Info_GetFunc)tt_cmap6_get_info   /* get_cmap_info */
+    tt_cmap6_validate,  /* TT_CMap_ValidateFunc validate      */
+    tt_cmap6_get_info   /* TT_CMap_Info_GetFunc get_cmap_info */
   )
 
 #endif /* TT_CONFIG_CMAP_FORMAT_6 */
@@ -1869,10 +1885,11 @@
   }
 
 
-  FT_CALLBACK_DEF( FT_UInt )
-  tt_cmap8_char_index( TT_CMap    cmap,
+  FT_CALLBACK_DEF( FT_UInt32 )
+  tt_cmap8_char_index( FT_CMap    cmap_,
                        FT_UInt32  char_code )
   {
+    TT_CMap   cmap = (TT_CMap)cmap_;
     FT_Byte*   table      = cmap->data;
     FT_UInt    result     = 0;
     FT_Byte*   p          = table + 8204;
@@ -1903,9 +1920,10 @@
 
 
   FT_CALLBACK_DEF( FT_UInt32 )
-  tt_cmap8_char_next( TT_CMap     cmap,
+  tt_cmap8_char_next( FT_CMap     cmap_,
                       FT_UInt32  *pchar_code )
   {
+    TT_CMap   cmap = (TT_CMap)cmap_;
     FT_Face    face       = cmap->cmap.charmap.face;
     FT_UInt32  result     = 0;
     FT_UInt32  char_code;
@@ -1970,9 +1988,10 @@
 
 
   FT_CALLBACK_DEF( FT_Error )
-  tt_cmap8_get_info( TT_CMap       cmap,
+  tt_cmap8_get_info( FT_CharMap       charmap,
                      TT_CMapInfo  *cmap_info )
   {
+    TT_CMap   cmap = (TT_CMap)FT_CMAP( charmap );
     FT_Byte*  p = cmap->data + 8;
 
 
@@ -1988,20 +2007,20 @@
 
       sizeof ( TT_CMapRec ),
 
-      (FT_CMap_InitFunc)     tt_cmap_init,         /* init       */
-      (FT_CMap_DoneFunc)     NULL,                 /* done       */
-      (FT_CMap_CharIndexFunc)tt_cmap8_char_index,  /* char_index */
-      (FT_CMap_CharNextFunc) tt_cmap8_char_next,   /* char_next  */
+      tt_cmap_init,         /* FT_CMap_InitFunc init       */
+      NULL,                 /* FT_CMap_DoneFunc done       */
+      tt_cmap8_char_index,  /* FT_CMap_CharIndexFunc char_index */
+      tt_cmap8_char_next,   /* FT_CMap_CharNextFunc char_next  */
 
-      (FT_CMap_CharVarIndexFunc)    NULL,  /* char_var_index   */
-      (FT_CMap_CharVarIsDefaultFunc)NULL,  /* char_var_default */
-      (FT_CMap_VariantListFunc)     NULL,  /* variant_list     */
-      (FT_CMap_CharVariantListFunc) NULL,  /* charvariant_list */
-      (FT_CMap_VariantCharListFunc) NULL,  /* variantchar_list */
+      NULL,  /* FT_CMap_CharVarIndexFunc char_var_index   */
+      NULL,  /* FT_CMap_CharVarIsDefaultFunc char_var_default */
+      NULL,  /* FT_CMap_VariantListFunc variant_list     */
+      NULL,  /* FT_CMap_CharVariantListFunc charvariant_list */
+      NULL,  /* FT_CMap_VariantCharListFunc variantchar_list */
 
     8,
-    (TT_CMap_ValidateFunc)tt_cmap8_validate,  /* validate      */
-    (TT_CMap_Info_GetFunc)tt_cmap8_get_info   /* get_cmap_info */
+    tt_cmap8_validate,  /* TT_CMap_ValidateFunc validate      */
+    tt_cmap8_get_info   /* TT_CMap_Info_GetFunc get_cmap_info */
   )
 
 #endif /* TT_CONFIG_CMAP_FORMAT_8 */
@@ -2073,10 +2092,11 @@
   }
 
 
-  FT_CALLBACK_DEF( FT_UInt )
-  tt_cmap10_char_index( TT_CMap    cmap,
+  FT_CALLBACK_DEF( FT_UInt32 )
+  tt_cmap10_char_index( FT_CMap    cmap_,
                         FT_UInt32  char_code )
   {
+    TT_CMap   cmap = (TT_CMap)cmap_;
     FT_Byte*   table  = cmap->data;
     FT_UInt    result = 0;
     FT_Byte*   p      = table + 12;
@@ -2101,9 +2121,10 @@
 
 
   FT_CALLBACK_DEF( FT_UInt32 )
-  tt_cmap10_char_next( TT_CMap     cmap,
+  tt_cmap10_char_next( FT_CMap     cmap_,
                        FT_UInt32  *pchar_code )
   {
+    TT_CMap   cmap = (TT_CMap)cmap_;
     FT_Byte*   table     = cmap->data;
     FT_UInt32  char_code;
     FT_UInt    gindex    = 0;
@@ -2142,9 +2163,10 @@
 
 
   FT_CALLBACK_DEF( FT_Error )
-  tt_cmap10_get_info( TT_CMap       cmap,
+  tt_cmap10_get_info( FT_CharMap       charmap,
                       TT_CMapInfo  *cmap_info )
   {
+    TT_CMap   cmap = (TT_CMap)FT_CMAP( charmap );
     FT_Byte*  p = cmap->data + 8;
 
 
@@ -2160,20 +2182,20 @@
 
       sizeof ( TT_CMapRec ),
 
-      (FT_CMap_InitFunc)     tt_cmap_init,          /* init       */
-      (FT_CMap_DoneFunc)     NULL,                  /* done       */
-      (FT_CMap_CharIndexFunc)tt_cmap10_char_index,  /* char_index */
-      (FT_CMap_CharNextFunc) tt_cmap10_char_next,   /* char_next  */
+      tt_cmap_init,          /* FT_CMap_InitFunc init       */
+      NULL,                  /* FT_CMap_DoneFunc done       */
+      tt_cmap10_char_index,  /* FT_CMap_CharIndexFunc char_index */
+      tt_cmap10_char_next,   /* FT_CMap_CharNextFunc char_next  */
 
-      (FT_CMap_CharVarIndexFunc)    NULL,  /* char_var_index   */
-      (FT_CMap_CharVarIsDefaultFunc)NULL,  /* char_var_default */
-      (FT_CMap_VariantListFunc)     NULL,  /* variant_list     */
-      (FT_CMap_CharVariantListFunc) NULL,  /* charvariant_list */
-      (FT_CMap_VariantCharListFunc) NULL,  /* variantchar_list */
+      NULL,  /* FT_CMap_CharVarIndexFunc char_var_index   */
+      NULL,  /* FT_CMap_CharVarIsDefaultFunc char_var_default */
+      NULL,  /* FT_CMap_VariantListFunc variant_list     */
+      NULL,  /* FT_CMap_CharVariantListFunc charvariant_list */
+      NULL,  /* FT_CMap_VariantCharListFunc variantchar_list */
 
     10,
-    (TT_CMap_ValidateFunc)tt_cmap10_validate,  /* validate      */
-    (TT_CMap_Info_GetFunc)tt_cmap10_get_info   /* get_cmap_info */
+    tt_cmap10_validate,  /* TT_CMap_ValidateFunc validate      */
+    tt_cmap10_get_info   /* TT_CMap_Info_GetFunc get_cmap_info */
   )
 
 #endif /* TT_CONFIG_CMAP_FORMAT_10 */
@@ -2223,9 +2245,11 @@
 
 
   FT_CALLBACK_DEF( FT_Error )
-  tt_cmap12_init( TT_CMap12  cmap,
-                  FT_Byte*   table )
+  tt_cmap12_init( FT_CMap  cmap_,
+                  FT_Pointer   table_ )
   {
+    TT_CMap12   cmap = (TT_CMap12)cmap_;
+    FT_Byte *table = (FT_Byte *)table_;
     cmap->cmap.data  = table;
 
     table           += 12;
@@ -2462,19 +2486,20 @@
   }
 
 
-  FT_CALLBACK_DEF( FT_UInt )
-  tt_cmap12_char_index( TT_CMap    cmap,
+  FT_CALLBACK_DEF( FT_UInt32 )
+  tt_cmap12_char_index( FT_CMap    cmap_,
                         FT_UInt32  char_code )
   {
+    TT_CMap   cmap = (TT_CMap)cmap_;
     return tt_cmap12_char_map_binary( cmap, &char_code, 0 );
   }
 
 
   FT_CALLBACK_DEF( FT_UInt32 )
-  tt_cmap12_char_next( TT_CMap     cmap,
+  tt_cmap12_char_next( FT_CMap     cmap_,
                        FT_UInt32  *pchar_code )
   {
-    TT_CMap12  cmap12 = (TT_CMap12)cmap;
+    TT_CMap12  cmap12 = (TT_CMap12)cmap_;
     FT_UInt    gindex;
 
 
@@ -2491,16 +2516,17 @@
         gindex = 0;
     }
     else
-      gindex = tt_cmap12_char_map_binary( cmap, pchar_code, 1 );
+      gindex = tt_cmap12_char_map_binary( &cmap12->cmap, pchar_code, 1 );
 
     return gindex;
   }
 
 
   FT_CALLBACK_DEF( FT_Error )
-  tt_cmap12_get_info( TT_CMap       cmap,
+  tt_cmap12_get_info( FT_CharMap       charmap,
                       TT_CMapInfo  *cmap_info )
   {
+    TT_CMap   cmap = (TT_CMap)FT_CMAP( charmap );
     FT_Byte*  p = cmap->data + 8;
 
 
@@ -2516,20 +2542,20 @@
 
       sizeof ( TT_CMap12Rec ),
 
-      (FT_CMap_InitFunc)     tt_cmap12_init,        /* init       */
-      (FT_CMap_DoneFunc)     NULL,                  /* done       */
-      (FT_CMap_CharIndexFunc)tt_cmap12_char_index,  /* char_index */
-      (FT_CMap_CharNextFunc) tt_cmap12_char_next,   /* char_next  */
+      tt_cmap12_init,        /* FT_CMap_InitFunc init       */
+      NULL,                  /* FT_CMap_DoneFunc done       */
+      tt_cmap12_char_index,  /* FT_CMap_CharIndexFunc char_index */
+      tt_cmap12_char_next,   /* FT_CMap_CharNextFunc char_next  */
 
-      (FT_CMap_CharVarIndexFunc)    NULL,  /* char_var_index   */
-      (FT_CMap_CharVarIsDefaultFunc)NULL,  /* char_var_default */
-      (FT_CMap_VariantListFunc)     NULL,  /* variant_list     */
-      (FT_CMap_CharVariantListFunc) NULL,  /* charvariant_list */
-      (FT_CMap_VariantCharListFunc) NULL,  /* variantchar_list */
+      NULL,  /* FT_CMap_CharVarIndexFunc char_var_index   */
+      NULL,  /* FT_CMap_CharVarIsDefaultFunc char_var_default */
+      NULL,  /* FT_CMap_VariantListFunc variant_list     */
+      NULL,  /* FT_CMap_CharVariantListFunc charvariant_list */
+      NULL,  /* FT_CMap_VariantCharListFunc variantchar_list */
 
     12,
-    (TT_CMap_ValidateFunc)tt_cmap12_validate,  /* validate      */
-    (TT_CMap_Info_GetFunc)tt_cmap12_get_info   /* get_cmap_info */
+    tt_cmap12_validate,  /* TT_CMap_ValidateFunc validate      */
+    tt_cmap12_get_info   /* TT_CMap_Info_GetFunc get_cmap_info */
   )
 
 #endif /* TT_CONFIG_CMAP_FORMAT_12 */
@@ -2579,9 +2605,11 @@
 
 
   FT_CALLBACK_DEF( FT_Error )
-  tt_cmap13_init( TT_CMap13  cmap,
-                  FT_Byte*   table )
+  tt_cmap13_init( FT_CMap  cmap_,
+                  FT_Pointer   table_ )
   {
+    TT_CMap13  cmap = (TT_CMap13)cmap_;
+    FT_Byte *table = (FT_Byte *)table_;
     cmap->cmap.data  = table;
 
     table           += 12;
@@ -2788,19 +2816,20 @@
   }
 
 
-  FT_CALLBACK_DEF( FT_UInt )
-  tt_cmap13_char_index( TT_CMap    cmap,
+  FT_CALLBACK_DEF( FT_UInt32 )
+  tt_cmap13_char_index( FT_CMap    cmap_,
                         FT_UInt32  char_code )
   {
+    TT_CMap   cmap = (TT_CMap)cmap_;
     return tt_cmap13_char_map_binary( cmap, &char_code, 0 );
   }
 
 
   FT_CALLBACK_DEF( FT_UInt32 )
-  tt_cmap13_char_next( TT_CMap     cmap,
+  tt_cmap13_char_next( FT_CMap     cmap_,
                        FT_UInt32  *pchar_code )
   {
-    TT_CMap13  cmap13 = (TT_CMap13)cmap;
+    TT_CMap13  cmap13 = (TT_CMap13)cmap_;
     FT_UInt    gindex;
 
 
@@ -2817,16 +2846,17 @@
         gindex = 0;
     }
     else
-      gindex = tt_cmap13_char_map_binary( cmap, pchar_code, 1 );
+      gindex = tt_cmap13_char_map_binary( &cmap13->cmap, pchar_code, 1 );
 
     return gindex;
   }
 
 
   FT_CALLBACK_DEF( FT_Error )
-  tt_cmap13_get_info( TT_CMap       cmap,
+  tt_cmap13_get_info( FT_CharMap       charmap,
                       TT_CMapInfo  *cmap_info )
   {
+    TT_CMap   cmap = (TT_CMap)FT_CMAP( charmap );
     FT_Byte*  p = cmap->data + 8;
 
 
@@ -2842,20 +2872,20 @@
 
       sizeof ( TT_CMap13Rec ),
 
-      (FT_CMap_InitFunc)     tt_cmap13_init,        /* init       */
-      (FT_CMap_DoneFunc)     NULL,                  /* done       */
-      (FT_CMap_CharIndexFunc)tt_cmap13_char_index,  /* char_index */
-      (FT_CMap_CharNextFunc) tt_cmap13_char_next,   /* char_next  */
+      tt_cmap13_init,        /* FT_CMap_InitFunc init       */
+      NULL,                  /* FT_CMap_DoneFunc done       */
+      tt_cmap13_char_index,  /* FT_CMap_CharIndexFunc char_index */
+      tt_cmap13_char_next,   /* FT_CMap_CharNextFunc char_next  */
 
-      (FT_CMap_CharVarIndexFunc)    NULL,  /* char_var_index   */
-      (FT_CMap_CharVarIsDefaultFunc)NULL,  /* char_var_default */
-      (FT_CMap_VariantListFunc)     NULL,  /* variant_list     */
-      (FT_CMap_CharVariantListFunc) NULL,  /* charvariant_list */
-      (FT_CMap_VariantCharListFunc) NULL,  /* variantchar_list */
+      NULL,  /* FT_CMap_CharVarIndexFunc char_var_index   */
+      NULL,  /* FT_CMap_CharVarIsDefaultFunc char_var_default */
+      NULL,  /* FT_CMap_VariantListFunc variant_list     */
+      NULL,  /* FT_CMap_CharVariantListFunc charvariant_list */
+      NULL,  /* FT_CMap_VariantCharListFunc variantchar_list */
 
     13,
-    (TT_CMap_ValidateFunc)tt_cmap13_validate,  /* validate      */
-    (TT_CMap_Info_GetFunc)tt_cmap13_get_info   /* get_cmap_info */
+    tt_cmap13_validate,  /* TT_CMap_ValidateFunc validate      */
+    tt_cmap13_get_info   /* TT_CMap_Info_GetFunc get_cmap_info */
   )
 
 #endif /* TT_CONFIG_CMAP_FORMAT_13 */
@@ -2941,8 +2971,9 @@
 
 
   FT_CALLBACK_DEF( void )
-  tt_cmap14_done( TT_CMap14  cmap )
+  tt_cmap14_done( FT_CMap  cmap_ )
   {
+    TT_CMap14 cmap = (TT_CMap14)cmap_;
     FT_Memory  memory = cmap->memory;
 
 
@@ -2978,9 +3009,11 @@
 
 
   FT_CALLBACK_DEF( FT_Error )
-  tt_cmap14_init( TT_CMap14  cmap,
-                  FT_Byte*   table )
+  tt_cmap14_init( FT_CMap  cmap_,
+                  FT_Pointer   table_ )
   {
+    TT_CMap14  cmap = (TT_CMap14)cmap_;
+    FT_Byte *table = (FT_Byte *)table_;
     cmap->cmap.data = table;
 
     table               += 6;
@@ -3115,11 +3148,11 @@
   }
 
 
-  FT_CALLBACK_DEF( FT_UInt )
-  tt_cmap14_char_index( TT_CMap    cmap,
+  FT_CALLBACK_DEF( FT_UInt32 )
+  tt_cmap14_char_index( FT_CMap    cmap_,
                         FT_UInt32  char_code )
   {
-    FT_UNUSED( cmap );
+    FT_UNUSED( cmap_ );
     FT_UNUSED( char_code );
 
     /* This can't happen */
@@ -3128,10 +3161,10 @@
 
 
   FT_CALLBACK_DEF( FT_UInt32 )
-  tt_cmap14_char_next( TT_CMap     cmap,
+  tt_cmap14_char_next( FT_CMap     cmap_,
                        FT_UInt32  *pchar_code )
   {
-    FT_UNUSED( cmap );
+    FT_UNUSED( cmap_ );
 
     /* This can't happen */
     *pchar_code = 0;
@@ -3140,10 +3173,10 @@
 
 
   FT_CALLBACK_DEF( FT_Error )
-  tt_cmap14_get_info( TT_CMap       cmap,
+  tt_cmap14_get_info( FT_CharMap       charmap,
                       TT_CMapInfo  *cmap_info )
   {
-    FT_UNUSED( cmap );
+    FT_UNUSED( charmap );
 
     cmap_info->format   = 14;
     /* subtable 14 does not define a language field */
@@ -3253,12 +3286,14 @@
   }
 
 
-  FT_CALLBACK_DEF( FT_UInt )
-  tt_cmap14_char_var_index( TT_CMap    cmap,
-                            TT_CMap    ucmap,
+  FT_CALLBACK_DEF( FT_UInt32 )
+  tt_cmap14_char_var_index( FT_CMap    cmap_,
+                            FT_CMap    ucmap_,
                             FT_UInt32  charcode,
                             FT_UInt32  variantSelector )
   {
+    TT_CMap    cmap = (TT_CMap)cmap_;
+    TT_CMap    ucmap = (TT_CMap)ucmap_;
     FT_Byte*  p = tt_cmap14_find_variant( cmap->data + 6, variantSelector );
     FT_ULong  defOff;
     FT_ULong  nondefOff;
@@ -3287,10 +3322,11 @@
 
 
   FT_CALLBACK_DEF( FT_Int )
-  tt_cmap14_char_var_isdefault( TT_CMap    cmap,
+  tt_cmap14_char_var_isdefault( FT_CMap    cmap_,
                                 FT_UInt32  charcode,
                                 FT_UInt32  variantSelector )
   {
+    TT_CMap    cmap = (TT_CMap)cmap_;
     FT_Byte*  p = tt_cmap14_find_variant( cmap->data + 6, variantSelector );
     FT_ULong  defOff;
     FT_ULong  nondefOff;
@@ -3316,12 +3352,12 @@
 
 
   FT_CALLBACK_DEF( FT_UInt32* )
-  tt_cmap14_variants( TT_CMap    cmap,
+  tt_cmap14_variants( FT_CMap    cmap_,
                       FT_Memory  memory )
   {
-    TT_CMap14   cmap14 = (TT_CMap14)cmap;
+    TT_CMap14   cmap14 = (TT_CMap14)cmap_;
     FT_UInt32   count  = cmap14->num_selectors;
-    FT_Byte*    p      = cmap->data + 10;
+    FT_Byte*    p      = cmap14->cmap.data + 10;
     FT_UInt32*  result;
     FT_UInt32   i;
 
@@ -3342,13 +3378,13 @@
 
 
   FT_CALLBACK_DEF( FT_UInt32 * )
-  tt_cmap14_char_variants( TT_CMap    cmap,
+  tt_cmap14_char_variants( FT_CMap    cmap_,
                            FT_Memory  memory,
                            FT_UInt32  charCode )
   {
-    TT_CMap14   cmap14 = (TT_CMap14)  cmap;
+    TT_CMap14   cmap14 = (TT_CMap14)  cmap_;
     FT_UInt32   count  = cmap14->num_selectors;
-    FT_Byte*    p      = cmap->data + 10;
+    FT_Byte*    p      = cmap14->cmap.data + 10;
     FT_UInt32*  q;
 
 
@@ -3363,10 +3399,10 @@
 
 
       if ( ( defOff != 0                                               &&
-             tt_cmap14_char_map_def_binary( cmap->data + defOff,
+             tt_cmap14_char_map_def_binary( cmap14->cmap.data + defOff,
                                             charCode )                 ) ||
            ( nondefOff != 0                                            &&
-             tt_cmap14_char_map_nondef_binary( cmap->data + nondefOff,
+             tt_cmap14_char_map_nondef_binary( cmap14->cmap.data + nondefOff,
                                                charCode ) != 0         ) )
       {
         q[0] = varSel;
@@ -3463,10 +3499,11 @@
 
 
   FT_CALLBACK_DEF( FT_UInt32 * )
-  tt_cmap14_variant_chars( TT_CMap    cmap,
+  tt_cmap14_variant_chars( FT_CMap    cmap_,
                            FT_Memory  memory,
                            FT_UInt32  variantSelector )
   {
+    TT_CMap   cmap = (TT_CMap) cmap_;
     FT_Byte    *p  = tt_cmap14_find_variant( cmap->data + 6,
                                              variantSelector );
     FT_Int      i;
@@ -3605,25 +3642,134 @@
 
       sizeof ( TT_CMap14Rec ),
 
-      (FT_CMap_InitFunc)     tt_cmap14_init,        /* init       */
-      (FT_CMap_DoneFunc)     tt_cmap14_done,        /* done       */
-      (FT_CMap_CharIndexFunc)tt_cmap14_char_index,  /* char_index */
-      (FT_CMap_CharNextFunc) tt_cmap14_char_next,   /* char_next  */
+      tt_cmap14_init,        /* FT_CMap_InitFunc init       */
+      tt_cmap14_done,        /* FT_CMap_DoneFunc done       */
+      tt_cmap14_char_index,  /* FT_CMap_CharIndexFunc char_index */
+      tt_cmap14_char_next,   /* FT_CMap_CharNextFunc char_next  */
 
       /* Format 14 extension functions */
-      (FT_CMap_CharVarIndexFunc)    tt_cmap14_char_var_index,
-      (FT_CMap_CharVarIsDefaultFunc)tt_cmap14_char_var_isdefault,
-      (FT_CMap_VariantListFunc)     tt_cmap14_variants,
-      (FT_CMap_CharVariantListFunc) tt_cmap14_char_variants,
-      (FT_CMap_VariantCharListFunc) tt_cmap14_variant_chars,
+      tt_cmap14_char_var_index,	/* FT_CMap_CharVarIndexFunc */
+      tt_cmap14_char_var_isdefault,/* FT_CMap_CharVarIsDefaultFunc */
+      tt_cmap14_variants,	/* FT_CMap_VariantListFunc */
+      tt_cmap14_char_variants, /* FT_CMap_CharVariantListFunc */
+      tt_cmap14_variant_chars, /* FT_CMap_VariantCharListFunc */
 
     14,
-    (TT_CMap_ValidateFunc)tt_cmap14_validate,  /* validate      */
-    (TT_CMap_Info_GetFunc)tt_cmap14_get_info   /* get_cmap_info */
+    tt_cmap14_validate,  /* TT_CMap_ValidateFunc validate      */
+    tt_cmap14_get_info   /* TT_CMap_Info_GetFunc get_cmap_info */
   )
 
 #endif /* TT_CONFIG_CMAP_FORMAT_14 */
 
+
+  /*************************************************************************/
+  /*************************************************************************/
+  /*****                                                               *****/
+  /*****                       SYNTHETIC UNICODE                       *****/
+  /*****                                                               *****/
+  /*************************************************************************/
+  /*************************************************************************/
+
+  /*        This charmap is generated using postscript glyph names.        */
+
+#ifdef FT_CONFIG_OPTION_POSTSCRIPT_NAMES
+
+  FT_CALLBACK_DEF( const char * )
+  tt_get_glyph_name( FT_Pointer  face_,
+                     FT_UInt32  idx )
+  {
+    TT_Face face = (TT_Face)face_;
+    FT_String*  PSname;
+
+
+    tt_face_get_ps_name( face, idx, &PSname );
+
+    return PSname;
+  }
+
+
+  FT_CALLBACK_DEF( FT_Error )
+  tt_cmap_unicode_init( FT_CMap cmap_,
+                        FT_Pointer   pointer )
+  {
+    PS_Unicodes  unicodes = (PS_Unicodes)cmap_;
+    TT_Face             face    = (TT_Face)FT_CMAP_FACE( unicodes );
+    FT_Memory           memory  = FT_FACE_MEMORY( face );
+    FT_Service_PsCMaps  psnames = (FT_Service_PsCMaps)face->psnames;
+
+    FT_UNUSED( pointer );
+
+
+    return psnames->unicodes_init( memory,
+                                   unicodes,
+                                   (FT_UInt)face->root.num_glyphs,
+                                   tt_get_glyph_name,
+                                   (PS_FreeGlyphNameFunc)NULL,
+                                   (FT_Pointer)face );
+  }
+
+
+  FT_CALLBACK_DEF( void )
+  tt_cmap_unicode_done( FT_CMap cmap_ )
+  {
+    PS_Unicodes  unicodes = (PS_Unicodes)cmap_;
+    FT_Face    face   = FT_CMAP_FACE( unicodes );
+    FT_Memory  memory = FT_FACE_MEMORY( face );
+
+
+    FT_FREE( unicodes->maps );
+    unicodes->num_maps = 0;
+  }
+
+
+  FT_CALLBACK_DEF( FT_UInt32 )
+  tt_cmap_unicode_char_index( FT_CMap  unicodes_,
+                              FT_UInt32    char_code )
+  {
+    PS_Unicodes unicodes = (PS_Unicodes)unicodes_;
+    TT_Face             face    = (TT_Face)FT_CMAP_FACE( unicodes );
+    FT_Service_PsCMaps  psnames = (FT_Service_PsCMaps)face->psnames;
+
+
+    return psnames->unicodes_char_index( unicodes, char_code );
+  }
+
+
+  FT_CALLBACK_DEF( FT_UInt32 )
+  tt_cmap_unicode_char_next( FT_CMap  unicodes_,
+                             FT_UInt32   *pchar_code )
+  {
+    PS_Unicodes unicodes = (PS_Unicodes)unicodes_;
+    TT_Face             face    = (TT_Face)FT_CMAP_FACE( unicodes );
+    FT_Service_PsCMaps  psnames = (FT_Service_PsCMaps)face->psnames;
+
+
+    return psnames->unicodes_char_next( unicodes, pchar_code );
+  }
+
+
+  FT_DEFINE_TT_CMAP(
+    tt_cmap_unicode_class_rec,
+
+      sizeof ( PS_UnicodesRec ),
+
+      tt_cmap_unicode_init,        /* FT_CMap_InitFuncinit       */
+      tt_cmap_unicode_done,        /* FT_CMap_DoneFunc done       */
+      tt_cmap_unicode_char_index,  /* FT_CMap_CharIndexFuncchar_index */
+      tt_cmap_unicode_char_next,   /* FT_CMap_CharNextFunc char_next  */
+
+      NULL,  /* FT_CMap_CharVarIndexFunc char_var_index   */
+      NULL,  /* FT_CMap_CharVarIsDefaultFunc char_var_default */
+      NULL,  /* FT_CMap_VariantListFunc variant_list     */
+      NULL,  /* FT_CMap_CharVariantListFunc charvariant_list */
+      NULL,  /* FT_CMap_VariantCharListFunc variantchar_list */
+
+    ~0U,
+    NULL,  /* TT_CMap_ValidateFunc validate      */
+    NULL   /* TT_CMap_Info_GetFunc get_cmap_info */
+  )
+
+#endif /* FT_CONFIG_OPTION_POSTSCRIPT_NAMES */
 
 #ifndef FT_CONFIG_OPTION_PIC
 
@@ -3806,8 +3952,10 @@
     FT_CMap        cmap  = (FT_CMap)charmap;
     TT_CMap_Class  clazz = (TT_CMap_Class)cmap->clazz;
 
-
-    return clazz->get_cmap_info( charmap, cmap_info );
+    if ( clazz->get_cmap_info )
+      return clazz->get_cmap_info( charmap, cmap_info );
+    else
+      return FT_THROW( Invalid_CharMap_Format );
   }
 
 

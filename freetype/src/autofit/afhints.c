@@ -53,9 +53,9 @@
     }
     else if ( axis->num_segments >= axis->max_segments )
     {
-      FT_Int  old_max = axis->max_segments;
-      FT_Int  new_max = old_max;
-      FT_Int  big_max = (FT_Int)( FT_INT_MAX / sizeof ( *segment ) );
+      FT_Offset  old_max = axis->max_segments;
+      FT_Offset  new_max = old_max;
+      FT_Offset  big_max = (FT_Offset)( FT_LONG_MAX / sizeof ( *segment ) );
 
 
       if ( old_max >= big_max )
@@ -81,7 +81,7 @@
           goto Exit;
       }
 
-      axis->max_segments = new_max;
+      axis->max_segments = (FT_Int)new_max;
     }
 
     segment = axis->segments + axis->num_segments++;
@@ -118,9 +118,9 @@
     }
     else if ( axis->num_edges >= axis->max_edges )
     {
-      FT_Int  old_max = axis->max_edges;
-      FT_Int  new_max = old_max;
-      FT_Int  big_max = (FT_Int)( FT_INT_MAX / sizeof ( *edge ) );
+      FT_Offset  old_max = axis->max_edges;
+      FT_Offset  new_max = old_max;
+      FT_Offset  big_max = (FT_Offset)( FT_LONG_MAX / sizeof ( *edge ) );
 
 
       if ( old_max >= big_max )
@@ -146,7 +146,7 @@
           goto Exit;
       }
 
-      axis->max_edges = new_max;
+      axis->max_edges = (FT_Int)new_max;
     }
 
     edges = axis->edges;
@@ -507,15 +507,15 @@
       return FT_THROW( Invalid_Argument );
 
     seg      = &axis->segments[idx];
-    *offset  = ( dim == AF_DIMENSION_HORZ ) ? seg->first->ox
-                                            : seg->first->oy;
+    *offset  = ( dim == AF_DIMENSION_HORZ ) ? seg->first->fx
+                                            : seg->first->fy;
     if ( seg->edge )
       *is_blue = (FT_Bool)( seg->edge->blue_edge != 0 );
     else
       *is_blue = FALSE;
 
     if ( *is_blue )
-      *blue_offset = seg->edge->blue_edge->cur;
+      *blue_offset = seg->edge->blue_edge->org;
     else
       *blue_offset = 0;
 

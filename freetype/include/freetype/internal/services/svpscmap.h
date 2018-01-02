@@ -76,7 +76,7 @@ FT_BEGIN_HEADER
    */
   typedef const char*
   (*PS_GetGlyphNameFunc)( FT_Pointer  data,
-                          FT_UInt     string_index );
+                          FT_UInt32     string_index );
 
   /*
    *  A function used to release the glyph name returned by
@@ -94,7 +94,7 @@ FT_BEGIN_HEADER
                            PS_FreeGlyphNameFunc  free_glyph_name,
                            FT_Pointer            glyph_data );
 
-  typedef FT_UInt
+  typedef FT_UInt32
   (*PS_Unicodes_CharIndexFunc)( PS_Unicodes  unicodes,
                                 FT_UInt32    unicode );
 

@@ -101,14 +101,14 @@ THE SOFTWARE.
   }
 
 
-  FT_CALLBACK_DEF( FT_UInt )
+  FT_CALLBACK_DEF( FT_UInt32 )
   pcf_cmap_char_index( FT_CMap    pcfcmap,  /* PCF_CMap */
                        FT_UInt32  charcode )
   {
     PCF_CMap      cmap      = (PCF_CMap)pcfcmap;
     PCF_Encoding  encodings = cmap->encodings;
     FT_ULong      min, max, mid;
-    FT_UInt       result    = 0;
+    FT_UInt32     result    = 0;
 
 
     min = 0;
@@ -138,7 +138,7 @@ THE SOFTWARE.
   }
 
 
-  FT_CALLBACK_DEF( FT_UInt )
+  FT_CALLBACK_DEF( FT_UInt32 )
   pcf_cmap_char_next( FT_CMap    pcfcmap,   /* PCF_CMap */
                       FT_UInt32  *acharcode )
   {
@@ -390,7 +390,11 @@ THE SOFTWARE.
           if ( !ft_strcmp( s, "10646" )                      ||
                ( !ft_strcmp( s, "8859" ) &&
                  !ft_strcmp( face->charset_encoding, "1" ) ) )
-          unicode_charmap = 1;
+            unicode_charmap = 1;
+          /* another name for ASCII */
+          else if ( !ft_strcmp( s, "646.1991" )                 &&
+                    !ft_strcmp( face->charset_encoding, "IRV" ) )
+            unicode_charmap = 1;
         }
       }
 
@@ -412,12 +416,6 @@ THE SOFTWARE.
         }
 
         error = FT_CMap_New( &pcf_cmap_class, NULL, &charmap, NULL );
-
-#if 0
-        /* Select default charmap */
-        if ( pcfface->num_charmaps )
-          pcfface->charmap = pcfface->charmaps[0];
-#endif
       }
     }
 

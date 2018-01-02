@@ -28,9 +28,10 @@ ANONYMOUS_STRUCT_DUMMY(FT_RasterRec_)
 ANONYMOUS_STRUCT_DUMMY(FT_IncrementalRec_)
 
   FT_CALLBACK_DEF( FT_Error )
-  pfr_cmap_init( PFR_CMap    cmap,
+  pfr_cmap_init( FT_CMap    cmap_,
                  FT_Pointer  pointer )
   {
+    PFR_CMap    cmap = (PFR_CMap)cmap_;
     FT_Error  error = FT_Err_Ok;
     PFR_Face  face  = (PFR_Face)FT_CMAP_FACE( cmap );
 
@@ -62,17 +63,19 @@ ANONYMOUS_STRUCT_DUMMY(FT_IncrementalRec_)
 
 
   FT_CALLBACK_DEF( void )
-  pfr_cmap_done( PFR_CMap  cmap )
+  pfr_cmap_done( FT_CMap  cmap_ )
   {
+    PFR_CMap    cmap = (PFR_CMap)cmap_;
     cmap->chars     = NULL;
     cmap->num_chars = 0;
   }
 
 
-  FT_CALLBACK_DEF( FT_UInt )
-  pfr_cmap_char_index( PFR_CMap   cmap,
+  FT_CALLBACK_DEF( FT_UInt32 )
+  pfr_cmap_char_index( FT_CMap   cmap_,
                        FT_UInt32  char_code )
   {
+    PFR_CMap    cmap = (PFR_CMap)cmap_;
     FT_UInt  min = 0;
     FT_UInt  max = cmap->num_chars;
 
@@ -99,9 +102,10 @@ ANONYMOUS_STRUCT_DUMMY(FT_IncrementalRec_)
 
 
   FT_CALLBACK_DEF( FT_UInt32 )
-  pfr_cmap_char_next( PFR_CMap    cmap,
+  pfr_cmap_char_next( FT_CMap    cmap_,
                       FT_UInt32  *pchar_code )
   {
+    PFR_CMap    cmap = (PFR_CMap)cmap_;
     FT_UInt    result    = 0;
     FT_UInt32  char_code = *pchar_code + 1;
 
@@ -164,16 +168,16 @@ ANONYMOUS_STRUCT_DUMMY(FT_IncrementalRec_)
   {
     sizeof ( PFR_CMapRec ),
 
-    (FT_CMap_InitFunc)     pfr_cmap_init,        /* init       */
-    (FT_CMap_DoneFunc)     pfr_cmap_done,        /* done       */
-    (FT_CMap_CharIndexFunc)pfr_cmap_char_index,  /* char_index */
-    (FT_CMap_CharNextFunc) pfr_cmap_char_next,   /* char_next  */
+    pfr_cmap_init,        /* FT_CMap_InitFunc init       */
+    pfr_cmap_done,        /* FT_CMap_DoneFunc done       */
+    pfr_cmap_char_index,  /* FT_CMap_CharIndexFunc char_index */
+    pfr_cmap_char_next,   /* FT_CMap_CharNextFunc char_next  */
 
-    (FT_CMap_CharVarIndexFunc)    NULL,  /* char_var_index   */
-    (FT_CMap_CharVarIsDefaultFunc)NULL,  /* char_var_default */
-    (FT_CMap_VariantListFunc)     NULL,  /* variant_list     */
-    (FT_CMap_CharVariantListFunc) NULL,  /* charvariant_list */
-    (FT_CMap_VariantCharListFunc) NULL   /* variantchar_list */
+    NULL,  /* FT_CMap_CharVarIndexFunc char_var_index   */
+    NULL,  /* FT_CMap_CharVarIsDefaultFunc char_var_default */
+    NULL,  /* FT_CMap_VariantListFunc variant_list     */
+    NULL,  /* FT_CMap_CharVariantListFunc charvariant_list */
+    NULL   /* FT_CMap_VariantCharListFunc variantchar_list */
   };
 
 

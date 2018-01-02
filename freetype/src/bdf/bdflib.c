@@ -305,7 +305,7 @@ static FT_Error _bdf_list_ensure(_bdf_list_t * list, unsigned long num_items)	/*
 	{
 		unsigned long oldsize = list->size;	/* same as _bdf_list_t.size */
 		unsigned long newsize = oldsize + (oldsize >> 1) + 5;
-		unsigned long bigsize = (unsigned long) (FT_INT_MAX / sizeof(char *));
+		unsigned long bigsize = (unsigned long) (FT_LONG_MAX / sizeof(char *));
 		FT_Memory memory = list->memory;
 
 		if (oldsize == bigsize)
@@ -659,7 +659,16 @@ static unsigned long _bdf_atoul(char *s)
 		return 0;
 
 	for (v = 0; sbitset(ddigits, *s); s++)
-		v = v * 10 + a2i[(int) *s];
+	{
+		if (v < ( ULONG_MAX - 9 ) / 10)
+		{
+			v = v * 10 + a2i[(int)*s];
+		} else
+		{
+			v = ULONG_MAX;
+			break;
+		}
+	}
 
 	return v;
 }
@@ -682,7 +691,16 @@ static long _bdf_atol(char *s)
 	}
 
 	for (v = 0; sbitset(ddigits, *s); s++)
-		v = v * 10 + a2i[(int) *s];
+	{
+		if (v < ( LONG_MAX - 9 ) / 10)
+		{
+			v = v * 10 + a2i[(int)*s];
+		} else
+		{
+			v = LONG_MAX;
+			break;
+		}
+	}
 
 	return (!neg) ? v : -v;
 }
@@ -697,7 +715,16 @@ static unsigned short _bdf_atous(char *s)
 		return 0;
 
 	for (v = 0; sbitset(ddigits, *s); s++)
-		v = (unsigned short) (v * 10 + a2i[(int) *s]);
+	{
+		if (v < ( USHRT_MAX - 9 ) / 10)
+		{
+			v = (unsigned short) (v * 10 + a2i[(int) *s]);
+		} else
+		{
+			v = USHRT_MAX;
+			break;
+		}
+	}
 
 	return v;
 }
@@ -720,7 +747,16 @@ static short _bdf_atos(char *s)
 	}
 
 	for (v = 0; sbitset(ddigits, *s); s++)
-		v = (short) (v * 10 + a2i[(int) *s]);
+	{
+		if (v < ( SHRT_MAX - 9 ) / 10)
+		{
+			v = (short) (v * 10 + a2i[(int) *s]);
+		} else
+		{
+			v = SHRT_MAX;
+			break;
+		}
+	}
 
 	return (short) ((!neg) ? v : -v);
 }
