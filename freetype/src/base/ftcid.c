@@ -24,7 +24,6 @@
 
 
 ANONYMOUS_STRUCT_DUMMY(FT_RasterRec_)
-ANONYMOUS_STRUCT_DUMMY(FT_Size_InternalRec_)
 ANONYMOUS_STRUCT_DUMMY(FT_IncrementalRec_)
 
   /* documentation is in ftcid.h */
@@ -95,11 +94,11 @@ ANONYMOUS_STRUCT_DUMMY(FT_IncrementalRec_)
 
   FT_EXPORT_DEF( FT_Error )
   FT_Get_CID_From_Glyph_Index( FT_Face   face,
-                               FT_UInt   glyph_index,
-                               FT_UInt  *cid )
+                               FT_UInt32 glyph_index,
+                               FT_UInt32  *cid )
   {
     FT_Error  error = FT_ERR( Invalid_Argument );
-    FT_UInt   c = 0;
+    FT_UInt32   c = 0;
 
 
     if ( face )

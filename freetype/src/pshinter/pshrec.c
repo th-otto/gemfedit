@@ -28,8 +28,6 @@
 
 #include "pshnterr.h"
 
-ANONYMOUS_STRUCT_DUMMY(T1_HintsRec_)
-ANONYMOUS_STRUCT_DUMMY(T2_HintsRec_)
 
 #undef  FT_COMPONENT
 #define FT_COMPONENT  trace_pshrec

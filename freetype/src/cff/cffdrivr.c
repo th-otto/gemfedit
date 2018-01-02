@@ -46,13 +46,6 @@
 #include <freetype/internal/services/svprop.h>
 #include <freetype/ftcffdrv.h>
 
-ANONYMOUS_STRUCT_DUMMY(FT_RasterRec_)
-ANONYMOUS_STRUCT_DUMMY(FT_Size_InternalRec_)
-ANONYMOUS_STRUCT_DUMMY(FT_IncrementalRec_)
-ANONYMOUS_STRUCT_DUMMY(GX_BlendRec_)
-ANONYMOUS_STRUCT_DUMMY(T1_HintsRec_)
-ANONYMOUS_STRUCT_DUMMY(T2_HintsRec_)
-
   /*************************************************************************/
   /*                                                                       */
   /* The macro FT_COMPONENT is used in trace mode.  It is an implicit      */
@@ -157,7 +150,7 @@ ANONYMOUS_STRUCT_DUMMY(T2_HintsRec_)
   FT_CALLBACK_DEF( FT_Error )
   cff_glyph_load( FT_GlyphSlot  cffslot,      /* CFF_GlyphSlot */
                   FT_Size       cffsize,      /* CFF_Size      */
-                  FT_UInt       glyph_index,
+                  FT_UInt32     glyph_index,
                   FT_Int32      load_flags )
   {
     FT_Error       error;
@@ -197,8 +190,8 @@ ANONYMOUS_STRUCT_DUMMY(T2_HintsRec_)
 
   FT_CALLBACK_DEF( FT_Error )
   cff_get_advances( FT_Face    face,
-                    FT_UInt    start,
-                    FT_UInt    count,
+                    FT_UInt32  start,
+                    FT_UInt32  count,
                     FT_Int32   flags,
                     FT_Fixed*  advances )
   {
@@ -307,7 +300,7 @@ ANONYMOUS_STRUCT_DUMMY(T2_HintsRec_)
 
   static FT_Error
   cff_get_glyph_name( CFF_Face    face,
-                      FT_UInt     glyph_index,
+                      FT_UInt32   glyph_index,
                       FT_Pointer  buffer,
                       FT_UInt     buffer_max )
   {
@@ -607,11 +600,12 @@ ANONYMOUS_STRUCT_DUMMY(T2_HintsRec_)
    *
    */
   static FT_Error
-  cff_get_ros( CFF_Face      face,
+  cff_get_ros( FT_Face      face_,
                const char*  *registry,
                const char*  *ordering,
                FT_Int       *supplement )
   {
+  	CFF_Face      face = (CFF_Face)face_;
     FT_Error  error = FT_Err_Ok;
     CFF_Font  cff   = (CFF_Font)face->extra.data;
 
@@ -664,9 +658,10 @@ ANONYMOUS_STRUCT_DUMMY(T2_HintsRec_)
 
 
   static FT_Error
-  cff_get_is_cid( CFF_Face  face,
+  cff_get_is_cid( FT_Face  face_,
                   FT_Bool  *is_cid )
   {
+  	CFF_Face      face = (CFF_Face)face_;
     FT_Error  error = FT_Err_Ok;
     CFF_Font  cff   = (CFF_Font)face->extra.data;
 
@@ -687,10 +682,11 @@ ANONYMOUS_STRUCT_DUMMY(T2_HintsRec_)
 
 
   static FT_Error
-  cff_get_cid_from_glyph_index( CFF_Face  face,
-                                FT_UInt   glyph_index,
-                                FT_UInt  *cid )
+  cff_get_cid_from_glyph_index( FT_Face  face_,
+                                FT_UInt32 glyph_index,
+                                FT_UInt32 *cid )
   {
+  	CFF_Face      face = (CFF_Face)face_;
     FT_Error  error = FT_Err_Ok;
     CFF_Font  cff;
 
@@ -729,11 +725,8 @@ ANONYMOUS_STRUCT_DUMMY(T2_HintsRec_)
   FT_DEFINE_SERVICE_CIDREC(
     cff_service_cid_info,
 
-    (FT_CID_GetRegistryOrderingSupplementFunc)
       cff_get_ros,                             /* get_ros                  */
-    (FT_CID_GetIsInternallyCIDKeyedFunc)
       cff_get_is_cid,                          /* get_is_cid               */
-    (FT_CID_GetCIDFromGlyphIndexFunc)
       cff_get_cid_from_glyph_index             /* get_cid_from_glyph_index */
   )
 
@@ -1057,10 +1050,11 @@ ANONYMOUS_STRUCT_DUMMY(T2_HintsRec_)
    */
 
   static FT_Error
-  cff_hadvance_adjust( CFF_Face  face,
+  cff_hadvance_adjust( FT_Face  face_,
                        FT_UInt   gindex,
                        FT_Int   *avalue )
   {
+  	CFF_Face  face = (CFF_Face) face_;
     FT_Service_MetricsVariations  var = (FT_Service_MetricsVariations)face->var;
 
 
@@ -1069,8 +1063,9 @@ ANONYMOUS_STRUCT_DUMMY(T2_HintsRec_)
 
 
   static void
-  cff_metrics_adjust( CFF_Face  face )
+  cff_metrics_adjust( FT_Face  face_ )
   {
+    CFF_Face face = (CFF_Face)face_;
     FT_Service_MetricsVariations  var = (FT_Service_MetricsVariations)face->var;
 
 
@@ -1081,16 +1076,16 @@ ANONYMOUS_STRUCT_DUMMY(T2_HintsRec_)
   FT_DEFINE_SERVICE_METRICSVARIATIONSREC(
     cff_service_metrics_variations,
 
-    (FT_HAdvance_Adjust_Func)cff_hadvance_adjust,    /* hadvance_adjust */
-    (FT_LSB_Adjust_Func)     NULL,                   /* lsb_adjust      */
-    (FT_RSB_Adjust_Func)     NULL,                   /* rsb_adjust      */
+    cff_hadvance_adjust,    /* hadvance_adjust */
+    NULL,                   /* lsb_adjust      */
+    NULL,                   /* rsb_adjust      */
 
-    (FT_VAdvance_Adjust_Func)NULL,                   /* vadvance_adjust */
-    (FT_TSB_Adjust_Func)     NULL,                   /* tsb_adjust      */
-    (FT_BSB_Adjust_Func)     NULL,                   /* bsb_adjust      */
-    (FT_VOrg_Adjust_Func)    NULL,                   /* vorg_adjust     */
+    NULL,                   /* vadvance_adjust */
+    NULL,                   /* tsb_adjust      */
+    NULL,                   /* bsb_adjust      */
+    NULL,                   /* vorg_adjust     */
 
-    (FT_Metrics_Adjust_Func) cff_metrics_adjust      /* metrics_adjust  */
+    cff_metrics_adjust      /* metrics_adjust  */
   )
 #endif
 

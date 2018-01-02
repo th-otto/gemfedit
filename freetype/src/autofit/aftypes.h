@@ -223,7 +223,7 @@ extern void*  _af_debug_hints;
                                      AF_StyleMetrics  metrics );
 
   typedef FT_Error
-  (*AF_WritingSystem_ApplyHintsFunc)( FT_UInt          glyph_index,
+  (*AF_WritingSystem_ApplyHintsFunc)( FT_UInt32        glyph_index,
                                       AF_GlyphHints    hints,
                                       FT_Outline*      outline,
                                       AF_StyleMetrics  metrics );
@@ -401,8 +401,7 @@ extern void*  _af_debug_hints;
    */
 
 #undef  COVERAGE
-#define COVERAGE( name, NAME, description, \
-                  tag1, tag2, tag3, tag4 ) \
+#define COVERAGE( name, NAME, description, tag1, tag2, tag3, tag4 ) \
           AF_COVERAGE_ ## NAME,
 
 
@@ -531,13 +530,7 @@ extern void*  _af_debug_hints;
   FT_CALLBACK_TABLE const AF_StyleClassRec    \
   style_class;
 
-#define AF_DEFINE_STYLE_CLASS(          \
-          style_class,                  \
-          style,                        \
-          writing_system,               \
-          script,                       \
-          blue_stringset,               \
-          coverage )                    \
+#define AF_DEFINE_STYLE_CLASS(style_class, style, writing_system, script, blue_stringset, coverage )                    \
   FT_CALLBACK_TABLE_DEF                 \
   const AF_StyleClassRec  style_class = \
   {                                     \

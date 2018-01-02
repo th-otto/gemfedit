@@ -256,15 +256,7 @@ FT_BEGIN_HEADER
     { NULL, NULL }                                                          \
   };
 
-#define FT_DEFINE_SERVICEDESCREC8( class_,                                  \
-                                   serv_id_1, serv_data_1,                  \
-                                   serv_id_2, serv_data_2,                  \
-                                   serv_id_3, serv_data_3,                  \
-                                   serv_id_4, serv_data_4,                  \
-                                   serv_id_5, serv_data_5,                  \
-                                   serv_id_6, serv_data_6,                  \
-                                   serv_id_7, serv_data_7,                  \
-                                   serv_id_8, serv_data_8 )                 \
+#define FT_DEFINE_SERVICEDESCREC8( class_, serv_id_1, serv_data_1, serv_id_2, serv_data_2, serv_id_3, serv_data_3, serv_id_4, serv_data_4, serv_id_5, serv_data_5, serv_id_6, serv_data_6, serv_id_7, serv_data_7, serv_id_8, serv_data_8 )                 \
   static const FT_ServiceDescRec  class_[] =                                \
   {                                                                         \
     { serv_id_1, serv_data_1 },                                             \
@@ -278,16 +270,7 @@ FT_BEGIN_HEADER
     { NULL, NULL }                                                          \
   };
 
-#define FT_DEFINE_SERVICEDESCREC9( class_,                                  \
-                                   serv_id_1, serv_data_1,                  \
-                                   serv_id_2, serv_data_2,                  \
-                                   serv_id_3, serv_data_3,                  \
-                                   serv_id_4, serv_data_4,                  \
-                                   serv_id_5, serv_data_5,                  \
-                                   serv_id_6, serv_data_6,                  \
-                                   serv_id_7, serv_data_7,                  \
-                                   serv_id_8, serv_data_8,                  \
-                                   serv_id_9, serv_data_9 )                 \
+#define FT_DEFINE_SERVICEDESCREC9( class_, serv_id_1, serv_data_1, serv_id_2, serv_data_2, serv_id_3, serv_data_3, serv_id_4, serv_data_4, serv_id_5, serv_data_5, serv_id_6, serv_data_6, serv_id_7, serv_data_7, serv_id_8, serv_data_8, serv_id_9, serv_data_9 )                 \
   static const FT_ServiceDescRec  class_[] =                                \
   {                                                                         \
     { serv_id_1, serv_data_1 },                                             \
@@ -312,8 +295,9 @@ FT_BEGIN_HEADER
     FT_Memory  memory = library->memory;                                    \
                                                                             \
                                                                             \
-    if ( clazz )                                                            \
+    if ( clazz ) {                                                          \
       FT_FREE( clazz );                                                     \
+    }                                                                       \
   }                                                                         \
                                                                             \
   FT_Error                                                                  \
@@ -348,8 +332,9 @@ FT_BEGIN_HEADER
     FT_Memory  memory = library->memory;                                    \
                                                                             \
                                                                             \
-    if ( clazz )                                                            \
+    if ( clazz ) {                                                          \
       FT_FREE( clazz );                                                     \
+    }                                                                       \
   }                                                                         \
                                                                             \
   FT_Error                                                                  \
@@ -387,8 +372,9 @@ FT_BEGIN_HEADER
     FT_Memory  memory = library->memory;                                    \
                                                                             \
                                                                             \
-    if ( clazz )                                                            \
+    if ( clazz ) {                                                          \
       FT_FREE( clazz );                                                     \
+    }                                                                       \
   }                                                                         \
                                                                             \
   FT_Error                                                                  \
@@ -429,8 +415,9 @@ FT_BEGIN_HEADER
     FT_Memory  memory = library->memory;                                    \
                                                                             \
                                                                             \
-    if ( clazz )                                                            \
+    if ( clazz ) {                                                          \
       FT_FREE( clazz );                                                     \
+    }                                                                       \
   }                                                                         \
                                                                             \
   FT_Error                                                                  \
@@ -474,8 +461,9 @@ FT_BEGIN_HEADER
     FT_Memory  memory = library->memory;                                    \
                                                                             \
                                                                             \
-    if ( clazz )                                                            \
+    if ( clazz ) {                                                          \
       FT_FREE( clazz );                                                     \
+    }                                                                       \
   }                                                                         \
                                                                             \
   FT_Error                                                                  \
@@ -522,8 +510,9 @@ FT_BEGIN_HEADER
     FT_Memory  memory = library->memory;                                    \
                                                                             \
                                                                             \
-    if ( clazz )                                                            \
+    if ( clazz ) {                                                          \
       FT_FREE( clazz );                                                     \
+	}                                                                       \
   }                                                                         \
                                                                             \
   FT_Error                                                                  \
@@ -573,8 +562,9 @@ FT_BEGIN_HEADER
     FT_Memory  memory = library->memory;                                    \
                                                                             \
                                                                             \
-    if ( clazz )                                                            \
+    if ( clazz ) {                                                          \
       FT_FREE( clazz );                                                     \
+    }                                                                       \
   }                                                                         \
                                                                             \
   FT_Error                                                                  \
@@ -627,8 +617,9 @@ FT_BEGIN_HEADER
     FT_Memory  memory = library->memory;                                    \
                                                                             \
                                                                             \
-    if ( clazz )                                                            \
+    if ( clazz ) {                                                          \
       FT_FREE( clazz );                                                     \
+    }                                                                       \
   }                                                                         \
                                                                             \
   FT_Error                                                                  \
@@ -684,8 +675,9 @@ FT_BEGIN_HEADER
     FT_Memory  memory = library->memory;                                    \
                                                                             \
                                                                             \
-    if ( clazz )                                                            \
+    if ( clazz ) {                                                          \
       FT_FREE( clazz );                                                     \
+    }                                                                       \
   }                                                                         \
                                                                             \
   FT_Error                                                                  \

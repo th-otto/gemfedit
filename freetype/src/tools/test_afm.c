@@ -142,9 +142,13 @@
       dump_fontinfo( &fi );
 
       if ( fi.KernPairs )
+      {
         FT_FREE( fi.KernPairs );
+      }
       if ( fi.TrackKerns )
+      {
         FT_FREE( fi.TrackKerns );
+      }
     }
     else
       printf( "parse error\n" );

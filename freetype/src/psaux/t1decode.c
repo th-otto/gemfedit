@@ -302,7 +302,7 @@ ANONYMOUS_STRUCT_DUMMY(T1_HintsRec_)
 
     /* the seac operator must not be nested */
     decoder->seac = TRUE;
-    error = t1_decoder_parse_glyph( decoder, (FT_UInt)bchar_index );
+    error = t1_decoder_parse_glyph( decoder, (FT_UInt32)bchar_index );
     decoder->seac = FALSE;
     if ( error )
       goto Exit;
@@ -324,7 +324,7 @@ ANONYMOUS_STRUCT_DUMMY(T1_HintsRec_)
 
     /* the seac operator must not be nested */
     decoder->seac = TRUE;
-    error = t1_decoder_parse_glyph( decoder, (FT_UInt)achar_index );
+    error = t1_decoder_parse_glyph( decoder, (FT_UInt32)achar_index );
     decoder->seac = FALSE;
     if ( error )
       goto Exit;
@@ -1356,7 +1356,7 @@ ANONYMOUS_STRUCT_DUMMY(T1_HintsRec_)
 
 
               if ( val )
-                idx = *val;
+                idx = (FT_Int)*val;
               else
                 idx = -1;
             }
@@ -1572,7 +1572,7 @@ ANONYMOUS_STRUCT_DUMMY(T1_HintsRec_)
   /* parse a single Type 1 glyph */
   FT_LOCAL_DEF( FT_Error )
   t1_decoder_parse_glyph( T1_Decoder  decoder,
-                          FT_UInt     glyph )
+                          FT_UInt32   glyph )
   {
     return decoder->parse_callback( decoder, glyph );
   }

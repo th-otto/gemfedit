@@ -31,7 +31,6 @@
 #include "aflatin.h"
 #include "afcjk.h"
 
-
 #ifdef AF_CONFIG_OPTION_CJK
 
 #undef AF_CONFIG_OPTION_CJK_BLUE_HANI_VERT
@@ -87,7 +86,7 @@
 
     {
       FT_Error          error;
-      FT_ULong          glyph_index;
+      FT_UInt32         glyph_index;
       int               dim;
       AF_CJKMetricsRec  dummy[1];
       AF_Scaler         scaler = &dummy->root.scaler;
@@ -347,7 +346,7 @@
 
       while ( *p )
       {
-        FT_ULong    glyph_index;
+        FT_UInt32   glyph_index;
         FT_Pos      best_pos;       /* same as points.y or points.x, resp. */
         FT_Int      best_point;
         FT_Vector*  points;
@@ -577,7 +576,7 @@
 
     while ( *p )
     {
-      FT_ULong      glyph_index;
+      FT_UInt32     glyph_index;
       unsigned int  num_idx;
 
 
@@ -2255,7 +2254,7 @@
   /* Apply the complete hinting algorithm to a CJK glyph. */
 
   FT_LOCAL_DEF( FT_Error )
-  af_cjk_hints_apply( FT_UInt        glyph_index,
+  af_cjk_hints_apply( FT_UInt32      glyph_index,
                       AF_GlyphHints  hints,
                       FT_Outline*    outline,
                       AF_CJKMetrics  metrics )

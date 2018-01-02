@@ -468,7 +468,7 @@
     TT_Face   face = (TT_Face)ttface;
     FT_UInt   asize;
     FT_ULong  i;
-    FT_ULong  glyph_index = 0;
+    FT_UInt32 glyph_index = 0;
     FT_UInt   count       = 0;
 
 
@@ -660,7 +660,7 @@
       if ( FT_HAS_MULTIPLE_MASTERS( ttface ) &&
            instance_index > 0                )
       {
-        error = TT_Get_MM_Var( face, NULL );
+        error = TT_Get_MM_Var( (FT_Face)face, NULL );
         if ( error )
           goto Exit;
 
@@ -682,17 +682,19 @@
 
           /* set style name; if already set, replace it */
           if ( face->root.style_name )
+          {
             FT_FREE( face->root.style_name );
+          }
           face->root.style_name = style_name;
 
           /* finally, select the named instance */
-          error = TT_Set_Var_Design( face,
+          error = TT_Set_Var_Design( (FT_Face)face,
                                      face->blend->mmvar->num_axis,
                                      named_style->coords );
           if ( error )
             goto Exit;
 
-          tt_apply_mvar( face );
+          tt_apply_mvar( (FT_Face)face );
         }
       }
     }
@@ -761,7 +763,7 @@
     face->cvt_program_size  = 0;
 
 #ifdef TT_CONFIG_OPTION_GX_VAR_SUPPORT
-    tt_done_blend( face );
+    tt_done_blend( (FT_Face)face );
     face->blend = NULL;
 #endif
   }

@@ -1043,7 +1043,7 @@ FT_BEGIN_HEADER
   /*                                                                       */
   typedef FT_Error
   (*TT_Loader_StartGlyphFunc)( TT_Loader  loader,
-                               FT_UInt    glyph_index,
+                               FT_UInt32  glyph_index,
                                FT_ULong   offset,
                                FT_UInt    byte_count );
 
@@ -1642,10 +1642,10 @@ FT_BEGIN_HEADER
     FT_GlyphLoader   gloader;
 
     FT_ULong         load_flags;
-    FT_UInt          glyph_index;
+    FT_UInt32        glyph_index;
 
     FT_Stream        stream;
-    FT_Int           byte_len;
+    FT_UInt          byte_len;
 
     FT_Short         n_contours;
     FT_BBox          bbox;

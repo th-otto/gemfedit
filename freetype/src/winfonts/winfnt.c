@@ -32,7 +32,6 @@
 #include <freetype/internal/services/svfntfmt.h>
 
 ANONYMOUS_STRUCT_DUMMY(FT_RasterRec_)
-ANONYMOUS_STRUCT_DUMMY(FT_Size_InternalRec_)
 ANONYMOUS_STRUCT_DUMMY(FT_IncrementalRec_)
 
   /*************************************************************************/
@@ -994,7 +993,7 @@ ANONYMOUS_STRUCT_DUMMY(FT_IncrementalRec_)
   static FT_Error
   FNT_Load_Glyph( FT_GlyphSlot  slot,
                   FT_Size       size,
-                  FT_UInt       glyph_index,
+                  FT_UInt32     glyph_index,
                   FT_Int32      load_flags )
   {
     FNT_Face    face   = (FNT_Face)FT_SIZE_FACE( size );
@@ -1016,7 +1015,7 @@ ANONYMOUS_STRUCT_DUMMY(FT_IncrementalRec_)
     font = face->font;
 
     if ( !font                                                   ||
-         glyph_index >= (FT_UInt)( FT_FACE( face )->num_glyphs ) )
+         glyph_index >= (FT_UInt32)( FT_FACE( face )->num_glyphs ) )
     {
       error = FT_THROW( Invalid_Argument );
       goto Exit;

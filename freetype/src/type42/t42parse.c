@@ -211,8 +211,9 @@
 
   Exit:
     if ( error && !parser->in_memory )
+    {
       FT_FREE( parser->base_dict );
-
+	}
     return error;
   }
 
@@ -225,8 +226,9 @@
 
     /* free the base dictionary only when we have a disk stream */
     if ( !parser->in_memory )
+    {
       FT_FREE( parser->base_dict );
-
+	}
     parser->root.funcs.done( &parser->root );
   }
 
@@ -767,7 +769,9 @@
 
   Exit:
     if ( allocated )
+    {
       FT_FREE( string_buf );
+    }
   }
 
 
@@ -802,7 +806,7 @@
 
     if ( ft_isdigit( *parser->root.cursor ) )
     {
-      loader->num_glyphs = T1_ToInt( parser );
+      loader->num_glyphs = (FT_Int)T1_ToInt( parser );
       if ( parser->root.error )
         return;
       if ( loader->num_glyphs < 0 )
@@ -813,13 +817,13 @@
       }
 
       /* we certainly need more than 4 bytes per glyph */
-      if ( loader->num_glyphs > ( limit - parser->root.cursor ) >> 2 )
+      if ( loader->num_glyphs > (( limit - parser->root.cursor ) >> 2) )
       {
         FT_TRACE0(( "t42_parse_charstrings: adjusting number of glyphs"
                     " (from %d to %d)\n",
                     loader->num_glyphs,
                     ( limit - parser->root.cursor ) >> 2 ));
-        loader->num_glyphs = ( limit - parser->root.cursor ) >> 2;
+        loader->num_glyphs = (FT_Int)(( limit - parser->root.cursor ) >> 2);
       }
 
     }

@@ -234,11 +234,12 @@
   static FT_Short*
   ft_var_readpackeddeltas( FT_Stream  stream,
                            FT_ULong   size,
-                           FT_UInt    delta_cnt )
+                           FT_ULong   delta_cnt )
   {
     FT_Short  *deltas = NULL;
     FT_UInt    runcnt, cnt;
-    FT_UInt    i, j;
+    FT_ULong i;
+    FT_UInt j;
     FT_Memory  memory = stream->memory;
     FT_Error   error  = FT_Err_Ok;
 
@@ -366,8 +367,9 @@
         /* it right now since loading the `avar' table is optional.   */
 
         for ( j = i - 1; j >= 0; j-- )
+        {
           FT_FREE( blend->avar_segment[j].correspondence );
-
+		}
         FT_FREE( blend->avar_segment );
         blend->avar_segment = NULL;
         goto Exit;
@@ -393,7 +395,7 @@
 
 
   /* some macros we need */
-  #define FT_FIXED_ONE  ( (FT_Fixed)0x10000 )
+  #define FT_FIXED_ONE  ( (FT_Fixed)0x10000L )
 
   #define FT_fdot14ToFixed( x )                \
           ( (FT_Fixed)( (FT_ULong)(x) << 2 ) )
@@ -1055,19 +1057,21 @@
 
 
   FT_LOCAL_DEF( FT_Error )
-  tt_hadvance_adjust( TT_Face  face,
+  tt_hadvance_adjust( FT_Face  face_,
                       FT_UInt  gindex,
                       FT_Int  *avalue )
   {
+    TT_Face face = (TT_Face)face_;
     return tt_hvadvance_adjust( face, gindex, avalue, 0 );
   }
 
 
   FT_LOCAL_DEF( FT_Error )
-  tt_vadvance_adjust( TT_Face  face,
+  tt_vadvance_adjust( FT_Face  face_,
                       FT_UInt  gindex,
                       FT_Int  *avalue )
   {
+    TT_Face face = (TT_Face)face_;
     return tt_hvadvance_adjust( face, gindex, avalue, 1 );
   }
 
@@ -1077,17 +1081,17 @@
   /* all values are FT_Short or FT_UShort entities; */
   /* we treat them consistently as FT_Short         */
 #define GX_VALUE_CASE( tag, dflt )      \
-          case MVAR_TAG_ ## tag :       \
+          else if (mvar_tag == MVAR_TAG_ ## tag) {      \
             p = (FT_Short*)&face->dflt; \
-            break
+          }
 
 #define GX_GASP_CASE( idx )                                       \
-          case MVAR_TAG_GASP_ ## idx :                            \
+          else if (mvar_tag == MVAR_TAG_GASP_ ## idx) {                            \
             if ( idx < face->gasp.numRanges - 1 )                 \
               p = (FT_Short*)&face->gasp.gaspRanges[idx].maxPPEM; \
             else                                                  \
               p = NULL;                                           \
-            break
+          }
 
 
   static FT_Short*
@@ -1097,52 +1101,51 @@
     FT_Short*  p;
 
 
-    switch ( mvar_tag )
-    {
-      GX_GASP_CASE( 0 );
-      GX_GASP_CASE( 1 );
-      GX_GASP_CASE( 2 );
-      GX_GASP_CASE( 3 );
-      GX_GASP_CASE( 4 );
-      GX_GASP_CASE( 5 );
-      GX_GASP_CASE( 6 );
-      GX_GASP_CASE( 7 );
-      GX_GASP_CASE( 8 );
-      GX_GASP_CASE( 9 );
+      if (0) { ; }
+      GX_GASP_CASE( 0 )
+      GX_GASP_CASE( 1 )
+      GX_GASP_CASE( 2 )
+      GX_GASP_CASE( 3 )
+      GX_GASP_CASE( 4 )
+      GX_GASP_CASE( 5 )
+      GX_GASP_CASE( 6 )
+      GX_GASP_CASE( 7 )
+      GX_GASP_CASE( 8 )
+      GX_GASP_CASE( 9 )
 
-      GX_VALUE_CASE( CPHT, os2.sCapHeight );
-      GX_VALUE_CASE( HASC, os2.sTypoAscender );
-      GX_VALUE_CASE( HCLA, os2.usWinAscent );
-      GX_VALUE_CASE( HCLD, os2.usWinDescent );
-      GX_VALUE_CASE( HCOF, horizontal.caret_Offset );
-      GX_VALUE_CASE( HCRN, horizontal.caret_Slope_Run );
-      GX_VALUE_CASE( HCRS, horizontal.caret_Slope_Rise );
-      GX_VALUE_CASE( HDSC, os2.sTypoDescender );
-      GX_VALUE_CASE( HLGP, os2.sTypoLineGap );
-      GX_VALUE_CASE( SBXO, os2.ySubscriptXOffset);
-      GX_VALUE_CASE( SBXS, os2.ySubscriptXSize );
-      GX_VALUE_CASE( SBYO, os2.ySubscriptYOffset );
-      GX_VALUE_CASE( SBYS, os2.ySubscriptYSize );
-      GX_VALUE_CASE( SPXO, os2.ySuperscriptXOffset );
-      GX_VALUE_CASE( SPXS, os2.ySuperscriptXSize );
-      GX_VALUE_CASE( SPYO, os2.ySuperscriptYOffset );
-      GX_VALUE_CASE( SPYS, os2.ySuperscriptYSize );
-      GX_VALUE_CASE( STRO, os2.yStrikeoutPosition );
-      GX_VALUE_CASE( STRS, os2.yStrikeoutSize );
-      GX_VALUE_CASE( UNDO, postscript.underlinePosition );
-      GX_VALUE_CASE( UNDS, postscript.underlineThickness );
-      GX_VALUE_CASE( VASC, vertical.Ascender );
-      GX_VALUE_CASE( VCOF, vertical.caret_Offset );
-      GX_VALUE_CASE( VCRN, vertical.caret_Slope_Run );
-      GX_VALUE_CASE( VCRS, vertical.caret_Slope_Rise );
-      GX_VALUE_CASE( VDSC, vertical.Descender );
-      GX_VALUE_CASE( VLGP, vertical.Line_Gap );
-      GX_VALUE_CASE( XHGT, os2.sxHeight );
+      GX_VALUE_CASE( CPHT, os2.sCapHeight )
+      GX_VALUE_CASE( HASC, os2.sTypoAscender )
+      GX_VALUE_CASE( HCLA, os2.usWinAscent )
+      GX_VALUE_CASE( HCLD, os2.usWinDescent )
+      GX_VALUE_CASE( HCOF, horizontal.caret_Offset )
+      GX_VALUE_CASE( HCRN, horizontal.caret_Slope_Run )
+      GX_VALUE_CASE( HCRS, horizontal.caret_Slope_Rise )
+      GX_VALUE_CASE( HDSC, os2.sTypoDescender )
+      GX_VALUE_CASE( HLGP, os2.sTypoLineGap )
+      GX_VALUE_CASE( SBXO, os2.ySubscriptXOffset)
+      GX_VALUE_CASE( SBXS, os2.ySubscriptXSize )
+      GX_VALUE_CASE( SBYO, os2.ySubscriptYOffset )
+      GX_VALUE_CASE( SBYS, os2.ySubscriptYSize )
+      GX_VALUE_CASE( SPXO, os2.ySuperscriptXOffset )
+      GX_VALUE_CASE( SPXS, os2.ySuperscriptXSize )
+      GX_VALUE_CASE( SPYO, os2.ySuperscriptYOffset )
+      GX_VALUE_CASE( SPYS, os2.ySuperscriptYSize )
+      GX_VALUE_CASE( STRO, os2.yStrikeoutPosition )
+      GX_VALUE_CASE( STRS, os2.yStrikeoutSize )
+      GX_VALUE_CASE( UNDO, postscript.underlinePosition )
+      GX_VALUE_CASE( UNDS, postscript.underlineThickness )
+      GX_VALUE_CASE( VASC, vertical.Ascender )
+      GX_VALUE_CASE( VCOF, vertical.caret_Offset )
+      GX_VALUE_CASE( VCRN, vertical.caret_Slope_Run )
+      GX_VALUE_CASE( VCRS, vertical.caret_Slope_Rise )
+      GX_VALUE_CASE( VDSC, vertical.Descender )
+      GX_VALUE_CASE( VLGP, vertical.Line_Gap )
+      GX_VALUE_CASE( XHGT, os2.sxHeight )
 
-    default:
+      else {
       /* ignore unknown tag */
       p = NULL;
-    }
+      }
 
     return p;
   }
@@ -1306,8 +1309,9 @@
   /*    face :: The font face.                                             */
   /*                                                                       */
   FT_LOCAL_DEF( void )
-  tt_apply_mvar( TT_Face  face )
+  tt_apply_mvar( FT_Face  face_ )
   {
+    TT_Face face = (TT_Face)face_;
     GX_Blend  blend = face->blend;
     GX_Value  value, limit;
 
@@ -1935,9 +1939,10 @@
   /*    FreeType error code.  0 means success.                             */
   /*                                                                       */
   FT_LOCAL_DEF( FT_Error )
-  TT_Get_MM_Var( TT_Face      face,
+  TT_Get_MM_Var( FT_Face      face_,
                  FT_MM_Var*  *master )
   {
+    TT_Face face = (TT_Face)face_;
     FT_Stream            stream = face->root.stream;
     FT_Memory            memory = face->root.memory;
     FT_ULong             table_len;
@@ -2037,7 +2042,7 @@
       /* `num_instances' holds the number of all named instances, */
       /* including the default instance which might be missing    */
       /* in fvar's table of named instances                       */
-      num_instances = face->root.style_flags >> 16;
+      num_instances = (FT_UInt)(face->root.style_flags >> 16);
 
       /* cannot overflow 32-bit arithmetic because of the size limits */
       /* used in the `fvar' table validity check in `sfnt_init_face'  */
@@ -2172,7 +2177,7 @@
         SFNT_Service  sfnt = (SFNT_Service)face->sfnt;
 
         FT_Int   found, dummy1, dummy2;
-        FT_UInt  strid = 0xFFFFFFFFUL;
+        FT_UInt  strid = (FT_UInt)-1;
 
 
         /* the default instance is missing in array the   */
@@ -2298,7 +2303,7 @@
 
     if ( !face->blend )
     {
-      if ( FT_SET_ERROR( TT_Get_MM_Var( face, NULL ) ) )
+      if ( FT_SET_ERROR( TT_Get_MM_Var( (FT_Face)face, NULL ) ) )
         goto Exit;
     }
 
@@ -2481,10 +2486,11 @@
   /*    FreeType error code.  0 means success.                             */
   /*                                                                       */
   FT_LOCAL_DEF( FT_Error )
-  TT_Set_MM_Blend( TT_Face    face,
+  TT_Set_MM_Blend( FT_Face    face_,
                    FT_UInt    num_coords,
                    FT_Fixed*  coords )
   {
+    TT_Face face = (TT_Face)face_;
     return tt_set_mm_blend( face, num_coords, coords, 1 );
   }
 
@@ -2513,10 +2519,11 @@
   /*    FreeType error code.  0 means success.                             */
   /*                                                                       */
   FT_LOCAL_DEF( FT_Error )
-  TT_Get_MM_Blend( TT_Face    face,
+  TT_Get_MM_Blend( FT_Face    face_,
                    FT_UInt    num_coords,
                    FT_Fixed*  coords )
   {
+    TT_Face face = (TT_Face)face_;
     FT_Error  error = FT_Err_Ok;
     GX_Blend  blend;
     FT_UInt   i, nc;
@@ -2524,7 +2531,7 @@
 
     if ( !face->blend )
     {
-      if ( FT_SET_ERROR( TT_Get_MM_Var( face, NULL ) ) )
+      if ( FT_SET_ERROR( TT_Get_MM_Var( (FT_Face)face, NULL ) ) )
         return error;
     }
 
@@ -2583,10 +2590,11 @@
   /*    FreeType error code.  0 means success.                             */
   /*                                                                       */
   FT_LOCAL_DEF( FT_Error )
-  TT_Set_Var_Design( TT_Face    face,
+  TT_Set_Var_Design( FT_Face    face_,
                      FT_UInt    num_coords,
                      FT_Fixed*  coords )
   {
+    TT_Face face = (TT_Face)face_;
     FT_Error    error  = FT_Err_Ok;
     GX_Blend    blend;
     FT_MM_Var*  mmvar;
@@ -2601,7 +2609,7 @@
 
     if ( !face->blend )
     {
-      if ( FT_SET_ERROR( TT_Get_MM_Var( face, NULL ) ) )
+      if ( FT_SET_ERROR( TT_Get_MM_Var( (FT_Face)face, NULL ) ) )
         goto Exit;
     }
 
@@ -2670,10 +2678,11 @@
   /*    FreeType error code.  0~means success.                             */
   /*                                                                       */
   FT_LOCAL_DEF( FT_Error )
-  TT_Get_Var_Design( TT_Face    face,
+  TT_Get_Var_Design( FT_Face    face_,
                      FT_UInt    num_coords,
                      FT_Fixed*  coords )
   {
+    TT_Face face = (TT_Face)face_;
     FT_Error  error = FT_Err_Ok;
     GX_Blend  blend;
     FT_UInt   i, nc;
@@ -2681,7 +2690,7 @@
 
     if ( !face->blend )
     {
-      if ( FT_SET_ERROR( TT_Get_MM_Var( face, NULL ) ) )
+      if ( FT_SET_ERROR( TT_Get_MM_Var( (FT_Face)face, NULL ) ) )
         return error;
     }
 
@@ -2980,7 +2989,9 @@
       }
 
       if ( localpoints != ALL_POINTS )
+      {
         FT_FREE( localpoints );
+      }
       FT_FREE( deltas );
 
       offsetToData += tupleDataSize;
@@ -3227,7 +3238,7 @@
   /*                                                                       */
   FT_LOCAL_DEF( FT_Error )
   TT_Vary_Apply_Glyph_Deltas( TT_Face      face,
-                              FT_UInt      glyph_index,
+                              FT_UInt32    glyph_index,
                               FT_Outline*  outline,
                               FT_UInt      n_points )
   {
@@ -3539,7 +3550,9 @@
       }
 
       if ( localpoints != ALL_POINTS )
+      {
         FT_FREE( localpoints );
+      }
       FT_FREE( deltas_x );
       FT_FREE( deltas_y );
 
@@ -3552,7 +3565,9 @@
 
   Fail2:
     if ( sharedpoints != ALL_POINTS )
+    {
       FT_FREE( sharedpoints );
+    }
     FT_FREE( tuple_coords );
     FT_FREE( im_start_coords );
     FT_FREE( im_end_coords );
@@ -3579,12 +3594,13 @@
   /*    the MM machinery in case it isn't loaded yet.                      */
   /*                                                                       */
   FT_LOCAL_DEF( FT_Error )
-  tt_get_var_blend( TT_Face      face,
+  tt_get_var_blend( FT_Face      face_,
                     FT_UInt     *num_coords,
                     FT_Fixed*   *coords,
                     FT_Fixed*   *normalizedcoords,
                     FT_MM_Var*  *mm_var )
   {
+    TT_Face face = (TT_Face)face_;
     if ( face->blend )
     {
       if ( num_coords )
@@ -3632,8 +3648,9 @@
     if ( itemStore->varRegionList )
     {
       for ( i = 0; i < itemStore->regionCount; i++ )
+      {
         FT_FREE( itemStore->varRegionList[i].axisList );
-
+	  }
       FT_FREE( itemStore->varRegionList );
     }
   }
@@ -3648,8 +3665,9 @@
   /*    Free the blend internal data structure.                            */
   /*                                                                       */
   FT_LOCAL_DEF( void )
-  tt_done_blend( TT_Face  face )
+  tt_done_blend( FT_Face  face_ )
   {
+    TT_Face face = (TT_Face)face_;
     FT_Memory  memory = FT_FACE_MEMORY( face );
     GX_Blend   blend  = face->blend;
 
@@ -3670,7 +3688,9 @@
       if ( blend->avar_segment )
       {
         for ( i = 0; i < num_axes; i++ )
+        {
           FT_FREE( blend->avar_segment[i].correspondence );
+        }
         FT_FREE( blend->avar_segment );
       }
 

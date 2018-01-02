@@ -42,7 +42,6 @@ THE SOFTWARE.
 #include "bdferror.h"
 
 ANONYMOUS_STRUCT_DUMMY(FT_RasterRec_)
-ANONYMOUS_STRUCT_DUMMY(FT_Size_InternalRec_)
 ANONYMOUS_STRUCT_DUMMY(FT_IncrementalRec_)
 
   /*************************************************************************/
@@ -623,7 +622,7 @@ FT_CALLBACK_DEF(FT_Error) BDF_Size_Request(FT_Size size, FT_Size_Request req)
 
 
 
-FT_CALLBACK_DEF(FT_Error) BDF_Glyph_Load(FT_GlyphSlot slot, FT_Size size, FT_UInt glyph_index, FT_Int32 load_flags)
+FT_CALLBACK_DEF(FT_Error) BDF_Glyph_Load(FT_GlyphSlot slot, FT_Size size, FT_UInt32 glyph_index, FT_Int32 load_flags)
 {
 	BDF_Face bdf = (BDF_Face) FT_SIZE_FACE(size);
 
@@ -646,7 +645,7 @@ FT_CALLBACK_DEF(FT_Error) BDF_Glyph_Load(FT_GlyphSlot slot, FT_Size size, FT_UIn
 		goto Exit;
 	}
 
-	if (glyph_index >= (FT_UInt) face->num_glyphs)
+	if (glyph_index >= (FT_UInt32) face->num_glyphs)
 	{
 		error = FT_THROW(Invalid_Argument);
 		goto Exit;

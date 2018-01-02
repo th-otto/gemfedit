@@ -175,7 +175,7 @@ FT_BEGIN_HEADER
   (*FT_AutoHinter_GlyphLoadFunc)( FT_AutoHinter  hinter,
                                   FT_GlyphSlot   slot,
                                   FT_Size        size,
-                                  FT_UInt        glyph_index,
+                                  FT_UInt32      glyph_index,
                                   FT_Int32       load_flags );
 
 

@@ -79,7 +79,7 @@
 
 
   static FT_Error
-  af_indic_hints_apply( FT_UInt        glyph_index,
+  af_indic_hints_apply( FT_UInt32      glyph_index,
                         AF_GlyphHints  hints,
                         FT_Outline*    outline,
                         AF_CJKMetrics  metrics )

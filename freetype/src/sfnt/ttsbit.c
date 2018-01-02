@@ -394,10 +394,10 @@
         /* set the scale values (in 16.16 units) so advances */
         /* from the hmtx and vmtx table are scaled correctly */
         metrics->x_scale = FT_MulDiv( metrics->x_ppem,
-                                      64 * 0x10000,
+                                      64 * 0x10000L,
                                       face->header.Units_Per_EM );
         metrics->y_scale = FT_MulDiv( metrics->y_ppem,
-                                      64 * 0x10000,
+                                      64 * 0x10000L,
                                       face->header.Units_Per_EM );
 
         return FT_Err_Ok;
@@ -406,7 +406,7 @@
     case TT_SBIT_TABLE_TYPE_SBIX:
       {
         FT_Stream       stream = face->root.stream;
-        FT_UInt         offset;
+        FT_ULong        offset;
         FT_UShort       upem, ppem, resolution;
         TT_HoriHeader  *hori;
         FT_Pos          ppem_; /* to reduce casts */
@@ -681,7 +681,7 @@
   /* forward declaration */
   static FT_Error
   tt_sbit_decoder_load_image( TT_SBitDecoder  decoder,
-                              FT_UInt         glyph_index,
+                              FT_UInt32       glyph_index,
                               FT_Int          x_pos,
                               FT_Int          y_pos,
                               FT_UInt         recurse_count,
@@ -1249,7 +1249,7 @@
 
   static FT_Error
   tt_sbit_decoder_load_image( TT_SBitDecoder  decoder,
-                              FT_UInt         glyph_index,
+                              FT_UInt32       glyph_index,
                               FT_Int          x_pos,
                               FT_Int          y_pos,
                               FT_UInt         recurse_count,
@@ -1455,13 +1455,13 @@
   static FT_Error
   tt_face_load_sbix_image( TT_Face              face,
                            FT_ULong             strike_index,
-                           FT_UInt              glyph_index,
+                           FT_UInt32            glyph_index,
                            FT_Stream            stream,
                            FT_Bitmap           *map,
                            TT_SBit_MetricsRec  *metrics,
                            FT_Bool              metrics_only )
   {
-    FT_UInt   strike_offset, glyph_start, glyph_end;
+    FT_ULong   strike_offset, glyph_start, glyph_end;
     FT_Int    originOffsetX, originOffsetY;
     FT_Tag    graphicType;
     FT_Int    recurse_depth = 0;
@@ -1484,7 +1484,7 @@
     strike_offset = FT_NEXT_ULONG( p );
 
   retry:
-    if ( glyph_index > (FT_UInt)face->root.num_glyphs )
+    if ( glyph_index > (FT_UInt32)face->root.num_glyphs )
       return FT_THROW( Invalid_Argument );
 
     if ( strike_offset >= face->ebdt_size                          ||
@@ -1518,9 +1518,8 @@
 
     graphicType = FT_GET_TAG4();
 
-    switch ( graphicType )
+	if (graphicType == FT_MAKE_TAG( 'd', 'u', 'p', 'e' ))
     {
-    case FT_MAKE_TAG( 'd', 'u', 'p', 'e' ):
       if ( recurse_depth < 4 )
       {
         glyph_index = FT_GET_USHORT();
@@ -1529,9 +1528,8 @@
         goto retry;
       }
       error = FT_THROW( Invalid_File_Format );
-      break;
-
-    case FT_MAKE_TAG( 'p', 'n', 'g', ' ' ):
+	} else if (graphicType == FT_MAKE_TAG( 'p', 'n', 'g', ' ' ))
+	{
 #ifdef FT_CONFIG_OPTION_USE_PNG
       error = Load_SBit_Png( face->root.glyph,
                              0,
@@ -1546,17 +1544,14 @@
 #else
       error = FT_THROW( Unimplemented_Feature );
 #endif
-      break;
-
-    case FT_MAKE_TAG( 'j', 'p', 'g', ' ' ):
-    case FT_MAKE_TAG( 't', 'i', 'f', 'f' ):
-    case FT_MAKE_TAG( 'r', 'g', 'b', 'l' ): /* used on iOS 7.1 */
+	} else if (graphicType == FT_MAKE_TAG( 'j', 'p', 'g', ' ' ) ||
+		graphicType == FT_MAKE_TAG( 't', 'i', 'f', 'f' ) ||
+		graphicType == FT_MAKE_TAG( 'r', 'g', 'b', 'l' )) /* used on iOS 7.1 */
+	{
       error = FT_THROW( Unknown_File_Format );
-      break;
-
-    default:
+    } else
+    {
       error = FT_THROW( Unimplemented_Feature );
-      break;
     }
 
     FT_FRAME_EXIT();
@@ -1582,7 +1577,7 @@
   FT_LOCAL( FT_Error )
   tt_face_load_sbit_image( TT_Face              face,
                            FT_ULong             strike_index,
-                           FT_UInt              glyph_index,
+                           FT_UInt32            glyph_index,
                            FT_UInt              load_flags,
                            FT_Stream            stream,
                            FT_Bitmap           *map,

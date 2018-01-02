@@ -72,10 +72,6 @@
 #include "t1load.h"
 #include "t1errors.h"
 
-ANONYMOUS_STRUCT_DUMMY(FT_RasterRec_)
-ANONYMOUS_STRUCT_DUMMY(FT_Size_InternalRec_)
-ANONYMOUS_STRUCT_DUMMY(FT_IncrementalRec_)
-
 #ifdef FT_CONFIG_OPTION_INCREMENTAL
 #define IS_INCREMENTAL  (FT_Bool)( face->root.internal->incremental_interface != 0 )
 #else
@@ -623,8 +619,10 @@ ANONYMOUS_STRUCT_DUMMY(FT_IncrementalRec_)
 
       /* release axis names */
       for ( n = 0; n < num_axis; n++ )
+      {
         FT_FREE( blend->axis_names[n] );
-
+	  }
+	  
       /* release design map */
       for ( n = 0; n < num_axis; n++ )
       {
@@ -1508,7 +1506,7 @@ ANONYMOUS_STRUCT_DUMMY(FT_IncrementalRec_)
 
     /* we certainly need more than 8 bytes per subroutine */
     if ( parser->root.limit >= parser->root.cursor                     &&
-         num_subrs > ( parser->root.limit - parser->root.cursor ) >> 3 )
+         num_subrs > (( parser->root.limit - parser->root.cursor ) >> 3) )
     {
       /*
        * There are two possibilities.  Either the font contains an invalid
@@ -1529,7 +1527,7 @@ ANONYMOUS_STRUCT_DUMMY(FT_IncrementalRec_)
                   " (from %d to %d)\n",
                   num_subrs,
                   ( parser->root.limit - parser->root.cursor ) >> 3 ));
-      num_subrs = ( parser->root.limit - parser->root.cursor ) >> 3;
+      num_subrs = (FT_Int)(( parser->root.limit - parser->root.cursor ) >> 3);
 
       if ( !loader->subrs_hash )
       {
@@ -1601,7 +1599,7 @@ ANONYMOUS_STRUCT_DUMMY(FT_IncrementalRec_)
       /* counter specified for `T1_Add_Table' acts as the value      */
       if ( loader->subrs_hash )
       {
-        ft_hash_num_insert( idx, count, loader->subrs_hash, memory );
+        ft_hash_num_insert( (FT_UInt)idx, count, loader->subrs_hash, memory );
         idx = count;
       }
 
@@ -1635,11 +1633,11 @@ ANONYMOUS_STRUCT_DUMMY(FT_IncrementalRec_)
         psaux->t1_decrypt( temp, size, 4330 );
         size -= (FT_ULong)face->type1.private_dict.lenIV;
         error = T1_Add_Table( table, (FT_Int)idx,
-                              temp + face->type1.private_dict.lenIV, size );
+                              temp + face->type1.private_dict.lenIV, (FT_UInt)size );
         FT_FREE( temp );
       }
       else
-        error = T1_Add_Table( table, (FT_Int)idx, base, size );
+        error = T1_Add_Table( table, (FT_Int)idx, base, (FT_UInt)size );
       if ( error )
         goto Fail;
     }
@@ -1685,12 +1683,12 @@ ANONYMOUS_STRUCT_DUMMY(FT_IncrementalRec_)
     }
 
     /* we certainly need more than 8 bytes per glyph */
-    if ( num_glyphs > ( limit - cur ) >> 3 )
+    if ( num_glyphs > (( limit - cur ) >> 3) )
     {
       FT_TRACE0(( "parse_charstrings: adjusting number of glyphs"
                   " (from %d to %d)\n",
                   num_glyphs, ( limit - cur ) >> 3 ));
-      num_glyphs = ( limit - cur ) >> 3;
+      num_glyphs = (FT_Int)(( limit - cur ) >> 3);
     }
 
     /* some fonts like Optima-Oblique not only define the /CharStrings */
@@ -1836,11 +1834,11 @@ ANONYMOUS_STRUCT_DUMMY(FT_IncrementalRec_)
           psaux->t1_decrypt( temp, size, 4330 );
           size -= (FT_ULong)face->type1.private_dict.lenIV;
           error = T1_Add_Table( code_table, n,
-                                temp + face->type1.private_dict.lenIV, size );
+                                temp + face->type1.private_dict.lenIV, (FT_UInt)size );
           FT_FREE( temp );
         }
         else
-          error = T1_Add_Table( code_table, n, base, size );
+          error = T1_Add_Table( code_table, n, base, (FT_UInt)size );
         if ( error )
           goto Fail;
 

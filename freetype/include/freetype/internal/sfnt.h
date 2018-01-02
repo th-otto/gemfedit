@@ -207,7 +207,7 @@ FT_BEGIN_HEADER
   /*                                                                       */
   typedef FT_Error
   (*TT_Find_SBit_Image_Func)( TT_Face          face,
-                              FT_UInt          glyph_index,
+                              FT_UInt32        glyph_index,
                               FT_ULong         strike_index,
                               TT_SBit_Range   *arange,
                               TT_SBit_Strike  *astrike,
@@ -289,7 +289,7 @@ FT_BEGIN_HEADER
   typedef FT_Error
   (*TT_Load_SBit_Image_Func)( TT_Face              face,
                               FT_ULong             strike_index,
-                              FT_UInt              glyph_index,
+                              FT_UInt32            glyph_index,
                               FT_UInt              load_flags,
                               FT_Stream            stream,
                               FT_Bitmap           *amap,
@@ -369,7 +369,7 @@ FT_BEGIN_HEADER
   /*                                                                       */
   typedef FT_Error
   (*TT_Get_PS_Name_Func)( TT_Face      face,
-                          FT_UInt      idx,
+                          FT_UInt32    idx,
                           FT_String**  PSname );
 
 
@@ -423,7 +423,7 @@ FT_BEGIN_HEADER
   typedef void
   (*TT_Get_Metrics_Func)( TT_Face     face,
                           FT_Bool     vertical,
-                          FT_UInt     gindex,
+                          FT_UInt32   gindex,
                           FT_Short*   abearing,
                           FT_UShort*  aadvance );
 

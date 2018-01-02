@@ -11,7 +11,7 @@ gemfedit.prg
 .C[-8-]		; no 68881 fpu instructions
 .C[-L64]	; maximum identifier length
 
-.C[-I../include]
+.C[-I..\include]
 
 .L[-S=12000]
 =

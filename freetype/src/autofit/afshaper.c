@@ -540,7 +540,7 @@
   }
 
 
-  FT_ULong
+  FT_UInt32
   af_shaper_get_elem( AF_StyleMetrics  metrics,
                       void*            buf_,
                       unsigned int     idx,
@@ -649,7 +649,7 @@
   }
 
 
-  FT_ULong
+  FT_UInt32
   af_shaper_get_elem( AF_StyleMetrics  metrics,
                       void*            buf_,
                       unsigned int     idx,
@@ -657,7 +657,7 @@
                       FT_Long*         y_offset )
   {
     FT_Face   face        = metrics->globals->face;
-    FT_ULong  glyph_index = *(FT_ULong*)buf_;
+    FT_UInt32 glyph_index = *(FT_ULong*)buf_;
 
     FT_UNUSED( idx );
 

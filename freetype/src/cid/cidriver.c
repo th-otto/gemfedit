@@ -106,11 +106,12 @@
    *
    */
   static FT_Error
-  cid_get_ros( CID_Face      face,
+  cid_get_ros( FT_Face      face_,
                const char*  *registry,
                const char*  *ordering,
                FT_Int       *supplement )
   {
+  	CID_Face      face = (CID_Face)face_;
     CID_FaceInfo  cid = &face->cid;
 
 
@@ -128,9 +129,10 @@
 
 
   static FT_Error
-  cid_get_is_cid( CID_Face  face,
+  cid_get_is_cid( FT_Face  face_,
                   FT_Bool  *is_cid )
   {
+  	CID_Face      face = (CID_Face)face_;
     FT_Error  error = FT_Err_Ok;
     FT_UNUSED( face );
 
@@ -143,10 +145,11 @@
 
 
   static FT_Error
-  cid_get_cid_from_glyph_index( CID_Face  face,
-                                FT_UInt   glyph_index,
-                                FT_UInt  *cid )
+  cid_get_cid_from_glyph_index( FT_Face  face_,
+                                FT_UInt32 glyph_index,
+                                FT_UInt32  *cid )
   {
+  	CID_Face      face = (CID_Face)face_;
     FT_Error  error = FT_Err_Ok;
     FT_UNUSED( face );
 
@@ -160,11 +163,8 @@
 
   static const FT_Service_CIDRec  cid_service_cid_info =
   {
-    (FT_CID_GetRegistryOrderingSupplementFunc)
       cid_get_ros,                             /* get_ros                  */
-    (FT_CID_GetIsInternallyCIDKeyedFunc)
       cid_get_is_cid,                          /* get_is_cid               */
-    (FT_CID_GetCIDFromGlyphIndexFunc)
       cid_get_cid_from_glyph_index             /* get_cid_from_glyph_index */
   };
 

@@ -218,7 +218,7 @@
   FT_LOCAL_DEF( void )
   tt_face_get_metrics( TT_Face     face,
                        FT_Bool     vertical,
-                       FT_UInt     gindex,
+                       FT_UInt32   gindex,
                        FT_Short   *abearing,
                        FT_UShort  *aadvance )
   {
@@ -305,16 +305,16 @@
       if ( vertical )
       {
         if ( var->vadvance_adjust )
-          var->vadvance_adjust( f, gindex, &a );
+          var->vadvance_adjust( f, (FT_UInt)gindex, &a );
         if ( var->tsb_adjust )
-          var->tsb_adjust( f, gindex, &b );
+          var->tsb_adjust( f, (FT_UInt)gindex, &b );
       }
       else
       {
         if ( var->hadvance_adjust )
-          var->hadvance_adjust( f, gindex, &a );
+          var->hadvance_adjust( f, (FT_UInt)gindex, &a );
         if ( var->lsb_adjust )
-          var->lsb_adjust( f, gindex, &b );
+          var->lsb_adjust( f, (FT_UInt)gindex, &b );
       }
 
       *aadvance = (FT_UShort)a;

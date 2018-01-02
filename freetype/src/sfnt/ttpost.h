@@ -31,7 +31,7 @@ FT_BEGIN_HEADER
 
   FT_LOCAL( FT_Error )
   tt_face_get_ps_name( TT_Face      face,
-                       FT_UInt      idx,
+                       FT_UInt32    idx,
                        FT_String**  PSname );
 
   FT_LOCAL( void )

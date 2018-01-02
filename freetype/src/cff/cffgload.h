@@ -137,7 +137,7 @@ FT_BEGIN_HEADER
                                    FT_Int    charcode );
   FT_LOCAL( FT_Error )
   cff_get_glyph_data( TT_Face    face,
-                      FT_UInt    glyph_index,
+                      FT_UInt32  glyph_index,
                       FT_Byte**  pointer,
                       FT_ULong*  length );
   FT_LOCAL( void )
@@ -212,7 +212,7 @@ FT_BEGIN_HEADER
   FT_LOCAL( FT_Error )
   cff_decoder_prepare( CFF_Decoder*  decoder,
                        CFF_Size      size,
-                       FT_UInt       glyph_index );
+                       FT_UInt32     glyph_index );
 
 #if 0  /* unused until we support pure CFF fonts */
 
@@ -234,7 +234,7 @@ FT_BEGIN_HEADER
   FT_LOCAL( FT_Error )
   cff_slot_load( CFF_GlyphSlot  glyph,
                  CFF_Size       size,
-                 FT_UInt        glyph_index,
+                 FT_UInt32      glyph_index,
                  FT_Int32       load_flags );
 
 

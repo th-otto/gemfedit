@@ -2709,7 +2709,7 @@
 
     while ( P )
     {
-      P->countL = P->start - min_Y;
+      P->countL = (Int)(P->start - min_Y);
       P = P->link;
     }
 

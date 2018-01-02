@@ -154,8 +154,8 @@ FT_BEGIN_HEADER
    */
   FT_EXPORT( FT_Error )
   FT_Get_CID_From_Glyph_Index( FT_Face   face,
-                               FT_UInt   glyph_index,
-                               FT_UInt  *cid );
+                               FT_UInt32 glyph_index,
+                               FT_UInt32 *cid );
 
   /* */
 

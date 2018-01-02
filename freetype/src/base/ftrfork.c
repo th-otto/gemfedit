@@ -573,10 +573,13 @@
     error = raccess_guess_linux_double_from_file_name( library, newpath,
                                                        result_offset );
     if ( !error )
+    {
       *result_file_name = newpath;
-    else
+    } else
+    {
       FT_FREE( newpath );
-
+	}
+	
     return error;
   }
 
@@ -729,10 +732,13 @@
     error = raccess_guess_linux_double_from_file_name( library, newpath,
                                                        result_offset );
     if ( !error )
+    {
       *result_file_name = newpath;
-    else
+    } else
+    {
       FT_FREE( newpath );
-
+	}
+	
     return error;
   }
 
@@ -761,10 +767,12 @@
     error = raccess_guess_linux_double_from_file_name( library, newpath,
                                                        result_offset );
     if ( !error )
+    {
       *result_file_name = newpath;
-    else
+    } else
+    {
       FT_FREE( newpath );
-
+	}
     return error;
   }
 

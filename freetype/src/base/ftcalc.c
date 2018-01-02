@@ -781,13 +781,13 @@
     if ( x == 0 )
     {
       if ( y > 0 )
-        vector->y = sy * 0x10000;
+        vector->y = sy * 0x10000L;
       return y;
     }
     else if ( y == 0 )
     {
       if ( x > 0 )
-        vector->x = sx * 0x10000;
+        vector->x = sx * 0x10000L;
       return x;
     }
 
@@ -818,7 +818,7 @@
     }
 
     /* lower linear approximation for reciprocal length minus one */
-    b = 0x10000 - (FT_Int32)l;
+    b = 0x10000L - (FT_Int32)l;
 
     x_ = (FT_Int32)x;
     y_ = (FT_Int32)y;
@@ -833,7 +833,7 @@
       /* On two's complement systems, converting to signed gives the   */
       /* difference with 2^32 even if the expression wraps around.     */
       z = -(FT_Int32)( u * u + v * v ) / 0x200;
-      z = z * ( ( 0x10000 + b ) >> 8 ) / 0x10000;
+      z = z * ( ( 0x10000L + b ) >> 8 ) / 0x10000L;
 
       b += z;
 
@@ -845,7 +845,7 @@
     /* Conversion to signed helps to recover from likely wrap around */
     /* in calculating the prenormalized length, because it gives the */
     /* correct difference with 2^32 on two's complement systems.     */
-    l = (FT_UInt32)( 0x10000 + (FT_Int32)( u * x + v * y ) / 0x10000 );
+    l = (FT_UInt32)( 0x10000L + (FT_Int32)( u * x + v * y ) / 0x10000L );
     if ( shift > 0 )
       l = ( l + ( 1 << ( shift - 1 ) ) ) >> shift;
     else

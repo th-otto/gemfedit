@@ -46,7 +46,7 @@ FT_BEGIN_HEADER
                          void*            buf_,
                          unsigned int*    count );
 
-  FT_ULong
+  FT_UInt32
   af_shaper_get_elem( AF_StyleMetrics  metrics,
                       void*            buf_,
                       unsigned int     idx,

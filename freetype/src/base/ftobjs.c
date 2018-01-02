@@ -218,10 +218,13 @@ ANONYMOUS_STRUCT_DUMMY(GX_BlendRec_)
       error = FT_THROW( Invalid_Argument );
 
     if ( error )
+    {
       FT_FREE( stream );
-    else
+    } else
+    {
       stream->memory = memory;  /* just to be certain */
-
+	}
+	
     *astream = stream;
 
   Exit:
@@ -241,7 +244,9 @@ ANONYMOUS_STRUCT_DUMMY(GX_BlendRec_)
       FT_Stream_Close( stream );
 
       if ( !external )
+      {
         FT_FREE( stream );
+      }
     }
   }
 
@@ -338,10 +343,12 @@ ANONYMOUS_STRUCT_DUMMY(GX_BlendRec_)
 
 
     if ( slot->internal->flags & FT_GLYPH_OWN_BITMAP )
+    {
       FT_FREE( slot->bitmap.buffer );
-    else
+    } else
+    {
       slot->internal->flags |= FT_GLYPH_OWN_BITMAP;
-
+	}
     (void)FT_ALLOC( slot->bitmap.buffer, size );
     return error;
   }
@@ -605,7 +612,7 @@ ANONYMOUS_STRUCT_DUMMY(GX_BlendRec_)
 
   FT_EXPORT_DEF( FT_Error )
   FT_Load_Glyph( FT_Face   face,
-                 FT_UInt   glyph_index,
+                 FT_UInt32 glyph_index,
                  FT_Int32  load_flags )
   {
     FT_Error      error;
@@ -864,13 +871,13 @@ ANONYMOUS_STRUCT_DUMMY(GX_BlendRec_)
                 FT_ULong  char_code,
                 FT_Int32  load_flags )
   {
-    FT_UInt  glyph_index;
+    FT_UInt32  glyph_index;
 
 
     if ( !face )
       return FT_THROW( Invalid_Face_Handle );
 
-    glyph_index = (FT_UInt)char_code;
+    glyph_index = char_code;
     if ( face->charmap )
       glyph_index = FT_Get_Char_Index( face, char_code );
 
@@ -2070,7 +2077,9 @@ ANONYMOUS_STRUCT_DUMMY(GX_BlendRec_)
     for (i = 0; i < FT_RACCESS_N_RULES; i++)
     {
       if ( file_names[i] )
+      {
         FT_FREE( file_names[i] );
+      }
     }
 
     /* Caller (load_mac_face) requires FT_Err_Unknown_File_Format. */
@@ -3904,7 +3913,7 @@ ANONYMOUS_STRUCT_DUMMY(GX_BlendRec_)
 
   FT_EXPORT_DEF( FT_Error )
   FT_Get_Glyph_Name( FT_Face     face,
-                     FT_UInt     glyph_index,
+                     FT_UInt32   glyph_index,
                      FT_Pointer  buffer,
                      FT_UInt     buffer_max )
   {
@@ -4228,8 +4237,10 @@ ANONYMOUS_STRUCT_DUMMY(GX_BlendRec_)
 
   Fail:
     if ( error )
+    {
       FT_FREE( node );
-
+	}
+	
   Exit:
     return error;
   }
@@ -4986,9 +4997,9 @@ ANONYMOUS_STRUCT_DUMMY(GX_BlendRec_)
 #ifdef FT_CONFIG_OPTION_PIC
   Fail:
     ft_pic_container_destroy( library );
-#endif
     FT_FREE( library );
     return error;
+#endif
   }
 
 

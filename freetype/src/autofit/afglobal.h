@@ -151,7 +151,7 @@ FT_BEGIN_HEADER
 
   FT_LOCAL( FT_Error )
   af_face_globals_get_metrics( AF_FaceGlobals    globals,
-                               FT_UInt           gindex,
+                               FT_UInt32         gindex,
                                FT_UInt           options,
                                AF_StyleMetrics  *ametrics );
 
@@ -160,7 +160,7 @@ FT_BEGIN_HEADER
 
   FT_LOCAL_DEF( FT_Bool )
   af_face_globals_is_digit( AF_FaceGlobals  globals,
-                            FT_UInt         gindex );
+                            FT_UInt32         gindex );
 
   /* */
 

@@ -78,7 +78,7 @@
 
     {
       FT_Error             error;
-      FT_UInt              glyph_index;
+      FT_UInt32            glyph_index;
       int                  dim;
       AF_LatinMetricsRec   dummy[1];
       AF_Scaler            scaler = &dummy->root.scaler;
@@ -226,7 +226,7 @@
 
       for ( ; p < limit && *p; p++ )
       {
-        FT_UInt     glyph_index;
+        FT_UInt32   glyph_index;
         FT_Int      best_point, best_y, best_first, best_last;
         FT_Vector*  points;
         FT_Bool     round;
@@ -447,7 +447,7 @@
     /* digit `0' is 0x30 in all supported charmaps                 */
     for ( i = 0x30; i <= 0x39; i++ )
     {
-      FT_UInt  glyph_index;
+      FT_UInt32 glyph_index;
 
 
       glyph_index = FT_Get_Char_Index( face, i );
@@ -2324,7 +2324,7 @@
 
 
   static FT_Error
-  af_latin2_hints_apply( FT_UInt          glyph_index,
+  af_latin2_hints_apply( FT_UInt32        glyph_index,
                          AF_GlyphHints    hints,
                          FT_Outline*      outline,
                          AF_LatinMetrics  metrics )

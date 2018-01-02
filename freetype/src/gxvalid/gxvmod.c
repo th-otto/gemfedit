@@ -227,8 +227,10 @@
 
   Exit:
     if ( error )
+    {
       FT_FREE( ckern );
-
+	}
+	
     return error;
   }
 

@@ -1,4 +1,4 @@
-spdview.prg
+ttfview.prg
 .C[-A-]		; no ANSI, because we need to use cdecl keyword
 .C[-P]		; use long calls
 .C[-M]		; no string merging
@@ -12,26 +12,14 @@ spdview.prg
 .C[-L64]	; maximum identifier length
 
 .C[-I..\include]
-.C[-I..\speedo]
+
+.C[-I..\freetype\include]
 
 .L[-S=12000]
 =
 cstartv.o
-spdview.c
-
-..\speedo\do_char.c
-..\speedo\do_trns.c
-..\speedo\out_util.c
-..\speedo\out_scrn.c
-..\speedo\out_bl2d.c
-..\speedo\out_blk.c
-..\speedo\out_outl.c
-..\speedo\keys.c
-..\speedo\reset.c
-..\speedo\set_spcs.c
-..\speedo\set_trns.c
-..\speedo\sp_err.c
-..\speedo\bics2uni.c
+ttfview.c
+freetype.prj
 
 pcgemlib.lib
 pcextlib.lib

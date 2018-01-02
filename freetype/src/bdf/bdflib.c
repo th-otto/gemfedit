@@ -1622,8 +1622,9 @@ static FT_Error _bdf_parse_glyphs(char *line, unsigned long linelen, unsigned lo
 
   Exit:
 	if (error && (p->flags & BDF_GLYPH_))
+	{
 		FT_FREE(p->glyph_name);
-
+	}
 	return error;
 }
 
@@ -2189,7 +2190,9 @@ FT_LOCAL_DEF(void) bdf_free_font(bdf_font_t * font)
 	for (i = 0; i < font->props_size; i++)
 	{
 		if (font->props[i].format == BDF_ATOM)
+		{
 			FT_FREE(font->props[i].value.atom);
+		}
 	}
 
 	FT_FREE(font->props);
@@ -2227,7 +2230,9 @@ FT_LOCAL_DEF(void) bdf_free_font(bdf_font_t * font)
 	{
 		FT_FREE(prop->name);
 		if (prop->format == BDF_ATOM)
+		{
 			FT_FREE(prop->value.atom);
+		}
 	}
 
 	FT_FREE(font->user_props);

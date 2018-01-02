@@ -214,7 +214,7 @@
   af_loader_load_glyph( AF_Loader  loader,
                         AF_Module  module,
                         FT_Face    face,
-                        FT_UInt    glyph_index,
+                        FT_UInt32  glyph_index,
                         FT_Int32   load_flags )
   {
     FT_Error  error;
@@ -660,7 +660,7 @@
     {
       FT_Int  xdelta = x2 - x1;
       FT_Int  ydelta = y2 - y1;
-      FT_Int  x      = stem_width_per_1000 -
+      FT_Fixed  x      = stem_width_per_1000 -
                        FT_DivFix( af_intToFixed( x1 ), ppem );
 
 
@@ -677,7 +677,7 @@
       {
         FT_Int  xdelta = x3 - x2;
         FT_Int  ydelta = y3 - y2;
-        FT_Int  x      = stem_width_per_1000 -
+        FT_Fixed x      = stem_width_per_1000 -
                          FT_DivFix( af_intToFixed( x2 ), ppem );
 
 
@@ -695,7 +695,7 @@
       {
         FT_Int  xdelta = x4 - x3;
         FT_Int  ydelta = y4 - y3;
-        FT_Int  x      = stem_width_per_1000 -
+        FT_Fixed  x      = stem_width_per_1000 -
                          FT_DivFix( af_intToFixed( x3 ), ppem );
 
 

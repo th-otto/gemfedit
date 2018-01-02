@@ -1913,8 +1913,9 @@
     }
 
     if ( strongs != strongs_0 )
+    {
       FT_FREE( strongs );
-
+	}
 #endif /* 1 */
 
   }

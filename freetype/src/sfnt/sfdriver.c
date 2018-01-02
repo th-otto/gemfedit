@@ -162,7 +162,7 @@
 
   static FT_Error
   sfnt_get_glyph_name( FT_Face     face,
-                       FT_UInt     glyph_index,
+                       FT_UInt32   glyph_index,
                        FT_Pointer  buffer,
                        FT_UInt     buffer_max )
   {
@@ -281,9 +281,9 @@
   fmix32( FT_UInt32  h )
   {
     h ^= h >> 16;
-    h *= 0x85ebca6b;
+    h *= 0x85ebca6bUL;
     h ^= h >> 13;
-    h *= 0xc2b2ae35;
+    h *= 0xc2b2ae35UL;
     h ^= h >> 16;
 
     return h;
@@ -304,10 +304,10 @@
     FT_UInt32  h3 = seed;
     FT_UInt32  h4 = seed;
 
-    const FT_UInt32  c1 = 0x239b961b;
-    const FT_UInt32  c2 = 0xab0e9789;
-    const FT_UInt32  c3 = 0x38b34ae5;
-    const FT_UInt32  c4 = 0xa1e38b93;
+    const FT_UInt32  c1 = 0x239b961bUL;
+    const FT_UInt32  c2 = 0xab0e9789UL;
+    const FT_UInt32  c3 = 0x38b34ae5UL;
+    const FT_UInt32  c4 = 0xa1e38b93UL;
 
     const FT_UInt32*  blocks = (const FT_UInt32*)( data + nblocks * 16 );
 
@@ -329,7 +329,7 @@
 
       h1  = ROTL32( h1, 19 );
       h1 += h2;
-      h1  = h1 * 5 + 0x561ccd1b;
+      h1  = h1 * 5 + 0x561ccd1bUL;
 
       k2 *= c2;
       k2  = ROTL32( k2, 16 );
@@ -338,7 +338,7 @@
 
       h2  = ROTL32( h2, 17 );
       h2 += h3;
-      h2  = h2 * 5 + 0x0bcaa747;
+      h2  = h2 * 5 + 0x0bcaa747UL;
 
       k3 *= c3;
       k3  = ROTL32( k3, 17 );
@@ -347,7 +347,7 @@
 
       h3  = ROTL32( h3, 15 );
       h3 += h4;
-      h3  = h3 * 5 + 0x96cd1c35;
+      h3  = h3 * 5 + 0x96cd1c35UL;
 
       k4 *= c4;
       k4  = ROTL32( k4, 18 );
@@ -356,7 +356,7 @@
 
       h4  = ROTL32( h4, 13 );
       h4 += h1;
-      h4  = h4 * 5 + 0x32ac3b17;
+      h4  = h4 * 5 + 0x32ac3b17UL;
     }
 
     {
@@ -372,53 +372,68 @@
       {
       case 15:
         k4 ^= (FT_UInt32)tail[14] << 16;
+        /* fall through */
       case 14:
         k4 ^= (FT_UInt32)tail[13] << 8;
+        /* fall through */
       case 13:
         k4 ^= (FT_UInt32)tail[12];
         k4 *= c4;
         k4  = ROTL32( k4, 18 );
         k4 *= c1;
         h4 ^= k4;
+        /* fall through */
 
       case 12:
         k3 ^= (FT_UInt32)tail[11] << 24;
+        /* fall through */
       case 11:
         k3 ^= (FT_UInt32)tail[10] << 16;
+        /* fall through */
       case 10:
         k3 ^= (FT_UInt32)tail[9] << 8;
+        /* fall through */
       case 9:
         k3 ^= (FT_UInt32)tail[8];
         k3 *= c3;
         k3  = ROTL32( k3, 17 );
         k3 *= c4;
         h3 ^= k3;
+        /* fall through */
 
       case 8:
         k2 ^= (FT_UInt32)tail[7] << 24;
+        /* fall through */
       case 7:
         k2 ^= (FT_UInt32)tail[6] << 16;
+        /* fall through */
       case 6:
         k2 ^= (FT_UInt32)tail[5] << 8;
+        /* fall through */
       case 5:
         k2 ^= (FT_UInt32)tail[4];
         k2 *= c2;
         k2  = ROTL32( k2, 16 );
         k2 *= c3;
         h2 ^= k2;
+        /* fall through */
 
       case 4:
         k1 ^= (FT_UInt32)tail[3] << 24;
+        /* fall through */
       case 3:
         k1 ^= (FT_UInt32)tail[2] << 16;
+        /* fall through */
       case 2:
         k1 ^= (FT_UInt32)tail[1] << 8;
+        /* fall through */
       case 1:
         k1 ^= (FT_UInt32)tail[0];
         k1 *= c1;
         k1  = ROTL32( k1, 15 );
         k1 *= c2;
         h1 ^= k1;
+        break;
       }
     }
 
@@ -650,15 +665,15 @@
    */
 
   static char*
-  fixed2float( FT_Int  fixed,
+  fixed2float( FT_Fixed  fixed,
                char*   buf )
   {
     char*  p;
     char*  q;
     char   tmp[5];
 
-    FT_Int  int_part;
-    FT_Int  frac_part;
+    FT_Fixed  int_part;
+    FT_Fixed  frac_part;
 
     FT_Int  i;
 
@@ -737,16 +752,16 @@
     if ( p - q == 5 )  /* five digits? */
     {
       /* take the representation that has zero as the last digit */
-      if ( frac_part < 34480 * 10 &&
+      if ( frac_part < 34480L * 10 &&
            *p == '1'              )
         *p = '0';
 
       /* otherwise use the one with less error */
-      else if ( frac_part == 17232 * 10 &&
+      else if ( frac_part == 17232L * 10 &&
                 *p & 1                  )
         *p -= 1;
 
-      else if ( frac_part < 17232 * 10 &&
+      else if ( frac_part < 17232L * 10 &&
                 *p != '0'              )
         *p -= 1;
     }
@@ -836,7 +851,7 @@
                                    sfnt_is_alphanumeric,
                                    0 );
 
-      len = ft_strlen( result );
+      len = (FT_UInt)ft_strlen( result );
 
       /* sanitize if necessary; we reserve space for 36 bytes (a 128bit  */
       /* checksum as a hex number, preceded by `-' and followed by three */
@@ -875,7 +890,7 @@
 
       /* try first to load the name string with index `postScriptNameID' */
       if ( psid == 6                      ||
-           ( psid > 255 && psid < 32768 ) )
+           ( psid > 255 && psid < 32768L ) )
         (void)sfnt->get_name( face, (FT_UShort)psid, &ps_name );
 
       if ( ps_name )
@@ -980,13 +995,13 @@
       /* the PS name is too long; replace the part after the prefix with */
       /* a checksum; we use MurmurHash 3 with a hash length of 128 bit   */
 
-      FT_UInt32  seed = 123456789;
+      FT_UInt32  seed = 123456789UL;
 
       FT_UInt32   hash[4];
       FT_UInt32*  h;
 
 
-      murmur_hash_3_128( result, p - result, seed, hash );
+      murmur_hash_3_128( result, (unsigned int)(p - result), seed, hash );
 
       p = result + face->var_postscript_prefix_len;
       *p++ = '-';

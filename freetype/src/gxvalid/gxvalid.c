@@ -21,6 +21,9 @@
 #include <ft2bld.h>
 #include <ft2build.h>
 
+ANONYMOUS_STRUCT_DUMMY(FT_RasterRec_)
+ANONYMOUS_STRUCT_DUMMY(FT_IncrementalRec_)
+
 #include "gxvbsln.c"
 #include "gxvcommn.c"
 #include "gxvfeat.c"

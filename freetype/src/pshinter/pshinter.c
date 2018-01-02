@@ -20,6 +20,9 @@
 #include <ft2bld.h>
 #include <ft2build.h>
 
+ANONYMOUS_STRUCT_DUMMY(T1_HintsRec_)
+ANONYMOUS_STRUCT_DUMMY(T2_HintsRec_)
+
 #include "pshalgo.c"
 #include "pshglob.c"
 #include "pshmod.c"

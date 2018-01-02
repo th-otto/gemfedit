@@ -27,7 +27,6 @@
 
 #include "ftsmerrs.h"
 
-ANONYMOUS_STRUCT_DUMMY(FT_Size_InternalRec_)
 ANONYMOUS_STRUCT_DUMMY(FT_IncrementalRec_)
 
 

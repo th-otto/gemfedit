@@ -57,7 +57,7 @@
 
   static FT_Error
   t1_get_glyph_name( T1_Face     face,
-                     FT_UInt     glyph_index,
+                     FT_UInt32   glyph_index,
                      FT_Pointer  buffer,
                      FT_UInt     buffer_max )
   {
@@ -285,7 +285,7 @@
       break;
 
     case PS_DICT_CHAR_STRING_KEY:
-      if ( idx < (FT_UInt)type1->num_glyphs )
+      if ( idx < (FT_UInt32)type1->num_glyphs )
       {
         retval = ft_strlen( type1->glyph_names[idx] ) + 1;
         if ( value && value_len >= retval )
@@ -297,7 +297,7 @@
       break;
 
     case PS_DICT_CHAR_STRING:
-      if ( idx < (FT_UInt)type1->num_glyphs )
+      if ( idx < (FT_UInt32)type1->num_glyphs )
       {
         retval = type1->charstrings_len[idx] + 1;
         if ( value && value_len >= retval )
@@ -349,7 +349,7 @@
 
           if ( val )
           {
-            idx = *val;
+            idx = (FT_UInt)*val;
             ok  = 1;
           }
         }

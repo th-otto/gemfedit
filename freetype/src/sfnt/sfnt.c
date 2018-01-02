@@ -20,6 +20,10 @@
 #include <ft2bld.h>
 #include <ft2build.h>
 
+ANONYMOUS_STRUCT_DUMMY(FT_RasterRec_)
+ANONYMOUS_STRUCT_DUMMY(FT_IncrementalRec_)
+ANONYMOUS_STRUCT_DUMMY(GX_BlendRec_)
+
 #include "pngshim.c"
 #include "sfdriver.c"
 #include "sfntpic.c"

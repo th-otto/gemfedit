@@ -566,7 +566,9 @@
     }
 
     if ( !stream->read )
+    {
       FT_FREE( stream->base );
+    }
   }
 
 

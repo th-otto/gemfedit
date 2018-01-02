@@ -29,6 +29,9 @@ THE SOFTWARE.
 #include <ft2bld.h>
 #include <ft2build.h>
 
+ANONYMOUS_STRUCT_DUMMY(FT_RasterRec_)
+ANONYMOUS_STRUCT_DUMMY(FT_IncrementalRec_)
+
 #include "pcfdrivr.c"
 #include "pcfread.c"
 #include "pcfutil.c"

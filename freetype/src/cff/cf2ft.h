@@ -73,7 +73,7 @@ FT_BEGIN_HEADER
 #ifdef TT_CONFIG_OPTION_GX_VAR_SUPPORT
   FT_LOCAL( FT_Error )
   cf2_getNormalizedVector( CFF_Decoder*  decoder,
-                           CF2_UInt     *len,
+                           FT_UInt     *len,
                            FT_Fixed*    *vec );
 #endif
 

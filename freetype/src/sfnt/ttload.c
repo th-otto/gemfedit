@@ -26,11 +26,6 @@
 
 #include "sferrors.h"
 
-ANONYMOUS_STRUCT_DUMMY(FT_RasterRec_)
-ANONYMOUS_STRUCT_DUMMY(FT_Size_InternalRec_)
-ANONYMOUS_STRUCT_DUMMY(FT_IncrementalRec_)
-ANONYMOUS_STRUCT_DUMMY(GX_BlendRec_)
-
   /*************************************************************************/
   /*                                                                       */
   /* The macro FT_COMPONENT is used in trace mode.  It is an implicit      */
@@ -1011,8 +1006,9 @@ ANONYMOUS_STRUCT_DUMMY(GX_BlendRec_)
 
 
       for ( ; entry < limit; entry++ )
+      {
         FT_FREE( entry->string );
-
+	  }
       FT_FREE( table->names );
     }
 
@@ -1023,8 +1019,9 @@ ANONYMOUS_STRUCT_DUMMY(GX_BlendRec_)
 
 
       for ( ; entry < limit; entry++ )
+      {
         FT_FREE( entry->string );
-
+	  }
       FT_FREE( table->langTags );
     }
 

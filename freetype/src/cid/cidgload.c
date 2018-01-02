@@ -41,7 +41,7 @@
 
   FT_CALLBACK_DEF( FT_Error )
   cid_load_glyph( T1_Decoder  decoder,
-                  FT_UInt     glyph_index )
+                  FT_UInt32   glyph_index )
   {
     CID_Face       face = (CID_Face)decoder->builder.face;
     CID_FaceInfo   cid  = &face->cid;
@@ -173,7 +173,7 @@
 
       error = decoder->funcs.parse_charstrings(
                 decoder, charstring + cs_offset,
-                glyph_length - cs_offset );
+                (FT_UInt)(glyph_length - cs_offset) );
     }
 
 #ifdef FT_CONFIG_OPTION_INCREMENTAL
@@ -233,7 +233,7 @@
   {
     FT_Error       error;
     T1_DecoderRec  decoder;
-    FT_Int         glyph_index;
+    FT_UInt32      glyph_index;
 
     PSAux_Service  psaux = (PSAux_Service)face->psaux;
 
@@ -282,7 +282,7 @@
   FT_LOCAL_DEF( FT_Error )
   cid_slot_load_glyph( FT_GlyphSlot  cidglyph,      /* CID_GlyphSlot */
                        FT_Size       cidsize,       /* CID_Size      */
-                       FT_UInt       glyph_index,
+                       FT_UInt32     glyph_index,
                        FT_Int32      load_flags )
   {
     CID_GlyphSlot  glyph = (CID_GlyphSlot)cidglyph;
@@ -296,7 +296,7 @@
     FT_Vector      font_offset;
 
 
-    if ( glyph_index >= (FT_UInt)face->root.num_glyphs )
+    if ( glyph_index >= (FT_UInt32)face->root.num_glyphs )
     {
       error = FT_THROW( Invalid_Argument );
       goto Exit;

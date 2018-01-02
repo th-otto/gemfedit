@@ -25,7 +25,6 @@
 #include <freetype/internal/ftobjs.h>
 
 ANONYMOUS_STRUCT_DUMMY(FT_RasterRec_)
-ANONYMOUS_STRUCT_DUMMY(FT_Size_InternalRec_)
 ANONYMOUS_STRUCT_DUMMY(FT_IncrementalRec_)
 
   static
@@ -456,9 +455,9 @@ ANONYMOUS_STRUCT_DUMMY(FT_IncrementalRec_)
      *
      */
 
-    l = (  4732UL /* 0.0722 * 65536 */ * bgra[0] * bgra[0] +
+    l = (FT_UInt)((  4732UL /* 0.0722 * 65536 */ * bgra[0] * bgra[0] +
           46871UL /* 0.7152 * 65536 */ * bgra[1] * bgra[1] +
-          13933UL /* 0.2126 * 65536 */ * bgra[2] * bgra[2] ) >> 16;
+          13933UL /* 0.2126 * 65536 */ * bgra[2] * bgra[2] ) >> 16);
 
     /*
      * Final transparency can be determined as follows.

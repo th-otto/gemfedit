@@ -34,7 +34,7 @@ FT_BEGIN_HEADER
 
   FT_LOCAL( FT_Error )
   t1_decoder_parse_glyph( T1_Decoder  decoder,
-                          FT_UInt     glyph_index );
+                          FT_UInt32   glyph_index );
 
   FT_LOCAL( FT_Error )
   t1_decoder_parse_charstrings( T1_Decoder  decoder,

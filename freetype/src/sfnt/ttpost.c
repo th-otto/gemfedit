@@ -300,7 +300,9 @@
 
 
       for ( n = 0; n < num_names; n++ )
+      {
         FT_FREE( name_strings[n] );
+      }
     }
 
   Fail:
@@ -443,8 +445,9 @@
         table->num_glyphs = 0;
 
         for ( n = 0; n < table->num_names; n++ )
+        {
           FT_FREE( table->glyph_names[n] );
-
+		}
         FT_FREE( table->glyph_names );
         table->num_names = 0;
       }
@@ -485,7 +488,7 @@
   /*                                                                       */
   FT_LOCAL_DEF( FT_Error )
   tt_face_get_ps_name( TT_Face      face,
-                       FT_UInt      idx,
+                       FT_UInt32    idx,
                        FT_String**  PSname )
   {
     FT_Error       error;
@@ -533,7 +536,7 @@
           goto End;
       }
 
-      if ( idx < (FT_UInt)table->num_glyphs )
+      if ( idx < (FT_UInt32)table->num_glyphs )
       {
         FT_UShort  name_index = table->glyph_indices[idx];
 
@@ -556,7 +559,7 @@
           goto End;
       }
 
-      if ( idx < (FT_UInt)table->num_glyphs )    /* paranoid checking */
+      if ( idx < (FT_UInt32)table->num_glyphs )    /* paranoid checking */
         *PSname = MAC_NAME( (FT_Int)idx + table->offsets[idx] );
     }
 

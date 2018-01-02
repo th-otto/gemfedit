@@ -507,7 +507,7 @@
   af_autofitter_load_glyph( AF_Module     module,
                             FT_GlyphSlot  slot,
                             FT_Size       size,
-                            FT_UInt       glyph_index,
+                            FT_UInt32     glyph_index,
                             FT_Int32      load_flags )
   {
     FT_Error   error  = FT_Err_Ok;

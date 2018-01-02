@@ -24,10 +24,6 @@
 #include <freetype/ftlist.h>
 #include <freetype/ttnameid.h>
 
-ANONYMOUS_STRUCT_DUMMY(FT_RasterRec_)
-ANONYMOUS_STRUCT_DUMMY(FT_Size_InternalRec_)
-ANONYMOUS_STRUCT_DUMMY(FT_IncrementalRec_)
-
 #undef  FT_COMPONENT
 #define FT_COMPONENT  trace_t42
 
@@ -647,7 +643,7 @@ ANONYMOUS_STRUCT_DUMMY(FT_IncrementalRec_)
   FT_LOCAL_DEF( FT_Error )
   T42_GlyphSlot_Load( FT_GlyphSlot  glyph,
                       FT_Size       size,
-                      FT_UInt       glyph_index,
+                      FT_UInt32     glyph_index,
                       FT_Int32      load_flags )
   {
     FT_Error         error;
@@ -660,7 +656,7 @@ ANONYMOUS_STRUCT_DUMMY(FT_IncrementalRec_)
     FT_TRACE1(( "T42_GlyphSlot_Load: glyph index %d\n", glyph_index ));
 
     /* map T42 glyph index to embedded TTF's glyph index */
-    glyph_index = (FT_UInt)ft_strtol(
+    glyph_index = (FT_UInt32)ft_strtol(
                     (const char *)t42face->type1.charstrings[glyph_index],
                     NULL, 10 );
 

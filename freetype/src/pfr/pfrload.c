@@ -744,8 +744,10 @@
 
 
     if ( *astring )
+    {
       FT_FREE( *astring );
-
+	}
+	
     if ( len > 0 && p[len - 1] == 0 )
       len--;
 

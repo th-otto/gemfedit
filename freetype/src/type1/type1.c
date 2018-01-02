@@ -20,6 +20,9 @@
 #include <ft2bld.h>
 #include <ft2build.h>
 
+ANONYMOUS_STRUCT_DUMMY(FT_RasterRec_)
+ANONYMOUS_STRUCT_DUMMY(FT_IncrementalRec_)
+
 #include "t1afm.c"
 #include "t1driver.c"
 #include "t1gload.c"

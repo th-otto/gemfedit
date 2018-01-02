@@ -578,7 +578,7 @@
   FT_LOCAL( FT_Error )
   pfr_slot_load_bitmap( PFR_Slot  glyph,
                         PFR_Size  size,
-                        FT_UInt   glyph_index,
+                        FT_UInt32 glyph_index,
                         FT_Bool   metrics_only )
   {
     FT_Error     error;

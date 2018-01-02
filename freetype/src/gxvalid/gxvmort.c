@@ -122,6 +122,7 @@
   gxv_mort_coverage_validate( FT_UShort      coverage,
                               GXV_Validator  gxvalid )
   {
+    FT_UNUSED(coverage);
     FT_UNUSED( gxvalid );
 
 #ifdef FT_DEBUG_LEVEL_TRACE

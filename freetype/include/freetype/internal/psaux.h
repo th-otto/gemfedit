@@ -634,7 +634,7 @@ FT_BEGIN_HEADER
 
   typedef FT_Error
   (*T1_Decoder_Callback)( T1_Decoder  decoder,
-                          FT_UInt     glyph_index );
+                          FT_UInt32   glyph_index );
 
 
   typedef struct  T1_Decoder_FuncsRec_

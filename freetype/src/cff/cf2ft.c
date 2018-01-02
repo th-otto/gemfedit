@@ -452,7 +452,7 @@
   /* Note: Uses FT_Fixed not CF2_Fixed for the vector.        */
   FT_LOCAL_DEF( FT_Error )
   cf2_getNormalizedVector( CFF_Decoder*  decoder,
-                           CF2_UInt     *len,
+                           FT_UInt     *len,
                            FT_Fixed*    *vec )
   {
     FT_ASSERT( decoder && decoder->builder.face );

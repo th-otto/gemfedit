@@ -378,26 +378,26 @@ FT_BEGIN_HEADER
 
 
   FT_LOCAL( FT_Error )
-  TT_Set_MM_Blend( TT_Face    face,
+  TT_Set_MM_Blend( FT_Face    face,
                    FT_UInt    num_coords,
                    FT_Fixed*  coords );
 
   FT_LOCAL( FT_Error )
-  TT_Get_MM_Blend( TT_Face    face,
+  TT_Get_MM_Blend( FT_Face    face,
                    FT_UInt    num_coords,
                    FT_Fixed*  coords );
 
   FT_LOCAL( FT_Error )
-  TT_Set_Var_Design( TT_Face    face,
+  TT_Set_Var_Design( FT_Face    face,
                      FT_UInt    num_coords,
                      FT_Fixed*  coords );
 
   FT_LOCAL( FT_Error )
-  TT_Get_MM_Var( TT_Face      face,
+  TT_Get_MM_Var( FT_Face      face,
                  FT_MM_Var*  *master );
 
   FT_LOCAL( FT_Error )
-  TT_Get_Var_Design( TT_Face    face,
+  TT_Get_Var_Design( FT_Face    face,
                      FT_UInt    num_coords,
                      FT_Fixed*  coords );
 
@@ -408,32 +408,32 @@ FT_BEGIN_HEADER
 
   FT_LOCAL( FT_Error )
   TT_Vary_Apply_Glyph_Deltas( TT_Face      face,
-                              FT_UInt      glyph_index,
+                              FT_UInt32    glyph_index,
                               FT_Outline*  outline,
                               FT_UInt      n_points );
 
   FT_LOCAL( FT_Error )
-  tt_hadvance_adjust( TT_Face  face,
+  tt_hadvance_adjust( FT_Face  face,
                       FT_UInt  gindex,
                       FT_Int  *adelta );
 
   FT_LOCAL( FT_Error )
-  tt_vadvance_adjust( TT_Face  face,
+  tt_vadvance_adjust( FT_Face  face,
                       FT_UInt  gindex,
                       FT_Int  *adelta );
 
   FT_LOCAL( void )
-  tt_apply_mvar( TT_Face  face );
+  tt_apply_mvar( FT_Face  face );
 
   FT_LOCAL( FT_Error )
-  tt_get_var_blend( TT_Face      face,
+  tt_get_var_blend( FT_Face      face,
                     FT_UInt     *num_coords,
                     FT_Fixed*   *coords,
                     FT_Fixed*   *normalizedcoords,
                     FT_MM_Var*  *mm_var );
 
   FT_LOCAL( void )
-  tt_done_blend( TT_Face  face );
+  tt_done_blend( FT_Face  face );
 
 
 FT_END_HEADER

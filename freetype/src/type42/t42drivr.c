@@ -59,7 +59,7 @@
 
   static FT_Error
   t42_get_glyph_name( T42_Face    face,
-                      FT_UInt     glyph_index,
+                      FT_UInt32   glyph_index,
                       FT_Pointer  buffer,
                       FT_UInt     buffer_max )
   {

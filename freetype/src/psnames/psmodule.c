@@ -32,7 +32,6 @@
 #include "pspic.h"
 
 ANONYMOUS_STRUCT_DUMMY(FT_RasterRec_)
-ANONYMOUS_STRUCT_DUMMY(FT_Size_InternalRec_)
 ANONYMOUS_STRUCT_DUMMY(FT_IncrementalRec_)
 
 #ifdef FT_CONFIG_OPTION_POSTSCRIPT_NAMES
@@ -257,8 +256,8 @@ ANONYMOUS_STRUCT_DUMMY(FT_IncrementalRec_)
 
   static void
   ps_check_extra_glyph_name( const char*  gname,
-                             FT_UInt      glyph,
-                             FT_UInt*     extra_glyphs,
+                             FT_UInt32    glyph,
+                             FT_UInt32*   extra_glyphs,
                              FT_UInt     *states )
   {
     FT_UInt  n;
@@ -314,7 +313,7 @@ ANONYMOUS_STRUCT_DUMMY(FT_IncrementalRec_)
     FT_Error  error;
 
     FT_UInt  extra_glyph_list_states[] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
-    FT_UInt  extra_glyphs[EXTRA_GLYPH_LIST_SIZE];
+    FT_UInt32 extra_glyphs[EXTRA_GLYPH_LIST_SIZE];
 
 
     /* we first allocate the table */
@@ -401,7 +400,7 @@ ANONYMOUS_STRUCT_DUMMY(FT_IncrementalRec_)
   }
 
 
-  static FT_UInt
+  static FT_UInt32
   ps_unicodes_char_index( PS_Unicodes  table,
                           FT_UInt32    unicode )
   {
@@ -451,7 +450,7 @@ ANONYMOUS_STRUCT_DUMMY(FT_IncrementalRec_)
   ps_unicodes_char_next( PS_Unicodes  table,
                          FT_UInt32   *unicode )
   {
-    FT_UInt    result    = 0;
+    FT_UInt32  result    = 0;
     FT_UInt32  char_code = *unicode + 1;
 
 

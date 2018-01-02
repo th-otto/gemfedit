@@ -95,15 +95,7 @@ FT_BEGIN_HEADER
 
 #ifndef FT_CONFIG_OPTION_PIC
 
-#define FT_DEFINE_SERVICE_METRICSVARIATIONSREC( class_,            \
-                                                hadvance_adjust_,  \
-                                                lsb_adjust_,       \
-                                                rsb_adjust_,       \
-                                                vadvance_adjust_,  \
-                                                tsb_adjust_,       \
-                                                bsb_adjust_,       \
-                                                vorg_adjust_,      \
-                                                metrics_adjust_  ) \
+#define FT_DEFINE_SERVICE_METRICSVARIATIONSREC( class_, hadvance_adjust_, lsb_adjust_, rsb_adjust_, vadvance_adjust_, tsb_adjust_, bsb_adjust_, vorg_adjust_, metrics_adjust_  ) \
   static const FT_Service_MetricsVariationsRec  class_ =           \
   {                                                                \
     hadvance_adjust_,                                              \
@@ -118,15 +110,7 @@ FT_BEGIN_HEADER
 
 #else /* FT_CONFIG_OPTION_PIC */
 
-#define FT_DEFINE_SERVICE_METRICSVARIATIONSREC( class_,               \
-                                                hadvance_adjust_,     \
-                                                lsb_adjust_,          \
-                                                rsb_adjust_,          \
-                                                vadvance_adjust_,     \
-                                                tsb_adjust_,          \
-                                                bsb_adjust_,          \
-                                                vorg_adjust_,         \
-                                                metrics_adjust_  )    \
+#define FT_DEFINE_SERVICE_METRICSVARIATIONSREC( class_, hadvance_adjust_, lsb_adjust_, rsb_adjust_, vadvance_adjust_, tsb_adjust_, bsb_adjust_, vorg_adjust_, metrics_adjust_  )    \
   void                                                                \
   FT_Init_Class_ ## class_( FT_Service_MetricsVariationsRec*  clazz ) \
   {                                                                   \

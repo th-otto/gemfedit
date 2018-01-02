@@ -57,7 +57,7 @@
 
   static FT_Error
   T1_Parse_Glyph_And_Get_Char_String( T1_Decoder  decoder,
-                                      FT_UInt     glyph_index,
+                                      FT_UInt32   glyph_index,
                                       FT_Data*    char_string )
   {
     T1_Face   face  = (T1_Face)decoder->builder.face;
@@ -124,7 +124,7 @@
 
   FT_CALLBACK_DEF( FT_Error )
   T1_Parse_Glyph( T1_Decoder  decoder,
-                  FT_UInt     glyph_index )
+                  FT_UInt32   glyph_index )
   {
     FT_Data   glyph_data;
     FT_Error  error = T1_Parse_Glyph_And_Get_Char_String(
@@ -156,7 +156,7 @@
   {
     FT_Error       error;
     T1_DecoderRec  decoder;
-    FT_Int         glyph_index;
+    FT_UInt32      glyph_index;
     T1_Font        type1 = &face->type1;
     PSAux_Service  psaux = (PSAux_Service)face->psaux;
 
@@ -193,10 +193,10 @@
 
     /* for each glyph, parse the glyph charstring and extract */
     /* the advance width                                      */
-    for ( glyph_index = 0; glyph_index < type1->num_glyphs; glyph_index++ )
+    for ( glyph_index = 0; glyph_index < (FT_UInt32)type1->num_glyphs; glyph_index++ )
     {
       /* now get load the unscaled outline */
-      (void)T1_Parse_Glyph( &decoder, (FT_UInt)glyph_index );
+      (void)T1_Parse_Glyph( &decoder, glyph_index );
       if ( glyph_index == 0 || decoder.builder.advance.x > *max_advance )
         *max_advance = decoder.builder.advance.x;
 
@@ -211,8 +211,8 @@
 
   FT_LOCAL_DEF( FT_Error )
   T1_Get_Advances( FT_Face    t1face,        /* T1_Face */
-                   FT_UInt    first,
-                   FT_UInt    count,
+                   FT_UInt32  first,
+                   FT_UInt32  count,
                    FT_Int32   load_flags,
                    FT_Fixed*  advances )
   {
@@ -271,7 +271,7 @@
   FT_LOCAL_DEF( FT_Error )
   T1_Load_Glyph( FT_GlyphSlot  t1glyph,          /* T1_GlyphSlot */
                  FT_Size       t1size,           /* T1_Size      */
-                 FT_UInt       glyph_index,
+                 FT_UInt32     glyph_index,
                  FT_Int32      load_flags )
   {
     T1_GlyphSlot            glyph = (T1_GlyphSlot)t1glyph;
@@ -293,10 +293,10 @@
 
 
 #ifdef FT_CONFIG_OPTION_INCREMENTAL
-    if ( glyph_index >= (FT_UInt)face->root.num_glyphs &&
+    if ( glyph_index >= (FT_UInt32)face->root.num_glyphs &&
          !face->root.internal->incremental_interface   )
 #else
-    if ( glyph_index >= (FT_UInt)face->root.num_glyphs )
+    if ( glyph_index >= (FT_UInt32)face->root.num_glyphs )
 #endif /* FT_CONFIG_OPTION_INCREMENTAL */
     {
       error = FT_THROW( Invalid_Argument );

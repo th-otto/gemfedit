@@ -48,7 +48,7 @@ FT_BEGIN_HEADER
   FT_LOCAL( FT_Error )
   tt_face_load_sbit_image( TT_Face              face,
                            FT_ULong             strike_index,
-                           FT_UInt              glyph_index,
+                           FT_UInt32            glyph_index,
                            FT_UInt              load_flags,
                            FT_Stream            stream,
                            FT_Bitmap           *map,

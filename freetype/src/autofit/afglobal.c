@@ -67,10 +67,6 @@
 #include "afstyles.h"
 
 
-ANONYMOUS_STRUCT_DUMMY(FT_RasterRec_)
-ANONYMOUS_STRUCT_DUMMY(FT_Size_InternalRec_)
-ANONYMOUS_STRUCT_DUMMY(FT_IncrementalRec_)
-
 #ifndef FT_CONFIG_OPTION_PIC
 
 #undef  WRITING_SYSTEM
@@ -427,7 +423,7 @@ ANONYMOUS_STRUCT_DUMMY(FT_IncrementalRec_)
 
   FT_LOCAL_DEF( FT_Error )
   af_face_globals_get_metrics( AF_FaceGlobals    globals,
-                               FT_UInt           gindex,
+                               FT_UInt32         gindex,
                                FT_UInt           options,
                                AF_StyleMetrics  *ametrics )
   {
@@ -495,10 +491,10 @@ ANONYMOUS_STRUCT_DUMMY(FT_IncrementalRec_)
 
   FT_LOCAL_DEF( FT_Bool )
   af_face_globals_is_digit( AF_FaceGlobals  globals,
-                            FT_UInt         gindex )
+                            FT_UInt32         gindex )
   {
-    if ( gindex < (FT_ULong)globals->glyph_count )
-      return (FT_Bool)( globals->glyph_styles[gindex] & AF_DIGIT );
+    if ( gindex < (FT_UInt32)globals->glyph_count )
+      return ( globals->glyph_styles[gindex] & AF_DIGIT ) != 0;
 
     return (FT_Bool)0;
   }

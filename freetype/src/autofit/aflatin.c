@@ -79,7 +79,7 @@
 
     {
       FT_Error            error;
-      FT_ULong            glyph_index;
+      FT_UInt32           glyph_index;
       int                 dim;
       AF_LatinMetricsRec  dummy[1];
       AF_Scaler           scaler = &dummy->root.scaler;
@@ -410,7 +410,7 @@
 
       while ( *p )
       {
-        FT_ULong    glyph_index;
+        FT_UInt32   glyph_index;
         FT_Long     y_offset;
         FT_Int      best_point, best_contour_first, best_contour_last;
         FT_Vector*  points;
@@ -1049,7 +1049,7 @@
 
     while ( *p )
     {
-      FT_ULong      glyph_index;
+      FT_UInt32     glyph_index;
       unsigned int  num_idx;
 
 

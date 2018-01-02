@@ -235,8 +235,9 @@
 
   Exit:
     if ( error && !parser->in_memory )
+    {
       FT_FREE( parser->base_dict );
-
+	}
     return error;
   }
 
@@ -252,8 +253,10 @@
 
     /* free the base dictionary only when we have a disk stream */
     if ( !parser->in_memory )
+    {
       FT_FREE( parser->base_dict );
-
+	}
+	
     parser->root.funcs.done( &parser->root );
   }
 

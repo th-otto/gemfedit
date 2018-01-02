@@ -820,7 +820,7 @@
                   const FT_String*      family,
                   FT_UInt               ppem,
                   const FT_String*      style,
-                  FT_UInt               glyph_index,
+                  FT_UInt32             glyph_index,
                   const SPH_TweakRule*  rule,
                   FT_UInt               num_rules )
   {
@@ -851,7 +851,7 @@
                     const FT_String*      family,
                     FT_UInt               ppem,
                     const FT_String*      style,
-                    FT_UInt               glyph_index,
+                    FT_UInt32             glyph_index,
                     const SPH_ScaleRule*  rule,
                     FT_UInt               num_rules )
   {
@@ -882,7 +882,7 @@
                             const FT_String*  family,
                             FT_UInt           ppem,
                             const FT_String*  style,
-                            FT_UInt           glyph_index )
+                            FT_UInt32         glyph_index )
   {
     return scale_test_tweak( face, family, ppem, style, glyph_index,
                              X_SCALING_Rules, X_SCALING_RULES_SIZE );
@@ -902,7 +902,7 @@
 
   FT_LOCAL_DEF( void )
   sph_set_tweaks( TT_Loader  loader,
-                  FT_UInt    glyph_index )
+                  FT_UInt32  glyph_index )
   {
     TT_Face     face   = loader->face;
     FT_String*  family = face->root.family_name;

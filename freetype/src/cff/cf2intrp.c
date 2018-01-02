@@ -655,7 +655,7 @@
         }
 
         {
-          FT_Int  temp = cf2_stack_popInt( opStack );
+          CF2_Int  temp = cf2_stack_popInt( opStack );
 
 
           if ( temp >= 0 )
@@ -682,13 +682,13 @@
 
           /* check cached blend vector */
           if ( cff_blend_check_vector( &font->blend,
-                                       font->vsindex,
-                                       font->lenNDV,
+                                       (FT_UInt)font->vsindex,
+                                       (FT_UInt)font->lenNDV,
                                        font->NDV ) )
           {
             lastError = cff_blend_build_vector( &font->blend,
-                                                font->vsindex,
-                                                font->lenNDV,
+                                                (FT_UInt)font->vsindex,
+                                                (FT_UInt)font->lenNDV,
                                                 font->NDV );
             if ( lastError )
               goto exit;

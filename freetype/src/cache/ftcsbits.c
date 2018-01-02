@@ -75,8 +75,9 @@
 
 
     for ( ; count > 0; sbit++, count-- )
+    {
       FT_FREE( sbit->buffer );
-
+	}
     FTC_GNode_Done( FTC_GNODE( snode ), cache );
 
     FT_FREE( snode );

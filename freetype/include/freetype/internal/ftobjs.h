@@ -929,7 +929,7 @@ FT_BEGIN_HEADER
 
   typedef FT_Error
   (*FT_Face_GetGlyphNameFunc)( FT_Face     face,
-                               FT_UInt     glyph_index,
+                               FT_UInt32   glyph_index,
                                FT_Pointer  buffer,
                                FT_UInt     buffer_max );
 
@@ -1217,8 +1217,9 @@ FT_BEGIN_HEADER
                                                                  \
                                                                  \
     class_ ## _pic_free( library );                              \
-    if ( rclazz )                                                \
+    if ( rclazz ) {                                              \
       FT_FREE( rclazz );                                         \
+    }                                                            \
   }                                                              \
                                                                  \
                                                                  \
@@ -1428,8 +1429,9 @@ FT_BEGIN_HEADER
                                                                  \
                                                                  \
     class_ ## _pic_free( library );                              \
-    if ( clazz )                                                 \
+    if ( clazz ) {                                               \
       FT_FREE( clazz );                                          \
+    }                                                            \
   }                                                              \
                                                                  \
                                                                  \

@@ -619,7 +619,7 @@
   FT_LOCAL_DEF( FT_Byte* )
   tt_face_get_device_metrics( TT_Face  face,
                               FT_UInt  ppem,
-                              FT_UInt  gindex )
+                              FT_UInt32 gindex )
   {
     FT_UInt   nn;
     FT_Byte*  result      = NULL;

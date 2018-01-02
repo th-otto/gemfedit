@@ -28,7 +28,6 @@
 #include "basepic.h"
 
 ANONYMOUS_STRUCT_DUMMY(FT_RasterRec_)
-ANONYMOUS_STRUCT_DUMMY(FT_Size_InternalRec_)
 ANONYMOUS_STRUCT_DUMMY(FT_IncrementalRec_)
 
   /* declare an extern to access `ft_outline_glyph_class' globally     */
@@ -1016,7 +1015,7 @@ ANONYMOUS_STRUCT_DUMMY(FT_IncrementalRec_)
     /* lines are long enough (line_length is zero for curves). */
     /* Also avoid U-turns of nearly 180 degree.                */
     if ( !border->movable || line_length == 0  ||
-         theta > 0x59C000 || theta < -0x59C000 )
+         theta > 0x59C000L || theta < -0x59C000L )
       intersect = FALSE;
     else
     {

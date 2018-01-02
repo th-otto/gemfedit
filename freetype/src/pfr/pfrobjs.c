@@ -316,7 +316,7 @@
   FT_LOCAL_DEF( FT_Error )
   pfr_slot_load( FT_GlyphSlot  pfrslot,         /* PFR_Slot */
                  FT_Size       pfrsize,         /* PFR_Size */
-                 FT_UInt       gindex,
+                 FT_UInt32     gindex,
                  FT_Int32      load_flags )
   {
     PFR_Slot     slot    = (PFR_Slot)pfrslot;

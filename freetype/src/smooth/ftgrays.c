@@ -1260,12 +1260,19 @@ ANONYMOUS_STRUCT_DUMMY(FT_RasterRec_)
       switch ( acount )
       {
       case 7: *q++ = c;
+      /* fall through */
       case 6: *q++ = c;
+      /* fall through */
       case 5: *q++ = c;
+      /* fall through */
       case 4: *q++ = c;
+      /* fall through */
       case 3: *q++ = c;
+      /* fall through */
       case 2: *q++ = c;
+      /* fall through */
       case 1: *q   = c;
+      /* fall through */
       case 0: break;
       default:
         FT_MEM_SET( q, c, acount );
@@ -1721,7 +1728,7 @@ ANONYMOUS_STRUCT_DUMMY(FT_RasterRec_)
   gray_convert_glyph( RAS_ARG )
   {
     TCell    buffer[FT_MAX_GRAY_POOL];
-    TCoord   band_size = FT_MAX_GRAY_POOL / 8;
+    TCoord   band_size = (TCoord)(FT_MAX_GRAY_POOL / 8);
     TCoord   count = ras.max_ey - ras.min_ey;
     int      num_bands;
     TCoord   min, max, max_y;
@@ -1912,10 +1919,10 @@ ANONYMOUS_STRUCT_DUMMY(FT_RasterRec_)
     }
 
     /* clip to target bitmap, exit if nothing to do */
-    ras.min_ex = FT_MAX( cbox.xMin, clip.xMin );
-    ras.min_ey = FT_MAX( cbox.yMin, clip.yMin );
-    ras.max_ex = FT_MIN( cbox.xMax, clip.xMax );
-    ras.max_ey = FT_MIN( cbox.yMax, clip.yMax );
+    ras.min_ex = (TCoord)FT_MAX( cbox.xMin, clip.xMin );
+    ras.min_ey = (TCoord)FT_MAX( cbox.yMin, clip.yMin );
+    ras.max_ex = (TCoord)FT_MIN( cbox.xMax, clip.xMax );
+    ras.max_ey = (TCoord)FT_MIN( cbox.yMax, clip.yMax );
 
     if ( ras.max_ex <= ras.min_ex || ras.max_ey <= ras.min_ey )
       return 0;

@@ -235,7 +235,9 @@ THE SOFTWARE.
         {
           FT_FREE( prop->name );
           if ( prop->isString )
+          {
             FT_FREE( prop->value.atom );
+          }
         }
       }
 
@@ -488,7 +490,7 @@ THE SOFTWARE.
   FT_CALLBACK_DEF( FT_Error )
   PCF_Glyph_Load( FT_GlyphSlot  slot,
                   FT_Size       size,
-                  FT_UInt       glyph_index,
+                  FT_UInt32     glyph_index,
                   FT_Int32      load_flags )
   {
     PCF_Face    face   = (PCF_Face)FT_SIZE_FACE( size );
@@ -507,7 +509,7 @@ THE SOFTWARE.
       goto Exit;
     }
 
-    if ( glyph_index >= (FT_UInt)face->root.num_glyphs )
+    if ( glyph_index >= (FT_UInt32)face->root.num_glyphs )
     {
       error = FT_THROW( Invalid_Argument );
       goto Exit;

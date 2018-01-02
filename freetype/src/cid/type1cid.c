@@ -21,6 +21,9 @@
 #include <ft2build.h>
 #include <freetype/freetype.h>
 
+ANONYMOUS_STRUCT_DUMMY(FT_RasterRec_)
+ANONYMOUS_STRUCT_DUMMY(FT_IncrementalRec_)
+
 #include "cidgload.c"
 #include "cidload.c"
 #include "cidobjs.c"

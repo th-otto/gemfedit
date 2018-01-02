@@ -28,9 +28,6 @@
 
 #include "ciderrs.h"
 
-ANONYMOUS_STRUCT_DUMMY(FT_RasterRec_)
-ANONYMOUS_STRUCT_DUMMY(FT_Size_InternalRec_)
-ANONYMOUS_STRUCT_DUMMY(FT_IncrementalRec_)
 
   /*************************************************************************/
   /*                                                                       */
@@ -266,7 +263,7 @@ ANONYMOUS_STRUCT_DUMMY(FT_IncrementalRec_)
       if ( FT_NEW_ARRAY( cid->font_dicts, num_dicts ) )
         goto Exit;
 
-      cid->num_dicts = num_dicts;
+      cid->num_dicts = (FT_Int)num_dicts;
 
       /* don't forget to set a few defaults */
       for ( n = 0; n < cid->num_dicts; n++ )
@@ -562,8 +559,9 @@ ANONYMOUS_STRUCT_DUMMY(FT_IncrementalRec_)
       for ( n = 0; n < cid->num_dicts; n++ )
       {
         if ( face->subrs[n].code )
+        {
           FT_FREE( face->subrs[n].code[0] );
-
+		}
         FT_FREE( face->subrs[n].code );
       }
       FT_FREE( face->subrs );

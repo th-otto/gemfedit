@@ -54,7 +54,7 @@ FT_BEGIN_HEADER
   typedef struct  PS_UniMap_
   {
     FT_UInt32  unicode;      /* bit 31 set: is glyph variant */
-    FT_UInt    glyph_index;
+    FT_UInt32  glyph_index;
 
   } PS_UniMap;
 

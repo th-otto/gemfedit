@@ -35,7 +35,7 @@
 #include "cfferrs.h"
 
 
-#define FT_FIXED_ONE  ( (FT_Fixed)0x10000 )
+#define FT_FIXED_ONE  ( (FT_Fixed)0x10000L )
 
 
 #if 1
@@ -239,7 +239,7 @@
   {
     FT_Error   error;
     FT_Memory  memory = stream->memory;
-    FT_UInt    count;
+    FT_ULong   count;
 
 
     FT_ZERO( idx );
@@ -277,7 +277,7 @@
         goto Exit;
       }
 
-      idx->count    = count;
+      idx->count    = (FT_UInt)count;
       idx->off_size = offsize;
       size          = (FT_ULong)( count + 1 ) * offsize;
 
@@ -314,8 +314,9 @@
 
   Exit:
     if ( error )
+    {
       FT_FREE( idx->offsets );
-
+	}
     return error;
   }
 
@@ -393,8 +394,9 @@
 
   Exit:
     if ( error )
+    {
       FT_FREE( idx->offsets );
-
+	}
     return error;
   }
 
@@ -496,7 +498,7 @@
 
   FT_LOCAL_DEF( FT_Error )
   cff_index_access_element( CFF_Index  idx,
-                            FT_UInt    element,
+                            FT_UInt32    element,
                             FT_Byte**  pbytes,
                             FT_ULong*  pbyte_len )
   {
@@ -748,7 +750,7 @@
 
   FT_LOCAL_DEF( FT_Byte )
   cff_fd_select_get( CFF_FDSelect  fdselect,
-                     FT_UInt       glyph_index )
+                     FT_UInt32     glyph_index )
   {
     FT_Byte  fd = 0;
 
@@ -862,7 +864,7 @@
 
   FT_LOCAL_DEF( FT_UInt )
   cff_charset_cid_to_gindex( CFF_Charset  charset,
-                             FT_UInt      cid )
+                             FT_UInt32      cid )
   {
     FT_UInt  result = 0;
 
@@ -1099,7 +1101,9 @@
     if ( vstore->varRegionList )
     {
       for ( i = 0; i < vstore->regionCount; i++ )
+      {
         FT_FREE( vstore->varRegionList[i].axisList );
+      }
     }
     FT_FREE( vstore->varRegionList );
 
@@ -1107,7 +1111,9 @@
     if ( vstore->varData )
     {
       for ( i = 0; i < vstore->dataCount; i++ )
+      {
         FT_FREE( vstore->varData[i].regionIndices );
+      }
     }
     FT_FREE( vstore->varData );
   }
@@ -1133,7 +1139,7 @@
     /* no offset means no vstore to parse */
     if ( offset )
     {
-      FT_UInt   vsOffset;
+      FT_ULong  vsOffset;
       FT_UInt   format;
       FT_ULong  regionListOffset;
 
@@ -1350,12 +1356,12 @@
 
 
       /* convert inputs to 16.16 fixed point */
-      sum = cff_parse_num( parser, &parser->stack[i + base] ) * 65536;
+      sum = cff_parse_num( parser, &parser->stack[i + base] ) * 65536L;
 
       for ( j = 1; j < blend->lenBV; j++ )
         sum += FT_MulFix( *weight++,
                           cff_parse_num( parser,
-                                         &parser->stack[delta++] ) * 65536 );
+                                         &parser->stack[delta++] ) * 65536L );
 
       /* point parser stack to new value on blend_stack */
       parser->stack[i + base] = subFont->blend_top;
@@ -1365,10 +1371,10 @@
       /* opcode in both CFF and CFF2 DICTs.  See `cff_parse_num' for    */
       /* decode of this, which rounds to an integer.                    */
       *subFont->blend_top++ = 255;
-      *subFont->blend_top++ = ( (FT_UInt32)sum & 0xFF000000U ) >> 24;
-      *subFont->blend_top++ = ( (FT_UInt32)sum & 0x00FF0000U ) >> 16;
-      *subFont->blend_top++ = ( (FT_UInt32)sum & 0x0000FF00U ) >>  8;
-      *subFont->blend_top++ =   (FT_UInt32)sum & 0x000000FFU;
+      *subFont->blend_top++ = ( (FT_UInt32)sum & 0xFF000000UL ) >> 24;
+      *subFont->blend_top++ = ( (FT_UInt32)sum & 0x00FF0000UL ) >> 16;
+      *subFont->blend_top++ = ( (FT_UInt32)sum & 0x0000FF00UL ) >>  8;
+      *subFont->blend_top++ =   (FT_UInt32)sum & 0x000000FFUL;
     }
 
     /* leave only numBlends results on parser stack */
@@ -1930,7 +1936,7 @@
     if ( priv->initial_random_seed < 0 )
       priv->initial_random_seed = -priv->initial_random_seed;
     else if ( priv->initial_random_seed == 0 )
-      priv->initial_random_seed = 987654321;
+      priv->initial_random_seed = 987654321L;
 
   Exit:
     /* clean up */

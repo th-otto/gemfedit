@@ -418,7 +418,7 @@
   FT_LOCAL_DEF( FT_Error )
   cff_decoder_prepare( CFF_Decoder*  decoder,
                        CFF_Size      size,
-                       FT_UInt       glyph_index )
+                       FT_UInt32     glyph_index )
   {
     CFF_Builder  *builder = &decoder->builder;
     CFF_Font      cff     = (CFF_Font)builder->face->extra.data;
@@ -661,7 +661,7 @@
 
   FT_LOCAL_DEF( FT_Error )
   cff_get_glyph_data( TT_Face    face,
-                      FT_UInt    glyph_index,
+                      FT_UInt32  glyph_index,
                       FT_Byte**  pointer,
                       FT_ULong*  length )
   {
@@ -2671,7 +2671,7 @@
   {
     FT_Error     error = FT_Err_Ok;
     CFF_Decoder  decoder;
-    FT_Int       glyph_index;
+    FT_Uint32    glyph_index;
     CFF_Font     cff = (CFF_Font)face->other;
 
 
@@ -2723,7 +2723,7 @@
   FT_LOCAL_DEF( FT_Error )
   cff_slot_load( CFF_GlyphSlot  glyph,
                  CFF_Size       size,
-                 FT_UInt        glyph_index,
+                 FT_UInt32      glyph_index,
                  FT_Int32       load_flags )
   {
     FT_Error     error;

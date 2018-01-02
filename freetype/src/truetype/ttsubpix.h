@@ -77,7 +77,7 @@ FT_BEGIN_HEADER
                   const FT_String*      family,
                   FT_UInt               ppem,
                   const FT_String*      style,
-                  FT_UInt               glyph_index,
+                  FT_UInt32             glyph_index,
                   const SPH_TweakRule*  rule,
                   FT_UInt               num_rules );
 
@@ -86,11 +86,11 @@ FT_BEGIN_HEADER
                             const FT_String*  family,
                             FT_UInt           ppem,
                             const FT_String*  style,
-                            FT_UInt           glyph_index );
+                            FT_UInt32         glyph_index );
 
   FT_LOCAL( void )
   sph_set_tweaks( TT_Loader  loader,
-                  FT_UInt    glyph_index );
+                  FT_UInt32  glyph_index );
 
 
   /* These macros are defined absent a method for setting them */

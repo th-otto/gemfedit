@@ -78,7 +78,8 @@
                                AF_Segment    segments,
                                FT_Int        num_segments )
   {
-    FT_Int        idx_min, idx_max, idx0;
+    FT_Pos        idx_min, idx_max;
+    FT_Pos idx0;
     FT_Int        nn;
     AF_WarpScore  scores[65];
 
@@ -121,7 +122,7 @@
       FT_Pos  len = segments[nn].max_coord - segments[nn].min_coord;
       FT_Pos  y0  = FT_MulFix( segments[nn].pos, scale ) + delta;
       FT_Pos  y   = y0 + ( idx_min - idx0 );
-      FT_Int  idx;
+      FT_Pos  idx;
 
 
       /* score the length of the segments for the given range */
@@ -131,7 +132,7 @@
 
     /* find best score */
     {
-      FT_Int  idx;
+      FT_Pos  idx;
 
 
       for ( idx = idx_min; idx <= idx_max; idx++ )
@@ -172,7 +173,7 @@
 
     FT_Int        nn, num_points, num_segments;
     FT_Int        X1, X2;
-    FT_Int        w;
+    FT_Pos        w;
 
     AF_WarpScore  base_distort;
     AF_Segment    segments;

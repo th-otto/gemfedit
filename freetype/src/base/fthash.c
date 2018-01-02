@@ -48,7 +48,7 @@
 
 
   static FT_ULong
-  hash_str_lookup( FT_Hashkey*  key )
+  hash_str_lookup( const FT_Hashkey*  key )
   {
     const char*  kp  = key->str;
     FT_ULong     res = 0;
@@ -63,7 +63,7 @@
 
 
   static FT_ULong
-  hash_num_lookup( FT_Hashkey*  key )
+  hash_num_lookup( const FT_Hashkey*  key )
   {
     FT_ULong  num = (FT_ULong)key->num;
     FT_ULong  res;
@@ -80,8 +80,8 @@
 
 
   static FT_Bool
-  hash_str_compare( FT_Hashkey*  a,
-                    FT_Hashkey*  b )
+  hash_str_compare( const FT_Hashkey*  a,
+                    const FT_Hashkey*  b )
   {
     if ( a->str[0] == b->str[0]           &&
          ft_strcmp( a->str, b->str ) == 0 )
@@ -92,8 +92,8 @@
 
 
   static FT_Bool
-  hash_num_compare( FT_Hashkey*  a,
-                    FT_Hashkey*  b )
+  hash_num_compare( const FT_Hashkey*  a,
+                    const FT_Hashkey*  b )
   {
     if ( a->num == b->num )
       return 1;
@@ -103,7 +103,7 @@
 
 
   static FT_Hashnode*
-  hash_bucket( FT_Hashkey  key,
+  hash_bucket( const FT_Hashkey  *key,
                FT_Hash     hash )
   {
     FT_ULong      res = 0;
@@ -111,12 +111,12 @@
     FT_Hashnode*  ndp;
 
 
-    res = (hash->lookup)( &key );
+    res = (hash->lookup)( key );
 
     ndp = bp + ( res % hash->size );
     while ( *ndp )
     {
-      if ( (hash->compare)( &(*ndp)->key, &key ) )
+      if ( (hash->compare)( &(*ndp)->key, key ) )
         break;
 
       ndp--;
@@ -150,7 +150,7 @@
     {
       if ( *bp )
       {
-        nbp = hash_bucket( (*bp)->key, hash );
+        nbp = hash_bucket( &(*bp)->key, hash );
         *nbp = *bp;
       }
     }
@@ -220,8 +220,9 @@
 
 
       for ( i = 0; i < sz; i++, bp++ )
+      {
         FT_FREE( *bp );
-
+	  }
       FT_FREE( hash->table );
     }
   }
@@ -231,7 +232,7 @@
 
 
   static FT_Error
-  hash_insert( FT_Hashkey  key,
+  hash_insert( const FT_Hashkey *key,
                size_t      data,
                FT_Hash     hash,
                FT_Memory   memory )
@@ -248,7 +249,7 @@
         goto Exit;
       *bp = nn;
 
-      nn->key  = key;
+      nn->key  = *key;
       nn->data = data;
 
       if ( hash->used >= hash->limit )
@@ -279,7 +280,7 @@
 
     hk.str = key;
 
-    return hash_insert( hk, data, hash, memory );
+    return hash_insert( &hk, data, hash, memory );
   }
 
 
@@ -294,12 +295,12 @@
 
     hk.num = num;
 
-    return hash_insert( hk, data, hash, memory );
+    return hash_insert( &hk, data, hash, memory );
   }
 
 
   static size_t*
-  hash_lookup( FT_Hashkey  key,
+  hash_lookup( const FT_Hashkey  *key,
                FT_Hash     hash )
   {
     FT_Hashnode*  np = hash_bucket( key, hash );
@@ -319,7 +320,7 @@
 
     hk.str = key;
 
-    return hash_lookup( hk, hash );
+    return hash_lookup( &hk, hash );
   }
 
 
@@ -332,7 +333,7 @@
 
     hk.num = num;
 
-    return hash_lookup( hk, hash );
+    return hash_lookup( &hk, hash );
   }
 
 

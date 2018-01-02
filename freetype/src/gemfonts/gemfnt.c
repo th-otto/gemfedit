@@ -34,7 +34,6 @@
 #include <freetype/ftmoderr.h>
 
 ANONYMOUS_STRUCT_DUMMY(FT_RasterRec_)
-ANONYMOUS_STRUCT_DUMMY(FT_Size_InternalRec_)
 ANONYMOUS_STRUCT_DUMMY(FT_IncrementalRec_)
 
 #undef __FTERRORS_H__
@@ -848,7 +847,7 @@ static FT_Error FNT_Size_Request(FT_Size size, FT_Size_Request req)
 }
 
 
-static FT_Error FNT_Load_Glyph(FT_GlyphSlot slot, FT_Size size, FT_UInt glyph_index, FT_Int32 load_flags)
+static FT_Error FNT_Load_Glyph(FT_GlyphSlot slot, FT_Size size, FT_UInt32 glyph_index, FT_Int32 load_flags)
 {
 	FNT_Face face = (FNT_Face) FT_SIZE_FACE(size);
 	FNT_Font font;
@@ -866,7 +865,7 @@ static FT_Error FNT_Load_Glyph(FT_GlyphSlot slot, FT_Size size, FT_UInt glyph_in
 
 	font = face->font;
 
-	if (!font || glyph_index >= (FT_UInt) (FT_FACE(face)->num_glyphs))
+	if (!font || glyph_index >= (FT_UInt32) (FT_FACE(face)->num_glyphs))
 	{
 		error = FT_THROW(Invalid_Argument);
 		goto Exit;

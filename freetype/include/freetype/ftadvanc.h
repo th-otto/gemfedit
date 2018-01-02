@@ -120,7 +120,7 @@ FT_BEGIN_HEADER
   /*                                                                       */
   FT_EXPORT( FT_Error )
   FT_Get_Advance( FT_Face    face,
-                  FT_UInt    gindex,
+                  FT_UInt32  gindex,
                   FT_Int32   load_flags,
                   FT_Fixed  *padvance );
 
@@ -171,8 +171,8 @@ FT_BEGIN_HEADER
   /*                                                                       */
   FT_EXPORT( FT_Error )
   FT_Get_Advances( FT_Face    face,
-                   FT_UInt    start,
-                   FT_UInt    count,
+                   FT_UInt32  start,
+                   FT_UInt32  count,
                    FT_Int32   load_flags,
                    FT_Fixed  *padvances );
 

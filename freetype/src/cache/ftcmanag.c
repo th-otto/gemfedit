@@ -31,10 +31,6 @@
 #error "cache system does not support PIC yet"
 #endif
 
-ANONYMOUS_STRUCT_DUMMY(FT_RasterRec_)
-ANONYMOUS_STRUCT_DUMMY(FT_Size_InternalRec_)
-ANONYMOUS_STRUCT_DUMMY(FT_IncrementalRec_)
-
 #undef  FT_COMPONENT
 #define FT_COMPONENT  trace_cache
 

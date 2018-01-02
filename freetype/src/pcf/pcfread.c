@@ -37,9 +37,6 @@ THE SOFTWARE.
 
 #include "pcferror.h"
 
-ANONYMOUS_STRUCT_DUMMY(FT_RasterRec_)
-ANONYMOUS_STRUCT_DUMMY(FT_Size_InternalRec_)
-ANONYMOUS_STRUCT_DUMMY(FT_IncrementalRec_)
 
   /*************************************************************************/
   /*                                                                       */
@@ -604,11 +601,11 @@ ANONYMOUS_STRUCT_DUMMY(FT_IncrementalRec_)
 
     /* the strings in the `strings' array are PostScript strings, */
     /* which can have a maximum length of 65536 characters each   */
-    if ( string_size > 16777472 )   /* 256 * (65536 + 1) */
+    if ( string_size > 16777472L )   /* 256 * (65536 + 1) */
     {
       FT_TRACE0(( "pcf_get_properties:"
                   " loading only 16777472 bytes of strings array\n" ));
-      string_size = 16777472;
+      string_size = 16777472L;
     }
 
     /* allocate one more byte so that we have a final null byte */
@@ -756,11 +753,11 @@ ANONYMOUS_STRUCT_DUMMY(FT_IncrementalRec_)
     /*                                                              */
     /* While technically possible to have a larger number of glyphs */
     /* in PCF files, we thus limit the number to 65536.             */
-    if ( orig_nmetrics > 65536 )
+    if ( orig_nmetrics > 65536L )
     {
       FT_TRACE0(( "pcf_get_metrics:"
                   " only loading first 65536 metrics\n" ));
-      nmetrics = 65536;
+      nmetrics = 65536L;
     }
     else
       nmetrics = orig_nmetrics;
@@ -801,8 +798,9 @@ ANONYMOUS_STRUCT_DUMMY(FT_IncrementalRec_)
     }
 
     if ( error )
+    {
       FT_FREE( face->metrics );
-
+	}
   Bail:
     return error;
   }
@@ -861,11 +859,11 @@ ANONYMOUS_STRUCT_DUMMY(FT_IncrementalRec_)
     FT_TRACE4(( "  number of bitmaps: %ld\n", orig_nbitmaps ));
 
     /* see comment in `pcf_get_metrics' */
-    if ( orig_nbitmaps > 65536 )
+    if ( orig_nbitmaps > 65536L )
     {
       FT_TRACE0(( "pcf_get_bitmaps:"
                   " only loading first 65536 bitmaps\n" ));
-      nbitmaps = 65536;
+      nbitmaps = 65536L;
     }
     else
       nbitmaps = orig_nbitmaps;

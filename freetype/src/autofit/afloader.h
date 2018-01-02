@@ -72,7 +72,7 @@ FT_BEGIN_HEADER
   af_loader_load_glyph( AF_Loader  loader,
                         AF_Module  module,
                         FT_Face    face,
-                        FT_UInt    gindex,
+                        FT_UInt32  gindex,
                         FT_Int32   load_flags );
 
   FT_LOCAL_DEF( FT_Int32 )

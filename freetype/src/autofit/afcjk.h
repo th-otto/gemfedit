@@ -115,7 +115,7 @@ FT_BEGIN_HEADER
                      AF_CJKMetrics  metrics );
 
   FT_LOCAL( FT_Error )
-  af_cjk_hints_apply( FT_UInt        glyph_index,
+  af_cjk_hints_apply( FT_UInt32      glyph_index,
                       AF_GlyphHints  hints,
                       FT_Outline*    outline,
                       AF_CJKMetrics  metrics );

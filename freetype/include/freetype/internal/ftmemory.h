@@ -152,10 +152,8 @@ extern "C++"
           FT_ASSIGNP_INNER( ptr, ft_mem_alloc( memory, (size), &error ) )
 
 #define FT_MEM_FREE( ptr )                \
-          FT_BEGIN_STMNT                  \
-            ft_mem_free( memory, (ptr) ); \
-            (ptr) = NULL;                 \
-          FT_END_STMNT
+            ft_mem_free( memory, (ptr) ), \
+            (ptr) = NULL
 
 #define FT_MEM_NEW( ptr )                        \
           FT_MEM_ALLOC( ptr, sizeof ( *(ptr) ) )

@@ -24,13 +24,12 @@
 #include <freetype/internal/ftobjs.h>
 
 ANONYMOUS_STRUCT_DUMMY(FT_RasterRec_)
-ANONYMOUS_STRUCT_DUMMY(FT_Size_InternalRec_)
 ANONYMOUS_STRUCT_DUMMY(FT_IncrementalRec_)
 
   static FT_Error
   _ft_face_scale_advances( FT_Face    face,
                            FT_Fixed*  advances,
-                           FT_UInt    count,
+                           FT_UInt32  count,
                            FT_Int32   flags )
   {
     FT_Fixed  scale;
@@ -77,7 +76,7 @@ ANONYMOUS_STRUCT_DUMMY(FT_IncrementalRec_)
 
   FT_EXPORT_DEF( FT_Error )
   FT_Get_Advance( FT_Face    face,
-                  FT_UInt    gindex,
+                  FT_UInt32  gindex,
                   FT_Int32   flags,
                   FT_Fixed  *padvance )
   {
@@ -90,7 +89,7 @@ ANONYMOUS_STRUCT_DUMMY(FT_IncrementalRec_)
     if ( !padvance )
       return FT_THROW( Invalid_Argument );
 
-    if ( gindex >= (FT_UInt)face->num_glyphs )
+    if ( gindex >= (FT_UInt32)face->num_glyphs )
       return FT_THROW( Invalid_Glyph_Index );
 
     func = face->driver->clazz->get_advances;
@@ -115,13 +114,13 @@ ANONYMOUS_STRUCT_DUMMY(FT_IncrementalRec_)
 
   FT_EXPORT_DEF( FT_Error )
   FT_Get_Advances( FT_Face    face,
-                   FT_UInt    start,
-                   FT_UInt    count,
+                   FT_UInt32  start,
+                   FT_UInt32  count,
                    FT_Int32   flags,
                    FT_Fixed  *padvances )
   {
     FT_Face_GetAdvancesFunc  func;
-    FT_UInt                  num, end, nn;
+    FT_UInt32                num, end, nn;
     FT_Error                 error = FT_Err_Ok;
 
 
@@ -131,7 +130,7 @@ ANONYMOUS_STRUCT_DUMMY(FT_IncrementalRec_)
     if ( !padvances )
       return FT_THROW( Invalid_Argument );
 
-    num = (FT_UInt)face->num_glyphs;
+    num = face->num_glyphs;
     end = start + count;
     if ( start >= num || end < start || end > num )
       return FT_THROW( Invalid_Glyph_Index );
@@ -155,7 +154,7 @@ ANONYMOUS_STRUCT_DUMMY(FT_IncrementalRec_)
     if ( flags & FT_ADVANCE_FLAG_FAST_ONLY )
       return FT_THROW( Unimplemented_Feature );
 
-    flags |= (FT_UInt32)FT_LOAD_ADVANCE_ONLY;
+    flags |= FT_LOAD_ADVANCE_ONLY;
     for ( nn = 0; nn < count; nn++ )
     {
       error = FT_Load_Glyph( face, start + nn, flags );

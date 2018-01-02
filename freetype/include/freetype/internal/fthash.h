@@ -69,11 +69,11 @@ FT_BEGIN_HEADER
 
 
   typedef FT_ULong
-  (*FT_Hash_LookupFunc)( FT_Hashkey*  key );
+  (*FT_Hash_LookupFunc)( const FT_Hashkey*  key );
 
   typedef FT_Bool
-  (*FT_Hash_CompareFunc)( FT_Hashkey*  a,
-                          FT_Hashkey*  b );
+  (*FT_Hash_CompareFunc)( const FT_Hashkey*  a,
+                          const FT_Hashkey*  b );
 
 
   typedef struct  FT_HashRec_

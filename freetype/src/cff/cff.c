@@ -20,6 +20,13 @@
 #include <ft2bld.h>
 #include <ft2build.h>
 
+ANONYMOUS_STRUCT_DUMMY(FT_RasterRec_)
+ANONYMOUS_STRUCT_DUMMY(FT_IncrementalRec_)
+ANONYMOUS_STRUCT_DUMMY(GX_BlendRec_)
+ANONYMOUS_STRUCT_DUMMY(T1_HintsRec_)
+ANONYMOUS_STRUCT_DUMMY(T2_HintsRec_)
+ANONYMOUS_STRUCT_DUMMY(PSH_GlobalsRec_)
+
 #include "cffcmap.c"
 #include "cffdrivr.c"
 #include "cffgload.c"

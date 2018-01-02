@@ -47,7 +47,6 @@
 #include "ttpic.h"
 
 ANONYMOUS_STRUCT_DUMMY(FT_RasterRec_)
-ANONYMOUS_STRUCT_DUMMY(FT_Size_InternalRec_)
 ANONYMOUS_STRUCT_DUMMY(FT_IncrementalRec_)
 
   /*************************************************************************/
@@ -223,8 +222,8 @@ ANONYMOUS_STRUCT_DUMMY(FT_IncrementalRec_)
 
   static FT_Error
   tt_get_advances( FT_Face    ttface,
-                   FT_UInt    start,
-                   FT_UInt    count,
+                   FT_UInt32  start,
+                   FT_UInt32  count,
                    FT_Int32   flags,
                    FT_Fixed  *advances )
   {
@@ -418,7 +417,7 @@ ANONYMOUS_STRUCT_DUMMY(FT_IncrementalRec_)
   static FT_Error
   tt_glyph_load( FT_GlyphSlot  ttslot,      /* TT_GlyphSlot */
                  FT_Size       ttsize,      /* TT_Size      */
-                 FT_UInt       glyph_index,
+                 FT_UInt32     glyph_index,
                  FT_Int32      load_flags )
   {
     TT_GlyphSlot  slot = (TT_GlyphSlot)ttslot;
@@ -437,10 +436,10 @@ ANONYMOUS_STRUCT_DUMMY(FT_IncrementalRec_)
       return FT_THROW( Invalid_Face_Handle );
 
 #ifdef FT_CONFIG_OPTION_INCREMENTAL
-    if ( glyph_index >= (FT_UInt)face->num_glyphs &&
+    if ( glyph_index >= (FT_UInt32)face->num_glyphs &&
          !face->internal->incremental_interface   )
 #else
-    if ( glyph_index >= (FT_UInt)face->num_glyphs )
+    if ( glyph_index >= (FT_UInt32)face->num_glyphs )
 #endif
       return FT_THROW( Invalid_Argument );
 
@@ -496,31 +495,31 @@ ANONYMOUS_STRUCT_DUMMY(FT_IncrementalRec_)
   FT_DEFINE_SERVICE_MULTIMASTERSREC(
     tt_service_gx_multi_masters,
 
-    (FT_Get_MM_Func)        NULL,                   /* get_mm         */
-    (FT_Set_MM_Design_Func) NULL,                   /* set_mm_design  */
-    (FT_Set_MM_Blend_Func)  TT_Set_MM_Blend,        /* set_mm_blend   */
-    (FT_Get_MM_Blend_Func)  TT_Get_MM_Blend,        /* get_mm_blend   */
-    (FT_Get_MM_Var_Func)    TT_Get_MM_Var,          /* get_mm_var     */
-    (FT_Set_Var_Design_Func)TT_Set_Var_Design,      /* set_var_design */
-    (FT_Get_Var_Design_Func)TT_Get_Var_Design,      /* get_var_design */
+    NULL,                   /* get_mm         */
+    NULL,                   /* set_mm_design  */
+    TT_Set_MM_Blend,        /* set_mm_blend   */
+    TT_Get_MM_Blend,        /* get_mm_blend   */
+    TT_Get_MM_Var,          /* get_mm_var     */
+    TT_Set_Var_Design,      /* set_var_design */
+    TT_Get_Var_Design,      /* get_var_design */
 
-    (FT_Get_Var_Blend_Func) tt_get_var_blend,       /* get_var_blend  */
-    (FT_Done_Blend_Func)    tt_done_blend           /* done_blend     */
+    tt_get_var_blend,       /* get_var_blend  */
+    tt_done_blend           /* done_blend     */
   )
 
   FT_DEFINE_SERVICE_METRICSVARIATIONSREC(
     tt_service_metrics_variations,
 
-    (FT_HAdvance_Adjust_Func)tt_hadvance_adjust,     /* hadvance_adjust */
-    (FT_LSB_Adjust_Func)     NULL,                   /* lsb_adjust      */
-    (FT_RSB_Adjust_Func)     NULL,                   /* rsb_adjust      */
+    tt_hadvance_adjust,     /* hadvance_adjust */
+    NULL,                   /* lsb_adjust      */
+    NULL,                   /* rsb_adjust      */
 
-    (FT_VAdvance_Adjust_Func)tt_vadvance_adjust,     /* vadvance_adjust */
-    (FT_TSB_Adjust_Func)     NULL,                   /* tsb_adjust      */
-    (FT_BSB_Adjust_Func)     NULL,                   /* bsb_adjust      */
-    (FT_VOrg_Adjust_Func)    NULL,                   /* vorg_adjust     */
+    tt_vadvance_adjust,     /* vadvance_adjust */
+    NULL,                   /* tsb_adjust      */
+    NULL,                   /* bsb_adjust      */
+    NULL,                   /* vorg_adjust     */
 
-    (FT_Metrics_Adjust_Func) tt_apply_mvar           /* metrics_adjust  */
+    tt_apply_mvar           /* metrics_adjust  */
   )
 
 #endif /* TT_CONFIG_OPTION_GX_VAR_SUPPORT */

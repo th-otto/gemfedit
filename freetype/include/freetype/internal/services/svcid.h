@@ -37,8 +37,8 @@ FT_BEGIN_HEADER
                                          FT_Bool  *is_cid );
   typedef FT_Error
   (*FT_CID_GetCIDFromGlyphIndexFunc)( FT_Face   face,
-                                      FT_UInt   glyph_index,
-                                      FT_UInt  *cid );
+                                      FT_UInt32 glyph_index,
+                                      FT_UInt32 *cid );
 
   FT_DEFINE_SERVICE( CID )
   {

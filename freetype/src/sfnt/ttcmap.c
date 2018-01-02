@@ -824,19 +824,19 @@
             FT_UInt  gindex = (FT_UInt)( (FT_Int)charcode + delta ) & 0xFFFFU;
 
 
-            if ( gindex >= (FT_UInt)face->root.num_glyphs )
+            if ( gindex >= (FT_UInt32)face->root.num_glyphs )
             {
               /* we have an invalid glyph index; if there is an overflow, */
               /* we can adjust `charcode', otherwise the whole segment is */
               /* invalid                                                  */
               gindex = 0;
 
-              if ( (FT_Int)charcode + delta < 0 &&
-                   (FT_Int)end + delta >= 0     )
+              if ( (FT_Int32)charcode + delta < 0 &&
+                   (FT_Int32)end + delta >= 0     )
                 charcode = (FT_UInt)( -delta );
 
-              else if ( (FT_Int)charcode + delta < 0x10000L &&
-                        (FT_Int)end + delta >= 0x10000L     )
+              else if ( (FT_Int32)charcode + delta < 0x10000L &&
+                        (FT_Int32)end + delta >= 0x10000L     )
                 charcode = (FT_UInt)( 0x10000L - delta );
 
               else
@@ -1149,7 +1149,7 @@
           if ( gindex )
           {
             gindex = (FT_UInt)( (FT_Int)gindex + delta ) & 0xFFFFU;
-            if ( gindex >= (FT_UInt)face->root.num_glyphs )
+            if ( gindex >= (FT_UInt32)face->root.num_glyphs )
               gindex = 0;
           }
         }
@@ -1157,19 +1157,19 @@
         {
           gindex = (FT_UInt)( (FT_Int)charcode + delta ) & 0xFFFFU;
 
-          if ( next && gindex >= (FT_UInt)face->root.num_glyphs )
+          if ( next && gindex >= (FT_UInt32)face->root.num_glyphs )
           {
             /* we have an invalid glyph index; if there is an overflow, */
             /* we can adjust `charcode', otherwise the whole segment is */
             /* invalid                                                  */
             gindex = 0;
 
-            if ( (FT_Int)charcode + delta < 0 &&
-                 (FT_Int)end + delta >= 0     )
+            if ( (FT_Int32)charcode + delta < 0 &&
+                 (FT_Int32)end + delta >= 0     )
               charcode = (FT_UInt)( -delta );
 
-            else if ( (FT_Int)charcode + delta < 0x10000L &&
-                      (FT_Int)end + delta >= 0x10000L     )
+            else if ( (FT_Int32)charcode + delta < 0x10000L &&
+                      (FT_Int32)end + delta >= 0x10000L     )
               charcode = (FT_UInt)( 0x10000L - delta );
 
             else
@@ -1208,7 +1208,7 @@
     FT_UInt   num_segs2, start, end, offset;
     FT_Int    delta;
     FT_UInt   max, min, mid, num_segs;
-    FT_UInt   charcode = (FT_UInt)*pcharcode;
+    FT_UInt32 charcode = *pcharcode;
     FT_UInt   gindex   = 0;
     FT_Byte*  p;
 
@@ -1387,7 +1387,7 @@
           if ( gindex )
           {
             gindex = (FT_UInt)( (FT_Int)gindex + delta ) & 0xFFFFU;
-            if ( gindex >= (FT_UInt)face->root.num_glyphs )
+            if ( gindex >= (FT_UInt32)face->root.num_glyphs )
               gindex = 0;
           }
         }
@@ -1395,7 +1395,7 @@
         {
           gindex = (FT_UInt)( (FT_Int)charcode + delta ) & 0xFFFFU;
 
-          if ( next && gindex >= (FT_UInt)face->root.num_glyphs )
+          if ( next && gindex >= (FT_UInt32)face->root.num_glyphs )
           {
             /* we have an invalid glyph index; if there is an overflow, */
             /* we can adjust `charcode', otherwise the whole segment is */
@@ -1406,8 +1406,8 @@
                  (FT_Int)end + delta >= 0     )
               charcode = (FT_UInt)( -delta );
 
-            else if ( (FT_Int)charcode + delta < 0x10000L &&
-                      (FT_Int)end + delta >= 0x10000L     )
+            else if ( (FT_Int32)charcode + delta < 0x10000L &&
+                      (FT_Int32)end + delta >= 0x10000L     )
               charcode = (FT_UInt)( 0x10000L - delta );
           }
         }
@@ -1953,7 +1953,7 @@
 
         /* if `gindex' is invalid, the remaining values */
         /* in this group are invalid, too               */
-        if ( gindex >= (FT_UInt)face->num_glyphs )
+        if ( gindex >= (FT_UInt32)face->num_glyphs )
         {
           gindex = 0;
           continue;
@@ -2346,7 +2346,7 @@
 
         /* if `gindex' is invalid, the remaining values */
         /* in this group are invalid, too               */
-        if ( gindex >= (FT_UInt)face->num_glyphs )
+        if ( gindex >= (FT_UInt32)face->num_glyphs )
         {
           gindex = 0;
           continue;
@@ -2442,7 +2442,7 @@
       cmap12->cur_charcode = char_code;
       cmap12->cur_group    = mid;
 
-      if ( gindex >= (FT_UInt)face->num_glyphs )
+      if ( gindex >= (FT_UInt32)face->num_glyphs )
         gindex = 0;
 
       if ( !gindex )
@@ -2680,7 +2680,7 @@
       {
         gindex = (FT_UInt)glyph_id;
 
-        if ( gindex && gindex < (FT_UInt)face->num_glyphs )
+        if ( gindex && gindex < (FT_UInt32)face->num_glyphs )
         {
           cmap->cur_charcode = char_code;
           cmap->cur_gindex   = gindex;
@@ -2768,7 +2768,7 @@
       cmap13->cur_charcode = char_code;
       cmap13->cur_group    = mid;
 
-      if ( gindex >= (FT_UInt)face->num_glyphs )
+      if ( gindex >= (FT_UInt32)face->num_glyphs )
         gindex = 0;
 
       if ( !gindex )
@@ -2948,7 +2948,9 @@
 
     cmap->max_results = 0;
     if ( memory && cmap->results )
+    {
       FT_FREE( cmap->results );
+    }
   }
 
 
@@ -3642,7 +3644,9 @@
 
 
     if ( clazz )
+    {
       FT_FREE( clazz );
+    }
   }
 
 
@@ -3749,7 +3753,7 @@
             ft_validator_init( FT_VALIDATOR( &valid ), cmap, limit,
                                FT_VALIDATE_DEFAULT );
 
-            valid.num_glyphs = (FT_UInt)face->max_profile.numGlyphs;
+            valid.num_glyphs = face->max_profile.numGlyphs;
 
             if ( ft_setjmp( FT_VALIDATOR( &valid )->jump_buffer) == 0 )
             {

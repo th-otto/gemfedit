@@ -43,7 +43,7 @@ FT_BEGIN_HEADER
 
   FT_LOCAL( FT_Error )
   cff_index_access_element( CFF_Index  idx,
-                            FT_UInt    element,
+                            FT_UInt32  element,
                             FT_Byte**  pbytes,
                             FT_ULong*  pbyte_len );
 
@@ -58,7 +58,7 @@ FT_BEGIN_HEADER
 
   FT_LOCAL( FT_UInt )
   cff_charset_cid_to_gindex( CFF_Charset  charset,
-                             FT_UInt      cid );
+                             FT_UInt32    cid );
 
 
   FT_LOCAL( FT_UInt32 )
@@ -85,7 +85,7 @@ FT_BEGIN_HEADER
 
   FT_LOCAL( FT_Byte )
   cff_fd_select_get( CFF_FDSelect  fdselect,
-                     FT_UInt       glyph_index );
+                     FT_UInt32     glyph_index );
 
   FT_LOCAL( FT_Bool )
   cff_blend_check_vector( CFF_Blend  blend,

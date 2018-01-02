@@ -39,7 +39,7 @@ FT_BEGIN_HEADER
   FT_LOCAL( FT_Error )
   cid_slot_load_glyph( FT_GlyphSlot  glyph,         /* CID_Glyph_Slot */
                        FT_Size       size,          /* CID_Size       */
-                       FT_UInt       glyph_index,
+                       FT_UInt32     glyph_index,
                        FT_Int32      load_flags );
 
 

@@ -234,8 +234,10 @@
     ft_lzwstate_reset( state );
 
     if ( state->stack != state->stack_0 )
+    {
       FT_FREE( state->stack );
-
+	}
+	
     FT_FREE( state->prefix );
     state->suffix = NULL;
 

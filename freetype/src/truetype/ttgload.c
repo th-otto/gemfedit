@@ -74,7 +74,7 @@
   /*                                                                       */
   FT_LOCAL_DEF( void )
   TT_Get_HMetrics( TT_Face     face,
-                   FT_UInt     idx,
+                   FT_UInt32   idx,
                    FT_Short*   lsb,
                    FT_UShort*  aw )
   {
@@ -92,7 +92,7 @@
   /*                                                                       */
   FT_LOCAL_DEF( void )
   TT_Get_VMetrics( TT_Face     face,
-                   FT_UInt     idx,
+                   FT_UInt32   idx,
                    FT_Pos      yMax,
                    FT_Short*   tsb,
                    FT_UShort*  ah )
@@ -121,7 +121,7 @@
 
   static FT_Error
   tt_get_metrics( TT_Loader  loader,
-                  FT_UInt    glyph_index )
+                  FT_UInt32  glyph_index )
   {
     TT_Face    face   = loader->face;
 #ifdef TT_SUPPORT_SUBPIXEL_HINTING_INFINALITY
@@ -183,7 +183,7 @@
 
   static void
   tt_get_metrics_incr_overrides( TT_Loader  loader,
-                                 FT_UInt    glyph_index )
+                                 FT_UInt32  glyph_index )
   {
     TT_Face  face = loader->face;
 
@@ -261,7 +261,7 @@
 
   FT_CALLBACK_DEF( FT_Error )
   TT_Access_Glyph_Frame( TT_Loader  loader,
-                         FT_UInt    glyph_index,
+                         FT_UInt32  glyph_index,
                          FT_ULong   offset,
                          FT_UInt    byte_count )
   {
@@ -901,11 +901,11 @@
       /* recalculate linear horizontal and vertical advances */
       /* if we don't have HVAR and VVAR, respectively        */
       if ( !( loader->face->variation_support & TT_FACE_FLAG_VAR_HADVANCE ) )
-        loader->linear = outline->points[n_points - 3].x -
-                         outline->points[n_points - 4].x;
+        loader->linear = (FT_Int)(outline->points[n_points - 3].x -
+                         outline->points[n_points - 4].x);
       if ( !( loader->face->variation_support & TT_FACE_FLAG_VAR_VADVANCE ) )
-        loader->vadvance = outline->points[n_points - 1].x -
-                           outline->points[n_points - 2].x;
+        loader->vadvance = (FT_Int)(outline->points[n_points - 1].x -
+                           outline->points[n_points - 2].x);
 
       if ( error )
         return error;
@@ -1220,7 +1220,7 @@
       {
         /* don't trust `maxSizeOfInstructions'; */
         /* only do a rough safety check         */
-        if ( (FT_Int)n_ins > loader->byte_len )
+        if ( n_ins > loader->byte_len )
         {
           FT_TRACE1(( "TT_Process_Composite_Glyph:"
                       " too many instructions (%d) for glyph with length %d\n",
@@ -1427,7 +1427,7 @@
   /*                                                                       */
   static FT_Error
   load_truetype_glyph( TT_Loader  loader,
-                       FT_UInt    glyph_index,
+                       FT_UInt32  glyph_index,
                        FT_UInt    recurse_count,
                        FT_Bool    header_only )
   {
@@ -1460,7 +1460,7 @@
 
 #ifndef FT_CONFIG_OPTION_INCREMENTAL
     /* check glyph index */
-    if ( glyph_index >= (FT_UInt)face->root.num_glyphs )
+    if ( glyph_index >= (FT_UInt32)face->root.num_glyphs )
     {
       error = FT_THROW( Invalid_Glyph_Index );
       goto Exit;
@@ -1504,7 +1504,7 @@
       FT_ZERO( &inc_stream );
       FT_Stream_OpenMemory( &inc_stream,
                             glyph_data.pointer,
-                            (FT_ULong)glyph_data.length );
+                            glyph_data.length );
 
       loader->stream = &inc_stream;
     }
@@ -1513,7 +1513,7 @@
 #endif /* FT_CONFIG_OPTION_INCREMENTAL */
 
       offset = tt_face_get_location( face, glyph_index,
-                                     (FT_UInt*)&loader->byte_len );
+                                     &loader->byte_len );
 
     if ( loader->byte_len > 0 )
     {
@@ -1532,7 +1532,7 @@
 
       error = face->access_glyph_frame( loader, glyph_index,
                                         face->glyf_offset + offset,
-                                        (FT_UInt)loader->byte_len );
+                                        loader->byte_len );
       if ( error )
         goto Exit;
 
@@ -1626,9 +1626,9 @@
         /* recalculate linear horizontal and vertical advances */
         /* if we don't have HVAR and VVAR, respectively        */
         if ( !( loader->face->variation_support & TT_FACE_FLAG_VAR_HADVANCE ) )
-          loader->linear = loader->pp2.x - loader->pp1.x;
+          loader->linear = (FT_Int)(loader->pp2.x - loader->pp1.x);
         if ( !( loader->face->variation_support & TT_FACE_FLAG_VAR_VADVANCE ) )
-          loader->vadvance = loader->pp4.x - loader->pp3.x;
+          loader->vadvance = (FT_Int)(loader->pp4.x - loader->pp3.x);
       }
 
 #endif /* TT_CONFIG_OPTION_GX_VAR_SUPPORT */
@@ -1849,9 +1849,9 @@
         /* recalculate linear horizontal and vertical advances */
         /* if we don't have HVAR and VVAR, respectively        */
         if ( !( face->variation_support & TT_FACE_FLAG_VAR_HADVANCE ) )
-          loader->linear = loader->pp2.x - loader->pp1.x;
+          loader->linear = (FT_Int)(loader->pp2.x - loader->pp1.x);
         if ( !( face->variation_support & TT_FACE_FLAG_VAR_VADVANCE ) )
-          loader->vadvance = loader->pp4.x - loader->pp3.x;
+          loader->vadvance = (FT_Int)(loader->pp4.x - loader->pp3.x);
 
       Exit1:
         FT_FREE( outline.points );
@@ -1902,7 +1902,7 @@
         FT_UInt      num_base_subgs = gloader->base.num_subglyphs;
 
         FT_Stream    old_stream     = loader->stream;
-        FT_Int       old_byte_len   = loader->byte_len;
+        FT_UInt      old_byte_len   = loader->byte_len;
 
 
         FT_GlyphLoader_Add( gloader );
@@ -2023,7 +2023,7 @@
 
   static FT_Error
   compute_glyph_metrics( TT_Loader  loader,
-                         FT_UInt    glyph_index )
+                         FT_UInt32  glyph_index )
   {
     TT_Face    face   = loader->face;
 #if defined TT_SUPPORT_SUBPIXEL_HINTING_INFINALITY || \
@@ -2210,7 +2210,7 @@
   static FT_Error
   load_sbit_image( TT_Size       size,
                    TT_GlyphSlot  glyph,
-                   FT_UInt       glyph_index,
+                   FT_UInt32     glyph_index,
                    FT_Int32      load_flags )
   {
     TT_Face             face;
@@ -2563,7 +2563,7 @@
   tt_loader_done( TT_Loader  loader )
   {
     FT_List_Finalize( &loader->composites,
-                      NULL,
+                      (FT_List_Destructor)NULL,
                       loader->face->root.memory,
                       NULL );
   }
@@ -2599,7 +2599,7 @@
   FT_LOCAL_DEF( FT_Error )
   TT_Load_Glyph( TT_Size       size,
                  TT_GlyphSlot  glyph,
-                 FT_UInt       glyph_index,
+                 FT_UInt32     glyph_index,
                  FT_Int32      load_flags )
   {
     FT_Error      error;

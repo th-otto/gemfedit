@@ -679,21 +679,28 @@
       axis->num_segments = 0;
       axis->max_segments = 0;
       if ( axis->segments != axis->embedded.segments )
+      {
         FT_FREE( axis->segments );
-
+	  }
       axis->num_edges = 0;
       axis->max_edges = 0;
       if ( axis->edges != axis->embedded.edges )
+      {
         FT_FREE( axis->edges );
+      }
     }
 
     if ( hints->contours != hints->embedded.contours )
+    {
       FT_FREE( hints->contours );
+    }
     hints->max_contours = 0;
     hints->num_contours = 0;
 
     if ( hints->points != hints->embedded.points )
+    {
       FT_FREE( hints->points );
+    }
     hints->max_points = 0;
     hints->num_points = 0;
 

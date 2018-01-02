@@ -40,8 +40,6 @@
 
 #include "cfferrs.h"
 
-ANONYMOUS_STRUCT_DUMMY(PSH_GlobalsRec_)
-
   /*************************************************************************/
   /*                                                                       */
   /* The macro FT_COMPONENT is used in trace mode.  It is an implicit      */
@@ -726,7 +724,9 @@ ANONYMOUS_STRUCT_DUMMY(PSH_GlobalsRec_)
 
             /* set style name; if already set, replace it */
             if ( face->root.style_name )
+            {
               FT_FREE( face->root.style_name );
+            }
             face->root.style_name = style_name;
 
             /* finally, select the named instance */
@@ -1194,7 +1194,7 @@ ANONYMOUS_STRUCT_DUMMY(PSH_GlobalsRec_)
     if ( driver->random_seed < 0 )
       driver->random_seed = -driver->random_seed;
     else if ( driver->random_seed == 0 )
-      driver->random_seed = 123456789;
+      driver->random_seed = 123456789L;
 
     return FT_Err_Ok;
   }

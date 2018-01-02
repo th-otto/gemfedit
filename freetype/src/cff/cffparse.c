@@ -1103,7 +1103,9 @@
 
 
     if ( clazz )
+    {
       FT_FREE( clazz );
+    }
   }
 
 

@@ -63,7 +63,7 @@ FT_BEGIN_HEADER
   typedef FT_Error
   (*FT_Slot_LoadFunc)( FT_GlyphSlot  slot,
                        FT_Size       size,
-                       FT_UInt       glyph_index,
+                       FT_UInt32     glyph_index,
                        FT_Int32      load_flags );
 
 
@@ -81,8 +81,8 @@ FT_BEGIN_HEADER
 
   typedef FT_Error
   (*FT_Face_GetAdvancesFunc)( FT_Face    face,
-                              FT_UInt    first,
-                              FT_UInt    count,
+                              FT_UInt32  first,
+                              FT_UInt32  count,
                               FT_Int32   flags,
                               FT_Fixed*  advances );
 
@@ -303,8 +303,9 @@ FT_BEGIN_HEADER
                                                                  \
                                                                  \
     class_ ## _pic_free( library );                              \
-    if ( dclazz )                                                \
+    if ( dclazz ) {                                              \
       FT_FREE( dclazz );                                         \
+    }                                                            \
   }                                                              \
                                                                  \
                                                                  \

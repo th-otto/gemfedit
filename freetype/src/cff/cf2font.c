@@ -172,7 +172,7 @@
       {
         FT_Int  xdelta = x2 - x1;
         FT_Int  ydelta = y2 - y1;
-        FT_Int  x      = stemWidthPer1000 -
+        FT_Pos  x      = stemWidthPer1000 -
                            FT_DivFix( cf2_intToFixed( x1 ), ppem );
 
 
@@ -189,7 +189,7 @@
         {
           FT_Int  xdelta = x3 - x2;
           FT_Int  ydelta = y3 - y2;
-          FT_Int  x      = stemWidthPer1000 -
+          FT_Pos x      = stemWidthPer1000 -
                              FT_DivFix( cf2_intToFixed( x2 ), ppem );
 
 
@@ -207,7 +207,7 @@
         {
           FT_Int  xdelta = x4 - x3;
           FT_Int  ydelta = y4 - y3;
-          FT_Int  x      = stemWidthPer1000 -
+          FT_Pos  x      = stemWidthPer1000 -
                              FT_DivFix( cf2_intToFixed( x3 ), ppem );
 
 
@@ -258,7 +258,7 @@
     CFF_SubFont  subFont;
     CF2_Fixed    ppem;
 
-    CF2_UInt   lenNormalizedV = 0;
+    FT_UInt   lenNormalizedV = 0;
     FT_Fixed*  normalizedV    = NULL;
 
 

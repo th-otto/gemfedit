@@ -84,7 +84,7 @@ FT_BEGIN_HEADER
   FT_LOCAL( FT_Error )
   pfr_slot_load( FT_GlyphSlot  slot,            /* PFR_Slot */
                  FT_Size       size,            /* PFR_Size */
-                 FT_UInt       gindex,
+                 FT_UInt32     gindex,
                  FT_Int32      load_flags );
 
 
