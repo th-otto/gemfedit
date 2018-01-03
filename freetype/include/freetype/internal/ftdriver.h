@@ -268,32 +268,7 @@ FT_BEGIN_HEADER
 
 #define FT_DECLARE_DRIVER( class_ )  FT_DECLARE_MODULE( class_ )
 
-#define FT_DEFINE_DRIVER(                                        \
-          class_,                                                \
-          flags_,                                                \
-          size_,                                                 \
-          name_,                                                 \
-          version_,                                              \
-          requires_,                                             \
-          interface_,                                            \
-          init_,                                                 \
-          done_,                                                 \
-          get_interface_,                                        \
-          face_object_size_,                                     \
-          size_object_size_,                                     \
-          slot_object_size_,                                     \
-          init_face_,                                            \
-          done_face_,                                            \
-          init_size_,                                            \
-          done_size_,                                            \
-          init_slot_,                                            \
-          done_slot_,                                            \
-          load_glyph_,                                           \
-          get_kerning_,                                          \
-          attach_file_,                                          \
-          get_advances_,                                         \
-          request_size_,                                         \
-          select_size_ )                                         \
+#define FT_DEFINE_DRIVER( class_, flags_, size_, name_, version_, requires_, interface_, init_, done_, get_interface_, face_object_size_, size_object_size_, slot_object_size_, init_face_, done_face_, init_size_, done_size_, init_slot_, done_slot_, load_glyph_, get_kerning_, attach_file_, get_advances_, request_size_, select_size_ ) \
   void                                                           \
   FT_Destroy_Class_ ## class_( FT_Library        library,        \
                                FT_Module_Class*  clazz )         \

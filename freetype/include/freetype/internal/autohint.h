@@ -211,12 +211,7 @@ FT_BEGIN_HEADER
 
 #else /* FT_CONFIG_OPTION_PIC */
 
-#define FT_DEFINE_AUTOHINTER_INTERFACE(                            \
-          class_,                                                  \
-          reset_face_,                                             \
-          get_global_hints_,                                       \
-          done_global_hints_,                                      \
-          load_glyph_ )                                            \
+#define FT_DEFINE_AUTOHINTER_INTERFACE(class_, reset_face_, get_global_hints_, done_global_hints_, load_glyph_ )                                            \
   void                                                             \
   FT_Init_Class_ ## class_( FT_Library                   library,  \
                             FT_AutoHinter_InterfaceRec*  clazz )   \

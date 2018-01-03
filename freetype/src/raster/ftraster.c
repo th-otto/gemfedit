@@ -63,8 +63,11 @@
 
 #include <ft2bld.h>
 #include <ft2build.h>
-#include "ftraster.h"
+#include <freetype/fttypes.h>
+#include <freetype/ftsystem.h>
+#include <freetype/ftimage.h>
 #include <freetype/internal/ftcalc.h>   /* for FT_MulDiv and FT_MulDiv_No_Round */
+#include "ftraster.h"
 
 #include "rastpic.h"
 
@@ -211,9 +214,7 @@
 
 #define ft_memset  memset
 
-#define FT_DEFINE_RASTER_FUNCS( class_, glyph_format_, raster_new_, \
-                                raster_reset_, raster_set_mode_,    \
-                                raster_render_, raster_done_ )      \
+#define FT_DEFINE_RASTER_FUNCS( class_, glyph_format_, raster_new_, raster_reset_, raster_set_mode_, raster_render_, raster_done_ )      \
           const FT_Raster_Funcs class_ =                            \
           {                                                         \
             glyph_format_,                                          \
@@ -3081,8 +3082,9 @@
 
   static int
   ft_black_new( FT_Memory       memory,
-                black_PRaster  *araster )
+                FT_Raster  *araster_)
   {
+    black_PRaster *araster = (black_PRaster *)araster_;
     FT_Error       error;
     black_PRaster  raster = NULL;
 
@@ -3101,8 +3103,9 @@
 
 
   static void
-  ft_black_done( black_PRaster  raster )
+  ft_black_done( FT_Raster  raster_ )
   {
+    black_TRaster *raster = (black_TRaster *)raster_;
     FT_Memory  memory = (FT_Memory)raster->memory;
 
 
@@ -3212,12 +3215,9 @@
 
     FT_GLYPH_FORMAT_OUTLINE,
 
-    (FT_Raster_New_Func)     ft_black_new,       /* raster_new      */
-    (FT_Raster_Reset_Func)   ft_black_reset,     /* raster_reset    */
-    (FT_Raster_Set_Mode_Func)ft_black_set_mode,  /* raster_set_mode */
-    (FT_Raster_Render_Func)  ft_black_render,    /* raster_render   */
-    (FT_Raster_Done_Func)    ft_black_done       /* raster_done     */
+    ft_black_new,       /* (FT_Raster_NewFunc)      raster_new      */
+    ft_black_reset,     /* (FT_Raster_ResetFunc)    raster_reset    */
+    ft_black_set_mode,  /* (FT_Raster_SetModeFunc)  raster_set_mode */
+    ft_black_render,    /* (FT_Raster_RenderFunc)   raster_render   */
+    ft_black_done       /* (FT_Raster_DoneFunc)     raster_done     */
   )
-
-
-/* END */

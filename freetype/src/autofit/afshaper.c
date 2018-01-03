@@ -58,8 +58,7 @@
 
   /* load coverage tags */
 #undef  COVERAGE
-#define COVERAGE( name, NAME, description,             \
-                  tag1, tag2, tag3, tag4 )             \
+#define COVERAGE( name, NAME, description, tag1, tag2, tag3, tag4 )             \
           static const hb_tag_t  name ## _coverage[] = \
           {                                            \
             HB_TAG( tag1, tag2, tag3, tag4 ),          \
@@ -72,12 +71,11 @@
 
   /* define mapping between coverage tags and AF_Coverage */
 #undef  COVERAGE
-#define COVERAGE( name, NAME, description, \
-                  tag1, tag2, tag3, tag4 ) \
+#define COVERAGE( name, NAME, description, tag1, tag2, tag3, tag4 ) \
           name ## _coverage,
 
 
-  static const hb_tag_t*  coverages[] =
+  static const hb_tag_t*  const coverages[] =
   {
 #include "afcover.h"
 
@@ -395,8 +393,7 @@
 
   /* construct HarfBuzz features */
 #undef  COVERAGE
-#define COVERAGE( name, NAME, description,                \
-                  tag1, tag2, tag3, tag4 )                \
+#define COVERAGE( name, NAME, description, tag1, tag2, tag3, tag4 ) \
           static const hb_feature_t  name ## _feature[] = \
           {                                               \
             {                                             \
@@ -411,12 +408,11 @@
 
   /* define mapping between HarfBuzz features and AF_Coverage */
 #undef  COVERAGE
-#define COVERAGE( name, NAME, description, \
-                  tag1, tag2, tag3, tag4 ) \
+#define COVERAGE( name, NAME, description, tag1, tag2, tag3, tag4 ) \
           name ## _feature,
 
 
-  static const hb_feature_t*  features[] =
+  static const hb_feature_t*  const features[] =
   {
 #include "afcover.h"
 

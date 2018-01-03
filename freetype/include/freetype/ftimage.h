@@ -1068,11 +1068,8 @@ FT_BEGIN_HEADER
   /*    completely ignored by a given raster implementation.               */
   /*                                                                       */
   typedef int
-  (*FT_Raster_NewFunc)( void*       memory,
+  (*FT_Raster_NewFunc)( FT_Memory   memory,
                         FT_Raster*  raster );
-
-#define FT_Raster_New_Func  FT_Raster_NewFunc
-
 
   /*************************************************************************/
   /*                                                                       */
@@ -1087,8 +1084,6 @@ FT_BEGIN_HEADER
   /*                                                                       */
   typedef void
   (*FT_Raster_DoneFunc)( FT_Raster  raster );
-
-#define FT_Raster_Done_Func  FT_Raster_DoneFunc
 
 
   /*************************************************************************/
@@ -1122,8 +1117,6 @@ FT_BEGIN_HEADER
                           unsigned char*  pool_base,
                           unsigned long   pool_size );
 
-#define FT_Raster_Reset_Func  FT_Raster_ResetFunc
-
 
   /*************************************************************************/
   /*                                                                       */
@@ -1147,8 +1140,6 @@ FT_BEGIN_HEADER
   (*FT_Raster_SetModeFunc)( FT_Raster      raster,
                             unsigned long  mode,
                             void*          args );
-
-#define FT_Raster_Set_Mode_Func  FT_Raster_SetModeFunc
 
 
   /*************************************************************************/
@@ -1188,8 +1179,6 @@ FT_BEGIN_HEADER
   typedef int
   (*FT_Raster_RenderFunc)( FT_Raster                raster,
                            const FT_Raster_Params*  params );
-
-#define FT_Raster_Render_Func  FT_Raster_RenderFunc
 
 
   /*************************************************************************/

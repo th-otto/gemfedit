@@ -322,9 +322,7 @@ FT_BEGIN_HEADER
     return FT_Err_Ok;                                                       \
   }
 
-#define FT_DEFINE_SERVICEDESCREC2( class_,                                  \
-                                   serv_id_1, serv_data_1,                  \
-                                   serv_id_2, serv_data_2 )                 \
+#define FT_DEFINE_SERVICEDESCREC2( class_, serv_id_1, serv_data_1, serv_id_2, serv_data_2 )                 \
   void                                                                      \
   FT_Destroy_Class_ ## class_( FT_Library          library,                 \
                                FT_ServiceDescRec*  clazz )                  \
@@ -361,10 +359,7 @@ FT_BEGIN_HEADER
     return FT_Err_Ok;                                                       \
   }
 
-#define FT_DEFINE_SERVICEDESCREC3( class_,                                  \
-                                   serv_id_1, serv_data_1,                  \
-                                   serv_id_2, serv_data_2,                  \
-                                   serv_id_3, serv_data_3 )                 \
+#define FT_DEFINE_SERVICEDESCREC3( class_, serv_id_1, serv_data_1, serv_id_2, serv_data_2, serv_id_3, serv_data_3 )                 \
   void                                                                      \
   FT_Destroy_Class_ ## class_( FT_Library          library,                 \
                                FT_ServiceDescRec*  clazz )                  \
@@ -403,11 +398,7 @@ FT_BEGIN_HEADER
     return FT_Err_Ok;                                                       \
   }
 
-#define FT_DEFINE_SERVICEDESCREC4( class_,                                  \
-                                   serv_id_1, serv_data_1,                  \
-                                   serv_id_2, serv_data_2,                  \
-                                   serv_id_3, serv_data_3,                  \
-                                   serv_id_4, serv_data_4 )                 \
+#define FT_DEFINE_SERVICEDESCREC4( class_, serv_id_1, serv_data_1, serv_id_2, serv_data_2, serv_id_3, serv_data_3, serv_id_4, serv_data_4 )                 \
   void                                                                      \
   FT_Destroy_Class_ ## class_( FT_Library          library,                 \
                                FT_ServiceDescRec*  clazz )                  \
@@ -448,12 +439,7 @@ FT_BEGIN_HEADER
     return FT_Err_Ok;                                                       \
   }
 
-#define FT_DEFINE_SERVICEDESCREC5( class_,                                  \
-                                   serv_id_1, serv_data_1,                  \
-                                   serv_id_2, serv_data_2,                  \
-                                   serv_id_3, serv_data_3,                  \
-                                   serv_id_4, serv_data_4,                  \
-                                   serv_id_5, serv_data_5 )                 \
+#define FT_DEFINE_SERVICEDESCREC5( class_, serv_id_1, serv_data_1, serv_id_2, serv_data_2, serv_id_3, serv_data_3, serv_id_4, serv_data_4, serv_id_5, serv_data_5 )                 \
   void                                                                      \
   FT_Destroy_Class_ ## class_( FT_Library          library,                 \
                                FT_ServiceDescRec*  clazz )                  \
@@ -496,13 +482,7 @@ FT_BEGIN_HEADER
     return FT_Err_Ok;                                                       \
   }
 
-#define FT_DEFINE_SERVICEDESCREC6( class_,                                  \
-                                   serv_id_1, serv_data_1,                  \
-                                   serv_id_2, serv_data_2,                  \
-                                   serv_id_3, serv_data_3,                  \
-                                   serv_id_4, serv_data_4,                  \
-                                   serv_id_5, serv_data_5,                  \
-                                   serv_id_6, serv_data_6 )                 \
+#define FT_DEFINE_SERVICEDESCREC6( class_, serv_id_1, serv_data_1, serv_id_2, serv_data_2, serv_id_3, serv_data_3, serv_id_4, serv_data_4, serv_id_5, serv_data_5, serv_id_6, serv_data_6 )                 \
   void                                                                      \
   FT_Destroy_Class_ ## class_( FT_Library          library,                 \
                                FT_ServiceDescRec*  clazz )                  \
@@ -547,14 +527,7 @@ FT_BEGIN_HEADER
     return FT_Err_Ok;                                                       \
   }
 
-#define FT_DEFINE_SERVICEDESCREC7( class_,                                  \
-                                   serv_id_1, serv_data_1,                  \
-                                   serv_id_2, serv_data_2,                  \
-                                   serv_id_3, serv_data_3,                  \
-                                   serv_id_4, serv_data_4,                  \
-                                   serv_id_5, serv_data_5,                  \
-                                   serv_id_6, serv_data_6,                  \
-                                   serv_id_7, serv_data_7 )                 \
+#define FT_DEFINE_SERVICEDESCREC7( class_, serv_id_1, serv_data_1, serv_id_2, serv_data_2, serv_id_3, serv_data_3, serv_id_4, serv_data_4, serv_id_5, serv_data_5, serv_id_6, serv_data_6, serv_id_7, serv_data_7 )                 \
   void                                                                      \
   FT_Destroy_Class_ ## class_( FT_Library          library,                 \
                                FT_ServiceDescRec*  clazz )                  \
@@ -601,15 +574,7 @@ FT_BEGIN_HEADER
     return FT_Err_Ok;                                                       \
   }
 
-#define FT_DEFINE_SERVICEDESCREC8( class_,                                  \
-                                   serv_id_1, serv_data_1,                  \
-                                   serv_id_2, serv_data_2,                  \
-                                   serv_id_3, serv_data_3,                  \
-                                   serv_id_4, serv_data_4,                  \
-                                   serv_id_5, serv_data_5,                  \
-                                   serv_id_6, serv_data_6,                  \
-                                   serv_id_7, serv_data_7,                  \
-                                   serv_id_8, serv_data_8 )                 \
+#define FT_DEFINE_SERVICEDESCREC8( class_, serv_id_1, serv_data_1, serv_id_2, serv_data_2, serv_id_3, serv_data_3, serv_id_4, serv_data_4, serv_id_5, serv_data_5, serv_id_6, serv_data_6, serv_id_7, serv_data_7, serv_id_8, serv_data_8 )                 \
   void                                                                      \
   FT_Destroy_Class_ ## class_( FT_Library          library,                 \
                                FT_ServiceDescRec*  clazz )                  \
@@ -658,16 +623,7 @@ FT_BEGIN_HEADER
     return FT_Err_Ok;                                                       \
   }
 
-#define FT_DEFINE_SERVICEDESCREC9( class_,                                  \
-                                   serv_id_1, serv_data_1,                  \
-                                   serv_id_2, serv_data_2,                  \
-                                   serv_id_3, serv_data_3,                  \
-                                   serv_id_4, serv_data_4,                  \
-                                   serv_id_5, serv_data_5,                  \
-                                   serv_id_6, serv_data_6,                  \
-                                   serv_id_7, serv_data_7,                  \
-                                   serv_id_8, serv_data_8,                  \
-                                   serv_id_9, serv_data_9 )                 \
+#define FT_DEFINE_SERVICEDESCREC9( class_, serv_id_1, serv_data_1, serv_id_2, serv_data_2, serv_id_3, serv_data_3, serv_id_4, serv_data_4, serv_id_5, serv_data_5, serv_id_6, serv_data_6, serv_id_7, serv_data_7, serv_id_8, serv_data_8, serv_id_9, serv_data_9 )                 \
   void                                                                      \
   FT_Destroy_Class_ ## class_( FT_Library          library,                 \
                                FT_ServiceDescRec*  clazz )                  \

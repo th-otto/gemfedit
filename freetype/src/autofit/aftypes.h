@@ -569,7 +569,7 @@ extern void*  _af_debug_hints;
   FT_LOCAL( void )                                          \
   FT_Init_Class_ ## script_class( AF_ScriptClassRec*  ac );
 
-#define AF_DEFINE_SCRIPT_CLASS(script_class, script, ranges, nonbase_ranges, top_to_bottom, std_charstring )                \
+#define AF_DEFINE_SCRIPT_CLASS(script_class, script_, ranges, nonbase_ranges, top_to_bottom, std_charstring )                \
   FT_LOCAL_DEF( void )                                     \
   FT_Init_Class_ ## script_class( AF_ScriptClassRec*  ac ) \
   {                                                        \
@@ -585,13 +585,7 @@ extern void*  _af_debug_hints;
   FT_LOCAL( void )                                        \
   FT_Init_Class_ ## style_class( AF_StyleClassRec*  ac );
 
-#define AF_DEFINE_STYLE_CLASS(                           \
-          style_class,                                   \
-          style_,                                        \
-          writing_system_,                               \
-          script_,                                       \
-          blue_stringset_,                               \
-          coverage_ )                                    \
+#define AF_DEFINE_STYLE_CLASS(style_class, style_, writing_system_, script_, blue_stringset_, coverage_ )                    \
   FT_LOCAL_DEF( void )                                   \
   FT_Init_Class_ ## style_class( AF_StyleClassRec*  ac ) \
   {                                                      \

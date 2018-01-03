@@ -256,18 +256,7 @@ FT_BEGIN_HEADER
   FT_Init_Class_ ## class_( FT_Library         library,  \
                             FT_CMap_ClassRec*  clazz );
 
-#define FT_DEFINE_CMAP_CLASS(                            \
-          class_,                                        \
-          size_,                                         \
-          init_,                                         \
-          done_,                                         \
-          char_index_,                                   \
-          char_next_,                                    \
-          char_var_index_,                               \
-          char_var_default_,                             \
-          variant_list_,                                 \
-          charvariant_list_,                             \
-          variantchar_list_ )                            \
+#define FT_DEFINE_CMAP_CLASS( class_, size_, init_, done_, char_index_, char_next_, char_var_index_, char_var_default_, variant_list_, charvariant_list_, variantchar_list_ )       \
   void                                                   \
   FT_Init_Class_ ## class_( FT_Library         library,  \
                             FT_CMap_ClassRec*  clazz )   \
@@ -734,7 +723,7 @@ FT_BEGIN_HEADER
     FT_Glyph_Class          glyph_class;
 
     FT_Raster               raster;
-    FT_Raster_Render_Func   raster_render;
+    FT_Raster_RenderFunc    raster_render;
     FT_Renderer_RenderFunc  render;
 
   } FT_RendererRec;

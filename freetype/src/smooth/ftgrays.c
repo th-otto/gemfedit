@@ -238,10 +238,7 @@ typedef ptrdiff_t  FT_PtrDist;
 #endif /* !FT_DEBUG_LEVEL_TRACE */
 
 
-#define FT_DEFINE_OUTLINE_FUNCS( class_,               \
-                                 move_to_, line_to_,   \
-                                 conic_to_, cubic_to_, \
-                                 shift_, delta_ )      \
+#define FT_DEFINE_OUTLINE_FUNCS( class_, move_to_, line_to_, conic_to_, cubic_to_, shift_, delta_ )      \
           static const FT_Outline_Funcs class_ =       \
           {                                            \
             move_to_,                                  \
@@ -252,10 +249,7 @@ typedef ptrdiff_t  FT_PtrDist;
             delta_                                     \
          };
 
-#define FT_DEFINE_RASTER_FUNCS( class_, glyph_format_,            \
-                                raster_new_, raster_reset_,       \
-                                raster_set_mode_, raster_render_, \
-                                raster_done_ )                    \
+#define FT_DEFINE_RASTER_FUNCS( class_, glyph_format_, raster_new_, raster_reset_, raster_set_mode_, raster_render_, raster_done_ )                    \
           const FT_Raster_Funcs class_ =                          \
           {                                                       \
             glyph_format_,                                        \
@@ -337,19 +331,19 @@ ANONYMOUS_STRUCT_DUMMY(FT_RasterRec_)
 #undef TRUNC
 #undef SCALED
 
-#define ONE_PIXEL       ( 1 << PIXEL_BITS )
-#define TRUNC( x )      ( (TCoord)( (x) >> PIXEL_BITS ) )
-#define SUBPIXELS( x )  ( (TPos)(x) * ONE_PIXEL )
+#define ONE_PIXEL       ( 1L << PIXEL_BITS )
+#define TRUNC( x )      ( (TCoord)((x) >> PIXEL_BITS) )
+#define SUBPIXELS( x )  ( (TPos)(x) << PIXEL_BITS)
 #define FLOOR( x )      ( (x) & -ONE_PIXEL )
 #define CEILING( x )    ( ( (x) + ONE_PIXEL - 1 ) & -ONE_PIXEL )
 #define ROUND( x )      ( ( (x) + ONE_PIXEL / 2 ) & -ONE_PIXEL )
 
 #if PIXEL_BITS >= 6
-#define UPSCALE( x )    ( (x) * ( ONE_PIXEL >> 6 ) )
+#define UPSCALE( x )    ( (x) << ( PIXEL_BITS - 6 ) )
 #define DOWNSCALE( x )  ( (x) >> ( PIXEL_BITS - 6 ) )
 #else
 #define UPSCALE( x )    ( (x) >> ( 6 - PIXEL_BITS ) )
-#define DOWNSCALE( x )  ( (x) * ( 64 >> PIXEL_BITS ) )
+#define DOWNSCALE( x )  ( (x) << ( 6 - PIXEL_BITS ) )
 #endif
 
 
@@ -409,7 +403,25 @@ ANONYMOUS_STRUCT_DUMMY(FT_RasterRec_)
 
   typedef long  TPos;     /* sub-pixel coordinate              */
   typedef int   TCoord;   /* integer scanline/pixel coordinate */
-  typedef int   TArea;    /* cell areas, coordinate products   */
+
+  /* determine the type used to store cell areas.  This normally takes at */
+  /* least PIXEL_BYTES*2 + 1.  On 16-bit systems, we need to use `long'   */
+  /* instead of `int', otherwise bad things happen                        */
+
+#if PIXEL_BITS <= 7
+
+  typedef int   TArea;
+
+#else /* PIXEL_BITS >= 8 */
+
+  /* approximately determine the size of integers using an ANSI-C header */
+#if FT_UINT_MAX == 0xFFFFU
+  typedef long  TArea;
+#else
+  typedef int  TArea;
+#endif
+
+#endif /* PIXEL_BITS >= 8 */
 
 
   typedef struct TCell_*  PCell;
@@ -600,7 +612,8 @@ ANONYMOUS_STRUCT_DUMMY(FT_RasterRec_)
                                  TPos    x2,
                                  TCoord  y2 )
   {
-    TCoord  ex1, ex2, fx1, fx2, first, dy, delta, mod;
+    TCoord  ex1, ex2, fx1, fx2, dy, delta, mod;
+    TCoord first;
     TPos    p, dx;
     int     incr;
 
@@ -632,7 +645,7 @@ ANONYMOUS_STRUCT_DUMMY(FT_RasterRec_)
     if ( dx > 0 )
     {
       p     = ( ONE_PIXEL - fx1 ) * dy;
-      first = ONE_PIXEL;
+      first = (TCoord)ONE_PIXEL;
       incr  = 1;
     }
     else
@@ -677,7 +690,7 @@ ANONYMOUS_STRUCT_DUMMY(FT_RasterRec_)
       } while ( ex1 != ex2 );
     }
 
-    fx1 = ONE_PIXEL - first;
+    fx1 = (TCoord)(ONE_PIXEL - first);
 
   End:
     dy = y2 - y1;
@@ -731,7 +744,7 @@ ANONYMOUS_STRUCT_DUMMY(FT_RasterRec_)
 
       if ( dy > 0)
       {
-        first = ONE_PIXEL;
+        first = (TCoord)ONE_PIXEL;
         incr  = 1;
       }
       else
@@ -747,7 +760,7 @@ ANONYMOUS_STRUCT_DUMMY(FT_RasterRec_)
 
       gray_set_cell( RAS_VAR_ ex, ey1 );
 
-      delta = first + first - ONE_PIXEL;
+      delta = (TCoord)(first + first - ONE_PIXEL);
       area  = (TArea)two_fx * delta;
       while ( ey1 != ey2 )
       {
@@ -758,7 +771,7 @@ ANONYMOUS_STRUCT_DUMMY(FT_RasterRec_)
         gray_set_cell( RAS_VAR_ ex, ey1 );
       }
 
-      delta      = fy2 - ONE_PIXEL + first;
+      delta      = (TCoord)(fy2 - ONE_PIXEL + first);
       ras.area  += (TArea)two_fx * delta;
       ras.cover += delta;
 
@@ -769,7 +782,7 @@ ANONYMOUS_STRUCT_DUMMY(FT_RasterRec_)
     if ( dy > 0)
     {
       p     = ( ONE_PIXEL - fy1 ) * dx;
-      first = ONE_PIXEL;
+      first = (TCoord)ONE_PIXEL;
       incr  = 1;
     }
     else
@@ -808,7 +821,7 @@ ANONYMOUS_STRUCT_DUMMY(FT_RasterRec_)
 
         x2 = x + delta;
         gray_render_scanline( RAS_VAR_ ey1,
-                                       x, ONE_PIXEL - first,
+                                       x, (TCoord)(ONE_PIXEL - first),
                                        x2, first );
         x = x2;
 
@@ -818,7 +831,7 @@ ANONYMOUS_STRUCT_DUMMY(FT_RasterRec_)
     }
 
     gray_render_scanline( RAS_VAR_ ey1,
-                                   x, ONE_PIXEL - first,
+                                   x, (TCoord)(ONE_PIXEL - first),
                                    to_x, fy2 );
 
   End:
@@ -2033,17 +2046,9 @@ ANONYMOUS_STRUCT_DUMMY(FT_RasterRec_)
 
     FT_GLYPH_FORMAT_OUTLINE,
 
-    (FT_Raster_New_Func)     gray_raster_new,       /* raster_new      */
-    (FT_Raster_Reset_Func)   gray_raster_reset,     /* raster_reset    */
-    (FT_Raster_Set_Mode_Func)gray_raster_set_mode,  /* raster_set_mode */
-    (FT_Raster_Render_Func)  gray_raster_render,    /* raster_render   */
-    (FT_Raster_Done_Func)    gray_raster_done       /* raster_done     */
+    gray_raster_new,       /* (FT_Raster_NewFunc)     raster_new      */
+    gray_raster_reset,     /* (FT_Raster_ResetFunc)   raster_reset    */
+    gray_raster_set_mode,  /* (FT_Raster_SetModeFunc) raster_set_mode */
+    gray_raster_render,    /* (FT_Raster_RenderFunc)  raster_render   */
+    gray_raster_done       /* (FT_Raster_DoneFunc)    raster_done     */
   )
-
-
-/* END */
-
-
-/* Local Variables: */
-/* coding: utf-8    */
-/* End:             */
