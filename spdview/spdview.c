@@ -1260,14 +1260,13 @@ static const char *get_uniname(uint16_t unicode)
 
 /* ------------------------------------------------------------------------- */
 
-static gboolean gen_speedo_font(const char *filename, GString *body)
+static gboolean gen_speedo_font(GString *body)
 {
 	gboolean decode_ok = TRUE;
 	const ufix8 *key;
 	uint16_t i, id, j;
 	uint16_t num_ids;
 	
-	UNUSED(filename);
 	/* init */
 	sp_reset();
 
@@ -1625,7 +1624,7 @@ static gboolean load_speedo_font(const char *filename, GString *body)
 	gboolean ret;
 	ufix8 tmp[FH_FBFSZ + 4];
 	ufix32 minbufsize;
-	const char *title = NULL;
+	gboolean got_header = FALSE;
 	
 	fp = fopen(filename, "rb");
 	if (fp == NULL)
@@ -1677,8 +1676,8 @@ static gboolean load_speedo_font(const char *filename, GString *body)
 						font.org = font_buffer;
 						font.no_bytes = minbufsize;
 					
-						title = fontname;
-						ret = gen_speedo_font(filename, body);
+						got_header = TRUE;
+						ret = gen_speedo_font(body);
 					
 						g_free(font_buffer);
 						font_buffer = NULL;
@@ -1691,7 +1690,7 @@ static gboolean load_speedo_font(const char *filename, GString *body)
 		fclose(fp);
 	}
 	
-	if (title == NULL)
+	if (!got_header)
 		html_out_header(body, NULL, xbasename(filename), FALSE);
 	html_out_trailer(body, FALSE);
 
