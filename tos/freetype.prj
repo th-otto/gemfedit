@@ -24,6 +24,7 @@ freetype.lib
 ..\freetype\src\base\ftbdf.c
 ..\freetype\src\base\ftbitmap.c
 ..\freetype\src\base\ftcid.c
+..\freetype\src\base\fterrors.c
 ..\freetype\src\base\ftfstype.c
 ..\freetype\src\base\ftgasp.c
 ..\freetype\src\base\ftgemfnt.c

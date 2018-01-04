@@ -30,10 +30,10 @@ ANONYMOUS_STRUCT_DUMMY(PSH_GlobalsRec_)
 #include "cffcmap.c"
 #include "cffdrivr.c"
 #include "cffgload.c"
-#include "cffparse.c"
-#include "cffpic.c"
 #include "cffload.c"
 #include "cffobjs.c"
+#include "cffparse.c"
+#include "cffpic.c"
 
 #include "cf2arrst.c"
 #include "cf2blues.c"

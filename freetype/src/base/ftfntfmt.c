@@ -22,10 +22,6 @@
 #include <freetype/internal/ftobjs.h>
 #include <freetype/internal/services/svfntfmt.h>
 
-ANONYMOUS_STRUCT_DUMMY(FT_RasterRec_)
-ANONYMOUS_STRUCT_DUMMY(FT_Size_InternalRec_)
-ANONYMOUS_STRUCT_DUMMY(FT_IncrementalRec_)
-
   /* documentation is in ftfntfmt.h */
 
   FT_EXPORT_DEF( const char* )
