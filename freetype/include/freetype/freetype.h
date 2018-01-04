@@ -1239,7 +1239,7 @@ typedef struct FT_FaceRec_
  *    @FT_HAS_VERTICAL can be used to check for vertical metrics.
  * 
  */
-#define FT_HAS_HORIZONTAL( face ) (face)->face_flags & FT_FACE_FLAG_HORIZONTAL )
+#define FT_HAS_HORIZONTAL( face ) ((face)->face_flags & FT_FACE_FLAG_HORIZONTAL)
 
 
 /*************************************************************************
