@@ -29,6 +29,9 @@ ftbitmap.o: $(ft2_srcdir)/src/base/ftbitmap.c
 ftcid.o: $(ft2_srcdir)/src/base/ftcid.c
 	$(AM_V_CC)$(CC) -c $(CFLAGS) -o $@ $<
 
+fterrors.o: $(ft2_srcdir)/src/base/fterrors.c
+	$(AM_V_CC)$(CC) -c $(CFLAGS) -o $@ $<
+
 ftfstype.o: $(ft2_srcdir)/src/base/ftfstype.c
 	$(AM_V_CC)$(CC) -c $(CFLAGS) -o $@ $<
 
@@ -153,7 +156,7 @@ gxvalid.o: $(ft2_srcdir)/src/gxvalid/gxvalid.c
 
 
 BASEOBJ = \
-	ftdebug.o ftbase.o ftbbox.o ftbdf.o ftbitmap.o ftcid.o \
+	ftdebug.o ftbase.o ftbbox.o ftbdf.o ftbitmap.o ftcid.o fterrors.o \
 	ftfstype.o ftgasp.o ftgemfnt.o ftglyph.o ftgxval.o ftinit.o \
 	ftlcdfil.o ftmm.o ftotval.o ftpatent.o ftpfr.o ftstroke.o \
 	ftsynth.o ftsystem.o fttype1.o

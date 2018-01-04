@@ -35,6 +35,3 @@
 #include "ftstream.c"
 #include "fttrigon.c"
 #include "ftutil.c"
-
-
-/* END */

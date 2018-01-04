@@ -172,6 +172,8 @@ extern "C"
 {
 #endif
 
+FT_EXPORT(const char *) FT_Strerror(FT_Error code);
+
 #endif									/* !FT_ERRORDEF */
 
 

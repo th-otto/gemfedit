@@ -31,8 +31,8 @@
 
 #include <ft2build.h>
 #include <freetype/config/ftconfig.h>
-#include <freetype/fterrors.h>
 #include <freetype/fttypes.h>
+#include <freetype/fterrors.h>
 
 
 FT_BEGIN_HEADER
