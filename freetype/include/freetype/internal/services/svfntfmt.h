@@ -23,16 +23,12 @@
 
 
 FT_BEGIN_HEADER
-
-
-  /*
-   *  A trivial service used to return the name of a face's font driver,
-   *  according to the XFree86 nomenclature.  Note that the service data
-   *  is a simple constant string pointer.
-   */
-
+/*
+ *  A trivial service used to return the name of a face's font driver,
+ *  according to the XFree86 nomenclature.  Note that the service data
+ *  is a simple constant string pointer.
+ */
 #define FT_SERVICE_ID_FONT_FORMAT  "font-format"
-
 #define FT_FONT_FORMAT_TRUETYPE  "TrueType"
 #define FT_FONT_FORMAT_TYPE_1    "Type 1"
 #define FT_FONT_FORMAT_BDF       "BDF"
@@ -44,13 +40,6 @@ FT_BEGIN_HEADER
 #define FT_FONT_FORMAT_WINFNT    "Windows FNT"
 #define FT_FONT_FORMAT_GEMFNT    "GEM FNT"
 
-  /* */
-
-
 FT_END_HEADER
 
-
 #endif /* SVFNTFMT_H_ */
-
-
-/* END */

@@ -24,28 +24,17 @@
 
 FT_BEGIN_HEADER
 
-
 #define FT_SERVICE_ID_CID  "CID"
+typedef FT_Error (*FT_CID_GetRegistryOrderingSupplementFunc)(FT_Face face, const char * *registry, const char * *ordering, FT_Int * supplement);
+typedef FT_Error(*FT_CID_GetIsInternallyCIDKeyedFunc) (FT_Face face, FT_Bool * is_cid);
+typedef FT_Error(*FT_CID_GetCIDFromGlyphIndexFunc) (FT_Face face, FT_UInt32 glyph_index, FT_UInt32 * cid);
 
-  typedef FT_Error
-  (*FT_CID_GetRegistryOrderingSupplementFunc)( FT_Face       face,
-                                               const char*  *registry,
-                                               const char*  *ordering,
-                                               FT_Int       *supplement );
-  typedef FT_Error
-  (*FT_CID_GetIsInternallyCIDKeyedFunc)( FT_Face   face,
-                                         FT_Bool  *is_cid );
-  typedef FT_Error
-  (*FT_CID_GetCIDFromGlyphIndexFunc)( FT_Face   face,
-                                      FT_UInt32 glyph_index,
-                                      FT_UInt32 *cid );
-
-  FT_DEFINE_SERVICE( CID )
-  {
-    FT_CID_GetRegistryOrderingSupplementFunc  get_ros;
-    FT_CID_GetIsInternallyCIDKeyedFunc        get_is_cid;
-    FT_CID_GetCIDFromGlyphIndexFunc           get_cid_from_glyph_index;
-  };
+FT_DEFINE_SERVICE(CID)
+{
+	FT_CID_GetRegistryOrderingSupplementFunc get_ros;
+	FT_CID_GetIsInternallyCIDKeyedFunc get_is_cid;
+	FT_CID_GetCIDFromGlyphIndexFunc get_cid_from_glyph_index;
+};
 
 
 #ifndef FT_CONFIG_OPTION_PIC
@@ -72,13 +61,6 @@ FT_BEGIN_HEADER
 
 #endif /* FT_CONFIG_OPTION_PIC */
 
-  /* */
-
-
 FT_END_HEADER
 
-
 #endif /* SVCID_H_ */
-
-
-/* END */

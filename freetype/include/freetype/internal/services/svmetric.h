@@ -24,73 +24,39 @@
 
 FT_BEGIN_HEADER
 
-
-  /*
-   *  A service to manage the `HVAR, `MVAR', and `VVAR' OpenType tables.
-   *
-   */
-
+	/*
+	 *  A service to manage the `HVAR, `MVAR', and `VVAR' OpenType tables.
+	 *
+	 */
 #define FT_SERVICE_ID_METRICS_VARIATIONS  "metrics-variations"
+/* HVAR */
+typedef FT_Error(*FT_HAdvance_Adjust_Func) (FT_Face face, FT_UInt gindex, FT_Int * avalue);
+typedef FT_Error(*FT_LSB_Adjust_Func) (FT_Face face, FT_UInt gindex, FT_Int * avalue);
+typedef FT_Error(*FT_RSB_Adjust_Func) (FT_Face face, FT_UInt gindex, FT_Int * avalue);
+
+/* VVAR */
+typedef FT_Error(*FT_VAdvance_Adjust_Func) (FT_Face face, FT_UInt gindex, FT_Int * avalue);
+typedef FT_Error(*FT_TSB_Adjust_Func) (FT_Face face, FT_UInt gindex, FT_Int * avalue);
+typedef FT_Error(*FT_BSB_Adjust_Func) (FT_Face face, FT_UInt gindex, FT_Int * avalue);
+typedef FT_Error(*FT_VOrg_Adjust_Func) (FT_Face face, FT_UInt gindex, FT_Int * avalue);
+
+/* MVAR */
+typedef void (*FT_Metrics_Adjust_Func) (FT_Face face);
 
 
-  /* HVAR */
+FT_DEFINE_SERVICE(MetricsVariations)
+{
+	FT_HAdvance_Adjust_Func hadvance_adjust;
+	FT_LSB_Adjust_Func lsb_adjust;
+	FT_RSB_Adjust_Func rsb_adjust;
 
-  typedef FT_Error
-  (*FT_HAdvance_Adjust_Func)( FT_Face  face,
-                              FT_UInt  gindex,
-                              FT_Int  *avalue );
+	FT_VAdvance_Adjust_Func vadvance_adjust;
+	FT_TSB_Adjust_Func tsb_adjust;
+	FT_BSB_Adjust_Func bsb_adjust;
+	FT_VOrg_Adjust_Func vorg_adjust;
 
-  typedef FT_Error
-  (*FT_LSB_Adjust_Func)( FT_Face  face,
-                         FT_UInt  gindex,
-                         FT_Int  *avalue );
-
-  typedef FT_Error
-  (*FT_RSB_Adjust_Func)( FT_Face  face,
-                         FT_UInt  gindex,
-                         FT_Int  *avalue );
-
-  /* VVAR */
-
-  typedef FT_Error
-  (*FT_VAdvance_Adjust_Func)( FT_Face  face,
-                              FT_UInt  gindex,
-                              FT_Int  *avalue );
-
-  typedef FT_Error
-  (*FT_TSB_Adjust_Func)( FT_Face  face,
-                         FT_UInt  gindex,
-                         FT_Int  *avalue );
-
-  typedef FT_Error
-  (*FT_BSB_Adjust_Func)( FT_Face  face,
-                         FT_UInt  gindex,
-                         FT_Int  *avalue );
-
-  typedef FT_Error
-  (*FT_VOrg_Adjust_Func)( FT_Face  face,
-                          FT_UInt  gindex,
-                          FT_Int  *avalue );
-
-  /* MVAR */
-
-  typedef void
-  (*FT_Metrics_Adjust_Func)( FT_Face  face );
-
-
-  FT_DEFINE_SERVICE( MetricsVariations )
-  {
-    FT_HAdvance_Adjust_Func  hadvance_adjust;
-    FT_LSB_Adjust_Func       lsb_adjust;
-    FT_RSB_Adjust_Func       rsb_adjust;
-
-    FT_VAdvance_Adjust_Func  vadvance_adjust;
-    FT_TSB_Adjust_Func       tsb_adjust;
-    FT_BSB_Adjust_Func       bsb_adjust;
-    FT_VOrg_Adjust_Func      vorg_adjust;
-
-    FT_Metrics_Adjust_Func   metrics_adjust;
-  };
+	FT_Metrics_Adjust_Func metrics_adjust;
+};
 
 
 #ifndef FT_CONFIG_OPTION_PIC
@@ -126,12 +92,6 @@ FT_BEGIN_HEADER
 
 #endif /* FT_CONFIG_OPTION_PIC */
 
-  /* */
-
-
 FT_END_HEADER
 
 #endif /* SVMETRIC_H_ */
-
-
-/* END */

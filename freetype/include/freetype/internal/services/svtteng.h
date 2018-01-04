@@ -25,29 +25,18 @@
 
 FT_BEGIN_HEADER
 
-
-  /*
-   *  SFNT table loading service.
-   */
-
+/*
+ *  SFNT table loading service.
+ */
 #define FT_SERVICE_ID_TRUETYPE_ENGINE  "truetype-engine"
-
-  /*
-   * Used to implement FT_Get_TrueType_Engine_Type
-   */
-
-  FT_DEFINE_SERVICE( TrueTypeEngine )
-  {
-    FT_TrueTypeEngineType  engine_type;
-  };
-
-  /* */
-
+/*
+ * Used to implement FT_Get_TrueType_Engine_Type
+ */
+FT_DEFINE_SERVICE(TrueTypeEngine)
+{
+	FT_TrueTypeEngineType engine_type;
+};
 
 FT_END_HEADER
 
-
 #endif /* SVTTENG_H_ */
-
-
-/* END */

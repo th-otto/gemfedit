@@ -25,26 +25,15 @@
 
 FT_BEGIN_HEADER
 
-
 #define FT_SERVICE_ID_GEMFNT  "gemfonts"
-
-  typedef FT_Error
-  (*FT_GemFnt_GetHeaderFunc)( FT_Face               face,
-                              FT_GemFNT_HeaderRec  *aheader );
+typedef FT_Error(*FT_GemFnt_GetHeaderFunc) (FT_Face face, FT_GemFNT_HeaderRec * aheader);
 
 
-  FT_DEFINE_SERVICE( GemFnt )
-  {
-    FT_GemFnt_GetHeaderFunc  get_header;
-  };
-
-  /* */
-
+FT_DEFINE_SERVICE(GemFnt)
+{
+	FT_GemFnt_GetHeaderFunc get_header;
+};
 
 FT_END_HEADER
 
-
 #endif /* __SVGEMFNT_H__ */
-
-
-/* END */
