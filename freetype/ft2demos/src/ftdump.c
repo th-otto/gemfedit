@@ -425,11 +425,11 @@ static void Print_Charmaps(FT_Face face)
 
 
 		if (format >= 0)
-			printf("  %2d: format %2ld, platform %u, encoding %2u",
-				   i, format, face->charmaps[i]->platform_id, face->charmaps[i]->encoding_id);
+			printf("  %2d: format %2ld, platform %s, encoding %2u",
+				   i, format, platform_id(face->charmaps[i]->platform_id), face->charmaps[i]->encoding_id);
 		else
-			printf("  %2d: synthetic, platform %u, encoding %2u",
-				   i, face->charmaps[i]->platform_id, face->charmaps[i]->encoding_id);
+			printf("  %2d: synthetic, platform %s, encoding %2u",
+				   i, platform_id(face->charmaps[i]->platform_id), face->charmaps[i]->encoding_id);
 
 		if (lang_id == 0xFFFFFFFFUL)
 			printf("   (Unicode Variation Sequences)");

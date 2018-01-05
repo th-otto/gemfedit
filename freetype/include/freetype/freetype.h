@@ -784,25 +784,6 @@ typedef enum FT_Encoding_
 } FT_Encoding;
 
 
-/* these constants are deprecated; use the corresponding `FT_Encoding' */
-/* values instead                                                      */
-#define ft_encoding_none            FT_ENCODING_NONE
-#define ft_encoding_unicode         FT_ENCODING_UNICODE
-#define ft_encoding_symbol          FT_ENCODING_MS_SYMBOL
-#define ft_encoding_latin_1         FT_ENCODING_ADOBE_LATIN_1
-#define ft_encoding_latin_2         FT_ENCODING_OLD_LATIN_2
-#define ft_encoding_sjis            FT_ENCODING_SJIS
-#define ft_encoding_gb2312          FT_ENCODING_PRC
-#define ft_encoding_big5            FT_ENCODING_BIG5
-#define ft_encoding_wansung         FT_ENCODING_WANSUNG
-#define ft_encoding_johab           FT_ENCODING_JOHAB
-
-#define ft_encoding_adobe_standard  FT_ENCODING_ADOBE_STANDARD
-#define ft_encoding_adobe_expert    FT_ENCODING_ADOBE_EXPERT
-#define ft_encoding_adobe_custom    FT_ENCODING_ADOBE_CUSTOM
-#define ft_encoding_apple_roman     FT_ENCODING_APPLE_ROMAN
-
-
 /*************************************************************************/
 /*                                                                       */
 /* <Struct>                                                              */
@@ -1328,18 +1309,6 @@ typedef struct FT_FaceRec_
  */
 #define FT_HAS_FIXED_SIZES( face ) \
           ( (face)->face_flags & FT_FACE_FLAG_FIXED_SIZES )
-
-
-/*************************************************************************
- * 
- *  @macro:
- *    FT_HAS_FAST_GLYPHS( face )
- * 
- *  @description:
- *    Deprecated.
- * 
- */
-#define FT_HAS_FAST_GLYPHS( face )  0
 
 
 /*************************************************************************
@@ -1938,15 +1907,6 @@ FT_EXPORT(FT_Error) FT_Done_FreeType(FT_Library library);
 #define FT_OPEN_PATHNAME  0x4
 #define FT_OPEN_DRIVER    0x8
 #define FT_OPEN_PARAMS    0x10
-
-
-/* these constants are deprecated; use the corresponding `FT_OPEN_XXX' */
-/* values instead                                                      */
-#define ft_open_memory    FT_OPEN_MEMORY
-#define ft_open_stream    FT_OPEN_STREAM
-#define ft_open_pathname  FT_OPEN_PATHNAME
-#define ft_open_driver    FT_OPEN_DRIVER
-#define ft_open_params    FT_OPEN_PARAMS
 
 
 /*************************************************************************/
@@ -3106,12 +3066,6 @@ typedef enum FT_Render_Mode_
 } FT_Render_Mode;
 
 
-/* these constants are deprecated; use the corresponding */
-/* `FT_Render_Mode' values instead                       */
-#define ft_render_mode_normal  FT_RENDER_MODE_NORMAL
-#define ft_render_mode_mono    FT_RENDER_MODE_MONO
-
-
 /*************************************************************************/
 /*                                                                       */
 /* <Function>                                                            */
@@ -3252,13 +3206,6 @@ typedef enum FT_Kerning_Mode_
 	FT_KERNING_UNFITTED,
 	FT_KERNING_UNSCALED
 } FT_Kerning_Mode;
-
-
-/* these constants are deprecated; use the corresponding */
-/* `FT_Kerning_Mode' values instead                      */
-#define ft_kerning_default   FT_KERNING_DEFAULT
-#define ft_kerning_unfitted  FT_KERNING_UNFITTED
-#define ft_kerning_unscaled  FT_KERNING_UNSCALED
 
 
 /*************************************************************************/
