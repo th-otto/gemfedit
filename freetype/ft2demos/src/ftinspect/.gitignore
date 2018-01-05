@@ -1,0 +1,4 @@
+moc_*.c
+moc_*.cpp
+Makefile
+ftinspect
