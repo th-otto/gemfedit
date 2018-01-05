@@ -390,6 +390,3 @@ grSurface*  init_surface( grSurface*  surface,
     0,
     0
   };
-
-
-/* End */

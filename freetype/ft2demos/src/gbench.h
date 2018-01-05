@@ -15,72 +15,56 @@
 #ifndef GBENCH_H_
 #define GBENCH_H_
 
-  typedef enum
-  {
-    GBITMAP_FORMAT_NONE = 0,
-    GBITMAP_FORMAT_RGB24,
-    GBITMAP_FORMAT_GRAY,
-    GBITMAP_FORMAT_RGB,
-    GBITMAP_FORMAT_BGR,
-    GBITMAP_FORMAT_RGBV,
-    GBITMAP_FORMAT_BGRV,
+typedef enum
+{
+	GBITMAP_FORMAT_NONE = 0,
+	GBITMAP_FORMAT_RGB24,
+	GBITMAP_FORMAT_GRAY,
+	GBITMAP_FORMAT_RGB,
+	GBITMAP_FORMAT_BGR,
+	GBITMAP_FORMAT_RGBV,
+	GBITMAP_FORMAT_BGRV,
 
-    GBITMAP_FORMAT_MAX
-
-  } GBitmapFormat;
-
-
-  typedef struct GBitmapRec_
-  {
-    int             width;
-    int             height;
-    int             pitch;
-    unsigned char*  buffer;
-    GBitmapFormat   format;
-
-  } GBitmapRec, *GBitmap;
+	GBITMAP_FORMAT_MAX
+} GBitmapFormat;
 
 
-  typedef struct GBlitterRec_*  GBlitter;
-
-  typedef void  (*GBlitterFunc)( GBlitter   blitter,
-                                 int        color );
-
-  typedef struct GBlitterRec_
-  {
-    int              width;
-    int              height;
-
-    int              src_x;
-    unsigned char*   src_line;
-    int              src_incr;
-
-    int              dst_x;
-    unsigned char*   dst_line;
-    int              dst_incr;
-
-    GBlitterFunc     blit;
-
-  } GBlitterRec;
+typedef struct GBitmapRec_
+{
+	int width;
+	int height;
+	int pitch;
+	unsigned char *buffer;
+	GBitmapFormat format;
+} GBitmapRec, *GBitmap;
 
 
-  extern void
-  ggamma_set( double  gamma );
+typedef struct GBlitterRec_ *GBlitter;
 
-  extern int
-  gblitter_init_rgb24( GBlitter   blitter,
-                       GBitmap    src,
-                       int        dst_x,
-                       int        dst_y,
-                       int        dst_width,
-                       int        dst_height,
-                       void*      dst_buffer,
-                       int        dst_pitch );
+typedef void (*GBlitterFunc) (GBlitter blitter, int color);
+
+typedef struct GBlitterRec_
+{
+	int width;
+	int height;
+
+	int src_x;
+	unsigned char *src_line;
+	int src_incr;
+
+	int dst_x;
+	unsigned char *dst_line;
+	int dst_incr;
+
+	GBlitterFunc blit;
+} GBlitterRec;
+
+
+extern void ggamma_set(double gamma);
+
+extern int gblitter_init_rgb24(GBlitter blitter, GBitmap src, int dst_x, int dst_y, int dst_width, int dst_height, void *dst_buffer, int dst_pitch);
 
 #define  gblitter_blit(b,c)   (b)->blit( (b), (c) )
 
 
 #endif /* GBENCH_H_ */
-
-
-/* End */

@@ -26,155 +26,143 @@
 #define gettext( x )  ( x )
 
 
-  FT_Error  error;
+FT_Error error;
 
-  FT_Library  library;
-  FT_Face     face;
+FT_Library library;
+FT_Face face;
 
-  unsigned int  num_glyphs;
-  int           ptsize;
+unsigned int num_glyphs;
+int ptsize;
 
-  int  Fail;
-  int  Num;
-
-
-  static void
-  Usage( char*  name )
-  {
-    printf( "fttry: simple TrueType instruction tester -- part of the FreeType project\n" );
-    printf( "--------------------------------------------------------------------------\n" );
-    printf( "\n" );
-    printf( "Usage: %s ppem glyph fontname [fontname2..]\n\n", name );
-    printf( "    or %s -u glyph fontname [fontname2..]\n", name );
-    printf( "          to load an unscaled glyph\n\n" );
-
-    exit( 1 );
-  }
+int Fail;
+int Num;
 
 
-  static void
-  Panic( const char*  message )
-  {
-    fprintf( stderr,
-             "%s\n  error code = 0x%04x\n", message, error );
-    exit( 1 );
-  }
+static void Usage(char *name)
+{
+	printf("fttry: simple TrueType instruction tester -- part of the FreeType project\n");
+	printf("--------------------------------------------------------------------------\n");
+	printf("\n");
+	printf("Usage: %s ppem glyph fontname [fontname2..]\n\n", name);
+	printf("    or %s -u glyph fontname [fontname2..]\n", name);
+	printf("          to load an unscaled glyph\n\n");
+
+	exit(1);
+}
 
 
-  int
-  main( int     argc,
-        char**  argv )
-  {
-    int    i, file_index, glyph_index;
-    char   filename[1024 + 4];
-    char   alt_filename[1024 + 4];
-    char*  execname;
-    char*  fname;
-    int    load_unscaled = 0;
+static void Panic(const char *message)
+{
+	fprintf(stderr, "%s\n  error code = 0x%04x\n", message, error);
+	exit(1);
+}
 
 
-    execname = argv[0];
+int main(int argc, char **argv)
+{
+	int i,
+	 file_index,
+	 glyph_index;
+	char filename[1024 + 4];
+	char alt_filename[1024 + 4];
+	char *execname;
+	char *fname;
+	int load_unscaled = 0;
 
-    if ( argc < 3 )
-      Usage( execname );
 
-    if ( argv[1][0] == '-' &&
-         argv[1][1] == 'u' )
-      load_unscaled = 1;
-    else
-    {
-      if ( sscanf( argv[1], "%d", &ptsize ) != 1 )
-        Usage( execname );
-    }
-    argc--;
-    argv++;
+	execname = argv[0];
 
-    if ( sscanf( argv[1], "%d", &glyph_index ) != 1 )
-      Usage( execname );
+	if (argc < 3)
+		Usage(execname);
 
-    error = FT_Init_FreeType( &library );
-    if ( error )
-      Panic( "Could not create library object" );
+	if (argv[1][0] == '-' && argv[1][1] == 'u')
+		load_unscaled = 1;
+	else
+	{
+		if (sscanf(argv[1], "%d", &ptsize) != 1)
+			Usage(execname);
+	}
+	argc--;
+	argv++;
 
-    /* Now check all files */
-    for ( file_index = 2; file_index < argc; file_index++ )
-    {
-      fname = argv[file_index];
-      i     = strlen( fname );
-      while ( i > 0 && fname[i] != '\\' && fname[i] != '/' )
-      {
-        if ( fname[i] == '.' )
-          i = 0;
-        i--;
-      }
+	if (sscanf(argv[1], "%d", &glyph_index) != 1)
+		Usage(execname);
 
-      filename[1024] = '\0';
-      alt_filename[1024] = '\0';
+	error = FT_Init_FreeType(&library);
+	if (error)
+		Panic("Could not create library object");
 
-      strncpy( filename, fname, 1024 );
-      strncpy( alt_filename, fname, 1024 );
+	/* Now check all files */
+	for (file_index = 2; file_index < argc; file_index++)
+	{
+		fname = argv[file_index];
+		i = strlen(fname);
+		while (i > 0 && fname[i] != '\\' && fname[i] != '/')
+		{
+			if (fname[i] == '.')
+				i = 0;
+			i--;
+		}
 
-      if ( i >= 0 )
-      {
-        strncpy( filename + strlen( filename ), ".ttf", 4 );
-        strncpy( alt_filename + strlen( alt_filename ), ".ttc", 4 );
-      }
+		filename[1024] = '\0';
+		alt_filename[1024] = '\0';
 
-      i     = strlen( filename );
-      fname = filename;
+		strncpy(filename, fname, 1024);
+		strncpy(alt_filename, fname, 1024);
 
-      while ( i >= 0 )
-        if ( filename[i] == '/' || filename[i] == '\\' )
-        {
-          fname = filename + i + 1;
-          i     = -1;
-        }
-        else
-          i--;
+		if (i >= 0)
+		{
+			strncpy(filename + strlen(filename), ".ttf", 4);
+			strncpy(alt_filename + strlen(alt_filename), ".ttc", 4);
+		}
 
-      printf( "%s: ", fname );
+		i = strlen(filename);
+		fname = filename;
 
-      /* Load face */
-      error = FT_New_Face( library, filename, 0, &face );
-      if ( error )
-        Panic( "Could not create face object" );
+		while (i >= 0)
+			if (filename[i] == '/' || filename[i] == '\\')
+			{
+				fname = filename + i + 1;
+				i = -1;
+			} else
+				i--;
 
-      num_glyphs = face->num_glyphs;
+		printf("%s: ", fname);
 
-      error = FT_Set_Char_Size( face, ptsize << 6, 0, 0, 0 );
-      if ( error )
-        Panic( "Could not set character size" );
+		/* Load face */
+		error = FT_New_Face(library, filename, 0, &face);
+		if (error)
+			Panic("Could not create face object");
+
+		num_glyphs = face->num_glyphs;
+
+		error = FT_Set_Char_Size(face, ptsize << 6, 0, 0, 0);
+		if (error)
+			Panic("Could not set character size");
 
 #ifdef DUMP_NAME
-      {
-        char name[1024];
+		{
+			char name[1024];
 
-        error = FT_Get_Glyph_Name( face, glyph_index, name, 1024 );
-        if ( error )
-          printf( "no glyph name available\n" );
-        else
-          printf( "glyph name = '%s'\n", name );
-      }
+			error = FT_Get_Glyph_Name(face, glyph_index, name, 1024);
+			if (error)
+				printf("no glyph name available\n");
+			else
+				printf("glyph name = '%s'\n", name);
+		}
 
 #endif
 
-      error = FT_Load_Glyph( face,
-                             glyph_index,
-                             load_unscaled ? FT_LOAD_NO_SCALE
-                                           : FT_LOAD_DEFAULT );
-      if ( error == 0 )
-        printf( "OK.\n" );
-      else
-        printf( "Fail with error 0x%04x\n", error );
+		error = FT_Load_Glyph(face, glyph_index, load_unscaled ? FT_LOAD_NO_SCALE : FT_LOAD_DEFAULT);
+		if (error == 0)
+			printf("OK.\n");
+		else
+			printf("Fail with error 0x%04x\n", error);
 
-      FT_Done_Face( face );
-    }
+		FT_Done_Face(face);
+	}
 
-    FT_Done_FreeType(library);
-    exit( 0 );      /* for safety reasons */
+	FT_Done_FreeType(library);
 
-    return 0;       /* never reached */
-  }
-
-
-/* End */
+	return 0;
+}

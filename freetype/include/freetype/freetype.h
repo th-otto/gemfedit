@@ -602,13 +602,8 @@ typedef struct FT_CharMapRec_ *FT_CharMap;
 #endif
 
 #ifndef FT_ENC_TAG
-#define FT_ENC_TAG( value, a, b, c, d )         \
-          value = ( ( (FT_UInt32)(a) << 24 ) |  \
-                    ( (FT_UInt32)(b) << 16 ) |  \
-                    ( (FT_UInt32)(c) <<  8 ) |  \
-                      (FT_UInt32)(d)         )
-
-#endif /* FT_ENC_TAG */
+#define FT_ENC_TAG( value, a, b, c, d ) value = FT_MAKE_TAG(a, b, c, d)
+#endif
 
 
 /*************************************************************************/
@@ -782,7 +777,10 @@ typedef enum FT_Encoding_
 
 	FT_ENC_TAG(FT_ENCODING_OLD_LATIN_2, 'l', 'a', 't', '2'),
 
-	FT_ENC_TAG(FT_ENCODING_APPLE_ROMAN, 'a', 'r', 'm', 'n')
+	FT_ENC_TAG(FT_ENCODING_APPLE_ROMAN, 'a', 'r', 'm', 'n'),
+
+	/* special encoding to display glyphs in order */
+	FT_ENCODING_ORDER = -1
 } FT_Encoding;
 
 

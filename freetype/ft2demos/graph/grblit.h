@@ -22,6 +22,3 @@
 
 
 #endif /* GRBLIT_H_ */
-
-
-/* End */

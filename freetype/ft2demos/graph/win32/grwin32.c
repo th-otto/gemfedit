@@ -654,6 +654,3 @@ LRESULT CALLBACK Message_Process( HWND handle, UINT mess,
     0,
     0
   };
-
-
-/* End */

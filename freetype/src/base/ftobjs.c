@@ -3608,7 +3608,7 @@ ANONYMOUS_STRUCT_DUMMY(GX_BlendRec_)
       {
         gindex = cmap->clazz->char_next( cmap, &code );
 
-      } while ( gindex >= (FT_UInt)face->num_glyphs );
+      } while ( gindex >= (FT_UInt32)face->num_glyphs );
 
       result = ( gindex == 0 ) ? 0 : code;
     }

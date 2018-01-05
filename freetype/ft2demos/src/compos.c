@@ -26,170 +26,158 @@
 
 #define gettext( x )  ( x )
 
-  FT_Error      error;
+FT_Error error;
 
-  FT_Library    library;
-  FT_Face       face;
-  FT_Size       size;
-  FT_GlyphSlot  slot;
+FT_Library library;
+FT_Face face;
+FT_Size size;
+FT_GlyphSlot slot;
 
-  unsigned int  num_glyphs;
-  int           ptsize;
+unsigned int num_glyphs;
+int ptsize;
 
-  int  Fail;
-  int  Num;
-
-
-
-  static void  Usage( char*  name )
-  {
-    printf( "compos: test FT_LOAD_NO_RECURSE load flag - www.freetype.org\n" );
-    printf( "------------------------------------------------------------\n" );
-    printf( "\n" );
-    printf( "Usage: %s fontname[.ttf|.ttc] [fontname2..]\n", name );
-    printf( "\n" );
-
-    exit( 1 );
-  }
+int Fail;
+int Num;
 
 
-  static void  Panic( const char*  message )
-  {
-    fprintf( stderr, "%s\n  error code = 0x%04x\n", message, error );
-    exit(1);
-  }
+
+static void Usage(char *name)
+{
+	printf("compos: test FT_LOAD_NO_RECURSE load flag - www.freetype.org\n");
+	printf("------------------------------------------------------------\n");
+	printf("\n");
+	printf("Usage: %s fontname[.ttf|.ttc] [fontname2..]\n", name);
+	printf("\n");
+
+	exit(1);
+}
 
 
-  int  main( int  argc, char**  argv )
-  {
-    int           i, file_index;
-    unsigned int  id;
-    char          filename[1024 + 4];
-    char          alt_filename[1024 + 4];
-    char*         execname;
-    char*         fname;
+static void Panic(const char *message)
+{
+	fprintf(stderr, "%s\n  error code = 0x%04x\n", message, error);
+	exit(1);
+}
 
 
-    execname = argv[0];
+int main(int argc, char **argv)
+{
+	int i, file_index;
+	unsigned int id;
+	char filename[1024 + 4];
+	char alt_filename[1024 + 4];
+	char *execname;
+	char *fname;
 
-    if ( argc < 2 )
-      Usage( execname );
+	execname = argv[0];
 
-    error = FT_Init_FreeType( &library );
-    if (error) Panic( "Could not create library object" );
+	if (argc < 2)
+		Usage(execname);
 
-    /* Now check all files */
-    for ( file_index = 1; file_index < argc; file_index++ )
-    {
-      fname = argv[file_index];
-      i     = strlen( fname );
-      while ( i > 0 && fname[i] != '\\' && fname[i] != '/' )
-      {
-        if ( fname[i] == '.' )
-          i = 0;
-        i--;
-      }
+	error = FT_Init_FreeType(&library);
+	if (error)
+		Panic("Could not create library object");
 
-      filename[1024] = '\0';
-      alt_filename[1024] = '\0';
+	/* Now check all files */
+	for (file_index = 1; file_index < argc; file_index++)
+	{
+		fname = argv[file_index];
+		i = strlen(fname);
+		while (i > 0 && fname[i] != '\\' && fname[i] != '/')
+		{
+			if (fname[i] == '.')
+				i = 0;
+			i--;
+		}
 
-      strncpy( filename, fname, 1024 );
-      strncpy( alt_filename, fname, 1024 );
+		filename[1024] = '\0';
+		alt_filename[1024] = '\0';
+
+		strncpy(filename, fname, 1024);
+		strncpy(alt_filename, fname, 1024);
 
 #ifndef macintosh
-      if ( i >= 0 )
-      {
-        strncpy( filename + strlen( filename ), ".ttf", 4 );
-        strncpy( alt_filename + strlen( alt_filename ), ".ttc", 4 );
-      }
+		if (i >= 0)
+		{
+			strncpy(filename + strlen(filename), ".ttf", 4);
+			strncpy(alt_filename + strlen(alt_filename), ".ttc", 4);
+		}
 #endif
-      i     = strlen( filename );
-      fname = filename;
+		i = strlen(filename);
+		fname = filename;
 
-      while ( i >= 0 )
+		while (i >= 0)
 #ifndef macintosh
-        if ( filename[i] == '/' || filename[i] == '\\' )
+			if (filename[i] == '/' || filename[i] == '\\')
 #else
-        if ( filename[i] == ':' )
+			if (filename[i] == ':')
 #endif
-        {
-          fname = filename + i + 1;
-          i = -1;
-        }
-        else
-          i--;
+			{
+				fname = filename + i + 1;
+				i = -1;
+			} else
+				i--;
 
-      printf( "%s:\n", fname );
+		printf("%s:\n", fname);
 
-      /* Load face */
-      error = FT_New_Face( library, filename, 0, &face );
-      if (error)
-      {
-        if (error == FT_Err_Invalid_File_Format)
-          printf( "unknown format\n" );
-        else
-          printf( "could not find/open file (error: %d)\n", error );
-        continue;
-      }
+		/* Load face */
+		error = FT_New_Face(library, filename, 0, &face);
+		if (error)
+		{
+			if (error == FT_Err_Invalid_File_Format)
+				printf("unknown format\n");
+			else
+				printf("could not find/open file (error: %d)\n", error);
+			continue;
+		}
 
-      num_glyphs = face->num_glyphs;
-      slot       = face->glyph;
+		num_glyphs = face->num_glyphs;
+		slot = face->glyph;
 
-      Fail = 0;
-      {
-        for ( id = 0; id < num_glyphs; id++ )
-        {
-          int  has_scale;
+		Fail = 0;
+		{
+			for (id = 0; id < num_glyphs; id++)
+			{
+				int has_scale;
 
-          error = FT_Load_Glyph( face, id, FT_LOAD_NO_RECURSE );
-          if ( !error && slot->format == FT_GLYPH_FORMAT_COMPOSITE )
-          {
-            unsigned int  n;
-            FT_SubGlyph   subg = slot->subglyphs;
+				error = FT_Load_Glyph(face, id, FT_LOAD_NO_RECURSE);
+				if (!error && slot->format == FT_GLYPH_FORMAT_COMPOSITE)
+				{
+					unsigned int n;
+					FT_SubGlyph subg = slot->subglyphs;
 
-            printf( "%4d:", id );
-            for ( n = 0; n < slot->num_subglyphs; n++, subg++ )
-            {
-              has_scale = subg->flags & (
-                            FT_SUBGLYPH_FLAG_SCALE |
-                            FT_SUBGLYPH_FLAG_XY_SCALE |
-                            FT_SUBGLYPH_FLAG_2X2 );
+					printf("%4d:", id);
+					for (n = 0; n < slot->num_subglyphs; n++, subg++)
+					{
+						has_scale = subg->flags & (FT_SUBGLYPH_FLAG_SCALE |
+												   FT_SUBGLYPH_FLAG_XY_SCALE | FT_SUBGLYPH_FLAG_2X2);
 
-              printf( " [%d%c",
-                      subg->index,
-                      subg->flags & FT_SUBGLYPH_FLAG_USE_MY_METRICS ? '*' : ' ' );
+						printf(" [%d%c", subg->index, subg->flags & FT_SUBGLYPH_FLAG_USE_MY_METRICS ? '*' : ' ');
 
-              if ( subg->arg1|subg->arg2 )
-              {
-                if ( subg->flags & FT_SUBGLYPH_FLAG_ARGS_ARE_XY_VALUES )
-                  printf( "(%d,%d)", subg->arg1, subg->arg2 );
-                else
-                  printf( "<%d,%d>", subg->arg1, subg->arg2 );
-              }
+						if (subg->arg1 | subg->arg2)
+						{
+							if (subg->flags & FT_SUBGLYPH_FLAG_ARGS_ARE_XY_VALUES)
+								printf("(%d,%d)", subg->arg1, subg->arg2);
+							else
+								printf("<%d,%d>", subg->arg1, subg->arg2);
+						}
 
-              if (has_scale)
-                printf( "-{%0.3f %0.3f %0.3f %0.3f}",
-                        subg->transform.xx/65536.0,
-                        subg->transform.xy/65536.0,
-                        subg->transform.yx/65536.0,
-                        subg->transform.yy/65536.0 );
-              printf( "]" );
-            }
-            printf( " adv=%ld lsb=%ld\n",
-                    slot->metrics.horiAdvance,
-                    slot->metrics.horiBearingX );
-          }
-        }
-      }
+						if (has_scale)
+							printf("-{%0.3f %0.3f %0.3f %0.3f}",
+								   subg->transform.xx / 65536.0,
+								   subg->transform.xy / 65536.0,
+								   subg->transform.yx / 65536.0, subg->transform.yy / 65536.0);
+						printf("]");
+					}
+					printf(" adv=%ld lsb=%ld\n", slot->metrics.horiAdvance, slot->metrics.horiBearingX);
+				}
+			}
+		}
 
-      FT_Done_Face( face );
-    }
+		FT_Done_Face(face);
+	}
 
-    FT_Done_FreeType(library);
-    exit( 0 );      /* for safety reasons */
+	FT_Done_FreeType(library);
 
-    return 0;       /* never reached */
-  }
-
-
-/* End */
+	return 0;
+}

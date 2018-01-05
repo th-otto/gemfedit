@@ -354,6 +354,3 @@ int Window::listen_event(grSurface* surface, int event_mask, grEvent* grevent) {
   Window* win = ((grBeOSSurface*)surface)->window;
   return win->listen_event(event_mask, grevent);
 }
-
-/* End */
-

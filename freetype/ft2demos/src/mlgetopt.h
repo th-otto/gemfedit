@@ -17,26 +17,17 @@
 #endif
 
 #ifdef __cplusplus
-  extern "C" {
+extern "C" {
 #endif
 
-  extern int    opterr;
-  extern int    optind;
-  extern char*  optarg;
+extern int opterr;
+extern int optind;
+extern char *optarg;
 
-  extern int  getopt(
-#ifdef __STDC__
-    int           argc,
-    char* const*  argv,
-    const char*   pattern
-#endif
-  );
+extern int getopt(int argc, char *const *argv, const char *pattern);
 
 #ifdef __cplusplus
-  }
+}
 #endif
 
-#endif /* MLGETOPT_H_ */
-
-
-/* End */
+#endif									/* MLGETOPT_H_ */

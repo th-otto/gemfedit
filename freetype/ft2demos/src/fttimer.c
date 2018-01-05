@@ -26,7 +26,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <time.h>    /* for clock() */
+#include <time.h>						/* for clock() */
 
   /* SunOS 4.1.* does not define CLOCKS_PER_SEC, so include <sys/param.h> */
   /* to get the HZ macro which is the equivalent.                         */
@@ -35,38 +35,37 @@
 #define CLOCKS_PER_SEC HZ
 #endif
 
-#define CHARSIZE    400   /* character point size */
-#define MAX_GLYPHS  512   /* Maximum number of glyphs rendered at one time */
+#define CHARSIZE    400					/* character point size */
+#define MAX_GLYPHS  512					/* Maximum number of glyphs rendered at one time */
 
-  char  Header[128];
+char Header[128];
 
-  FT_Error    error;
-  FT_Library  library;
+FT_Error error;
+FT_Library library;
 
-  FT_Face     face;
+FT_Face face;
 
-  int         num_glyphs;
-  FT_Glyph    glyphs[MAX_GLYPHS];
+int num_glyphs;
+FT_Glyph glyphs[MAX_GLYPHS];
 
-  int         tab_glyphs;
-  int         cur_glyph;
+int tab_glyphs;
+int cur_glyph;
 
-  int         pixel_size   = CHARSIZE;
-  int         repeat_count = 1;
+int pixel_size = CHARSIZE;
+int repeat_count = 1;
 
-  int         Fail;
-  int         Num;
+int Fail;
+int Num;
 
-  short       antialias = 1; /* smooth fonts with gray levels  */
-  short       force_low;
+short antialias = 1;					/* smooth fonts with gray levels  */
+short force_low;
 
 
-  static void
-  Panic( const char*  message )
-  {
-    fprintf( stderr, "%s\n", message );
-    exit( 1 );
-  }
+static void Panic(const char *message)
+{
+	fprintf(stderr, "%s\n", message);
+	exit(1);
+}
 
 
   /*******************************************************************/
@@ -77,11 +76,10 @@
   /*                                                                 */
   /*******************************************************************/
 
-  static long
-  Get_Time( void )
-  {
-    return clock() * 10000 / CLOCKS_PER_SEC;
-  }
+static long Get_Time(void)
+{
+	return clock() * 10000 / CLOCKS_PER_SEC;
+}
 
 
   /*******************************************************************/
@@ -92,20 +90,18 @@
   /*                                                                 */
   /*******************************************************************/
 
-  static FT_Error
-  LoadChar( int  idx )
-  {
-    FT_Glyph  glyph;
+static FT_Error LoadChar(int idx)
+{
+	FT_Glyph glyph;
 
 
-    /* load the glyph in the glyph slot */
-    error = FT_Load_Glyph( face, idx, FT_LOAD_DEFAULT ) ||
-            FT_Get_Glyph ( face->glyph, &glyph );
-    if ( !error )
-      glyphs[cur_glyph++] = glyph;
+	/* load the glyph in the glyph slot */
+	error = FT_Load_Glyph(face, idx, FT_LOAD_DEFAULT) || FT_Get_Glyph(face->glyph, &glyph);
+	if (!error)
+		glyphs[cur_glyph++] = glyph;
 
-    return error;
-  }
+	return error;
+}
 
 
   /*******************************************************************/
@@ -116,236 +112,225 @@
   /*                                                                 */
   /*******************************************************************/
 
-  static FT_Error
-  ConvertRaster( int  idx )
-  {
-    FT_Glyph  bitmap;
+static FT_Error ConvertRaster(int idx)
+{
+	FT_Glyph bitmap;
 
 
-    bitmap = glyphs[idx];
-    if ( bitmap->format == FT_GLYPH_FORMAT_BITMAP )
-      error = 0;  /* we already have a (embedded) bitmap */
-    else
-    {
-      error = FT_Glyph_To_Bitmap( &bitmap,
-                                  antialias ? FT_RENDER_MODE_NORMAL
-                                            : FT_RENDER_MODE_MONO,
-                                  0,
-                                  0 );
-      if ( !error )
-        FT_Done_Glyph( bitmap );
-    }
+	bitmap = glyphs[idx];
+	if (bitmap->format == FT_GLYPH_FORMAT_BITMAP)
+		error = 0;						/* we already have a (embedded) bitmap */
+	else
+	{
+		error = FT_Glyph_To_Bitmap(&bitmap, antialias ? FT_RENDER_MODE_NORMAL : FT_RENDER_MODE_MONO, 0, 0);
+		if (!error)
+			FT_Done_Glyph(bitmap);
+	}
 
-    return error;
-  }
+	return error;
+}
 
 
-  static void
-  Usage( void )
-  {
-    fprintf( stderr, "fttimer: simple performance timer -- part of the FreeType project\n" );
-    fprintf( stderr, "-----------------------------------------------------------------\n\n" );
-    fprintf( stderr, "Usage: fttimer [options] fontname[.ttf|.ttc]\n\n" );
-    fprintf( stderr, "options:\n");
-    fprintf( stderr, "   -r : repeat count to be used (default is 1)\n" );
-    fprintf( stderr, "   -s : character pixel size (default is 600)\n" );
-    fprintf( stderr, "   -m : render monochrome glyphs (default is anti-aliased)\n" );
-    fprintf( stderr, "   -a : use smooth anti-aliaser\n" );
-    fprintf( stderr, "   -l : force low quality even at small sizes\n" );
+static void Usage(void)
+{
+	fprintf(stderr, "fttimer: simple performance timer -- part of the FreeType project\n");
+	fprintf(stderr, "-----------------------------------------------------------------\n\n");
+	fprintf(stderr, "Usage: fttimer [options] fontname[.ttf|.ttc]\n\n");
+	fprintf(stderr, "options:\n");
+	fprintf(stderr, "   -r : repeat count to be used (default is 1)\n");
+	fprintf(stderr, "   -s : character pixel size (default is 600)\n");
+	fprintf(stderr, "   -m : render monochrome glyphs (default is anti-aliased)\n");
+	fprintf(stderr, "   -a : use smooth anti-aliaser\n");
+	fprintf(stderr, "   -l : force low quality even at small sizes\n");
 
-    exit( 1 );
-  }
-
-
-  int
-  main( int     argc,
-        char**  argv )
-  {
-    int    i, total, base, rendered_glyphs;
-    char   filename[1024 + 4];
-    char   alt_filename[1024 + 4];
-
-    long   t, t0, tz0;
+	exit(1);
+}
 
 
-    antialias = 1;
-    force_low = 0;
+int main(int argc, char **argv)
+{
+	int i,
+	 total,
+	 base,
+	 rendered_glyphs;
+	char filename[1024 + 4];
+	char alt_filename[1024 + 4];
 
-    while ( argc > 1 && argv[1][0] == '-' )
-    {
-      switch ( argv[1][1] )
-      {
-      case 'm':
-        antialias = 0;
-        break;
-
-      case 'l':
-        force_low = 1;
-        break;
-
-      case 's':
-        argc--;
-        argv++;
-        if ( argc < 2 ||
-             sscanf( argv[1], "%d", &pixel_size ) != 1 )
-          Usage();
-        break;
-
-      case 'r':
-        argc--;
-        argv++;
-        if ( argc < 2 ||
-             sscanf( argv[1], "%d", &repeat_count ) != 1 )
-          Usage();
-        if ( repeat_count < 1 )
-          repeat_count = 1;
-        break;
-
-      default:
-        fprintf( stderr, "Unknown argument `%s'\n", argv[1] );
-        Usage();
-        break;
-      }
-
-      argc--;
-      argv++;
-    }
-
-    if ( argc != 2 )
-      Usage();
-
-    i = strlen( argv[1] );
-    while ( i > 0 && argv[1][i] != '\\' )
-    {
-      if ( argv[1][i] == '.' )
-        i = 0;
-      i--;
-    }
-
-    filename[1024]     = '\0';
-    alt_filename[1024] = '\0';
-
-    strncpy( filename, argv[1], 1024 );
-    strncpy( alt_filename, argv[1], 1024 );
-
-    if ( i >= 0 )
-    {
-      strncpy( filename + strlen( filename ), ".ttf", 4 );
-      strncpy( alt_filename + strlen( alt_filename ), ".ttc", 4 );
-    }
-
-    /* Initialize engine */
-
-    if ( ( error = FT_Init_FreeType( &library ) ) != 0 )
-      Panic( "Error while initializing engine" );
-
-    /* Load face */
-
-    error = FT_New_Face( library, filename, 0, &face );
-    if ( error == FT_Err_Cannot_Open_Stream )
-      Panic( "Could not find/open font resource" );
-    else if ( error )
-      Panic( "Error while opening font resource" );
-
-    /* get face properties and allocate preload arrays */
-
-    num_glyphs = face->num_glyphs;
-
-    tab_glyphs = MAX_GLYPHS;
-    if ( tab_glyphs > num_glyphs )
-      tab_glyphs = num_glyphs;
-
-    /* create size */
-
-    error = FT_Set_Pixel_Sizes( face, pixel_size, pixel_size );
-    if ( error )
-      Panic( "Could not reset instance" );
-
-    Num  = 0;
-    Fail = 0;
-
-    total = num_glyphs;
-    base  = 0;
-
-    rendered_glyphs = 0;
-
-    t0 = 0;  /* Initial time */
-
-    tz0 = Get_Time();
-
-    while ( total > 0 )
-    {
-      int  repeat;
+	long t,
+	 t0,
+	 tz0;
 
 
-      /* First, preload 'tab_glyphs' in memory */
-      cur_glyph = 0;
+	antialias = 1;
+	force_low = 0;
 
-      printf( "loading %d glyphs", tab_glyphs );
+	while (argc > 1 && argv[1][0] == '-')
+	{
+		switch (argv[1][1])
+		{
+		case 'm':
+			antialias = 0;
+			break;
 
-      for ( Num = 0; Num < tab_glyphs; Num++ )
-      {
-        error = LoadChar( base + Num );
-        if ( error )
-          Fail++;
+		case 'l':
+			force_low = 1;
+			break;
 
-        total--;
-      }
+		case 's':
+			argc--;
+			argv++;
+			if (argc < 2 || sscanf(argv[1], "%d", &pixel_size) != 1)
+				Usage();
+			break;
 
-      base += tab_glyphs;
+		case 'r':
+			argc--;
+			argv++;
+			if (argc < 2 || sscanf(argv[1], "%d", &repeat_count) != 1)
+				Usage();
+			if (repeat_count < 1)
+				repeat_count = 1;
+			break;
 
-      if ( tab_glyphs > total )
-        tab_glyphs = total;
+		default:
+			fprintf(stderr, "Unknown argument `%s'\n", argv[1]);
+			Usage();
+			break;
+		}
 
-      printf( ", rendering... " );
+		argc--;
+		argv++;
+	}
 
-      /* Now, render the loaded glyphs */
+	if (argc != 2)
+		Usage();
 
-      t = Get_Time();
+	i = strlen(argv[1]);
+	while (i > 0 && argv[1][i] != '\\')
+	{
+		if (argv[1][i] == '.')
+			i = 0;
+		i--;
+	}
 
-      for ( repeat = 0; repeat < repeat_count; repeat++ )
-      {
-        for ( Num = 0; Num < cur_glyph; Num++ )
-        {
-          if ( ( error = ConvertRaster( Num ) ) != 0 )
-            Fail++;
-          else
-            rendered_glyphs++;
-        }
-      }
+	filename[1024] = '\0';
+	alt_filename[1024] = '\0';
 
-      t = Get_Time() - t;
-      if ( t < 0 )
-        t += 1000 * 60 * 60;
+	strncpy(filename, argv[1], 1024);
+	strncpy(alt_filename, argv[1], 1024);
 
-      printf( " = %f s\n", (double)t / 10000 );
-      t0 += t;
+	if (i >= 0)
+	{
+		strncpy(filename + strlen(filename), ".ttf", 4);
+		strncpy(alt_filename + strlen(alt_filename), ".ttc", 4);
+	}
 
-      /* Now free all loaded outlines */
-      for ( Num = 0; Num < cur_glyph; Num++ )
-        FT_Done_Glyph( glyphs[Num] );
-    }
+	/* Initialize engine */
 
-    tz0 = Get_Time() - tz0;
+	if ((error = FT_Init_FreeType(&library)) != 0)
+		Panic("Error while initializing engine");
 
-    FT_Done_Face( face );
+	/* Load face */
 
-    printf( "\n" );
-    printf( "rendered glyphs  = %d\n", rendered_glyphs );
-    printf( "render time      = %f s\n", (double)t0 / 10000 );
-    printf( "fails            = %d\n", Fail );
-    printf( "average glyphs/s = %f\n",
-            (double)rendered_glyphs / t0 * 10000 );
+	error = FT_New_Face(library, filename, 0, &face);
+	if (error == FT_Err_Cannot_Open_Stream)
+		Panic("Could not find/open font resource");
+	else if (error)
+		Panic("Error while opening font resource");
 
-    printf( "total timing     = %f s\n", (double)tz0 / 10000 );
-    printf( "Fails = %d\n", Fail );
+	/* get face properties and allocate preload arrays */
 
-    FT_Done_FreeType( library );
+	num_glyphs = face->num_glyphs;
 
-    exit( 0 );      /* for safety reasons */
+	tab_glyphs = MAX_GLYPHS;
+	if (tab_glyphs > num_glyphs)
+		tab_glyphs = num_glyphs;
 
-    return 0;       /* never reached */
-  }
+	/* create size */
+
+	error = FT_Set_Pixel_Sizes(face, pixel_size, pixel_size);
+	if (error)
+		Panic("Could not reset instance");
+
+	Num = 0;
+	Fail = 0;
+
+	total = num_glyphs;
+	base = 0;
+
+	rendered_glyphs = 0;
+
+	t0 = 0;								/* Initial time */
+
+	tz0 = Get_Time();
+
+	while (total > 0)
+	{
+		int repeat;
 
 
-/* End */
+		/* First, preload 'tab_glyphs' in memory */
+		cur_glyph = 0;
+
+		printf("loading %d glyphs", tab_glyphs);
+
+		for (Num = 0; Num < tab_glyphs; Num++)
+		{
+			error = LoadChar(base + Num);
+			if (error)
+				Fail++;
+
+			total--;
+		}
+
+		base += tab_glyphs;
+
+		if (tab_glyphs > total)
+			tab_glyphs = total;
+
+		printf(", rendering... ");
+
+		/* Now, render the loaded glyphs */
+
+		t = Get_Time();
+
+		for (repeat = 0; repeat < repeat_count; repeat++)
+		{
+			for (Num = 0; Num < cur_glyph; Num++)
+			{
+				if ((error = ConvertRaster(Num)) != 0)
+					Fail++;
+				else
+					rendered_glyphs++;
+			}
+		}
+
+		t = Get_Time() - t;
+		if (t < 0)
+			t += 1000 * 60 * 60;
+
+		printf(" = %f s\n", (double) t / 10000);
+		t0 += t;
+
+		/* Now free all loaded outlines */
+		for (Num = 0; Num < cur_glyph; Num++)
+			FT_Done_Glyph(glyphs[Num]);
+	}
+
+	tz0 = Get_Time() - tz0;
+
+	FT_Done_Face(face);
+
+	printf("\n");
+	printf("rendered glyphs  = %d\n", rendered_glyphs);
+	printf("render time      = %f s\n", (double) t0 / 10000);
+	printf("fails            = %d\n", Fail);
+	printf("average glyphs/s = %f\n", (double) rendered_glyphs / t0 * 10000);
+
+	printf("total timing     = %f s\n", (double) tz0 / 10000);
+	printf("Fails = %d\n", Fail);
+
+	FT_Done_FreeType(library);
+
+	return 0;
+}
