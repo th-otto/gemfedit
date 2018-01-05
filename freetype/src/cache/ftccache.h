@@ -341,12 +341,7 @@ FT_BEGIN_HEADER
     }                                                             \
   }
 
- /* */
-
 FT_END_HEADER
 
 
 #endif /* FTCCACHE_H_ */
-
-
-/* END */

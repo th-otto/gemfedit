@@ -134,8 +134,6 @@ FT_BEGIN_HEADER
 
   } PS_HintsRec, *PS_Hints;
 
-  /* */
-
   /* initialize hints recorder */
   FT_LOCAL( void )
   ps_hints_init( PS_Hints   hints,
@@ -160,13 +158,7 @@ FT_BEGIN_HEADER
   extern  int      ps_debug_no_vert_hints;
 #endif
 
- /* */
-
-
 FT_END_HEADER
 
 
 #endif /* PSHREC_H_ */
-
-
-/* END */

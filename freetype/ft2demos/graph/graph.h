@@ -677,6 +677,4 @@
   extern
   void  grSetGlyphGamma( double  gamma_value );
 
-/* */
-
 #endif /* GRAPH_H_ */

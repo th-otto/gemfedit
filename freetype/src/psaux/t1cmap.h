@@ -94,12 +94,6 @@ FT_BEGIN_HEADER
   FT_CALLBACK_TABLE const FT_CMap_ClassRec
   t1_cmap_unicode_class_rec;
 
- /* */
-
-
 FT_END_HEADER
 
 #endif /* T1CMAP_H_ */
-
-
-/* END */

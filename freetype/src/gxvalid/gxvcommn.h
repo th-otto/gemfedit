@@ -572,11 +572,6 @@ FT_BEGIN_HEADER
           FT_END_STMNT
 
 
- /* */
-
 FT_END_HEADER
 
 #endif /* GXVCOMMN_H_ */
-
-
-/* END */

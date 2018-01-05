@@ -53,11 +53,6 @@ FT_BEGIN_HEADER
                       FT_Long*         x_advance,
                       FT_Long*         y_offset );
 
- /* */
-
 FT_END_HEADER
 
 #endif /* AFSHAPER_H_ */
-
-
-/* END */

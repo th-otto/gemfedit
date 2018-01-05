@@ -37,11 +37,6 @@ FT_BEGIN_HEADER
 
 #include "afscript.h"
 
- /* */
-
 FT_END_HEADER
 
 #endif /* AFRANGES_H_ */
-
-
-/* END */

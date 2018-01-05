@@ -164,9 +164,4 @@
                   FT_Byte*     buffer,
                   FT_ULong     out_size );
 
-/* */
-
 #endif /* FTZOPEN_H_ */
-
-
-/* END */

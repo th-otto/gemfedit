@@ -97,11 +97,6 @@ FT_BEGIN_HEADER
 #endif
 
 
- /* */
-
 FT_END_HEADER
 
 #endif /* FTCIMAGE_H_ */
-
-
-/* END */

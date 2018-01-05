@@ -184,11 +184,6 @@ FT_BEGIN_HEADER
                                   AF_WidthRec*   widths,
                                   AF_Dimension   dim );
 
-/* */
-
 FT_END_HEADER
 
 #endif /* AFLATIN_H_ */
-
-
-/* END */

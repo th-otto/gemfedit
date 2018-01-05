@@ -55,9 +55,4 @@ FT_END_HEADER
 
 #endif /* FT_CONFIG_OPTION_PIC */
 
- /* */
-
 #endif /* PSHPIC_H_ */
-
-
-/* END */

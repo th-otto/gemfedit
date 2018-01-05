@@ -60,9 +60,6 @@ FT_BEGIN_HEADER
   } T42_DriverRec, *T42_Driver;
 
 
-  /* */
-
-
   FT_LOCAL( FT_Error )
   T42_Face_Init( FT_Stream      stream,
                  FT_Face        face,
@@ -113,12 +110,7 @@ FT_BEGIN_HEADER
   FT_LOCAL( void )
   T42_Driver_Done( FT_Module  module );
 
- /* */
-
 FT_END_HEADER
 
 
 #endif /* T42OBJS_H_ */
-
-
-/* END */

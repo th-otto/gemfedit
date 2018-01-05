@@ -893,9 +893,6 @@ FT_BEGIN_HEADER
   /*                                                                       */
 #define AF_CONFIG_OPTION_USE_WARPER
 
-  /* */
-
-
   /*
    * This macro is obsolete.  Support has been removed in FreeType
    * version 2.5.

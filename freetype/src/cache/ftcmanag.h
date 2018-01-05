@@ -149,8 +149,6 @@ FT_BEGIN_HEADER
                              FTC_CacheClass   clazz,
                              FTC_Cache       *acache );
 
- /* */
-
 #define FTC_SCALER_COMPARE( a, b )                \
     ( (a)->face_id      == (b)->face_id      &&   \
       (a)->width        == (b)->width        &&   \
@@ -165,11 +163,6 @@ FT_BEGIN_HEADER
       (q)->width + (q)->height*7 +                           \
       ( (q)->pixel ? 0 : ( (q)->x_res*33 ^ (q)->y_res*61 ) ) )
 
- /* */
-
 FT_END_HEADER
 
 #endif /* FTCMANAG_H_ */
-
-
-/* END */

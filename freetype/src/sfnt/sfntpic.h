@@ -104,9 +104,4 @@ FT_END_HEADER
 
 #endif /* FT_CONFIG_OPTION_PIC */
 
-  /* */
-
 #endif /* SFNTPIC_H_ */
-
-
-/* END */

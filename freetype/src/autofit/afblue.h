@@ -401,12 +401,7 @@ FT_BEGIN_HEADER
   FT_LOCAL_ARRAY( AF_Blue_StringRec )
   af_blue_stringsets[];
 
-/* */
-
 FT_END_HEADER
 
 
 #endif /* AFBLUE_H_ */
-
-
-/* END */

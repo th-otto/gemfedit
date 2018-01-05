@@ -355,8 +355,8 @@ static void ft_bitmap_draw(FT_Bitmap * bitmap, int x, int y, FTDemo_Display * di
 {
 	grBitmap gbit;
 
-	gbit.width = (int) bitmap->width;
-	gbit.rows = (int) bitmap->rows;
+	gbit.width = bitmap->width;
+	gbit.rows = bitmap->rows;
 	gbit.pitch = bitmap->pitch;
 	gbit.buffer = bitmap->buffer;
 
@@ -422,10 +422,10 @@ static void ft_outline_draw(FT_Outline * outline,
 
 	bitm.width = (unsigned int) ((cbox.xMax - cbox.xMin) >> 6);
 	bitm.rows = (unsigned int) ((cbox.yMax - cbox.yMin) >> 6);
-	bitm.pitch = (int) bitm.width;
+	bitm.pitch = bitm.width;
 	bitm.num_grays = 256;
 	bitm.pixel_mode = FT_PIXEL_MODE_GRAY;
-	bitm.buffer = (unsigned char *) calloc((unsigned int) bitm.pitch, bitm.rows);
+	bitm.buffer = (unsigned char *) calloc(bitm.pitch, bitm.rows);
 
 	FT_Outline_Translate(&transformed, -cbox.xMin, -cbox.yMin);
 	FT_Outline_Get_Bitmap(handle->library, &transformed, &bitm);
@@ -531,7 +531,7 @@ static void bitmap_scale(grBitmap * bit, FT_F26Dot6 scale)
 	pitch = bit->pitch > 0 ? bit->pitch : -bit->pitch;
 	width = bit->width;
 
-	t = (unsigned char *) malloc((size_t) (pitch * bit->rows * scale * scale));
+	t = (unsigned char *) malloc((size_t) pitch * bit->rows * scale * scale);
 	if (!t)
 		return;
 
@@ -961,7 +961,7 @@ static void event_cff_hinting_engine_change(int delta)
 	sprintf(status.header_buffer, "CFF engine changed to %s",
 			status.cff_hinting_engine == FT_CFF_HINTING_FREETYPE ? "FreeType" : "Adobe");
 
-	status.header = (const char *) status.header_buffer;
+	status.header = status.header_buffer;
 }
 
 
@@ -985,7 +985,7 @@ static void event_tt_interpreter_version_change(void)
 	sprintf(status.header_buffer,
 			"TrueType engine changed to version %d", status.tt_interpreter_versions[status.tt_interpreter_version_idx]);
 
-	status.header = (const char *) status.header_buffer;
+	status.header = status.header_buffer;
 }
 
 
@@ -1055,7 +1055,7 @@ static void event_grid_zoom(double zoom)
 
 	sprintf(status.header_buffer, "zoom level %.0f%%", status.scale * 100.0 / status.scale_0);
 
-	status.header = (const char *) status.header_buffer;
+	status.header = status.header_buffer;
 }
 
 
@@ -1098,7 +1098,7 @@ static void event_lcd_mode_change(int delta)
 
 	sprintf(status.header_buffer, "rendering mode changed to %s", lcd_mode);
 
-	status.header = (const char *) status.header_buffer;
+	status.header = status.header_buffer;
 
 	FTDemo_Update_Current_Flags(handle);
 }
@@ -1146,7 +1146,7 @@ static void event_lcd_filter_change(void)
 
 		sprintf(status.header_buffer, "LCD filter changed to %s", lcd_filter);
 
-		status.header = (const char *) status.header_buffer;
+		status.header = status.header_buffer;
 
 		FT_Library_SetLcdFilter(handle->library, status.lcd_filter);
 	} else
@@ -1619,15 +1619,13 @@ static void write_header(FT_Error error_code)
 
 	if (status.mm)
 	{
-		const char *format = "%s axis: %.02f";
-
-		snprintf(status.header_buffer, BUFSIZE, format,
+		snprintf(status.header_buffer, BUFSIZE, "%s axis: %.02f",
 				 status.axis_name[status.current_axis]
 				 ? status.axis_name[status.current_axis]
 				 : status.mm->axis[status.current_axis].name,
 				 status.design_pos[status.current_axis] / 65536.0);
 
-		status.header = (const char *) status.header_buffer;
+		status.header = status.header_buffer;
 		grWriteCellString(display->bitmap, 0, 4 * HEADER_HEIGHT, status.header, display->fore_color);
 	}
 

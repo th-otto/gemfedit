@@ -113,11 +113,6 @@ FT_BEGIN_HEADER
   pfr_phy_font_done( PFR_PhyFont  phy_font,
                      FT_Memory    memory );
 
-  /* */
-
 FT_END_HEADER
 
 #endif /* PFRLOAD_H_ */
-
-
-/* END */

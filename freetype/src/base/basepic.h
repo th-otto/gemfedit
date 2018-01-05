@@ -79,9 +79,4 @@ FT_END_HEADER
 
 #endif /* FT_CONFIG_OPTION_PIC */
 
-  /* */
-
 #endif /* BASEPIC_H_ */
-
-
-/* END */

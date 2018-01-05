@@ -31,11 +31,6 @@ FT_BEGIN_HEADER
   AF_DECLARE_WRITING_SYSTEM_CLASS( af_indic_writing_system_class )
 
 
-/* */
-
 FT_END_HEADER
 
 #endif /* AFINDIC_H_ */
-
-
-/* END */

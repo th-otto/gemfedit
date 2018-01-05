@@ -464,8 +464,6 @@ FT_BEGIN_HEADER
   FT_LOCAL( void )
   af_glyph_hints_done( AF_GlyphHints  hints );
 
-/* */
-
 #define AF_SEGMENT_LEN( seg )          ( (seg)->max_coord - (seg)->min_coord )
 
 #define AF_SEGMENT_DIST( seg1, seg2 )  ( ( (seg1)->pos > (seg2)->pos )   \
@@ -476,6 +474,3 @@ FT_BEGIN_HEADER
 FT_END_HEADER
 
 #endif /* AFHINTS_H_ */
-
-
-/* END */

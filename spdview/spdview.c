@@ -1332,7 +1332,7 @@ static gboolean gen_speedo_font(GString *body)
 		time_t t;
 		struct tm tm;
 		char *basename;
-		int columns = 0;
+		int columns;
 		
 		t = time(NULL);
 		tm = *gmtime(&t);
@@ -1558,9 +1558,9 @@ static gboolean gen_speedo_font(GString *body)
 							c->bbox.width, c->bbox.height, c->bbox.ascent, c->bbox.descent, c->bbox.lbearing, c->bbox.rbearing);
 					}
 					if (specs.output_mode == MODE_OUTLINE)
- 						src = g_strdup_printf("<svg width=\"%d\" height=\"%d\"><use xlink:href=\"%s#chr%04x\" style=\"text-align: left; vertical-align: top;\"></use></svg>",
- 							font_bb.width, font_bb.height,
- 							img[j], char_id);
+						src = g_strdup_printf("<svg width=\"%d\" height=\"%d\"><use xlink:href=\"%s#chr%04x\" style=\"text-align: left; vertical-align: top;\"></use></svg>",
+							font_bb.width, font_bb.height,
+							img[j], char_id);
 					else
 						src = g_strdup_printf("<img alt=\"\" style=\"text-align: left; vertical-align: top; position: relative; left: %dpx; top: %dpx\" src=\"%s\">",
 							-(font_bb.lbearing - c->bbox.lbearing),
@@ -1787,7 +1787,7 @@ static int mycurl_trace(CURL *handle, curl_infotype type, char *data, size_t siz
 	case CURLINFO_END:
 	default:
 		break;
- 	}
+	}
 	return 0;
 }
 

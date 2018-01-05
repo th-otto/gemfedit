@@ -162,12 +162,6 @@ FT_BEGIN_HEADER
   af_face_globals_is_digit( AF_FaceGlobals  globals,
                             FT_UInt32         gindex );
 
-  /* */
-
-
 FT_END_HEADER
 
 #endif /* AFGLOBAL_H_ */
-
-
-/* END */

@@ -93,11 +93,6 @@ FT_BEGIN_HEADER
 
 #endif
 
-  /* */
-
 FT_END_HEADER
 
 #endif /* FTCSBITS_H_ */
-
-
-/* END */

@@ -427,11 +427,6 @@ FT_BEGIN_HEADER
   FT_LOCAL( FT_UInt )
   otv_GSUBGPOS_have_MarkAttachmentType_flag( FT_Bytes  table );
 
- /* */
-
 FT_END_HEADER
 
 #endif /* OTVCOMMN_H_ */
-
-
-/* END */

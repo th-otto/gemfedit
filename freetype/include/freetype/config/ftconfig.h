@@ -168,9 +168,6 @@ typedef signed short FT_Int16;
 /*                                                                       */
 typedef unsigned short FT_UInt16;
 
-/* */
-
-
 /* this #if 0 ... #endif clause is for documentation purposes */
 #if 0
 
@@ -219,8 +216,6 @@ typedef signed XXX FT_Int64;
 /*    otherwise, it gets emulated with a structure (if necessary).       */
 /*                                                                       */
 typedef unsigned XXX FT_UInt64;
-
-/* */
 
 #endif
 

@@ -13,8 +13,6 @@
                                (d)[1] = (unsigned char)(g); \
                                (d)[2] = (unsigned char)(b)
 
-/* */
-
 #define  GRGB_TO_RGB565(r,g,b)   ((unsigned short)( (((r) << 8) & 0xF800) |  \
                                                     (((g) << 3) & 0x07E0) |  \
                                                     (((b) >> 3) & 0x001F) ) )
@@ -29,8 +27,6 @@
                                                    (((p) >> 5) & 0x07E0 ) |   \
                                                    (((p) >> 3) & 0x001F ) ) )
 
-/* */
-
 #define  GRGB_TO_BGR565(r,g,b)    GRGB_TO_RGB565(b,g,r)
 
 #define  GBGR565_TO_RGB24(p)   ( ( ((p) << 19) & 0xF80000 ) |             \
@@ -43,8 +39,6 @@
 #define  GRGB24_TO_BGR565(p)   ( (unsigned short)( (((p) <<  8) & 0xF800 ) |  \
                                                    (((p) >>  5) & 0x07E0 ) |  \
                                                    (((p) >> 19) & 0x001F ) ) )
-
-/* */
 
 /* Rgb32 blitting routines
  */
@@ -152,8 +146,6 @@
 #define  GDST_STOREC(d,r,g,b)   *(unsigned short*)(d) = GRGB_TO_BGR565(r,g,b)
 
 #include "gblany.h"
-
-/* */
 
 static void
 _gblender_blit_dummy( GBlenderBlit   blit,
@@ -325,4 +317,3 @@ gblender_blit_init( GBlenderBlit           blit,
 
   return 0;
 }
-

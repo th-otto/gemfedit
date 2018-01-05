@@ -2853,8 +2853,6 @@ FT_EXPORT(FT_Error) FT_Load_Char(FT_Face face, FT_ULong char_code, FT_Int32 load
 #define FT_LOAD_COMPUTE_METRICS              ( 1L << 21 )
 #define FT_LOAD_BITMAP_METRICS_ONLY          ( 1L << 22 )
 
-/* */
-
 /* used internally only by certain font drivers */
 #define FT_LOAD_ADVANCE_ONLY                 ( 1L << 8 )
 #define FT_LOAD_SBITS_ONLY                   ( 1L << 14 )

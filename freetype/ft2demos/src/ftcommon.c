@@ -543,8 +543,8 @@ void FTDemo_Set_Current_Size(FTDemo_Handle * handle, int pixel_size)
 		pixel_size = face->available_sizes[j].y_ppem / 64;
 	}
 
-	handle->scaler.width = (FT_UInt) pixel_size;
-	handle->scaler.height = (FT_UInt) pixel_size;
+	handle->scaler.width = pixel_size;
+	handle->scaler.height = pixel_size;
 	handle->scaler.pixel = 1;			/* activate integer format */
 	handle->scaler.x_res = 0;
 	handle->scaler.y_res = 0;
@@ -585,11 +585,11 @@ void FTDemo_Set_Current_Charsize(FTDemo_Handle * handle, int char_size, int reso
 		char_size = face->available_sizes[j].y_ppem * 72 / resolution;
 	}
 
-	handle->scaler.width = (FT_UInt) char_size;
-	handle->scaler.height = (FT_UInt) char_size;
+	handle->scaler.width = char_size;
+	handle->scaler.height = char_size;
 	handle->scaler.pixel = 0;			/* activate 26.6 format */
-	handle->scaler.x_res = (FT_UInt) resolution;
-	handle->scaler.y_res = (FT_UInt) resolution;
+	handle->scaler.x_res = resolution;
+	handle->scaler.y_res = resolution;
 
 	handle->string_reload = 1;
 }
@@ -643,6 +643,7 @@ void FTDemo_Update_Current_Flags(FTDemo_Handle * handle)
 
 		default:
 			target = FT_LOAD_TARGET_NORMAL;
+			break;
 		}
 
 		flags |= target;
@@ -740,7 +741,8 @@ void FTDemo_Draw_Header(FTDemo_Handle * handle, FTDemo_Display * display, int pt
 			sprintf(buf, "Invalid ppem value");
 			break;
 		default:
-			sprintf(buf, "error 0x%04x", (FT_UShort) error_code);
+			sprintf(buf, "error 0x%04x", error_code);
+			break;
 		}
 		grWriteCellString(display->bitmap, 8 * x, line * HEADER_HEIGHT, buf, display->warn_color);
 	}
@@ -895,8 +897,8 @@ FTDemo_Glyph_To_Bitmap(FTDemo_Handle * handle,
 	bitmap = (FT_BitmapGlyph) glyf;
 	source = &bitmap->bitmap;
 
-	target->rows = (int) source->rows;
-	target->width = (int) source->width;
+	target->rows = source->rows;
+	target->width = source->width;
 	target->pitch = source->pitch;
 	target->buffer = source->buffer;
 	target->grays = source->num_grays;
@@ -979,7 +981,7 @@ FTDemo_Index_To_Bitmap(FTDemo_Handle * handle,
 
 
 		error = FTC_SBitCache_LookupScaler(handle->sbits_cache,
-										   &handle->scaler, (FT_ULong) handle->load_flags, Index, &sbit, NULL);
+										   &handle->scaler, handle->load_flags, Index, &sbit, NULL);
 		if (error)
 			goto Exit;
 
@@ -1049,7 +1051,7 @@ FTDemo_Index_To_Bitmap(FTDemo_Handle * handle,
 
 
 		error = FTC_ImageCache_LookupScaler(handle->image_cache,
-											&handle->scaler, (FT_ULong) handle->load_flags, Index, &glyf, NULL);
+											&handle->scaler, handle->load_flags, Index, &glyf, NULL);
 
 		if (!error)
 			error = FTDemo_Glyph_To_Bitmap(handle, glyf, target, left, top, x_advance, y_advance, aglyf);

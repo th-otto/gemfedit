@@ -110,9 +110,4 @@ FT_END_HEADER
 
 #endif /* FT_CONFIG_OPTION_PIC */
 
- /* */
-
 #endif /* CFFPIC_H_ */
-
-
-/* END */

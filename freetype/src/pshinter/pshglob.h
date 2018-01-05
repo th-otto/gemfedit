@@ -180,7 +180,6 @@ FT_BEGIN_HEADER
                        FT_Int         stem_top,
                        FT_Int         stem_bot,
                        PSH_Alignment  alignment );
-  /* */
 
 #ifdef DEBUG_HINTER
   extern PSH_Globals  ps_debug_globals;
@@ -191,6 +190,3 @@ FT_END_HEADER
 
 
 #endif /* PSHGLOB_H_ */
-
-
-/* END */

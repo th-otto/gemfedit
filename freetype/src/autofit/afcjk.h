@@ -131,11 +131,6 @@ FT_BEGIN_HEADER
 #endif /* AF_CONFIG_OPTION_CJK */
 
 
-/* */
-
 FT_END_HEADER
 
 #endif /* AFCJK_H_ */
-
-
-/* END */

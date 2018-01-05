@@ -80,12 +80,6 @@ FT_BEGIN_HEADER
                                FT_Face    face,
                                FT_Pos     standard_width );
 
-/* */
-
-
 FT_END_HEADER
 
 #endif /* AFLOADER_H_ */
-
-
-/* END */

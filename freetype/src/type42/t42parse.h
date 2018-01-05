@@ -80,12 +80,7 @@ FT_BEGIN_HEADER
   t42_loader_done( T42_Loader  loader );
 
 
- /* */
-
 FT_END_HEADER
 
 
 #endif /* T42PARSE_H_ */
-
-
-/* END */

@@ -43,7 +43,7 @@ void LogMessage(const char *fmt, ...);
 
 #else /* !DEBUG */
 
-#define LOG( x )						/* */
+#define LOG( x )
 
 #endif
 

@@ -267,9 +267,6 @@ FT_BEGIN_HEADER
 #endif
 
 
-  /* */
-
-
 #define FTC_FAMILY_FREE( family, cache )                      \
           FTC_MruList_Remove( &FTC_GCACHE((cache))->families, \
                               (FTC_MruNode)(family) )
@@ -303,7 +300,6 @@ FT_BEGIN_HEADER
         FTC_FAMILY_FREE( _gqfamily, _gcache );                              \
     }                                                                       \
   FT_END_STMNT
-  /* */
 
 #else /* !FTC_INLINE */
 
@@ -322,6 +318,3 @@ FT_END_HEADER
 
 
 #endif /* FTCGLYPH_H_ */
-
-
-/* END */

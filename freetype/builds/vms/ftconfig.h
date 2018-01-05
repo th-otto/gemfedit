@@ -153,9 +153,6 @@ FT_BEGIN_HEADER
   /*                                                                       */
   typedef unsigned short  FT_UInt16;
 
-  /* */
-
-
   /* this #if 0 ... #endif clause is for documentation purposes */
 #if 0
 
@@ -204,8 +201,6 @@ FT_BEGIN_HEADER
   /*    otherwise, it gets emulated with a structure (if necessary).       */
   /*                                                                       */
   typedef unsigned XXX  FT_UInt64;
-
-  /* */
 
 #endif
 
@@ -459,6 +454,3 @@ FT_END_HEADER
 
 
 #endif /* FTCONFIG_H_ */
-
-
-/* END */

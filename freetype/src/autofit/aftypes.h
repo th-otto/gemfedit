@@ -599,11 +599,6 @@ extern void*  _af_debug_hints;
 #endif /* FT_CONFIG_OPTION_PIC */
 
 
-/* */
-
 FT_END_HEADER
 
 #endif /* AFTYPES_H_ */
-
-
-/* END */

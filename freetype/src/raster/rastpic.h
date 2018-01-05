@@ -52,11 +52,6 @@ FT_BEGIN_HEADER
 
 #endif /* FT_CONFIG_OPTION_PIC */
 
- /* */
-
 FT_END_HEADER
 
 #endif /* RASTPIC_H_ */
-
-
-/* END */
