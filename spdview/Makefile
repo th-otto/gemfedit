@@ -1,6 +1,6 @@
 CC = gcc
 WARN = -fno-common -Wall -W -Wunused -Wundef -Wstrict-prototypes -Wmissing-prototypes -Werror
-CFLAGS = -O2 -g -fomit-frame-pointer $(WARN) -I../include -I../speedo
+CFLAGS = -O2 -g -fomit-frame-pointer $(WARN) -I../include -I../speedo -I../freetype/include
 LDFLAGS = -s
 LIBS= -lcurl -lpng12 -lz
 
@@ -8,15 +8,24 @@ SPDLIB = reset.o do_char.o do_trns.o set_spcs.o set_trns.o \
 	out_bl2d.o out_blk.o out_scrn.o out_util.o out_outl.o \
 	keys.o sp_err.o bics2uni.o
 
-PROGRAMS = spdview.cgi
+TTFLIB = 
+
+PROGRAMS = spdview.cgi ttfview.cgi
 
 all: $(PROGRAMS)
 
-spdview.cgi: spdview.o cgic.o glib.o $(SPDLIB) writepng.o
+spdview.cgi: spdview.o cgic.o glib.o $(SPDLIB) writepng.o cgiutil.o
 	$(CC) $(CFLAGS) $(LDFLAGS) $^ $(LIBS) -o $@
 	cp $@ ../www
 
+ttfview.cgi: ttfview.o cgic.o glib.o $(TTFLIB) writepng.o cgiutil.o
+	$(CC) $(CFLAGS) $(LDFLAGS) $^ $(LIBS) -L../freetype -lttf -lbz2 -o $@
+	cp $@ ../www
+
 spdview.o: spdview.c
+	$(CC) $(CFLAGS) $< -c -o $@
+
+ttfview.o: ttfview.c
 	$(CC) $(CFLAGS) $< -c -o $@
 
 cgic.o: cgic.c

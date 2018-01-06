@@ -5,7 +5,7 @@
  */
 
 #include "linux/libcwrap.h"
-#include "spddefs.h"
+#include "defs.h"
 #include <time.h>
 #include "cgic.h"
 

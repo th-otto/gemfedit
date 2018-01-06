@@ -279,12 +279,18 @@ int writepng_init(writepng_info *wpnginfo)
 	if (wpnginfo->bpp <= 8)
 	{
 		color_type = wpnginfo->num_palette > 2 ? PNG_COLOR_TYPE_PALETTE : PNG_COLOR_TYPE_GRAY;
+		if (wpnginfo->bpp < 8)
+			png_set_packing(png_ptr);
 	} else if (wpnginfo->bpp == 24)
 	{
 		color_type = PNG_COLOR_TYPE_RGB;
+		if (wpnginfo->swapped)
+			png_set_swap(png_ptr);
 	} else if (wpnginfo->bpp == 32)
 	{
 		color_type = PNG_COLOR_TYPE_RGB_ALPHA;
+		if (wpnginfo->swapped)
+			png_set_swap(png_ptr);
 	} else
 	{
 		png_destroy_write_struct(&png_ptr, &info_ptr);

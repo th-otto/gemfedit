@@ -1,5 +1,5 @@
 #include "linux/libcwrap.h"
-#include "spddefs.h"
+#include "defs.h"
 #include <limits.h>
 
 #ifndef unreachable

@@ -95,6 +95,7 @@ typedef struct _writepng_info {
 	int num_palette;
 	png_color palette[PNG_MAX_PALETTE_LENGTH];
 	png_color bg;
+	int swapped;
 } writepng_info;
 
 
