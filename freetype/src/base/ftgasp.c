@@ -25,41 +25,35 @@ ANONYMOUS_STRUCT_DUMMY(FT_RasterRec_)
 ANONYMOUS_STRUCT_DUMMY(FT_IncrementalRec_)
 ANONYMOUS_STRUCT_DUMMY(GX_BlendRec_)
 
-  FT_EXPORT_DEF( FT_Int )
-  FT_Get_Gasp( FT_Face  face,
-               FT_UInt  ppem )
-  {
-    FT_Int  result = FT_GASP_NO_TABLE;
+FT_EXPORT_DEF(FT_Int) FT_Get_Gasp(FT_Face face, FT_UInt ppem)
+{
+	FT_Int result = FT_GASP_NO_TABLE;
+
+	if (face && FT_IS_SFNT(face))
+	{
+		TT_Face ttface = (TT_Face) face;
 
 
-    if ( face && FT_IS_SFNT( face ) )
-    {
-      TT_Face  ttface = (TT_Face)face;
+		if (ttface->gasp.numRanges > 0)
+		{
+			TT_GaspRange range = ttface->gasp.gaspRanges;
+			TT_GaspRange range_end = range + ttface->gasp.numRanges;
 
 
-      if ( ttface->gasp.numRanges > 0 )
-      {
-        TT_GaspRange  range     = ttface->gasp.gaspRanges;
-        TT_GaspRange  range_end = range + ttface->gasp.numRanges;
+			while (ppem > range->maxPPEM)
+			{
+				range++;
+				if (range >= range_end)
+					goto Exit;
+			}
 
+			result = range->gaspFlag;
 
-        while ( ppem > range->maxPPEM )
-        {
-          range++;
-          if ( range >= range_end )
-            goto Exit;
-        }
-
-        result = range->gaspFlag;
-
-        /* ensure that we don't have spurious bits */
-        if ( ttface->gasp.version == 0 )
-          result &= 3;
-      }
-    }
+			/* ensure that we don't have spurious bits */
+			if (ttface->gasp.version == 0)
+				result &= 3;
+		}
+	}
   Exit:
-    return result;
-  }
-
-
-/* END */
+	return result;
+}

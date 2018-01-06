@@ -434,8 +434,8 @@ Free_VecPooled( APTR  poolHeader,
     stream->size = fib->fib_Size;
     FreeDosObject( DOS_FIB, fib );
 
-    stream->descriptor.pointer = (void *)sysfile;
-    stream->pathname.pointer   = (char*)filepathname;
+    stream->descriptor.cpointer = sysfile;
+    stream->pathname.cpointer  = filepathname;
     sysfile->iobuf_start       = 0;
     sysfile->iobuf_end         = 0;
     stream->pos                = 0;

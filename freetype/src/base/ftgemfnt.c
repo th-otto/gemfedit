@@ -25,9 +25,7 @@
 ANONYMOUS_STRUCT_DUMMY(FT_RasterRec_)
 ANONYMOUS_STRUCT_DUMMY(FT_IncrementalRec_)
 
-  /* documentation is in ftgemfnt.h */
-
-FT_EXPORT_DEF(FT_Error) FT_Get_GemFNT_Header(FT_Face face, FT_GemFNT_HeaderRec *header)
+FT_EXPORT_DEF(FT_Error) FT_Get_GemFNT_Header(FT_Face face, FT_GemFNT_HeaderRec * header)
 {
 	FT_Service_GemFnt service;
 	FT_Error error;

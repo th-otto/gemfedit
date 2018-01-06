@@ -1187,8 +1187,9 @@ ANONYMOUS_STRUCT_DUMMY(FT_RasterRec_)
 
   static int
   gray_move_to( const FT_Vector*  to,
-                gray_PWorker      worker )
+                 void *user)
   {
+  	gray_PWorker      worker = (gray_PWorker)user;
     TPos  x, y;
 
 
@@ -1206,8 +1207,9 @@ ANONYMOUS_STRUCT_DUMMY(FT_RasterRec_)
 
   static int
   gray_line_to( const FT_Vector*  to,
-                gray_PWorker      worker )
+                void *user )
   {
+    gray_PWorker      worker = (gray_PWorker)user;
     gray_render_line( RAS_VAR_ UPSCALE( to->x ), UPSCALE( to->y ) );
     return 0;
   }
@@ -1216,8 +1218,9 @@ ANONYMOUS_STRUCT_DUMMY(FT_RasterRec_)
   static int
   gray_conic_to( const FT_Vector*  control,
                  const FT_Vector*  to,
-                 gray_PWorker      worker )
+                 void *user)
   {
+    gray_PWorker      worker = (gray_PWorker)user;
     gray_render_conic( RAS_VAR_ control, to );
     return 0;
   }
@@ -1227,8 +1230,9 @@ ANONYMOUS_STRUCT_DUMMY(FT_RasterRec_)
   gray_cubic_to( const FT_Vector*  control1,
                  const FT_Vector*  control2,
                  const FT_Vector*  to,
-                 gray_PWorker      worker )
+                 void *user )
   {
+    gray_PWorker      worker = (gray_PWorker)user;
     gray_render_cubic( RAS_VAR_ control1, control2, to );
     return 0;
   }
@@ -1706,10 +1710,10 @@ ANONYMOUS_STRUCT_DUMMY(FT_RasterRec_)
   FT_DEFINE_OUTLINE_FUNCS(
     func_interface,
 
-    (FT_Outline_MoveTo_Func) gray_move_to,   /* move_to  */
-    (FT_Outline_LineTo_Func) gray_line_to,   /* line_to  */
-    (FT_Outline_ConicTo_Func)gray_conic_to,  /* conic_to */
-    (FT_Outline_CubicTo_Func)gray_cubic_to,  /* cubic_to */
+    gray_move_to,   /* FT_Outline_MoveToFuncmove_to  */
+    gray_line_to,   /* FT_Outline_LineToFunc line_to  */
+    gray_conic_to,  /* FT_Outline_ConicToFunc conic_to */
+    gray_cubic_to,  /* FT_Outline_CubicToFunc cubic_to */
 
     0,                                       /* shift    */
     0                                        /* delta    */

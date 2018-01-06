@@ -28,27 +28,18 @@
 ANONYMOUS_STRUCT_DUMMY(FT_RasterRec_)
 ANONYMOUS_STRUCT_DUMMY(FT_IncrementalRec_)
 
-  /* documentation is in freetype.h */
+FT_EXPORT_DEF(FT_Bool) FT_Face_CheckTrueTypePatents(FT_Face face)
+{
+	FT_UNUSED(face);
 
-  FT_EXPORT_DEF( FT_Bool )
-  FT_Face_CheckTrueTypePatents( FT_Face  face )
-  {
-    FT_UNUSED( face );
-
-    return FALSE;
-  }
+	return FALSE;
+}
 
 
-  /* documentation is in freetype.h */
+FT_EXPORT_DEF(FT_Bool) FT_Face_SetUnpatentedHinting(FT_Face face, FT_Bool value)
+{
+	FT_UNUSED(face);
+	FT_UNUSED(value);
 
-  FT_EXPORT_DEF( FT_Bool )
-  FT_Face_SetUnpatentedHinting( FT_Face  face,
-                                FT_Bool  value )
-  {
-    FT_UNUSED( face );
-    FT_UNUSED( value );
-
-    return FALSE;
-  }
-
-/* END */
+	return FALSE;
+}

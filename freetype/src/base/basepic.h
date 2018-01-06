@@ -44,17 +44,17 @@
 
 FT_BEGIN_HEADER
 
-  typedef struct  BasePIC_
-  {
-    FT_Module_Class**  default_module_classes;
-    FT_Glyph_Class     ft_outline_glyph_class;
-    FT_Glyph_Class     ft_bitmap_glyph_class;
+typedef struct BasePIC_
+{
+	FT_Module_Class **default_module_classes;
+	FT_Glyph_Class ft_outline_glyph_class;
+	FT_Glyph_Class ft_bitmap_glyph_class;
 
 #ifdef FT_CONFIG_OPTION_GUESSING_EMBEDDED_RFORK
-    ft_raccess_guess_rec  ft_raccess_guess_table[FT_RACCESS_N_RULES];
+	ft_raccess_guess_rec ft_raccess_guess_table[FT_RACCESS_N_RULES];
 #endif
 
-  } BasePIC;
+} BasePIC;
 
 
 #define GET_PIC( lib )  ( (BasePIC*)( (lib)->pic_container.base ) )
@@ -68,12 +68,10 @@ FT_BEGIN_HEADER
 #endif
 
 
-  /* see basepic.c for the implementation */
-  void
-  ft_base_pic_free( FT_Library  library );
+/* see basepic.c for the implementation */
+void ft_base_pic_free(FT_Library library);
 
-  FT_Error
-  ft_base_pic_init( FT_Library  library );
+FT_Error ft_base_pic_init(FT_Library library);
 
 FT_END_HEADER
 

@@ -479,8 +479,6 @@ typedef struct FT_Outline_
 /*                                                                       */
 typedef int (*FT_Outline_MoveToFunc) (const FT_Vector * to, void *user);
 
-#define FT_Outline_MoveTo_Func  FT_Outline_MoveToFunc
-
 
 /*************************************************************************/
 /*                                                                       */
@@ -503,8 +501,6 @@ typedef int (*FT_Outline_MoveToFunc) (const FT_Vector * to, void *user);
 /*    Error code.  0 means success.                                      */
 /*                                                                       */
 typedef int (*FT_Outline_LineToFunc) (const FT_Vector * to, void *user);
-
-#define FT_Outline_LineTo_Func  FT_Outline_LineToFunc
 
 
 /*************************************************************************/
@@ -533,9 +529,6 @@ typedef int (*FT_Outline_LineToFunc) (const FT_Vector * to, void *user);
 /*                                                                       */
 typedef int (*FT_Outline_ConicToFunc) (const FT_Vector * control, const FT_Vector * to, void *user);
 
-#define FT_Outline_ConicTo_Func  FT_Outline_ConicToFunc
-
-
 /*************************************************************************/
 /*                                                                       */
 /* <FuncType>                                                            */
@@ -561,8 +554,6 @@ typedef int (*FT_Outline_ConicToFunc) (const FT_Vector * control, const FT_Vecto
 /*    Error code.  0 means success.                                      */
 /*                                                                       */
 typedef int (*FT_Outline_CubicToFunc) (const FT_Vector * control1, const FT_Vector * control2, const FT_Vector * to, void *user);
-
-#define FT_Outline_CubicTo_Func  FT_Outline_CubicToFunc
 
 
 /*************************************************************************/

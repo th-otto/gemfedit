@@ -203,6 +203,7 @@ typedef union FT_StreamDesc_
 {
 	long value;
 	void *pointer;
+	const void *cpointer;
 
 } FT_StreamDesc;
 

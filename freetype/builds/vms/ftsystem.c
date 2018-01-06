@@ -257,7 +257,7 @@
     close( file );
 
     stream->descriptor.pointer = stream->base;
-    stream->pathname.pointer   = (char*)filepathname;
+    stream->pathname.cpointer   = filepathname;
 
     stream->close = ft_close_stream;
     stream->read  = 0;
