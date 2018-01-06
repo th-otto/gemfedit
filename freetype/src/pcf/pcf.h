@@ -141,7 +141,8 @@ FT_BEGIN_HEADER
 
     char*          charset_encoding;
     char*          charset_registry;
-
+    char*          pcf_style_name;
+    
     PCF_TocRec     toc;
     PCF_AccelRec   accel;
 

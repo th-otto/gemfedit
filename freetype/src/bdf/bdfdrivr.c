@@ -244,10 +244,11 @@ static FT_Error bdf_interpret_style(BDF_Face bdf)
 		char *s;
 
 
-		if (FT_ALLOC(face->style_name, len))
+		if (FT_ALLOC(bdf->bdf_style_name, len))
 			return error;
-
-		s = face->style_name;
+		face->style_name = bdf->bdf_style_name;
+		
+		s = bdf->bdf_style_name;
 
 		for (nn = 0; nn < 4; nn++)
 		{
@@ -304,7 +305,7 @@ FT_CALLBACK_DEF(void) BDF_Face_Done(FT_Face bdfface)	/* BDF_Face */
 	FT_FREE(face->charset_encoding);
 	FT_FREE(face->charset_registry);
 	FT_FREE(bdfface->family_name);
-	FT_FREE(bdfface->style_name);
+	FT_FREE(face->bdf_style_name);
 
 	FT_FREE(bdfface->available_sizes);
 

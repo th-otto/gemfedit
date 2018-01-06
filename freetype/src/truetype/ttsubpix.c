@@ -907,11 +907,11 @@
     TT_Face     face   = loader->face;
     FT_String*  family = face->root.family_name;
     FT_UInt     ppem   = loader->size->metrics->x_ppem;
-    FT_String*  style  = face->root.style_name;
+    const FT_String*  style  = face->root.style_name;
 
 
     /* don't apply rules if style isn't set */
-    if ( !face->root.style_name )
+    if ( !style )
       return;
 
 #ifdef SPH_DEBUG_MORE_VERBOSE

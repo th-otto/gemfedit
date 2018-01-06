@@ -1036,7 +1036,7 @@ typedef struct FT_FaceRec_
 	FT_Long num_glyphs;
 
 	FT_String *family_name;
-	FT_String *style_name;
+	const FT_String *style_name;
 
 	FT_Int num_fixed_sizes;
 	FT_Bitmap_Size *available_sizes;

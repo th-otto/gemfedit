@@ -169,7 +169,7 @@ typedef struct FontFaceRec_
 {
 	const char *filepath;
 	char *family_name;
-	char *style_name;
+	const char *style_name;
 	int index;
 
 } FontFaceRec, *FontFace;
@@ -357,7 +357,7 @@ static void render_state_set_files(RenderState state, char **files, char *execna
 		{
 			char *fn;
 			char *family_name;
-			char *sn;
+			const char *sn;
 			char *style_name;
 
 
@@ -394,7 +394,7 @@ static void render_state_set_files(RenderState state, char **files, char *execna
 			if (face->style_name)
 				sn = face->style_name;
 			else
-				sn = (char *) "(unknown style)";
+				sn = "(unknown style)";
 			style_name = (char *) malloc(strlen(sn) + 1);
 			if (style_name == NULL)
 				panic("ftdiff: not enough memory\n");

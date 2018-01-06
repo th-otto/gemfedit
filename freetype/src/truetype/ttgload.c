@@ -928,7 +928,7 @@
 
       FT_String*  family         = face->root.family_name;
       FT_UInt     ppem           = loader->size->metrics->x_ppem;
-      FT_String*  style          = face->root.style_name;
+      const char *  style          = face->root.style_name;
       FT_UInt     x_scale_factor = 1000;
 #endif
 

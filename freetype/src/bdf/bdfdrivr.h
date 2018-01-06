@@ -55,7 +55,8 @@ FT_BEGIN_HEADER
 
     char*             charset_encoding;
     char*             charset_registry;
-
+	char *bdf_style_name;
+	
     bdf_font_t*       bdffont;
 
     BDF_encoding_el*  en_table;

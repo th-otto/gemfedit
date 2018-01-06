@@ -773,17 +773,17 @@ static FT_Error FNT_Face_Init(FT_Stream stream, FT_Face fntface,	/* FNT_Face */
 		root->num_glyphs = font->header.last_ade - font->header.first_ade + 1 + 1;
 
 		root->family_name = font->family_name;
-		root->style_name = (char *) "Regular";
+		root->style_name = "Regular";
 
 		if (root->style_flags & FT_STYLE_FLAG_BOLD)
 		{
 			if (root->style_flags & FT_STYLE_FLAG_ITALIC)
-				root->style_name = (char *) "Bold Italic";
+				root->style_name = "Bold Italic";
 			else
-				root->style_name = (char *) "Bold";
+				root->style_name = "Bold";
 		} else if (root->style_flags & FT_STYLE_FLAG_ITALIC)
 		{
-			root->style_name = (char *) "Italic";
+			root->style_name = "Italic";
 		}
 	}
 	goto Exit;

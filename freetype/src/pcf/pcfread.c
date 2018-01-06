@@ -1229,7 +1229,7 @@ THE SOFTWARE.
     PCF_Property  prop;
 
     size_t  nn, len;
-    char*   strings[4] = { NULL, NULL, NULL, NULL };
+    const char*   strings[4] = { NULL, NULL, NULL, NULL };
     size_t  lengths[4];
 
 
@@ -1242,8 +1242,8 @@ THE SOFTWARE.
     {
       face->style_flags |= FT_STYLE_FLAG_ITALIC;
       strings[2] = ( *(prop->value.atom) == 'O' ||
-                     *(prop->value.atom) == 'o' ) ? (char *)"Oblique"
-                                                  : (char *)"Italic";
+                     *(prop->value.atom) == 'o' ) ? "Oblique"
+                                                  : "Italic";
     }
 
     prop = pcf_find_property( pcf, "WEIGHT_NAME" );
@@ -1251,20 +1251,20 @@ THE SOFTWARE.
          ( *(prop->value.atom) == 'B' || *(prop->value.atom) == 'b' ) )
     {
       face->style_flags |= FT_STYLE_FLAG_BOLD;
-      strings[1] = (char*)"Bold";
+      strings[1] = "Bold";
     }
 
     prop = pcf_find_property( pcf, "SETWIDTH_NAME" );
     if ( prop && prop->isString                                        &&
          *(prop->value.atom)                                           &&
          !( *(prop->value.atom) == 'N' || *(prop->value.atom) == 'n' ) )
-      strings[3] = (char*)( prop->value.atom );
+      strings[3] = (const char*)( prop->value.atom );
 
     prop = pcf_find_property( pcf, "ADD_STYLE_NAME" );
     if ( prop && prop->isString                                        &&
          *(prop->value.atom)                                           &&
          !( *(prop->value.atom) == 'N' || *(prop->value.atom) == 'n' ) )
-      strings[0] = (char*)( prop->value.atom );
+      strings[0] = (const char*)( prop->value.atom );
 
     for ( len = 0, nn = 0; nn < 4; nn++ )
     {
@@ -1278,7 +1278,7 @@ THE SOFTWARE.
 
     if ( len == 0 )
     {
-      strings[0] = (char*)"Regular";
+      strings[0] = "Regular";
       lengths[0] = ft_strlen( strings[0] );
       len        = lengths[0] + 1;
     }
@@ -1287,14 +1287,15 @@ THE SOFTWARE.
       char*  s;
 
 
-      if ( FT_ALLOC( face->style_name, len ) )
+      if ( FT_ALLOC( pcf->pcf_style_name, len ) )
         return error;
 
-      s = face->style_name;
+      face->style_name = pcf->pcf_style_name;
+      s = pcf->pcf_style_name;
 
       for ( nn = 0; nn < 4; nn++ )
       {
-        char*  src = strings[nn];
+        const char*  src = strings[nn];
 
 
         len = lengths[nn];

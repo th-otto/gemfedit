@@ -427,7 +427,7 @@ ANONYMOUS_STRUCT_DUMMY(PSH_GlobalsRec_)
           }
 
           if ( the_same )
-            root->style_name = (char *)"Regular";
+            root->style_name = "Regular";
         }
       }
       else
@@ -443,7 +443,7 @@ ANONYMOUS_STRUCT_DUMMY(PSH_GlobalsRec_)
           root->style_name = info->weight;
         else
           /* assume `Regular' style because we don't know better */
-          root->style_name = (char *)"Regular";
+          root->style_name = "Regular";
       }
 
       /* compute style flags */

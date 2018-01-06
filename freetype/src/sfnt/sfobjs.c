@@ -1354,7 +1354,7 @@
 
     face->root.family_name = NULL;
     face->root.style_name  = NULL;
-    if ( face->os2.version != 0xFFFFU && face->os2.fsSelection & 256 )
+    if ( face->os2.version != 0xFFFFU && (face->os2.fsSelection & 256 ))
     {
       if ( !ignore_typographic_family )
         GET_NAME( TYPOGRAPHIC_FAMILY, &face->root.family_name );
@@ -1362,9 +1362,9 @@
         GET_NAME( FONT_FAMILY, &face->root.family_name );
 
       if ( !ignore_typographic_subfamily )
-        GET_NAME( TYPOGRAPHIC_SUBFAMILY, &face->root.style_name );
+        GET_NAME( TYPOGRAPHIC_SUBFAMILY, (char **)&face->root.style_name );
       if ( !face->root.style_name )
-        GET_NAME( FONT_SUBFAMILY, &face->root.style_name );
+        GET_NAME( FONT_SUBFAMILY, (char **)&face->root.style_name );
     }
     else
     {
@@ -1374,11 +1374,11 @@
       if ( !face->root.family_name )
         GET_NAME( FONT_FAMILY, &face->root.family_name );
 
-      GET_NAME( WWS_SUBFAMILY, &face->root.style_name );
+      GET_NAME( WWS_SUBFAMILY, (char **)&face->root.style_name );
       if ( !face->root.style_name && !ignore_typographic_subfamily )
-        GET_NAME( TYPOGRAPHIC_SUBFAMILY, &face->root.style_name );
+        GET_NAME( TYPOGRAPHIC_SUBFAMILY, (char **)&face->root.style_name );
       if ( !face->root.style_name )
-        GET_NAME( FONT_SUBFAMILY, &face->root.style_name );
+        GET_NAME( FONT_SUBFAMILY, (char **)&face->root.style_name );
     }
 
     /* now set up root fields */

@@ -374,7 +374,7 @@ ANONYMOUS_STRUCT_DUMMY(PSH_GlobalsRec_)
       /* have a /FontName dictionary entry!                   */
       cidface->family_name = info->family_name;
       /* assume "Regular" style if we don't know better */
-      cidface->style_name = (char *)"Regular";
+      cidface->style_name = "Regular";
       if ( cidface->family_name )
       {
         char*  full   = info->full_name;

@@ -905,17 +905,17 @@ ANONYMOUS_STRUCT_DUMMY(FT_IncrementalRec_)
         goto Fail;
 
       root->family_name = font->family_name;
-      root->style_name  = (char *)"Regular";
+      root->style_name  = "Regular";
 
       if ( root->style_flags & FT_STYLE_FLAG_BOLD )
       {
         if ( root->style_flags & FT_STYLE_FLAG_ITALIC )
-          root->style_name = (char *)"Bold Italic";
+          root->style_name = "Bold Italic";
         else
-          root->style_name = (char *)"Bold";
+          root->style_name = "Bold";
       }
       else if ( root->style_flags & FT_STYLE_FLAG_ITALIC )
-        root->style_name = (char *)"Italic";
+        root->style_name = "Italic";
     }
     goto Exit;
 
