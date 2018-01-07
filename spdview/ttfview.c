@@ -40,7 +40,6 @@ typedef struct _glyphinfo_t {
 
 #define DEBUG 0
 
-#define	MAX_BITS	1024
 #define CHAR_COLUMNS 16
 #define PAGE_SIZE    128
 
@@ -225,7 +224,7 @@ static gboolean write_png(const charinfo *c, FT_Bitmap *source)
 	int i;
 	writepng_info *info;
 	int rc;
-	FT_Bitmap target = { 0, 0, 0, 0, 0, 0, 0, 0 };
+	FT_Bitmap target = { 0, 0, 0, 0, 0, FT_PIXEL_MODE_NONE, 0, 0 };
 	
 	info = writepng_new();
 	/*
@@ -237,6 +236,8 @@ static gboolean write_png(const charinfo *c, FT_Bitmap *source)
 		info->height = 1;
 
 	info->bpp = 8;
+	info->width = source->width;
+	info->height = source->rows;
 
 	switch (source->pixel_mode)
 	{
@@ -258,11 +259,13 @@ static gboolean write_png(const charinfo *c, FT_Bitmap *source)
 
 	case FT_PIXEL_MODE_LCD:
 		info->bpp = 24;
+		info->width /= 3;
 		info->num_palette = 0;
 		break;
 
 	case FT_PIXEL_MODE_LCD_V:
 		info->bpp = 24;
+		info->height /= 3;
 		info->num_palette = 0;
 		break;
 
@@ -279,8 +282,6 @@ static gboolean write_png(const charinfo *c, FT_Bitmap *source)
 	info->rowbytes = source->pitch;
 
 	info->image_data = source->buffer;
-	info->width = source->width;
-	info->height = source->rows;
 	info->x_res = (x_res * 10000L) / 254;
 	info->y_res = (y_res * 10000L) / 254;
 
@@ -309,6 +310,10 @@ static gboolean write_png(const charinfo *c, FT_Bitmap *source)
 		fclose(info->outfile);
 	}
 	writepng_exit(info);
+	
+	if (target.pixel_mode != FT_PIXEL_MODE_NONE)
+		FT_Bitmap_Done(ft_library, &target);
+	
 	return rc == 0;
 }
 

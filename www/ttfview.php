@@ -13,7 +13,7 @@ body {
 </style>
 <!-- BEGIN CONFIGURATION -->
 <?php
-error_reporting(E_ALL & ~E_WARNING);
+error_reporting(E_ALL | E_WARNING);
 ini_set("display_errors", 1);
 $ttffontdir = 'ttffonts';
 ?>
@@ -197,21 +197,61 @@ class ttf {
 		while (false !== ($entry = readdir($dir))) {
 			if ($entry == ".") continue;
 			if ($entry == "..") continue;
-			if (!fnmatch("*.ttf", $entry)) continue;
-	
-			$ttf->files[$entry] = array();
-			$ttf->files[$entry]['name'] = $entry;
+			if (fnmatch(".*", $entry)) continue;
+			if (fnmatch("*.dir", $entry)) continue;
+			if (fnmatch("*.scale", $entry)) continue;
+			
 			$info = fopen("$ttffontdir/$entry", "rb");
 			if (is_resource($info))
 			{
-				// fseek($info, 24);
-				// $fontname = fread($info, 70);
-				// if (strpos($fontname, 0) >= 0)
-				// 	$fontname = substr($fontname, 0, strpos($fontname, 0));
-				// $ttf->files[$entry]['fontname'] = $fontname;
+				$fontname = '';
+				if (fnmatch("*.pfa", $entry))
+				{
+					$ttf->files[$entry] = array();
+					$ttf->files[$entry]['name'] = $entry;
+					$test = fread($info, 1024);
+					$pos = strpos($test, '/FullName (');
+					if ($pos >= 0)
+					{
+						$end = strpos($test, ')', $pos);
+						if ($end >= 0)
+						{
+							$pos += 11;
+							$fontname = substr($test, $pos, $end - $pos);
+						}
+					}
+				} else if (fnmatch("*.pfb", $entry))
+				{
+					$ttf->files[$entry] = array();
+					$ttf->files[$entry]['name'] = $entry;
+				} else if (fnmatch("*.ttf", $entry) ||
+					fnmatch("*.otf", $entry) ||
+					fnmatch("*.ttc", $entry) ||
+					fnmatch("*.otc", $entry))
+				{
+					$ttf->files[$entry] = array();
+					$ttf->files[$entry]['name'] = $entry;
+				} else if (fnmatch("*.otf", $entry))
+				{
+					$ttf->files[$entry] = array();
+					$ttf->files[$entry]['name'] = $entry;
+				} else if (fnmatch("*.afm", $entry))
+				{
+				} else
+				{
+					$ttf->files[$entry] = array();
+					$ttf->files[$entry]['name'] = $entry;
+					$fontname = 'unknown file format';
+				}
+				if ($fontname != '')
+				{
+					$ttf->files[$entry]['fontname'] = $fontname;
+				}
 				fclose($info);
 			} else
 			{
+				$ttf->files[$entry] = array();
+				$ttf->files[$entry]['name'] = $entry;
 				$ttf->files[$entry]['fontname'] = 'no such file';
 			}
 	    }
