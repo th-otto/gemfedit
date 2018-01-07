@@ -33,7 +33,7 @@ char *optarg;
 
 static int cmdac;
 static const char *cmdname;
-static char *const * cmdav;
+static char *const *cmdav;
 
 int getopt(int ac, char *const *av, const char *pat)
 {

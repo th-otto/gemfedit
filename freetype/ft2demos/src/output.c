@@ -14,13 +14,13 @@
 #include "output.h"
 
 
-static char hexdigit[16] = {
+static char const hexdigit[16] = {
 	'0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
 	'A', 'B', 'C', 'D', 'E', 'F'
 };
 
 
-void put_ascii_string(char *out, FT_Byte * string, FT_UInt string_len, FT_UInt indent)
+void put_ascii_string(char *out, FT_Byte *string, FT_UInt string_len, FT_UInt indent)
 {
 	FT_UInt i, j;
 
@@ -86,11 +86,10 @@ void put_ascii_string(char *out, FT_Byte * string, FT_UInt string_len, FT_UInt i
 }
 
 
-FT_UInt put_ascii_string_size(FT_Byte * string, FT_UInt string_len, FT_UInt indent)
+FT_UInt put_ascii_string_size(FT_Byte *string, FT_UInt string_len, FT_UInt indent)
 {
-	FT_UInt i,
-	 len = 0;
-
+	FT_UInt i;
+	FT_UInt len = 0;
 
 	/* the code formatting follows `put_ascii_string' */
 
@@ -136,11 +135,10 @@ FT_UInt put_ascii_string_size(FT_Byte * string, FT_UInt string_len, FT_UInt inde
 }
 
 
-void put_ascii(FT_Byte * string, FT_UInt string_len, FT_UInt indent)
+void put_ascii(FT_Byte *string, FT_UInt string_len, FT_UInt indent)
 {
 	FT_UInt len;
 	char *s;
-
 
 	len = put_ascii_string_size(string, string_len, indent);
 	s = (char *) malloc(len);
@@ -155,12 +153,10 @@ void put_ascii(FT_Byte * string, FT_UInt string_len, FT_UInt indent)
 }
 
 
-void put_unicode_be16_string(char *out, FT_Byte * string, FT_UInt string_len, FT_UInt indent, FT_Int as_utf8)
+void put_unicode_be16_string(char *out, FT_Byte *string, FT_UInt string_len, FT_UInt indent, FT_Int as_utf8)
 {
-	FT_Int ch = 0;
-	FT_UInt i,
-	 j;
-
+	FT_UInt ch = 0;
+	FT_UInt i, j;
 
 	for (j = 0; j < indent; j++)
 		*out++ = ' ';
@@ -223,17 +219,18 @@ void put_unicode_be16_string(char *out, FT_Byte * string, FT_UInt string_len, FT
 			 */
 
 			if (ch < 0x80)
-				*out++ = (char) ch;
-			else if (ch < 0x800)
 			{
-				*out++ = (char) (0xC0 | ((FT_UInt) ch >> 6));
-				*out++ = (char) (0x80 | ((FT_UInt) ch & 0x3F));
+				*out++ = (char) ch;
+			} else if (ch < 0x800)
+			{
+				*out++ = (char) (0xC0 | (ch >> 6));
+				*out++ = (char) (0x80 | (ch & 0x3F));
 			} else
 			{
 				/* we don't handle surrogates */
-				*out++ = (char) (0xE0 | ((FT_UInt) ch >> 12));
-				*out++ = (char) (0x80 | (((FT_UInt) ch >> 6) & 0x3F));
-				*out++ = (char) (0x80 | ((FT_UInt) ch & 0x3F));
+				*out++ = (char) (0xE0 | (ch >> 12));
+				*out++ = (char) (0x80 | ((ch >> 6) & 0x3F));
+				*out++ = (char) (0x80 | (ch & 0x3F));
 			}
 
 			continue;
@@ -271,8 +268,9 @@ void put_unicode_be16_string(char *out, FT_Byte * string, FT_UInt string_len, FT
 
 		default:
 			if (ch < 128)
+			{
 				*out++ = (char) ch;
-			else
+			} else
 			{
 				*out++ = '\\';
 				*out++ = 'U';
@@ -293,12 +291,11 @@ void put_unicode_be16_string(char *out, FT_Byte * string, FT_UInt string_len, FT
 }
 
 
-FT_UInt put_unicode_be16_string_size(FT_Byte * string, FT_UInt string_len, FT_UInt indent, FT_Int as_utf8)
+FT_UInt put_unicode_be16_string_size(FT_Byte *string, FT_UInt string_len, FT_UInt indent, FT_Int as_utf8)
 {
 	FT_Int ch = 0;
-	FT_UInt i,
-	 len = 0;
-
+	FT_UInt i;
+	FT_UInt len = 0;
 
 	/* the code formatting follows `put_unicode_be16_string' */
 
@@ -382,11 +379,10 @@ FT_UInt put_unicode_be16_string_size(FT_Byte * string, FT_UInt string_len, FT_UI
 }
 
 
-void put_unicode_be16(FT_Byte * string, FT_UInt string_len, FT_UInt indent, FT_Int utf8)
+void put_unicode_be16(FT_Byte *string, FT_UInt string_len, FT_UInt indent, FT_Int utf8)
 {
 	FT_UInt len;
 	char *s;
-
 
 	len = put_unicode_be16_string_size(string, string_len, indent, utf8);
 	s = (char *) malloc(len);

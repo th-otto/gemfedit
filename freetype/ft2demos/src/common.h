@@ -25,4 +25,4 @@ FT_Int32 utf8_next(const char **pcursor, const char *end);
 }
 #endif
 
-#endif									/* COMMON_H_ */
+#endif

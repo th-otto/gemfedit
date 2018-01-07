@@ -215,7 +215,6 @@ static void render_state_init(RenderState state, Display display, FT_Library lib
 		TT_INTERPRETER_VERSION_40
 	};
 
-
 	memset(state, 0, sizeof(*state));
 
 	state->library = library;
@@ -332,7 +331,6 @@ static void render_state_set_files(RenderState state, char **files, char *execna
 	unsigned int num_faces = 0;
 	unsigned int max_faces = 0;
 
-
 	state->files = files;
 	for (; files[0] != NULL; files++)
 	{
@@ -340,7 +338,6 @@ static void render_state_set_files(RenderState state, char **files, char *execna
 
 		int num_subfonts;
 		int count;
-
 
 		error = FT_New_Face(state->library, files[0], -1, &face);
 		if (error)
@@ -359,7 +356,6 @@ static void render_state_set_files(RenderState state, char **files, char *execna
 			char *family_name;
 			const char *sn;
 			char *style_name;
-
 
 			error = FT_New_Face(state->library, files[0], count, &face);
 			if (error)
@@ -447,7 +443,6 @@ static int render_state_set_file(RenderState state)
 			unsigned int len = strlen(filepath);
 			char *p;
 
-
 			if (len + 1 > sizeof(state->filepath0))
 			{
 				state->filepath = (const char *) malloc(len + 1);
@@ -492,7 +487,6 @@ static void render_state_draw(RenderState state, const char *text, int idx, int 
 	FT_Bool have_0x0A = 0;
 	FT_Bool have_0x0D = 0;
 
-
 	/* no need to check for errors: the values used here are always valid */
 	FT_Property_Set(state->library, "cff", "hinting-engine", &column->cff_hinting_engine);
 	FT_Property_Set(state->library,
@@ -533,7 +527,6 @@ static void render_state_draw(RenderState state, const char *text, int idx, int 
 		FT_GlyphSlot slot = face->glyph;
 		FT_Bitmap *map = &slot->bitmap;
 		FT_Long xmax;
-
 
 		ch = utf8_next(&p, p_end);
 		if (ch < 0)
@@ -596,7 +589,6 @@ static void render_state_draw(RenderState state, const char *text, int idx, int 
 			FT_Vector vec;
 			FT_UInt kerning_mode = FT_KERNING_DEFAULT;
 
-
 			if (rmode == HINT_MODE_UNHINTED)
 				kerning_mode = FT_KERNING_UNFITTED;
 
@@ -621,7 +613,6 @@ static void render_state_draw(RenderState state, const char *text, int idx, int 
 		{
 			FT_Pos shift = x_origin & 63;
 
-
 			FT_Outline_Translate(&slot->outline, shift, 0);
 		}
 
@@ -630,7 +621,6 @@ static void render_state_draw(RenderState state, const char *text, int idx, int 
 			if (slot->format == FT_GLYPH_FORMAT_OUTLINE)
 			{
 				FT_BBox cbox;
-
 
 				FT_Outline_Get_CBox(&slot->outline, &cbox);
 				xmax = (x_origin + cbox.xMax + 63) >> 6;
@@ -665,7 +655,6 @@ static void render_state_draw(RenderState state, const char *text, int idx, int 
 		{
 			DisplayMode mode = DISPLAY_MODE_MONO;
 
-
 			if (slot->bitmap.pixel_mode == FT_PIXEL_MODE_GRAY)
 				mode = DISPLAY_MODE_GRAY;
 			else if (slot->bitmap.pixel_mode == FT_PIXEL_MODE_LCD)
@@ -691,7 +680,6 @@ static void render_state_draw(RenderState state, const char *text, int idx, int 
 		const char *extra;
 		const char *msg;
 		char temp[64];
-
 
 		extra = "";
 		if (rmode == HINT_MODE_BYTECODE)
@@ -742,7 +730,6 @@ static void render_state_draw(RenderState state, const char *text, int idx, int 
 			{
 				int fwi = column->fw_index;
 				unsigned char *fw = column->filter_weights;
-
 
 				sprintf(temp,
 						"%s0x%02X%s0x%02X%s0x%02X%s0x%02X%s0x%02X%s",
@@ -826,7 +813,6 @@ static int adisplay_init(ADisplay display, grPixelMode mode, int width, int heig
 	grSurface *surface;
 	grBitmap bit;
 
-
 	if (mode != gr_pixel_mode_gray && mode != gr_pixel_mode_rgb24)
 		return -1;
 
@@ -862,19 +848,16 @@ static void adisplay_clear(ADisplay display)
 	grBitmap *bit = display->bitmap;
 	int pitch = bit->pitch;
 
-
 	if (pitch < 0)
 		pitch = -pitch;
 
 	if (bit->mode == gr_pixel_mode_gray)
 	{
-		memset(bit->buffer, display->back_color.value, (unsigned int) (pitch * bit->rows));
+		memset(bit->buffer, display->back_color.value, (size_t) pitch * bit->rows);
 	} else
 	{
 		unsigned char *p = bit->buffer;
-		int i,
-		 j;
-
+		int i, j;
 
 		for (i = 0; i < bit->rows; i++)
 		{
@@ -924,7 +907,6 @@ static void adisplay_draw_text(void *_display, int x, int y, const char *msg)
 {
 	ADisplay adisplay = (ADisplay) _display;
 
-
 	grWriteCellString(adisplay->bitmap, x, y, msg, adisplay->fore_color);
 }
 
@@ -952,7 +934,6 @@ static void event_help(RenderState state)
 
 	ADisplay display = (ADisplay) state->display.disp;
 	grEvent dummy_event;
-
 
 	FT_Library_Version(state->library, &major, &minor, &patch);
 
@@ -1011,7 +992,6 @@ static void event_change_gamma(RenderState state, double delta)
 {
 	ADisplay display = (ADisplay) state->display.disp;
 
-
 	adisplay_change_gamma(display, delta);
 }
 
@@ -1019,7 +999,6 @@ static void event_change_gamma(RenderState state, double delta)
 static void event_change_size(RenderState state, double delta)
 {
 	double char_size = state->char_size;
-
 
 	char_size += delta;
 	if (char_size < 6.0)
@@ -1043,11 +1022,10 @@ static void event_change_face_index(RenderState state, int idx)
 }
 
 
-static int process_event(RenderState state, grEvent * event)
+static int process_event(RenderState state, grEvent *event)
 {
 	int ret = 0;
 	ColumnState column = &state->columns[state->col];
-
 
 	switch (event->key)
 	{
@@ -1115,13 +1093,11 @@ static int process_event(RenderState state, grEvent * event)
 		{
 			FT_Module module = &state->face->driver->root;
 
-
 			if (column->hint_mode == HINT_MODE_BYTECODE)
 			{
 				if (!strcmp(module->clazz->module_name, "cff"))
 				{
 					FT_UInt new_cff_hinting_engine;
-
 
 					new_cff_hinting_engine = (column->cff_hinting_engine + 1) % HINTING_ENGINE_MAX;
 
@@ -1145,7 +1121,6 @@ static int process_event(RenderState state, grEvent * event)
 	case grKEY('w'):
 		{
 			FT_Bool new_warping_state = !column->warping;
-
 
 			error = FT_Property_Set(state->library, "autofitter", "warping", &new_warping_state);
 			if (!error)
@@ -1258,7 +1233,6 @@ static void write_global_info(RenderState state)
 	FontFace face = &state->faces[state->face_index];
 	const char *basename;
 
-
 	basename = ft_basename(state->filename);
 	sprintf(buf, "%.50s %.50s (file `%.100s')", face->family_name, face->style_name, basename);
 	grWriteCellString(adisplay->bitmap, 0, 5, buf, adisplay->fore_color);
@@ -1288,7 +1262,6 @@ int main(int argc, char **argv)
 
 	char *execname;
 	int option;
-
 
 	execname = ft_basename(argv[0]);
 
@@ -1324,10 +1297,7 @@ int main(int argc, char **argv)
 
 		case 'v':
 			{
-				FT_Int major,
-				 minor,
-				 patch;
-
+				FT_Int major, minor, patch;
 
 				FT_Library_Version(library, &major, &minor, &patch);
 
@@ -1362,13 +1332,11 @@ int main(int argc, char **argv)
 	{
 		FILE *tfile = fopen(textfile, "r");
 
-
 		if (tfile == NULL)
 			fprintf(stderr, "could not read textfile '%s'\n", textfile);
 		else
 		{
 			int tsize;
-
 
 			fseek(tfile, 0, SEEK_END);
 			tsize = ftell(tfile);
@@ -1424,7 +1392,6 @@ int main(int argc, char **argv)
 		int column_y_start;
 		int column_height;
 		int column_width;
-
 
 		adisplay_clear(adisplay);
 

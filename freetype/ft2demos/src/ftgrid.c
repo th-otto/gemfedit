@@ -65,10 +65,10 @@ extern "C" {
 extern void af_glyph_hints_dump_segments(AF_GlyphHints hints, FT_Bool to_stdout);
 extern void af_glyph_hints_dump_points(AF_GlyphHints hints, FT_Bool to_stdout);
 extern void af_glyph_hints_dump_edges(AF_GlyphHints hints, FT_Bool to_stdout);
-extern FT_Error af_glyph_hints_get_num_segments(AF_GlyphHints hints, FT_Int dimension, FT_Int * num_segments);
+extern FT_Error af_glyph_hints_get_num_segments(AF_GlyphHints hints, FT_Int dimension, FT_Int *num_segments);
 extern FT_Error af_glyph_hints_get_segment_offset(AF_GlyphHints hints,
 									 FT_Int dimension,
-									 FT_Int idx, FT_Pos * offset, FT_Bool * is_blue, FT_Pos * blue_offset);
+									 FT_Int idx, FT_Pos *offset, FT_Bool *is_blue, FT_Pos *blue_offset);
 #ifdef __cplusplus
 }
 #endif
@@ -172,7 +172,7 @@ static void grid_status_init(GridStatus st)
 }
 
 
-static void grid_status_display(GridStatus st, FTDemo_Display * display)
+static void grid_status_display(GridStatus st, FTDemo_Display *display)
 {
 	st->disp_width = display->bitmap->width;
 	st->disp_height = display->bitmap->rows;
@@ -180,7 +180,7 @@ static void grid_status_display(GridStatus st, FTDemo_Display * display)
 }
 
 
-static void grid_status_colors(GridStatus st, FTDemo_Display * display)
+static void grid_status_colors(GridStatus st, FTDemo_Display *display)
 {
 	st->axis_color = grFindColor(display->bitmap, 0, 0, 0, 255);	/* black       */
 	st->grid_color = grFindColor(display->bitmap, 192, 192, 192, 255);	/* gray        */
@@ -192,7 +192,7 @@ static void grid_status_colors(GridStatus st, FTDemo_Display * display)
 }
 
 
-static void grid_status_alt_colors(GridStatus st, FTDemo_Display * display)
+static void grid_status_alt_colors(GridStatus st, FTDemo_Display *display)
 {
 	/* colours are adjusted for color-blind people, */
 	/* cf. http://jfly.iam.u-tokyo.ac.jp/color      */
@@ -206,7 +206,7 @@ static void grid_status_alt_colors(GridStatus st, FTDemo_Display * display)
 }
 
 
-static void grid_status_rescale_initial(GridStatus st, FTDemo_Handle * handle)
+static void grid_status_rescale_initial(GridStatus st, FTDemo_Handle *handle)
 {
 	FT_Size size;
 	FT_Error err = FTDemo_Get_Size(handle, &size);
@@ -351,7 +351,7 @@ static void grid_hint_draw_segment(GridStatus st, FT_Size size, AF_GlyphHints hi
 #endif /* FT_DEBUG_AUTOFIT */
 
 
-static void ft_bitmap_draw(FT_Bitmap * bitmap, int x, int y, FTDemo_Display * display, grColor color)
+static void ft_bitmap_draw(FT_Bitmap *bitmap, int x, int y, FTDemo_Display *display, grColor color)
 {
 	grBitmap gbit;
 
@@ -390,8 +390,8 @@ static void ft_bitmap_draw(FT_Bitmap * bitmap, int x, int y, FTDemo_Display * di
 }
 
 
-static void ft_outline_draw(FT_Outline * outline,
-				double scale, int pen_x, int pen_y, FTDemo_Handle * handle, FTDemo_Display * display, grColor color)
+static void ft_outline_draw(FT_Outline *outline,
+	double scale, int pen_x, int pen_y, FTDemo_Handle *handle, FTDemo_Display *display, grColor color)
 {
 	FT_Outline transformed;
 	FT_BBox cbox;
@@ -437,7 +437,7 @@ static void ft_outline_draw(FT_Outline * outline,
 }
 
 
-static void ft_outline_new_circle(FT_Outline * outline, FT_F26Dot6 radius, FTDemo_Handle * handle)
+static void ft_outline_new_circle(FT_Outline *outline, FT_F26Dot6 radius, FTDemo_Handle *handle)
 {
 	char *tag;
 	FT_Vector *vec;
@@ -505,7 +505,7 @@ static void ft_outline_new_circle(FT_Outline * outline, FT_F26Dot6 radius, FTDem
 
 
 static void circle_draw(FT_F26Dot6 center_x,
-			FT_F26Dot6 center_y, FT_F26Dot6 radius, FTDemo_Handle * handle, FTDemo_Display * display, grColor color)
+	FT_F26Dot6 center_y, FT_F26Dot6 radius, FTDemo_Handle *handle, FTDemo_Display *display, grColor color)
 {
 	FT_Outline outline;
 
@@ -519,19 +519,22 @@ static void circle_draw(FT_F26Dot6 center_x,
 }
 
 
-static void bitmap_scale(grBitmap * bit, FT_F26Dot6 scale)
+static void bitmap_scale(grBitmap *bit, FT_F26Dot6 scale)
 {
 	unsigned char *s = bit->buffer;
 	unsigned char *t;
 	unsigned char *line;
-	int pitch;
+	size_t pitch;
 	int width;
-	int i, j, k;
-
+	int i, k;
+	size_t j;
+	size_t scaled_pitch;
+	
 	pitch = bit->pitch > 0 ? bit->pitch : -bit->pitch;
 	width = bit->width;
-
-	t = (unsigned char *) malloc((size_t) pitch * bit->rows * scale * scale);
+	scaled_pitch = pitch * scale;
+	
+	t = (unsigned char *) malloc(pitch * bit->rows * scale * scale);
 	if (!t)
 		return;
 
@@ -542,15 +545,17 @@ static void bitmap_scale(grBitmap * bit, FT_F26Dot6 scale)
 	case gr_pixel_mode_mono:
 		for (i = 0; i < bit->rows; i++)
 		{
-			for (j = 0; j < pitch * scale * 8; j++)
+			for (j = 0; j < scaled_pitch * 8; j++)
+			{
 				if (s[i * pitch + j / scale / 8] & (0x80 >> (j / scale & 7)))
 					line[j / 8] |= 0x80 >> (j & 7);
 				else
 					line[j / 8] &= ~(0x80 >> (j & 7));
-
-			for (k = 1; k < scale; k++, line += pitch * scale)
-				memcpy(line + pitch * scale, line, (size_t) (pitch * scale));
-			line += pitch * scale;
+			}
+			
+			for (k = 1; k < scale; k++, line += scaled_pitch)
+				memcpy(line + scaled_pitch, line, scaled_pitch);
+			line += scaled_pitch;
 		}
 		break;
 
@@ -558,11 +563,11 @@ static void bitmap_scale(grBitmap * bit, FT_F26Dot6 scale)
 		for (i = 0; i < bit->rows; i++)
 		{
 			for (j = 0; j < pitch; j++)
-				memset(line + j * scale, s[i * pitch + j], (size_t) scale);
+				memset(line + j * scale, s[i * pitch + j], scale);
 
-			for (k = 1; k < scale; k++, line += pitch * scale)
-				memcpy(line + pitch * scale, line, (size_t) (pitch * scale));
-			line += pitch * scale;
+			for (k = 1; k < scale; k++, line += scaled_pitch)
+				memcpy(line + scaled_pitch, line, scaled_pitch);
+			line += scaled_pitch;
 		}
 		break;
 
@@ -570,17 +575,18 @@ static void bitmap_scale(grBitmap * bit, FT_F26Dot6 scale)
 	case gr_pixel_mode_lcd2:
 		for (i = 0; i < bit->rows; i++)
 		{
-			for (j = 0; j < width; j += 3)
+			for (j = 0; j < (size_t)width; j += 3)
+			{
 				for (k = 0; k < scale; k++)
 				{
 					line[j * scale + 3 * k] = s[i * pitch + j];
 					line[j * scale + 3 * k + 1] = s[i * pitch + j + 1];
 					line[j * scale + 3 * k + 2] = s[i * pitch + j + 2];
 				}
-
-			for (k = 1; k < scale; k++, line += pitch * scale)
-				memcpy(line + pitch * scale, line, (size_t) (pitch * scale));
-			line += pitch * scale;
+			}
+			for (k = 1; k < scale; k++, line += scaled_pitch)
+				memcpy(line + scaled_pitch, line, scaled_pitch);
+			line += scaled_pitch;
 		}
 		break;
 
@@ -590,14 +596,14 @@ static void bitmap_scale(grBitmap * bit, FT_F26Dot6 scale)
 		{
 			for (j = 0; j < pitch; j++)
 			{
-				memset(line + j * scale, s[i * pitch + j], (size_t) scale);
-				memset(line + j * scale + pitch * scale, s[i * pitch + pitch + j], (size_t) scale);
-				memset(line + j * scale + 2 * pitch * scale, s[i * pitch + 2 * pitch + j], (size_t) scale);
+				memset(line + j * scale, s[i * pitch + j], scale);
+				memset(line + j * scale + scaled_pitch, s[i * pitch + pitch + j], scale);
+				memset(line + j * scale + 2 * scaled_pitch, s[i * pitch + 2 * pitch + j], scale);
 			}
 
-			for (k = 1; k < scale; k++, line += 3 * pitch * scale)
-				memcpy(line + 3 * pitch * scale, line, (size_t) (3 * pitch * scale));
-			line += 3 * pitch * scale;
+			for (k = 1; k < scale; k++, line += 3 * scaled_pitch)
+				memcpy(line + 3 * scaled_pitch, line, 3 * scaled_pitch);
+			line += 3 * scaled_pitch;
 		}
 		break;
 
@@ -612,7 +618,7 @@ static void bitmap_scale(grBitmap * bit, FT_F26Dot6 scale)
 }
 
 
-static void grid_status_draw_outline(GridStatus st, FTDemo_Handle * handle, FTDemo_Display * display)
+static void grid_status_draw_outline(GridStatus st, FTDemo_Handle *handle, FTDemo_Display *display)
 {
 	FT_Size size;
 	FT_GlyphSlot slot;
@@ -620,7 +626,6 @@ static void grid_status_draw_outline(GridStatus st, FTDemo_Handle * handle, FTDe
 	FT_F26Dot6 scale = st->scale;
 	int ox = st->x_origin;
 	int oy = st->y_origin;
-
 
 	FTDemo_Get_Size(handle, &size);
 
@@ -633,7 +638,7 @@ static void grid_status_draw_outline(GridStatus st, FTDemo_Handle * handle, FTDe
 		_af_debug_disable_vert_hints = 0;
 
 		if (!FT_Load_Glyph(size->face, (FT_UInt) st->Num,
-						 FT_LOAD_DEFAULT | FT_LOAD_NO_BITMAP | FT_LOAD_FORCE_AUTOHINT | FT_LOAD_TARGET_NORMAL))
+			FT_LOAD_DEFAULT | FT_LOAD_NO_BITMAP | FT_LOAD_FORCE_AUTOHINT | FT_LOAD_TARGET_NORMAL))
 			grid_hint_draw_segment(&status, size, _af_debug_hints);
 	}
 
@@ -646,7 +651,6 @@ static void grid_status_draw_outline(GridStatus st, FTDemo_Handle * handle, FTDe
 		glyph_idx = (FT_UInt) st->Num;
 	else
 		glyph_idx = FTDemo_Get_Index(handle, (FT_UInt32) st->Num);
-
 
 	if (FT_Load_Glyph(size->face, glyph_idx, handle->load_flags | FT_LOAD_NO_BITMAP))
 		return;
@@ -1348,7 +1352,7 @@ static void event_font_change(int delta)
 }
 
 
-static int Process_Event(grEvent * event)
+static int Process_Event(grEvent *event)
 {
 	int ret = 0;
 

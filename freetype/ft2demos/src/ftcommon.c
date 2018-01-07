@@ -68,7 +68,6 @@ void PanicZ(const char *message)
 {
 	const FT_String *str;
 
-
 	switch (error)
 #include <freetype/fterrors.h>
 
@@ -127,7 +126,7 @@ FTDemo_Display *FTDemo_Display_New(grPixelMode mode, int width, int height)
 }
 
 
-void FTDemo_Display_Done(FTDemo_Display * display)
+void FTDemo_Display_Done(FTDemo_Display *display)
 {
 	if (!display)
 		return;
@@ -141,7 +140,7 @@ void FTDemo_Display_Done(FTDemo_Display * display)
 }
 
 
-void FTDemo_Display_Clear(FTDemo_Display * display)
+void FTDemo_Display_Clear(FTDemo_Display *display)
 {
 	grBitmap *bit = display->bitmap;
 	int pitch = bit->pitch;
@@ -151,12 +150,11 @@ void FTDemo_Display_Clear(FTDemo_Display * display)
 
 	if (bit->mode == gr_pixel_mode_gray)
 	{
-		memset(bit->buffer, display->back_color.value, (unsigned int) (pitch * bit->rows));
+		memset(bit->buffer, display->back_color.value, (size_t) pitch * bit->rows);
 	} else
 	{
 		unsigned char *p = bit->buffer;
 		int i;
-
 
 		for (i = 0; i < pitch; i += 3, p += 3)
 		{
@@ -166,7 +164,7 @@ void FTDemo_Display_Clear(FTDemo_Display * display)
 		}
 
 		for (i = 1; i < bit->rows; i++, p += pitch)
-			memcpy(p, p - pitch, (size_t) pitch);
+			memcpy(p, p - pitch, pitch);
 	}
 }
 
@@ -194,7 +192,7 @@ void FTDemo_Display_Clear(FTDemo_Display * display)
 /*                                                                       */
 /* In this program, the face IDs are simply pointers to TFont objects.   */
 /*                                                                       */
-static FT_Error my_face_requester(FTC_FaceID face_id, FT_Library lib, FT_Pointer request_data, FT_Face * aface)
+static FT_Error my_face_requester(FTC_FaceID face_id, FT_Library lib, FT_Pointer request_data, FT_Face *aface)
 {
 	PFont font = (PFont) face_id;
 
@@ -218,7 +216,6 @@ static FT_Error my_face_requester(FTC_FaceID face_id, FT_Library lib, FT_Pointer
 			char orig[5];
 			char *suffix = (char *) strrchr(font->filepathname, '.');
 			int has_extension = suffix && (strcasecmp(suffix, ".pfa") == 0 || strcasecmp(suffix, ".pfb") == 0);
-
 
 			if (has_extension)
 				memcpy(orig, suffix, 5);
@@ -297,7 +294,7 @@ FTDemo_Handle *FTDemo_New(void)
 }
 
 
-void FTDemo_Done(FTDemo_Handle * handle)
+void FTDemo_Done(FTDemo_Handle *handle)
 {
 	int i;
 
@@ -320,7 +317,6 @@ void FTDemo_Done(FTDemo_Handle * handle)
 	{
 		PGlyph glyph = handle->string + i;
 
-
 		if (glyph->image)
 			FT_Done_Glyph(glyph->image);
 	}
@@ -334,7 +330,7 @@ void FTDemo_Done(FTDemo_Handle * handle)
 }
 
 
-FT_Error FTDemo_Install_Font(FTDemo_Handle * handle, const char *filepath, FT_Bool outline_only, FT_Bool no_instances)
+FT_Error FTDemo_Install_Font(FTDemo_Handle *handle, const char *filepath, FT_Bool outline_only, FT_Bool no_instances)
 {
 	static char filename[1024 + 5];
 	long i, num_faces;
@@ -408,7 +404,6 @@ FT_Error FTDemo_Install_Font(FTDemo_Handle * handle, const char *filepath, FT_Bo
 			{
 				FILE *file = fopen(filename, "rb");
 				size_t file_size;
-
 
 				if (file == NULL)		/* shouldn't happen */
 				{
@@ -490,10 +485,9 @@ FT_Error FTDemo_Install_Font(FTDemo_Handle * handle, const char *filepath, FT_Bo
 			} else if (handle->num_fonts >= handle->max_fonts)
 			{
 				handle->max_fonts *= 2;
-				handle->fonts = (PFont *) realloc(handle->fonts, (size_t) handle->max_fonts * sizeof(PFont));
+				handle->fonts = (PFont *) realloc(handle->fonts, handle->max_fonts * sizeof(PFont));
 
-				memset(&handle->fonts[handle->num_fonts], 0,
-					   (size_t) (handle->max_fonts - handle->num_fonts) * sizeof(PFont));
+				memset(&handle->fonts[handle->num_fonts], 0, (handle->max_fonts - handle->num_fonts) * sizeof(PFont));
 			}
 
 			handle->fonts[handle->num_fonts++] = font;
@@ -504,7 +498,7 @@ FT_Error FTDemo_Install_Font(FTDemo_Handle * handle, const char *filepath, FT_Bo
 }
 
 
-void FTDemo_Set_Current_Font(FTDemo_Handle * handle, PFont font)
+void FTDemo_Set_Current_Font(FTDemo_Handle *handle, PFont font)
 {
 	handle->current_font = font;
 	handle->scaler.face_id = (FTC_FaceID) font;
@@ -513,7 +507,7 @@ void FTDemo_Set_Current_Font(FTDemo_Handle * handle, PFont font)
 }
 
 
-void FTDemo_Set_Current_Size(FTDemo_Handle * handle, int pixel_size)
+void FTDemo_Set_Current_Size(FTDemo_Handle *handle, int pixel_size)
 {
 	FT_Face face;
 
@@ -553,7 +547,7 @@ void FTDemo_Set_Current_Size(FTDemo_Handle * handle, int pixel_size)
 }
 
 
-void FTDemo_Set_Current_Charsize(FTDemo_Handle * handle, int char_size, int resolution)
+void FTDemo_Set_Current_Charsize(FTDemo_Handle *handle, int char_size, int resolution)
 {
 	FT_Face face;
 
@@ -595,13 +589,13 @@ void FTDemo_Set_Current_Charsize(FTDemo_Handle * handle, int char_size, int reso
 }
 
 
-void FTDemo_Set_Preload(FTDemo_Handle * handle, int preload)
+void FTDemo_Set_Preload(FTDemo_Handle *handle, int preload)
 {
 	handle->preload = ! !preload;
 }
 
 
-void FTDemo_Update_Current_Flags(FTDemo_Handle * handle)
+void FTDemo_Update_Current_Flags(FTDemo_Handle *handle)
 {
 	FT_Int32 flags;
 	FT_Int32 target;
@@ -660,17 +654,16 @@ void FTDemo_Update_Current_Flags(FTDemo_Handle * handle)
 }
 
 
-FT_UInt FTDemo_Get_Index(FTDemo_Handle * handle, FT_UInt32 charcode)
+FT_UInt FTDemo_Get_Index(FTDemo_Handle *handle, FT_UInt32 charcode)
 {
 	FTC_FaceID face_id = handle->scaler.face_id;
 	PFont font = handle->current_font;
-
 
 	return FTC_CMapCache_Lookup(handle->cmap_cache, face_id, font->cmap_index, charcode);
 }
 
 
-FT_Error FTDemo_Get_Size(FTDemo_Handle * handle, FT_Size * asize)
+FT_Error FTDemo_Get_Size(FTDemo_Handle *handle, FT_Size *asize)
 {
 	FT_Size size;
 
@@ -683,7 +676,7 @@ FT_Error FTDemo_Get_Size(FTDemo_Handle * handle, FT_Size * asize)
 }
 
 
-void FTDemo_Draw_Header(FTDemo_Handle * handle, FTDemo_Display * display, int ptsize, int res, int idx, int error_code)
+void FTDemo_Draw_Header(FTDemo_Handle *handle, FTDemo_Display *display, int ptsize, int res, int idx, int error_code)
 {
 	FT_Face face;
 	char buf[256];
@@ -700,7 +693,6 @@ void FTDemo_Draw_Header(FTDemo_Handle * handle, FTDemo_Display * display, int pt
 		PanicZ("can't access font file");
 	}
 
-
 	/* font and file name */
 	basename = ft_basename(handle->current_font->filepathname);
 	sprintf(buf, "%.50s %.50s (file `%.100s')", face->family_name, face->style_name, basename);
@@ -708,8 +700,7 @@ void FTDemo_Draw_Header(FTDemo_Handle * handle, FTDemo_Display * display, int pt
 
 	/* instance, pt and dpi */
 	if (face->face_index >> 16)
-		x = sprintf(buf, "instance %ld/%ld, %gpt at %ddpi ",
-					face->face_index >> 16, face->style_flags >> 16, ptsize / 64.0, res);
+		x = sprintf(buf, "instance %ld/%ld, %gpt at %ddpi ", face->face_index >> 16, face->style_flags >> 16, ptsize / 64.0, res);
 	else
 		x = sprintf(buf, "%gpt at %ddpi ", ptsize / 64.0, res);
 
@@ -719,16 +710,14 @@ void FTDemo_Draw_Header(FTDemo_Handle * handle, FTDemo_Display * display, int pt
 	{
 		int highlight;
 
-
-		highlight = abs(ptsize * res - face->size->metrics.y_ppem * 72 * 64) > 36 * 64;
+		highlight = abs(ptsize * res - face->size->metrics.y_ppem * 72 * 64) > (36 * 64);
 
 		/* ppem */
 		if (FT_IS_SCALABLE(face))
 			sprintf(buf, "(%.4gppem)", FT_MulFix(face->units_per_EM, face->size->metrics.y_scale) / 64.0);
 		else
 			sprintf(buf, "(%dppem)", face->size->metrics.y_ppem);
-		grWriteCellString(display->bitmap, 8 * x, line * HEADER_HEIGHT,
-						  buf, highlight ? display->warn_color : display->fore_color);
+		grWriteCellString(display->bitmap, 8 * x, line * HEADER_HEIGHT, buf, highlight ? display->warn_color : display->fore_color);
 	} else
 	{
 		/* errors */
@@ -760,7 +749,6 @@ void FTDemo_Draw_Header(FTDemo_Handle * handle, FTDemo_Display * display, int pt
 	if (idx >= 0)
 	{
 		const char *encoding = NULL;
-
 
 		switch (handle->encoding)
 		{
@@ -814,16 +802,13 @@ void FTDemo_Draw_Header(FTDemo_Handle * handle, FTDemo_Display * display, int pt
 		if (handle->encoding == FT_ENCODING_ORDER)
 			x = sprintf(buf, "%s idx: %d", encoding, idx);
 		else if (handle->encoding == FT_ENCODING_UNICODE)
-			x = sprintf(buf, "%s charcode: U+%04X (glyph idx %d)",
-						encoding, idx, FTDemo_Get_Index(handle, (FT_UInt32) idx));
+			x = sprintf(buf, "%s charcode: U+%04X (glyph idx %d)", encoding, idx, FTDemo_Get_Index(handle, (FT_UInt32) idx));
 		else
-			x = sprintf(buf, "%s charcode: 0x%X (glyph idx %d)",
-						encoding, idx, FTDemo_Get_Index(handle, (FT_UInt32) idx));
+			x = sprintf(buf, "%s charcode: 0x%X (glyph idx %d)", encoding, idx, FTDemo_Get_Index(handle, (FT_UInt32) idx));
 
 		if (FT_HAS_GLYPH_NAMES(face))
 		{
 			unsigned int glyph_idx;
-
 
 			x += sprintf(buf + x, ", name: ");
 
@@ -840,10 +825,9 @@ void FTDemo_Draw_Header(FTDemo_Handle * handle, FTDemo_Display * display, int pt
 }
 
 
-FT_Error
-FTDemo_Glyph_To_Bitmap(FTDemo_Handle * handle,
-					   FT_Glyph glyf,
-					   grBitmap * target, int *left, int *top, int *x_advance, int *y_advance, FT_Glyph * aglyf)
+FT_Error FTDemo_Glyph_To_Bitmap(FTDemo_Handle *handle,
+	FT_Glyph glyf,
+	grBitmap *target, int *left, int *top, int *x_advance, int *y_advance, FT_Glyph *aglyf)
 {
 	FT_BitmapGlyph bitmap;
 	FT_Bitmap *source;
@@ -855,7 +839,6 @@ FTDemo_Glyph_To_Bitmap(FTDemo_Handle * handle,
 	if (glyf->format == FT_GLYPH_FORMAT_OUTLINE)
 	{
 		FT_Render_Mode render_mode;
-
 
 		switch (handle->lcd_mode)
 		{
@@ -952,10 +935,9 @@ FTDemo_Glyph_To_Bitmap(FTDemo_Handle * handle,
 }
 
 
-FT_Error
-FTDemo_Index_To_Bitmap(FTDemo_Handle * handle,
-					   FT_ULong Index,
-					   grBitmap * target, int *left, int *top, int *x_advance, int *y_advance, FT_Glyph * aglyf)
+FT_Error FTDemo_Index_To_Bitmap(FTDemo_Handle *handle,
+	FT_ULong Index,
+	grBitmap *target, int *left, int *top, int *x_advance, int *y_advance, FT_Glyph *aglyf)
 {
 	unsigned int width, height;
 
@@ -979,9 +961,7 @@ FTDemo_Index_To_Bitmap(FTDemo_Handle * handle,
 		FTC_SBit sbit;
 		FT_Bitmap source;
 
-
-		error = FTC_SBitCache_LookupScaler(handle->sbits_cache,
-										   &handle->scaler, handle->load_flags, Index, &sbit, NULL);
+		error = FTC_SBitCache_LookupScaler(handle->sbits_cache, &handle->scaler, handle->load_flags, Index, &sbit, NULL);
 		if (error)
 			goto Exit;
 
@@ -1049,9 +1029,7 @@ FTDemo_Index_To_Bitmap(FTDemo_Handle * handle,
 	{
 		FT_Glyph glyf;
 
-
-		error = FTC_ImageCache_LookupScaler(handle->image_cache,
-											&handle->scaler, handle->load_flags, Index, &glyf, NULL);
+		error = FTC_ImageCache_LookupScaler(handle->image_cache, &handle->scaler, handle->load_flags, Index, &glyf, NULL);
 
 		if (!error)
 			error = FTDemo_Glyph_To_Bitmap(handle, glyf, target, left, top, x_advance, y_advance, aglyf);
@@ -1066,7 +1044,7 @@ FTDemo_Index_To_Bitmap(FTDemo_Handle * handle,
 }
 
 
-FT_Error FTDemo_Draw_Index(FTDemo_Handle * handle, FTDemo_Display * display, unsigned int gindex, int *pen_x, int *pen_y)
+FT_Error FTDemo_Draw_Index(FTDemo_Handle *handle, FTDemo_Display *display, unsigned int gindex, int *pen_x, int *pen_y)
 {
 	int left, top, x_advance, y_advance;
 	grBitmap bit3;
@@ -1088,9 +1066,8 @@ FT_Error FTDemo_Draw_Index(FTDemo_Handle * handle, FTDemo_Display * display, uns
 }
 
 
-FT_Error
-FTDemo_Draw_Glyph_Color(FTDemo_Handle * handle,
-						FTDemo_Display * display, FT_Glyph glyph, int *pen_x, int *pen_y, grColor color)
+FT_Error FTDemo_Draw_Glyph_Color(FTDemo_Handle *handle,
+	FTDemo_Display *display, FT_Glyph glyph, int *pen_x, int *pen_y, grColor color)
 {
 	int left, top, x_advance, y_advance;
 	grBitmap bit3;
@@ -1116,13 +1093,13 @@ FTDemo_Draw_Glyph_Color(FTDemo_Handle * handle,
 }
 
 
-FT_Error FTDemo_Draw_Glyph(FTDemo_Handle * handle, FTDemo_Display * display, FT_Glyph glyph, int *pen_x, int *pen_y)
+FT_Error FTDemo_Draw_Glyph(FTDemo_Handle *handle, FTDemo_Display *display, FT_Glyph glyph, int *pen_x, int *pen_y)
 {
 	return FTDemo_Draw_Glyph_Color(handle, display, glyph, pen_x, pen_y, display->fore_color);
 }
 
 
-FT_Error FTDemo_Draw_Slot(FTDemo_Handle * handle, FTDemo_Display * display, FT_GlyphSlot slot, int *pen_x, int *pen_y)
+FT_Error FTDemo_Draw_Slot(FTDemo_Handle *handle, FTDemo_Display *display, FT_GlyphSlot slot, int *pen_x, int *pen_y)
 {
 	FT_Glyph glyph;
 
@@ -1138,7 +1115,7 @@ FT_Error FTDemo_Draw_Slot(FTDemo_Handle * handle, FTDemo_Display * display, FT_G
 }
 
 
-void FTDemo_String_Set(FTDemo_Handle * handle, const char *string)
+void FTDemo_String_Set(FTDemo_Handle *handle, const char *string)
 {
 	const char *p = string;
 	const char *end = p + strlen(string);
@@ -1146,7 +1123,6 @@ void FTDemo_String_Set(FTDemo_Handle * handle, const char *string)
 	int ch;
 	int expect;
 	PGlyph glyph = handle->string;
-
 
 	handle->string_length = 0;
 	codepoint = expect = 0;
@@ -1175,7 +1151,7 @@ void FTDemo_String_Set(FTDemo_Handle * handle, const char *string)
 }
 
 
-static FT_Error string_load(FTDemo_Handle * handle)
+static FT_Error string_load(FTDemo_Handle *handle)
 {
 	int n;
 	FT_Size size;
@@ -1192,7 +1168,6 @@ static FT_Error string_load(FTDemo_Handle * handle)
 	{
 		PGlyph glyph = handle->string + n;
 
-
 		/* clear existing image if there is one */
 		if (glyph->image)
 		{
@@ -1204,7 +1179,6 @@ static FT_Error string_load(FTDemo_Handle * handle)
 		if (!FT_Load_Glyph(face, glyph->glyph_index, handle->load_flags) && !FT_Get_Glyph(face->glyph, &glyph->image))
 		{
 			FT_Glyph_Metrics *metrics = &face->glyph->metrics;
-
 
 			/* note that in vertical layout, y-positive goes downwards */
 
@@ -1234,7 +1208,7 @@ static FT_Error string_load(FTDemo_Handle * handle)
 }
 
 
-static FT_Error string_render_prepare(FTDemo_Handle * handle, FTDemo_String_Context * sc, FT_Vector * advances)
+static FT_Error string_render_prepare(FTDemo_Handle *handle, FTDemo_String_Context *sc, FT_Vector *advances)
 {
 	FT_Face face;
 	FT_Size size;
@@ -1286,7 +1260,6 @@ static FT_Error string_render_prepare(FTDemo_Handle * handle, FTDemo_String_Cont
 				{
 					FT_Vector kern;
 
-
 					FT_Get_Kerning(face, prev_index, glyph->glyph_index, FT_KERNING_UNFITTED, &kern);
 
 					prev_advance->x += kern.x;
@@ -1334,14 +1307,13 @@ static FT_Error string_render_prepare(FTDemo_Handle * handle, FTDemo_String_Cont
 }
 
 
-FT_Error FTDemo_String_Draw(FTDemo_Handle * handle, FTDemo_Display * display, FTDemo_String_Context * sc, int x, int y)
+FT_Error FTDemo_String_Draw(FTDemo_Handle *handle, FTDemo_Display *display, FTDemo_String_Context *sc, int x, int y)
 {
 	int n;
 	FT_Vector pen;
 	FT_Vector advances[MAX_GLYPHS];
 	FT_Size size;
 	FT_Face face;
-
 
 	if (!sc || x < 0 || y < 0 || x > display->bitmap->width || y > display->bitmap->rows)
 		return FT_Err_Invalid_Argument;
@@ -1419,7 +1391,6 @@ FT_Error FTDemo_String_Draw(FTDemo_Handle * handle, FTDemo_Display * display, FT
 		{
 			FT_BitmapGlyph bitmap = (FT_BitmapGlyph) image;
 
-
 			if (sc->vertical)
 			{
 				bitmap->left += (glyph->vvector.x + pen.x) >> 6;
@@ -1450,13 +1421,9 @@ FT_Error FTDemo_String_Draw(FTDemo_Handle * handle, FTDemo_Display * display, FT
 		/* display surface, we don't need to render it         */
 		if (bbox.xMax > 0 && bbox.yMax > 0 && bbox.xMin < display->bitmap->width && bbox.yMin < display->bitmap->rows)
 		{
-			int left,
-			 top,
-			 dummy1,
-			 dummy2;
+			int left, top, dummy1,dummy2;
 			grBitmap bit3;
 			FT_Glyph glyf;
-
 
 			error = FTDemo_Glyph_To_Bitmap(handle, image, &bit3, &left, &top, &dummy1, &dummy2, &glyf);
 			if (!error)

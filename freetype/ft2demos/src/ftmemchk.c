@@ -217,8 +217,7 @@ static void Panic(const char *message)
 
 int main(int argc, char **argv)
 {
-	int i,
-	 file_index;
+	int i, file_index;
 	unsigned int id;
 	char filename[1024 + 4];
 	char alt_filename[1024 + 4];
@@ -241,7 +240,6 @@ int main(int argc, char **argv)
 	/* the new library has no drivers in it, add the default ones */
 	/* (implemented in ftinit.c)..                                */
 	FT_Add_Default_Modules(library);
-
 
 	/* Now check all files */
 	for (file_index = 2; file_index < argc; file_index++)

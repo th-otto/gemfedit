@@ -28,8 +28,8 @@
 #include <string.h>
 #include <time.h>						/* for clock() */
 
-  /* SunOS 4.1.* does not define CLOCKS_PER_SEC, so include <sys/param.h> */
-  /* to get the HZ macro which is the equivalent.                         */
+/* SunOS 4.1.* does not define CLOCKS_PER_SEC, so include <sys/param.h> */
+/* to get the HZ macro which is the equivalent.                         */
 #if defined( __sun__ ) && !defined( SVR4 ) && !defined( __SVR4 )
 #include <sys/param.h>
 #define CLOCKS_PER_SEC HZ
@@ -68,13 +68,13 @@ static void Panic(const char *message)
 }
 
 
-  /*******************************************************************/
-  /*                                                                 */
-  /*  Get_Time:                                                      */
-  /*                                                                 */
-  /*    Returns the current time in milliseconds.                    */
-  /*                                                                 */
-  /*******************************************************************/
+/*******************************************************************/
+/*                                                                 */
+/*  Get_Time:                                                      */
+/*                                                                 */
+/*    Returns the current time in milliseconds.                    */
+/*                                                                 */
+/*******************************************************************/
 
 static long Get_Time(void)
 {
@@ -82,18 +82,17 @@ static long Get_Time(void)
 }
 
 
-  /*******************************************************************/
-  /*                                                                 */
-  /*  LoadChar:                                                      */
-  /*                                                                 */
-  /*    Loads a glyph into memory.                                   */
-  /*                                                                 */
-  /*******************************************************************/
+/*******************************************************************/
+/*                                                                 */
+/*  LoadChar:                                                      */
+/*                                                                 */
+/*    Loads a glyph into memory.                                   */
+/*                                                                 */
+/*******************************************************************/
 
 static FT_Error LoadChar(int idx)
 {
 	FT_Glyph glyph;
-
 
 	/* load the glyph in the glyph slot */
 	error = FT_Load_Glyph(face, idx, FT_LOAD_DEFAULT) || FT_Get_Glyph(face->glyph, &glyph);
@@ -104,18 +103,17 @@ static FT_Error LoadChar(int idx)
 }
 
 
-  /*******************************************************************/
-  /*                                                                 */
-  /*  ConvertRaster:                                                 */
-  /*                                                                 */
-  /*    Performs scan conversion.                                    */
-  /*                                                                 */
-  /*******************************************************************/
+/*******************************************************************/
+/*                                                                 */
+/*  ConvertRaster:                                                 */
+/*                                                                 */
+/*    Performs scan conversion.                                    */
+/*                                                                 */
+/*******************************************************************/
 
 static FT_Error ConvertRaster(int idx)
 {
 	FT_Glyph bitmap;
-
 
 	bitmap = glyphs[idx];
 	if (bitmap->format == FT_GLYPH_FORMAT_BITMAP)
@@ -149,17 +147,10 @@ static void Usage(void)
 
 int main(int argc, char **argv)
 {
-	int i,
-	 total,
-	 base,
-	 rendered_glyphs;
+	int i, total, base, rendered_glyphs;
 	char filename[1024 + 4];
 	char alt_filename[1024 + 4];
-
-	long t,
-	 t0,
-	 tz0;
-
+	long t, t0, tz0;
 
 	antialias = 1;
 	force_low = 0;
@@ -267,7 +258,6 @@ int main(int argc, char **argv)
 	while (total > 0)
 	{
 		int repeat;
-
 
 		/* First, preload 'tab_glyphs' in memory */
 		cur_glyph = 0;

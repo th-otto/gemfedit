@@ -35,7 +35,7 @@ static int ptsize;
 static int Fail;
 
 
-static void Usage(char *name)
+static void Usage(const char *name)
 {
 	printf("ftlint: simple font tester -- part of the FreeType project\n");
 	printf("----------------------------------------------------------\n");
@@ -56,14 +56,12 @@ static void Panic(const char *message)
 
 int main(int argc, char **argv)
 {
-	int i,
-	 file_index;
+	int i, file_index;
 	unsigned int id;
 	char filename[1024 + 4];
 	char alt_filename[1024 + 4];
 	char *execname;
 	char *fname;
-
 
 	execname = argv[0];
 
@@ -89,7 +87,6 @@ int main(int argc, char **argv)
 			printf("%s: ", fname);
 			goto Success;
 		}
-
 
 		if (error == FT_Err_Unknown_File_Format)
 		{

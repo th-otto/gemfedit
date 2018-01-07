@@ -60,15 +60,12 @@ static void Panic(const char *message)
 
 int main(int argc, char **argv)
 {
-	int i,
-	 file_index,
-	 glyph_index;
+	int i, file_index, glyph_index;
 	char filename[1024 + 4];
 	char alt_filename[1024 + 4];
 	char *execname;
 	char *fname;
 	int load_unscaled = 0;
-
 
 	execname = argv[0];
 

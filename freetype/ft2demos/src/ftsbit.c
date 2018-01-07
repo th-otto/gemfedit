@@ -143,7 +143,6 @@ int main(int argc, char **argv)
 	char *fname;
 	int dump_all = 0;
 
-
 #ifdef HAVE_LIBINTL_H
 	setlocale(LC_ALL, "");
 	bindtextdomain("freetype", LOCALEDIR);

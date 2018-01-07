@@ -666,12 +666,12 @@ static const FT_String *OpStr[256] = {
 };
 
 
-  /*********************************************************************
-   *
-   * Init_Keyboard: Set the input file descriptor to char-by-char
-   *                mode on Unix.
-   *
-   *********************************************************************/
+/*********************************************************************
+ *
+ * Init_Keyboard: Set the input file descriptor to char-by-char
+ *                mode on Unix.
+ *
+ *********************************************************************/
 
 #ifdef UNIX
 
@@ -681,7 +681,6 @@ static struct termios old_termio;
 static void Init_Keyboard(void)
 {
 	struct termios termio;
-
 
 #ifndef HAVE_TCGETATTR
 	ioctl(0, TCGETS, &old_termio);
@@ -735,13 +734,13 @@ static void Abort(const char *message)
 }
 
 
-  /******************************************************************
-   *
-   *  Function:    Calc_Length
-   *
-   *  Description: Compute the length in bytes of current opcode.
-   *
-   *****************************************************************/
+/******************************************************************
+ *
+ *  Function:    Calc_Length
+ *
+ *  Description: Compute the length in bytes of current opcode.
+ *
+ *****************************************************************/
 
 #define CUR  (*exc)
 
@@ -805,10 +804,7 @@ static void Calc_Length(TT_ExecContext exc)
 static const FT_String *Cur_U_Line(TT_ExecContext exc)
 {
 	FT_String s[32];
-	FT_Int op,
-	 i,
-	 n;
-
+	FT_Int op, i, n;
 
 	op = CUR.code[CUR.IP];
 
@@ -881,7 +877,6 @@ static void handle_WS(TT_ExecContext exc, Storage * storage)
 		FT_ULong idx = (FT_ULong) CUR.stack[CUR.top - 2];
 		FT_Long value = (FT_Long) CUR.stack[CUR.top - 1];
 
-
 		if (idx < CUR.storeSize)
 		{
 			storage[idx].initialized = 1;
@@ -891,15 +886,13 @@ static void handle_WS(TT_ExecContext exc, Storage * storage)
 }
 
 
-static void display_changed_points(TT_GlyphZoneRec * prev, TT_GlyphZoneRec * curr, FT_Bool is_twilight)
+static void display_changed_points(TT_GlyphZoneRec *prev, TT_GlyphZoneRec *curr, FT_Bool is_twilight)
 {
 	FT_Int A;
-
 
 	for (A = 0; A < curr->n_points; A++)
 	{
 		FT_Int diff = 0;
-
 
 		if (prev->org[A].x != curr->org[A].x)
 			diff |= 1;
@@ -915,7 +908,6 @@ static void display_changed_points(TT_GlyphZoneRec * prev, TT_GlyphZoneRec * cur
 		if (diff)
 		{
 			const FT_String *temp;
-
 
 			printf("%3d%s ", A, is_twilight ? "T" : " ");
 			printf("%6ld,%6ld  ", curr->orus[A].x, curr->orus[A].y);
@@ -1018,10 +1010,9 @@ static void display_changed_points(TT_GlyphZoneRec * prev, TT_GlyphZoneRec * cur
 }
 
 
-static void show_points_table(TT_GlyphZoneRec * zone, const FT_String * code_range, int n_points, FT_Bool is_twilight)
+static void show_points_table(TT_GlyphZoneRec *zone, const FT_String *code_range, int n_points, FT_Bool is_twilight)
 {
 	int A;
-
 
 	if (code_range[0] == 'g')
 	{
@@ -1055,11 +1046,10 @@ static void show_points_table(TT_GlyphZoneRec * zone, const FT_String * code_ran
 static FT_Error RunIns(TT_ExecContext exc)
 {
 	FT_Int key;
-
 	FT_Bool really_leave;
 
-	FT_String ch,
-	 oldch = '\0';
+	FT_String ch;
+	FT_String oldch = '\0';
 
 	FT_Long last_IP = 0;
 	FT_Int last_range = 0;
@@ -1076,7 +1066,7 @@ static FT_Error RunIns(TT_ExecContext exc)
 
 	const FT_String *code_range;
 
-	const FT_String *round_str[8] = {
+	static const FT_String *const round_str[8] = {
 		"to half-grid",
 		"to grid",
 		"to double grid",
@@ -1086,7 +1076,6 @@ static FT_Error RunIns(TT_ExecContext exc)
 		"super",
 		"super 45"
 	};
-
 
 	error = FT_Err_Ok;
 
@@ -1127,6 +1116,7 @@ static FT_Error RunIns(TT_ExecContext exc)
 
 	default:
 		code_range = "fpgm";
+		break;
 	}
 
 	printf("Entering `%s' table.\n" "\n", code_range);
@@ -1151,11 +1141,8 @@ static FT_Error RunIns(TT_ExecContext exc)
 
 			{
 				char temp[90];
-				int n,
-				 col,
-				 pop;
+				int n, col, pop;
 				int args = CUR.args;
-
 
 				sprintf(temp, "%78c\n", ' ');
 
@@ -1191,7 +1178,6 @@ static FT_Error RunIns(TT_ExecContext exc)
 				{
 					int num_chars;
 
-
 					if (pop == 0)
 						temp[col - 1] = temp[col - 1] == '(' ? ' ' : ')';
 
@@ -1200,7 +1186,6 @@ static FT_Error RunIns(TT_ExecContext exc)
 						/* we display signed hexadecimal numbers, which */
 						/* is easier to read and needs less space       */
 						long val = (signed long) CUR.stack[args];
-
 
 						num_chars = sprintf(temp + col, "%s%04lx", val < 0 ? "-" : "", val < 0 ? -val : val);
 						if (col + num_chars >= 78)
@@ -1335,7 +1320,6 @@ static FT_Error RunIns(TT_ExecContext exc)
 				{
 					int version;
 
-
 					/* this doesn't really belong to the graphics state, */
 					/* but I consider it a good place to show            */
 					FT_Property_Get(library, "truetype", "interpreter-version", &version);
@@ -1366,7 +1350,6 @@ static FT_Error RunIns(TT_ExecContext exc)
 					{
 						FT_ULong i;
 
-
 						printf("Control Value Table (CVT) data\n" "\n");
 						printf(" idx         value       \n" "-------------------------\n");
 
@@ -1385,7 +1368,6 @@ static FT_Error RunIns(TT_ExecContext exc)
 					else
 					{
 						FT_ULong i;
-
 
 						printf("Storage Area\n" "\n");
 						printf(" idx         value       \n" "-------------------------\n");
@@ -1420,14 +1402,12 @@ static FT_Error RunIns(TT_ExecContext exc)
 				{
 					FT_Int i;
 
-
 					printf("Function call backtrace\n" "\n");
 					printf(" idx   loopcount   start    end   caller\n" "----------------------------------------\n");
 
 					for (i = CUR.callTop; i > 0; i--)
 					{
 						TT_CallRec *rec = &CUR.callStack[i - 1];
-
 
 						printf(" %3d      %4ld     f%04lx   f%04lx   %c%04lx\n",
 							   rec->Def->opc,
@@ -1534,7 +1514,6 @@ static FT_Error RunIns(TT_ExecContext exc)
 					{
 						FT_Long next_IP;
 
-
 						/* loop execution until we reach the next opcode */
 						next_IP = CUR.IP + CUR.length;
 						while (CUR.IP != next_IP)
@@ -1567,7 +1546,6 @@ static FT_Error RunIns(TT_ExecContext exc)
 			{
 				FT_Long next_IP;
 				FT_Int saved_range;
-
 
 				/* `step over' is equivalent to `step into' except if */
 				/* the current opcode is a CALL or LOOPCALL           */
@@ -1672,20 +1650,22 @@ static FT_Error RunIns(TT_ExecContext exc)
 		{
 			FT_ULong i;
 
-
 			for (i = 0; i < CUR.cvtSize; i++)
+			{
 				if (save_cvt[i] != CUR.cvt[i])
 				{
 					printf("%3ldC %8ld (%8.2f)\n", i, save_cvt[i], save_cvt[i] / 64.0);
 					printf("     %8ld (%8.2f)\n", CUR.cvt[i], CUR.cvt[i] / 64.0);
 				}
-
+			}
 			for (i = 0; i < CUR.storeSize; i++)
+			{
 				if (save_storage[i].initialized != storage[i].initialized || save_storage[i].value != storage[i].value)
 				{
 					printf("%3ldS %8ld (%8.2f)\n", i, save_storage[i].value, save_storage[i].value / 64.0);
 					printf("     %8ld (%8.2f)\n", storage[i].value, storage[i].value / 64.0);
 				}
+			}
 		}
 
 	} while (1);
@@ -1713,7 +1693,6 @@ static FT_Error RunIns(TT_ExecContext exc)
 static void Usage(char *execname)
 {
 	char versions[32];
-
 
 	/* we expect that at least one interpreter version is available */
 	if (num_tt_interpreter_versions == 2)
@@ -1754,14 +1733,14 @@ int main(int argc, char **argv)
 
 	int i;
 
-	unsigned int versions[3] = { TT_INTERPRETER_VERSION_35,
+	unsigned int versions[3] = {
+		TT_INTERPRETER_VERSION_35,
 		TT_INTERPRETER_VERSION_38,
 		TT_INTERPRETER_VERSION_40
 	};
 	int version;
 
 	int tmp;
-
 
 	/* init library, read face object, get driver, create size */
 	error = FT_Init_FreeType(&library);
@@ -1774,17 +1753,14 @@ int main(int argc, char **argv)
 		Abort("could not find the TrueType driver in FreeType 2\n");
 
 	{
-		FT_Int major,
-		 minor,
-		 patch;
+		FT_Int major, minor, patch;
 		int offset;
-
 
 		FT_Library_Version(library, &major, &minor, &patch);
 
-		offset = snprintf(version_string, 64, "ttdebug (FreeType) %d.%d", major, minor);
+		offset = snprintf(version_string, sizeof(version_string), "ttdebug (FreeType) %d.%d", major, minor);
 		if (patch)
-			offset = snprintf(version_string + offset, (size_t) (64 - offset), ".%d", patch);
+			offset = snprintf(version_string + offset, sizeof(version_string) - offset, ".%d", patch);
 	}
 
 	/* collect all available versions, then set again the default */

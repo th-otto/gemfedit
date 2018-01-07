@@ -98,7 +98,6 @@ static void Print_Name(FT_Face face)
 {
 	const char *ps_name;
 
-
 	printf("font name entries\n");
 
 	/* XXX: Foundry?  Copyright?  Version? ... */
@@ -113,11 +112,9 @@ static void Print_Name(FT_Face face)
 	printf("   postscript: %s\n", ps_name);
 }
 
-
 static void Print_Type(FT_Face face)
 {
 	FT_Module module;
-
 
 	printf("font type entries\n");
 
@@ -262,7 +259,6 @@ static void Print_Sfnt_Names(FT_Face face)
 			const char *NameID = name_id(name.name_id);
 			const char *PlatformID = platform_id(name.platform_id);
 
-
 			if (NameID)
 				printf("   %-15s [%s]", NameID, PlatformID);
 			else
@@ -400,7 +396,6 @@ static void Print_Fixed(FT_Face face)
 	{
 		FT_Bitmap_Size *bsize = face->available_sizes + i;
 
-
 		printf("   %3d: height %d, width %d\n", i, bsize->height, bsize->width);
 		printf("        size %.3f, x_ppem %.3f, y_ppem %.3f\n",
 			   bsize->size / 64.0, bsize->x_ppem / 64.0, bsize->y_ppem / 64.0);
@@ -422,7 +417,6 @@ static void Print_Charmaps(FT_Face face)
 	{
 		FT_Long format = FT_Get_CMap_Format(face->charmaps[i]);
 		FT_ULong lang_id = FT_Get_CMap_Language_ID(face->charmaps[i]);
-
 
 		if (format >= 0)
 			printf("  %2d: format %2ld, platform %s, encoding %2u",
@@ -446,7 +440,6 @@ static void Print_Charmaps(FT_Face face)
 			FT_ULong charcode;
 			FT_UInt gindex;
 			FT_String buf[32];
-
 
 			FT_Set_Charmap(face, face->charmaps[i]);
 
@@ -492,14 +485,12 @@ static void Print_MM_Axes(FT_Face face)
 	{
 		FT_SfntName name;
 
-
 		name.string = NULL;
 
 		if (is_GX)
 		{
 			FT_UInt strid = mm->axis[i].strid;
 			FT_UInt j;
-
 
 			/* iterate over all name entries        */
 			/* to find an English entry for `strid' */
@@ -542,7 +533,7 @@ static void Print_MM_Axes(FT_Face face)
 }
 
 
-static void Print_Bytecode(FT_Byte * buffer, FT_UShort length, char *tag)
+static void Print_Bytecode(FT_Byte *buffer, FT_UShort length, char *tag)
 {
 	FT_UShort i;
 	int j = 0;							/* status counter */
@@ -589,7 +580,6 @@ static void Print_Programs(FT_Face face)
 
 	TT_Header *head;
 	TT_MaxProfile *maxp;
-
 
 	error = FT_Load_Sfnt_Table(face, TTAG_fpgm, 0, NULL, &length);
 	if (error || length == 0)
@@ -662,11 +652,11 @@ static void Print_Programs(FT_Face face)
 		FT_UInt16 len;
 		char tag[5];
 
-
 		if (head->Index_To_Loc_Format)
 			loc = (FT_UInt32) offset[4 * i] << 24 |
 				(FT_UInt32) offset[4 * i + 1] << 16 |
-				(FT_UInt32) offset[4 * i + 2] << 8 | (FT_UInt32) offset[4 * i + 3];
+				(FT_UInt32) offset[4 * i + 2] << 8 |
+				(FT_UInt32) offset[4 * i + 3];
 		else
 			loc = (FT_UInt32) offset[2 * i] << 9 | (FT_UInt32) offset[2 * i + 1] << 1;
 
@@ -677,7 +667,6 @@ static void Print_Programs(FT_Face face)
 		if ((FT_Int16) len < 0)			/* composite */
 		{
 			FT_UShort flags;
-
 
 			do
 			{
@@ -694,8 +683,10 @@ static void Print_Programs(FT_Face face)
 			if ((flags & 0x100) == 0)
 				continue;
 		} else
+		{
 			loc += 2 * len;
-
+		}
+		
 		len = (FT_UInt16) (buffer[loc] << 8 | buffer[loc + 1]);
 
 		if (len == 0)
@@ -725,7 +716,6 @@ int main(int argc, char *argv[])
 
 	FT_Library library;					/* the FreeType library */
 	FT_Face face;						/* the font face        */
-
 
 	execname = ft_basename(argv[0]);
 
@@ -761,10 +751,7 @@ int main(int argc, char *argv[])
 
 		case 'v':
 			{
-				FT_Int major,
-				 minor,
-				 patch;
-
+				FT_Int major, minor, patch;
 
 				FT_Library_Version(library, &major, &minor, &patch);
 

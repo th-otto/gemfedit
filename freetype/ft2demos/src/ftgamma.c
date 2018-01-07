@@ -23,7 +23,7 @@ static grBitmap bit2 = { 288, 600, 600, gr_pixel_mode_gray, 256, NULL };
 static int status = 0;
 
 
-static void do_ptrn(grBitmap * bitmap, int x, int y, int w, int h)
+static void do_ptrn(grBitmap *bitmap, int x, int y, int w, int h)
 {
 	int pitch = bitmap->pitch;
 	int i, j, k;
@@ -63,13 +63,12 @@ static void do_ptrn(grBitmap * bitmap, int x, int y, int w, int h)
 }
 
 
-static FT_Error GammaPtrn(grBitmap * bitmap)
+static FT_Error GammaPtrn(grBitmap *bitmap)
 {
 	int x = 0;
 	int y = 0;
 	int h = (bitmap->rows - 2 * y) / 2;
 	int w = bitmap->width - 2 * x;
-
 
 	do_ptrn(bitmap, x, y, w, h);
 	do_ptrn(bitmap, x, y += h, w, h);
@@ -78,30 +77,33 @@ static FT_Error GammaPtrn(grBitmap * bitmap)
 }
 
 
-static void do_fill(grBitmap * bitmap, int x, int y, int w, int h, int back, int fore)
+static void do_fill(grBitmap *bitmap, int x, int y, int w, int h, int back, int fore)
 {
 	int pitch = bitmap->pitch;
 	int i;
-	double b,
-	 f;
-
+	double b, f;
 	unsigned char *line = bitmap->buffer + y * pitch + x;
 
-
 	if (back == 0 || back == 255)
+	{
 		for (i = 0; i < w; i++)
 			line[i + (i & 1) * pitch] = (unsigned char) back;
-	else
+	} else
+	{
 		for (b = back / 255., i = 0; i < w; i++)
 			line[i + (i & 1) * pitch] = (unsigned char) (0.5 + 255. * pow(b, 1. / (1. + 2. * i / w)));
-
+	}
+	
 	if (fore == 0 || fore == 255)
+	{
 		for (i = 0; i < w; i++)
 			line[i + (~i & 1) * pitch] = (unsigned char) fore;
-	else
+	} else
+	{
 		for (f = fore / 255., i = 0; i < w; i++)
 			line[i + (~i & 1) * pitch] = (unsigned char) (0.5 + 255. * pow(f, 1. / (1. + 2. * i / w)));
-
+	}
+	
 	for (i = 2; i < h; i += 2)
 	{
 		memcpy(line + i * pitch, line, (size_t) w);
@@ -110,13 +112,12 @@ static void do_fill(grBitmap * bitmap, int x, int y, int w, int h, int back, int
 }
 
 
-static FT_Error GammaGrid(grBitmap * bitmap)
+static FT_Error GammaGrid(grBitmap *bitmap)
 {
 	int x = 0;
 	int y = 0;
 	int h = (bitmap->rows - 2 * y) / 15;
 	int w = bitmap->width - 2 * x;
-
 
 	do_fill(bitmap, x, y, w, h, 85, 255);
 	do_fill(bitmap, x, y += h, w, h, 170, 170);
@@ -144,13 +145,11 @@ static void event_help(void)
 {
 	grEvent dummy_event;
 
-
 	FTDemo_Display_Clear(display);
 	grSetLineHeight(10);
 	grGotoxy(0, 0);
 	grSetMargin(2, 1);
 	grGotobitmap(display->bitmap);
-
 
 	grWriteln("FreeType Gamma Matcher");
 	grLn();
@@ -177,7 +176,6 @@ static void event_color_change(void)
 	unsigned char g = i & 2 ? 0xff : 0;
 	unsigned char b = i & 1 ? 0xff : 0;
 
-
 	display->back_color = grFindColor(display->bitmap, 0, 0, 0, 0xff);
 	display->fore_color = grFindColor(display->bitmap, r, g, b, 0xff);
 
@@ -199,17 +197,15 @@ static void event_gamma_grid(void)
 	int y_0 = (display->bitmap->rows - gammas * (yside + 1)) / 2;
 	int pitch = display->bitmap->pitch;
 
-
 	FTDemo_Display_Clear(display);
 	grGotobitmap(display->bitmap);
 
 	if (pitch < 0)
 		pitch = -pitch;
 
-	memset(display->bitmap->buffer, 100, (unsigned int) (pitch * display->bitmap->rows));
+	memset(display->bitmap->buffer, 100, (size_t) pitch * display->bitmap->rows);
 
 	grWriteCellString(display->bitmap, 0, 0, "Gamma grid", display->fore_color);
-
 
 	for (g = 1; g <= gammas; g++)
 	{
@@ -234,12 +230,10 @@ static void event_gamma_grid(void)
 		{
 			unsigned char *dst = line;
 
-
 			for (nx = 0; nx < levels; nx++, dst += 3 * xside)
 			{
 				double p = nx / (double) (levels - 1);
 				int gm = (int) (255.0 * pow(p, ggamma) + 0.5);
-
 
 				memset(dst, gm, (unsigned int) (xside * 3));
 			}
@@ -251,7 +245,7 @@ static void event_gamma_grid(void)
 }
 
 
-static void Render_Bitmap(grBitmap * out, grBitmap * in, int x, int y, grColor color, int lcd)
+static void Render_Bitmap(grBitmap *out, grBitmap *in, int x, int y, grColor color, int lcd)
 {
 	int pitch = out->pitch;
 	int i, ii, j;
@@ -287,7 +281,7 @@ static void Render_Bitmap(grBitmap * out, grBitmap * in, int x, int y, grColor c
 }
 
 
-static int Process_Event(grEvent * event)
+static int Process_Event(grEvent *event)
 {
 	int ret = 0;
 

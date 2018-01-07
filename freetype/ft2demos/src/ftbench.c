@@ -52,7 +52,7 @@ typedef struct btimer_t_
 } btimer_t;
 
 
-typedef int (*bcall_t) (btimer_t * timer, FT_Face face, void *user_data);
+typedef int (*bcall_t) (btimer_t *timer, FT_Face face, void *user_data);
 
 
 typedef struct btest_t_
@@ -61,7 +61,6 @@ typedef struct btest_t_
 	bcall_t bench;
 	int cache_first;
 	void *user_data;
-
 } btest_t;
 
 
@@ -69,16 +68,15 @@ typedef struct bcharset_t_
 {
 	FT_Int size;
 	FT_ULong *code;
-
 } bcharset_t;
 
 
-static FT_Error get_face(FT_Face * face);
+static FT_Error get_face(FT_Face *face);
 
 
-  /*
-   * Globals
-   */
+/*
+ * Globals
+ */
 
 #define CACHE_SIZE  1024
 #define BENCH_TIME  2.0
@@ -140,7 +138,8 @@ static unsigned int cff_hinting_engines[2];
 static int num_cff_hinting_engines;
 static unsigned int dflt_cff_hinting_engine;
 
-static char cff_hinting_engine_names[2][10] = { "freetype",
+static char cff_hinting_engine_names[2][10] = {
+	"freetype",
 	"adobe"
 };
 
@@ -149,7 +148,7 @@ static char cff_hinting_engine_names[2][10] = { "freetype",
  * Dummy face requester (the face object is already loaded)
  */
 
-static FT_Error face_requester(FTC_FaceID face_id, FT_Library library, FT_Pointer request_data, FT_Face * aface)
+static FT_Error face_requester(FTC_FaceID face_id, FT_Library library, FT_Pointer request_data, FT_Face *aface)
 {
 	FT_UNUSED(face_id);
 	FT_UNUSED(library);
@@ -191,7 +190,7 @@ static double get_time(void)
 /*
  * Bench code
  */
-static void benchmark(FT_Face face, btest_t * test, int max_iter, double max_time)
+static void benchmark(FT_Face face, btest_t *test, int max_iter, double max_time)
 {
 	int n, done;
 	btimer_t timer, elapsed;
@@ -237,7 +236,7 @@ static void benchmark(FT_Face face, btest_t * test, int max_iter, double max_tim
 /*
  * Various tests
  */
-static int test_load(btimer_t * timer, FT_Face face, void *user_data)
+static int test_load(btimer_t *timer, FT_Face face, void *user_data)
 {
 	unsigned int i;
 	int done = 0;
@@ -258,7 +257,7 @@ static int test_load(btimer_t * timer, FT_Face face, void *user_data)
 }
 
 
-static int test_load_advances(btimer_t * timer, FT_Face face, void *user_data)
+static int test_load_advances(btimer_t *timer, FT_Face face, void *user_data)
 {
 	int done = 0;
 	FT_Fixed *advances;
@@ -279,7 +278,7 @@ static int test_load_advances(btimer_t * timer, FT_Face face, void *user_data)
 }
 
 
-static int test_render(btimer_t * timer, FT_Face face, void *user_data)
+static int test_render(btimer_t *timer, FT_Face face, void *user_data)
 {
 	unsigned int i;
 	int done = 0;
@@ -301,7 +300,7 @@ static int test_render(btimer_t * timer, FT_Face face, void *user_data)
 }
 
 
-static int test_embolden(btimer_t * timer, FT_Face face, void *user_data)
+static int test_embolden(btimer_t *timer, FT_Face face, void *user_data)
 {
 	unsigned int i;
 	int done = 0;
@@ -323,14 +322,13 @@ static int test_embolden(btimer_t * timer, FT_Face face, void *user_data)
 }
 
 
-static int test_get_glyph(btimer_t * timer, FT_Face face, void *user_data)
+static int test_get_glyph(btimer_t *timer, FT_Face face, void *user_data)
 {
 	FT_Glyph glyph;
 	unsigned int i;
 	int done = 0;
 
 	FT_UNUSED(user_data);
-
 
 	for (i = first_index; i < (unsigned int) face->num_glyphs; i++)
 	{
@@ -350,7 +348,7 @@ static int test_get_glyph(btimer_t * timer, FT_Face face, void *user_data)
 }
 
 
-static int test_get_cbox(btimer_t * timer, FT_Face face, void *user_data)
+static int test_get_cbox(btimer_t *timer, FT_Face face, void *user_data)
 {
 	FT_Glyph glyph;
 	FT_BBox bbox;
@@ -358,7 +356,6 @@ static int test_get_cbox(btimer_t * timer, FT_Face face, void *user_data)
 	int done = 0;
 
 	FT_UNUSED(user_data);
-
 
 	for (i = first_index; i < (unsigned int) face->num_glyphs; i++)
 	{
@@ -380,7 +377,7 @@ static int test_get_cbox(btimer_t * timer, FT_Face face, void *user_data)
 }
 
 
-static int test_get_bbox(btimer_t * timer, FT_Face face, void *user_data)
+static int test_get_bbox(btimer_t *timer, FT_Face face, void *user_data)
 {
 	FT_BBox bbox;
 	unsigned int i;
@@ -389,11 +386,9 @@ static int test_get_bbox(btimer_t * timer, FT_Face face, void *user_data)
 
 	FT_UNUSED(user_data);
 
-
 	for (i = first_index; i < (unsigned int) face->num_glyphs; i++)
 	{
 		FT_Outline *outline;
-
 
 		if (FT_Load_Glyph(face, i, load_flags))
 			continue;
@@ -414,12 +409,11 @@ static int test_get_bbox(btimer_t * timer, FT_Face face, void *user_data)
 }
 
 
-static int test_get_char_index(btimer_t * timer, FT_Face face, void *user_data)
+static int test_get_char_index(btimer_t *timer, FT_Face face, void *user_data)
 {
 	bcharset_t *charset = (bcharset_t *) user_data;
-	int i,
-	 done = 0;
-
+	int i;
+	int done = 0;
 
 	TIMER_START(timer);
 
@@ -435,7 +429,7 @@ static int test_get_char_index(btimer_t * timer, FT_Face face, void *user_data)
 }
 
 
-static int test_cmap_cache(btimer_t * timer, FT_Face face, void *user_data)
+static int test_cmap_cache(btimer_t *timer, FT_Face face, void *user_data)
 {
 	bcharset_t *charset = (bcharset_t *) user_data;
 	int i, done = 0;
@@ -462,14 +456,13 @@ static int test_cmap_cache(btimer_t * timer, FT_Face face, void *user_data)
 }
 
 
-static int test_image_cache(btimer_t * timer, FT_Face face, void *user_data)
+static int test_image_cache(btimer_t *timer, FT_Face face, void *user_data)
 {
 	FT_Glyph glyph;
 	unsigned int i;
 	int done = 0;
 
 	FT_UNUSED(user_data);
-
 
 	if (!image_cache)
 	{
@@ -491,14 +484,13 @@ static int test_image_cache(btimer_t * timer, FT_Face face, void *user_data)
 }
 
 
-static int test_sbit_cache(btimer_t * timer, FT_Face face, void *user_data)
+static int test_sbit_cache(btimer_t *timer, FT_Face face, void *user_data)
 {
 	FTC_SBit glyph;
 	unsigned int i;
 	int done = 0;
 
 	FT_UNUSED(user_data);
-
 
 	if (!sbit_cache)
 	{
@@ -520,13 +512,12 @@ static int test_sbit_cache(btimer_t * timer, FT_Face face, void *user_data)
 }
 
 
-static int test_cmap_iter(btimer_t * timer, FT_Face face, void *user_data)
+static int test_cmap_iter(btimer_t *timer, FT_Face face, void *user_data)
 {
 	FT_UInt idx;
 	FT_ULong charcode;
 
 	FT_UNUSED(user_data);
-
 
 	TIMER_START(timer);
 
@@ -540,13 +531,12 @@ static int test_cmap_iter(btimer_t * timer, FT_Face face, void *user_data)
 }
 
 
-static int test_new_face(btimer_t * timer, FT_Face face, void *user_data)
+static int test_new_face(btimer_t *timer, FT_Face face, void *user_data)
 {
 	FT_Face bench_face;
 
 	FT_UNUSED(face);
 	FT_UNUSED(user_data);
-
 
 	TIMER_START(timer);
 
@@ -562,7 +552,7 @@ static int test_new_face(btimer_t * timer, FT_Face face, void *user_data)
 /*
  * main
  */
-static void get_charset(FT_Face face, bcharset_t * charset)
+static void get_charset(FT_Face face, bcharset_t *charset)
 {
 	FT_ULong charcode;
 	FT_UInt gindex;
@@ -590,7 +580,6 @@ static void get_charset(FT_Face face, bcharset_t * charset)
 	{
 		unsigned int j;
 
-
 		/* no charmap, do an identity mapping */
 		for (i = 0, j = first_index; j < (unsigned int) face->num_glyphs; i++, j++)
 			charset->code[i] = j;
@@ -600,7 +589,7 @@ static void get_charset(FT_Face face, bcharset_t * charset)
 }
 
 
-static FT_Error get_face(FT_Face * face)
+static FT_Error get_face(FT_Face *face)
 {
 	static unsigned char *memory_file = NULL;
 	static size_t memory_size;
@@ -675,7 +664,6 @@ static void usage(void)
 		sprintf(hinting_engines,
 				"`%s' and `%s'",
 				cff_hinting_engine_names[cff_hinting_engines[0]], cff_hinting_engine_names[cff_hinting_engines[1]]);
-
 
 	fprintf(stderr,
 			"\n"
@@ -762,7 +750,6 @@ int main(int argc, char **argv)
 		return 1;
 	}
 
-
 	/* collect all available versions, then set again the default */
 	FT_Property_Get(lib, "truetype", "interpreter-version", &dflt_tt_interpreter_version);
 	for (j = 0; j < 3; j++)
@@ -781,7 +768,6 @@ int main(int argc, char **argv)
 			cff_hinting_engines[num_cff_hinting_engines++] = engines[j];
 	}
 	FT_Property_Set(lib, "cff", "hinting-engine", &dflt_cff_hinting_engine);
-
 
 	version = (int) dflt_tt_interpreter_version;
 	engine = cff_hinting_engine_names[dflt_cff_hinting_engine];
@@ -851,7 +837,6 @@ int main(int argc, char **argv)
 			{
 				int fi = atoi(optarg);
 
-
 				if (fi > 0)
 					first_index = (unsigned int) fi;
 			}
@@ -860,7 +845,6 @@ int main(int argc, char **argv)
 		case 'l':
 			{
 				int filter = atoi(optarg);
-
 
 				switch (filter)
 				{
@@ -879,7 +863,6 @@ int main(int argc, char **argv)
 			{
 				int mb = atoi(optarg);
 
-
 				if (mb > 0)
 					max_bytes = (unsigned int) mb *1024;
 			}
@@ -893,7 +876,6 @@ int main(int argc, char **argv)
 			{
 				int rm = atoi(optarg);
 
-
 				if (rm < 0 || rm >= FT_RENDER_MODE_MAX)
 					render_mode = FT_RENDER_MODE_NORMAL;
 				else
@@ -904,7 +886,6 @@ int main(int argc, char **argv)
 		case 's':
 			{
 				int sz = atoi(optarg);
-
 
 				/* value 0 is special */
 				if (sz < 0)
@@ -922,10 +903,7 @@ int main(int argc, char **argv)
 
 		case 'v':
 			{
-				FT_Int major,
-				 minor,
-				 patch;
-
+				FT_Int major, minor, patch;
 
 				FT_Library_Version(lib, &major, &minor, &patch);
 
@@ -1089,12 +1067,10 @@ int main(int argc, char **argv)
 			{
 				bcharset_t charset;
 
-
 				get_charset(face, &charset);
 				if (charset.code)
 				{
 					test.user_data = (void *) &charset;
-
 
 					test.title = "Get_Char_Index";
 					test.bench = test_get_char_index;

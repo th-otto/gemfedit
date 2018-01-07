@@ -68,7 +68,7 @@ static TableSpecRec ot_table_spec[] = {
 	MAKE_TABLE_SPEC(GPOS),
 	MAKE_TABLE_SPEC(GSUB),
 	MAKE_TABLE_SPEC(JSTF),
-	MAKE_TABLE_SPEC(MATH),
+	MAKE_TABLE_SPEC(MATH)
 };
 
 #define N_OT_TABLE_SPEC  ( sizeof ( ot_table_spec ) / sizeof ( TableSpecRec ) )
@@ -83,7 +83,7 @@ static TableSpecRec gx_table_spec[] = {
 	MAKE_TABLE_SPEC(opbd),
 	MAKE_TABLE_SPEC(trak),
 	MAKE_TABLE_SPEC(prop),
-	MAKE_TABLE_SPEC(lcar),
+	MAKE_TABLE_SPEC(lcar)
 };
 
 #define N_GX_TABLE_SPEC  ( sizeof ( gx_table_spec ) / sizeof ( TableSpecRec ) )
@@ -170,10 +170,9 @@ static char *make_tag_chararray(char chararray[4], FT_UInt tag)
 }
 
 
-static void print_tag(FILE * stream, FT_UInt tag)
+static void print_tag(FILE *stream, FT_UInt tag)
 {
 	char buffer[5];
-
 
 	buffer[4] = '\0';
 	fprintf(stream, "%s", make_tag_chararray(buffer, tag));
@@ -186,8 +185,7 @@ static void print_tag(FILE * stream, FT_UInt tag)
      call with NULL. */
 static void print_usage(FT_Library library_initializer)
 {
-	unsigned int i,
-	 j;
+	unsigned int i, j;
 	Validator v;
 	static FT_Library library;
 
@@ -287,7 +285,6 @@ static FT_Error try_load(FT_Face face, FT_ULong tag)
 {
 	FT_ULong length;
 
-
 	length = 0;
 	return FT_Load_Sfnt_Table(face, tag, 0, NULL, &length);
 }
@@ -296,7 +293,6 @@ static FT_Error try_load(FT_Face face, FT_ULong tag)
 static FT_UInt find_validation_flag(FT_UInt tag, const TableSpecRec spec[], int spec_count)
 {
 	int i;
-
 
 	for (i = 0; i < spec_count; i++)
 	{
@@ -321,7 +317,6 @@ static FT_UInt parse_table_specs(const char *tables, const TableSpecRec spec[], 
 
 	unsigned int i;
 	char tag[4];
-
 
 	validation_flags = 0;
 
@@ -361,7 +356,6 @@ static FT_UInt list_face_tables(FT_Face face, const TableSpecRec spec[], int spe
 	int i;
 	FT_UInt tag;
 
-
 	validation_flags = 0;
 
 	for (i = 0; i < spec_count; i++)
@@ -384,11 +378,10 @@ static FT_UInt make_table_specs(FT_Face face, const char *request, const TableSp
 }
 
 
-static int print_tables(FILE * stream, FT_UInt validation_flags, const TableSpecRec spec[], int spec_count)
+static int print_tables(FILE *stream, FT_UInt validation_flags, const TableSpecRec spec[], int spec_count)
 {
 	int i;
 	int n_print;
-
 
 	for (i = 0, n_print = 0; i < spec_count; i++)
 	{
@@ -421,7 +414,6 @@ static void report_result(FT_Bytes data[], FT_UInt validation_flags, const Table
 	int n_passes;
 	int n_targets;
 
-
 	for (i = 0, n_passes = 0, n_targets = 0; i < spec_count; i++)
 	{
 		if (spec[i].validation_flag & validation_flags)
@@ -447,9 +439,9 @@ static void report_result(FT_Bytes data[], FT_UInt validation_flags, const Table
 }
 
 
-  /*
-   * OpenType related functions
-   */
+/*
+ * OpenType related functions
+ */
 static int is_ot_validator_implemented(FT_Library library)
 {
 	FT_Module mod;
@@ -464,7 +456,6 @@ static FT_Error run_ot_validator(FT_Face face, const char *tables, int validatio
 	FT_Error error;
 	FT_Bytes data[N_OT_TABLE_SPEC];
 	unsigned int i;
-
 
 	validation_flags = (FT_UInt) validation_level;
 	validation_flags |= make_table_specs(face, tables, ot_table_spec, N_OT_TABLE_SPEC);
@@ -489,15 +480,14 @@ static int list_ot_tables(FT_Face face)
 {
 	FT_UInt validation_flags;
 
-
 	validation_flags = list_face_tables(face, ot_table_spec, N_OT_TABLE_SPEC);
 	return print_tables(stdout, validation_flags, ot_table_spec, N_OT_TABLE_SPEC);
 }
 
 
-  /*
-   * TrueTypeGX related functions
-   */
+/*
+ * TrueTypeGX related functions
+ */
 static int is_gx_validator_implemented(FT_Library library)
 {
 	FT_Module mod;
@@ -512,7 +502,6 @@ static FT_Error run_gx_validator(FT_Face face, const char *tables, int validatio
 	FT_Error error;
 	FT_Bytes data[N_GX_TABLE_SPEC];
 	unsigned int i;
-
 
 	validation_flags = (FT_UInt) validation_level;
 	validation_flags |= make_table_specs(face, tables, gx_table_spec, N_GX_TABLE_SPEC);
@@ -542,9 +531,9 @@ static int list_gx_tables(FT_Face face)
 }
 
 
-  /*
-   * Classic kern related functions
-   */
+/*
+ * Classic kern related functions
+ */
 static int is_ckern_validator_implemented(FT_Library library)
 {
 	FT_Module mod;
@@ -560,10 +549,8 @@ static FT_Error run_ckern_validator(FT_Face face, const char *dialect_request, i
 	FT_Error error;
 	FT_Bytes data;
 
-
 	if (dialect_request == NULL)
 		dialect_request = "ms:apple";
-
 
 	validation_flags = (FT_UInt) validation_level;
 
@@ -581,9 +568,7 @@ static FT_Error run_ckern_validator(FT_Face face, const char *dialect_request, i
 
 	printf("[%s:%s] validation targets: %s...", execname, validators[validator].symbol, dialect_request);
 
-
 	error = FT_ClassicKern_Validate(face, validation_flags, &data);
-
 
 	if (data)
 		printf("pass\n");
@@ -607,10 +592,10 @@ static int list_ckern_tables(FT_Face face)
 	return 0;
 }
 
-  /*
-   * Main driver
-   */
 
+/*
+ * Main driver
+ */
 int main(int argc, char **argv)
 {
 	FT_Library library;
@@ -619,14 +604,12 @@ int main(int argc, char **argv)
 	char *fontfile;
 	int option;
 
-
 	char *tables;
 	int dump_table_list;
 
 	int validation_level;
 
 	int font_index = 0;
-
 
 	execname = ft_basename(argv[0]);
 
@@ -636,7 +619,6 @@ int main(int argc, char **argv)
 
 	/* Initialize print_usage internal variable */
 	print_usage(library);
-
 
 	/*
 	 * Parsing options
@@ -699,10 +681,7 @@ int main(int argc, char **argv)
 
 		case 'v':
 			{
-				FT_Int major,
-				 minor,
-				 patch;
-
+				FT_Int major, minor, patch;
 
 				FT_Library_Version(library, &major, &minor, &patch);
 
@@ -746,7 +725,6 @@ int main(int argc, char **argv)
 
 		if (!validators[validator].is_implemented(library))
 			panic(FT_Err_Unimplemented_Feature, validators[validator].unimplemented_message);
-
 
 		/* TODO: Multiple faces in a font file? */
 		error = FT_New_Face(library, fontfile, font_index, &face);

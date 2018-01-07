@@ -96,14 +96,12 @@ static struct status_
 } status =
 {
 	DIM_X, DIM_Y, RENDER_MODE_STRING, FT_ENCODING_UNICODE, 72, 48, 0, NULL,
-	{
-	0, 0, 0, 0, NULL},
-	{
-	0},
-	{
-	0, 0, 0, 0}, 0, NULL,
-	{
-0}};
+	{ 0, 0, 0, 0, NULL },
+	{ 0 },
+	{ 0, 0, 0, 0 },
+	0, NULL,
+	{ 0 }
+};
 
 static FTDemo_Display *display;
 static FTDemo_Handle *handle;
@@ -123,14 +121,9 @@ static void event_help(void)
 {
 	char buf[256];
 	char version[64];
-
 	const char *format;
-	FT_Int major,
-	 minor,
-	 patch;
-
+	FT_Int major, minor, patch;
 	grEvent dummy_event;
-
 
 	FT_Library_Version(handle->library, &major, &minor, &patch);
 
@@ -210,7 +203,6 @@ static void event_angle_change(int delta)
 	FT_Fixed cosinus;
 	FT_Fixed sinus;
 
-
 	status.angle += delta;
 
 	if (status.angle <= -180)
@@ -241,7 +233,6 @@ static void event_angle_change(int delta)
 static void event_lcdmode_change(void)
 {
 	const char *lcd_mode;
-
 
 	handle->lcd_mode++;
 
@@ -285,7 +276,6 @@ static void event_color_change(void)
 	unsigned char g = i & 2 ? 0xff : 0;
 	unsigned char b = i & 1 ? 0xff : 0;
 
-
 	display->back_color = grFindColor(display->bitmap, r, g, b, 0xff);
 	display->fore_color = grFindColor(display->bitmap, ~r, ~g, ~b, 0xff);
 
@@ -307,7 +297,6 @@ static void event_text_change(void)
 static void event_gamma_change(double delta)
 {
 	int i;
-
 
 	display->gamma += delta;
 
@@ -359,11 +348,10 @@ static void event_render_mode_change(int delta)
 }
 
 
-static int Process_Event(grEvent * event)
+static int Process_Event(grEvent *event)
 {
 	FTDemo_String_Context *sc = &status.sc;
 	int ret = 0;
-
 
 	if (event->key >= '1' && event->key < '1' + N_RENDER_MODES)
 	{
@@ -499,14 +487,11 @@ static int Process_Event(grEvent * event)
 }
 
 
-static void gamma_ramp_draw(FT_Byte gamma_ramp[256], grBitmap * bitmap)
+static void gamma_ramp_draw(FT_Byte gamma_ramp[256], grBitmap *bitmap)
 {
-	int i,
-	 x,
-	 y;
+	int i, x, y;
 	int bpp = bitmap->pitch / bitmap->width;
 	FT_Byte *p = (FT_Byte *) bitmap->buffer;
-
 
 	if (bitmap->pitch < 0)
 		p += -bitmap->pitch * (bitmap->rows - 1);
@@ -564,7 +549,6 @@ static void parse_cmdline(int *argc, char ***argv)
 	char *execname;
 	int option;
 
-
 	execname = ft_basename((*argv)[0]);
 
 	while (1)
@@ -600,10 +584,7 @@ static void parse_cmdline(int *argc, char ***argv)
 
 		case 'v':
 			{
-				FT_Int major,
-				 minor,
-				 patch;
-
+				FT_Int major, minor, patch;
 
 				FT_Library_Version(handle->library, &major, &minor, &patch);
 
@@ -645,7 +626,6 @@ static void parse_cmdline(int *argc, char ***argv)
 int main(int argc, char **argv)
 {
 	grEvent event;
-
 
 	/* Initialize engine */
 	handle = FTDemo_New();
@@ -708,10 +688,8 @@ int main(int argc, char **argv)
 		case RENDER_MODE_KERNCMP:
 			{
 				FTDemo_String_Context sc = status.sc;
-				FT_Int x,
-				 y;
+				FT_Int x, y;
 				FT_Int height;
-
 
 				x = 55;
 

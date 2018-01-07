@@ -24,7 +24,6 @@ int main(int argc, char *argv[])
 	FT_Error error;
 	FT_Library library;
 
-
 	error = FT_Init_FreeType(&library);
 	if (error)
 	{
@@ -35,7 +34,6 @@ int main(int argc, char *argv[])
 	for (; argc > 1; argc--, argv++)
 	{
 		FT_Face face;
-
 
 		error = FT_New_Face(library, argv[1], 0, &face);
 		if (error)

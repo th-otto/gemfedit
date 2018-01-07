@@ -18,7 +18,6 @@ int main(int argc, char *argv[])
 	int num_chars;
 	char char_name[256];
 
-
 	if (argc != 2)
 		exit(1);
 	if (FT_Init_FreeType(&font_library))

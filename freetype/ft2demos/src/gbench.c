@@ -22,15 +22,15 @@
 #include <time.h>
 #include <math.h>
 
- /*
-  *  gbench is a small program used to benchmark a new algorithm
-  *  performing gamma-corrected alpha-blending.
-  *
-  *  EXPERIMENTAL: the numbers given here do not correspond to
-  *                typical usage patterns yet, and the algorithm
-  *                can still be tuned
-  *
-  */
+/*
+ *  gbench is a small program used to benchmark a new algorithm
+ *  performing gamma-corrected alpha-blending.
+ *
+ *  EXPERIMENTAL: the numbers given here do not correspond to
+ *                typical usage patterns yet, and the algorithm
+ *                can still be tuned
+ *
+ */
 
 #ifdef UNIX
 #include <sys/time.h>
@@ -54,7 +54,6 @@ typedef struct CKeyRec_
 	int background;
 	int foreground;
 	unsigned char *grades;
-
 } CKeyRec, *CKey;
 
 static CKeyRec ckeys[ALGO_KEY_COUNT];
@@ -65,8 +64,8 @@ static cmiss1 = 0;
 static cmiss2 = 0;
 
 
- /* clear the cache
-  */
+/* clear the cache
+ */
 static void cclear(void)
 {
 	int nn;
@@ -75,21 +74,16 @@ static void cclear(void)
 		ckeys[nn].grades = NULL;
 }
 
- /* recompute the grade levels of a given key
-  */
+
+/* recompute the grade levels of a given key
+ */
 static void ckey_reset(CKey key)
 {
 	int back = key->background;
 	int fore = key->foreground;
 	unsigned char *gr = key->grades;
 	int nn;
-
-	int r1,
-	 g1,
-	 b1,
-	 r2,
-	 g2,
-	 b2;
+	int r1, g1, b1, r2, g2, b2;
 
 	r1 = (unsigned char) (back >> 16);
 	g1 = (unsigned char) (back >> 8);
@@ -142,12 +136,12 @@ static void ckey_reset(CKey key)
 	cmiss2++;
 }
 
- /* lookup the grades of a given (background,foreground) couple
-  */
+
+/* lookup the grades of a given (background,foreground) couple
+ */
 static const unsigned char *clookup(int background, int foreground)
 {
-	int index,
-	 index0;
+	int index, index0;
 	CKey key;
 
 	cmiss1++;
@@ -385,9 +379,8 @@ static void gblitter_blitrgb24_gray_cache(GBlitter blitter, int color)
 
 
 
-int
-gblitter_init_rgb24(GBlitter blitter,
-					GBitmap src, int dst_x, int dst_y, int dst_width, int dst_height, void *dst_buffer, int dst_pitch)
+int gblitter_init_rgb24(GBlitter blitter,
+	GBitmap src, int dst_x, int dst_y, int dst_width, int dst_height, void *dst_buffer, int dst_pitch)
 {
 	int width = src->width;
 	int height = src->height;
@@ -473,11 +466,8 @@ double bench_time = BENCH_TIME;
 
 static void bench(bench_t bench_func, int bench_arg, const char *title, int max)
 {
-	int i,
-	 n,
-	 done;
-	double t0,
-	 delta;
+	int i, n, done;
+	double t0, delta;
 
 	printf("%-30s : ", title);
 	fflush(stdout);
@@ -551,7 +541,7 @@ unsigned long seed = 0;
 
 unsigned long my_rand(void)
 {
-	seed = seed * 1103515245 + 12345;
+	seed = seed * 1103515245L + 12345;
 	return ((seed >> 16) & 32767);
 }
 
@@ -572,7 +562,6 @@ static int do_glyph(int arg)
 		gblitter_blitrgb24_gray_cache(&blit, color);
 	else
 		gblitter_blitrgb24_gray_direct(&blit, color);
-
 
 	return 0;
 }
@@ -644,7 +633,6 @@ int main(int argc, char **argv)
 			if (argc < 1 || sscanf(argv[1], "%lf", &gamma) != 1)
 				usage();
 			break;
-
 
 		case 's':
 			if (argc < 1)

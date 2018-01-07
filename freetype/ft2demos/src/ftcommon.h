@@ -86,11 +86,11 @@ typedef struct
 FTDemo_Display *FTDemo_Display_New(grPixelMode mode, int width, int height);
 
 
-void FTDemo_Display_Done(FTDemo_Display * display);
+void FTDemo_Display_Done(FTDemo_Display *display);
 
 
 /* fill the bitmap with background color */
-void FTDemo_Display_Clear(FTDemo_Display * display);
+void FTDemo_Display_Clear(FTDemo_Display *display);
 
 
 /*************************************************************************/
@@ -208,74 +208,70 @@ typedef struct
 FTDemo_Handle *FTDemo_New(void);
 
 
-void FTDemo_Done(FTDemo_Handle * handle);
+void FTDemo_Done(FTDemo_Handle *handle);
 
 
 /* install a font */
-FT_Error FTDemo_Install_Font(FTDemo_Handle * handle, const char *filepath, FT_Bool outline_only, FT_Bool no_instances);
+FT_Error FTDemo_Install_Font(FTDemo_Handle *handle, const char *filepath, FT_Bool outline_only, FT_Bool no_instances);
 
 
-void FTDemo_Set_Preload(FTDemo_Handle * handle, int preload);
+void FTDemo_Set_Preload(FTDemo_Handle *handle, int preload);
 
-void FTDemo_Set_Current_Font(FTDemo_Handle * handle, PFont font);
+void FTDemo_Set_Current_Font(FTDemo_Handle *handle, PFont font);
 
-void FTDemo_Set_Current_Size(FTDemo_Handle * handle, int pixel_size);
+void FTDemo_Set_Current_Size(FTDemo_Handle *handle, int pixel_size);
 
-void FTDemo_Set_Current_Charsize(FTDemo_Handle * handle, int point_size, int res);
+void FTDemo_Set_Current_Charsize(FTDemo_Handle *handle, int point_size, int res);
 
-void FTDemo_Update_Current_Flags(FTDemo_Handle * handle);
+void FTDemo_Update_Current_Flags(FTDemo_Handle *handle);
 
 
 /* charcode => glyph index of current font */
-FT_UInt FTDemo_Get_Index(FTDemo_Handle * handle, FT_UInt32 charcode);
+FT_UInt FTDemo_Get_Index(FTDemo_Handle *handle, FT_UInt32 charcode);
 
 
 /* get FT_Size of current font */
-FT_Error FTDemo_Get_Size(FTDemo_Handle * handle, FT_Size * asize);
+FT_Error FTDemo_Get_Size(FTDemo_Handle *handle, FT_Size *asize);
 
 
 /* draw common header */
-void FTDemo_Draw_Header(FTDemo_Handle * handle, FTDemo_Display * display, int ptsize, int res, int idx, int error_code);
+void FTDemo_Draw_Header(FTDemo_Handle *handle, FTDemo_Display *display, int ptsize, int res, int idx, int error_code);
 
 
 /* convert a FT_Glyph to a grBitmap (don't free target->buffer) */
 /* if aglyf != NULL, you should FT_Glyph_Done the aglyf */
-FT_Error
-FTDemo_Glyph_To_Bitmap(FTDemo_Handle * handle,
+FT_Error FTDemo_Glyph_To_Bitmap(FTDemo_Handle *handle,
 					   FT_Glyph glyf,
-					   grBitmap * target, int *left, int *top, int *x_advance, int *y_advance, FT_Glyph * aglyf);
+					   grBitmap *target, int *left, int *top, int *x_advance, int *y_advance, FT_Glyph *aglyf);
 
 /* get a grBitmap from glyph index (don't free target->buffer) */
 /* if aglyf != NULL, you should FT_Glyph_Done the aglyf */
-FT_Error
-FTDemo_Index_To_Bitmap(FTDemo_Handle * handle,
+FT_Error FTDemo_Index_To_Bitmap(FTDemo_Handle *handle,
 					   FT_ULong Index,
-					   grBitmap * target, int *left, int *top, int *x_advance, int *y_advance, FT_Glyph * aglyf);
+					   grBitmap *target, int *left, int *top, int *x_advance, int *y_advance, FT_Glyph *aglyf);
 
 
 /* given glyph index, draw a glyph on the display */
-FT_Error
-FTDemo_Draw_Index(FTDemo_Handle * handle, FTDemo_Display * display, unsigned int gindex, int *pen_x, int *pen_y);
+FT_Error FTDemo_Draw_Index(FTDemo_Handle *handle, FTDemo_Display *display, unsigned int gindex, int *pen_x, int *pen_y);
 
 
 /* given FT_Glyph, draw a glyph on the display */
-FT_Error FTDemo_Draw_Glyph(FTDemo_Handle * handle, FTDemo_Display * display, FT_Glyph glyph, int *pen_x, int *pen_y);
+FT_Error FTDemo_Draw_Glyph(FTDemo_Handle *handle, FTDemo_Display *display, FT_Glyph glyph, int *pen_x, int *pen_y);
 
-FT_Error FTDemo_Draw_Glyph_Color(FTDemo_Handle * handle,
-						FTDemo_Display * display, FT_Glyph glyph, int *pen_x, int *pen_y, grColor color);
+FT_Error FTDemo_Draw_Glyph_Color(FTDemo_Handle *handle,
+						FTDemo_Display *display, FT_Glyph glyph, int *pen_x, int *pen_y, grColor color);
 
 /* given FT_GlyphSlot, draw a glyph on the display */
-FT_Error FTDemo_Draw_Slot(FTDemo_Handle * handle, FTDemo_Display * display, FT_GlyphSlot slot, int *pen_x, int *pen_y);
+FT_Error FTDemo_Draw_Slot(FTDemo_Handle *handle, FTDemo_Display *display, FT_GlyphSlot slot, int *pen_x, int *pen_y);
 
 
 /* set the string to be drawn */
-void FTDemo_String_Set(FTDemo_Handle * handle, const char *string);
+void FTDemo_String_Set(FTDemo_Handle *handle, const char *string);
 
 
 /* draw a string centered at (center_x, center_y) --  */
 /* note that handle->use_sbits_cache is not supported */
-FT_Error FTDemo_String_Draw(FTDemo_Handle * handle,
-				   FTDemo_Display * display, FTDemo_String_Context * sc, int center_x, int center_y);
+FT_Error FTDemo_String_Draw(FTDemo_Handle *handle, FTDemo_Display *display, FTDemo_String_Context *sc, int center_x, int center_y);
 
 
 /* make a FT_Encoding tag from a string */

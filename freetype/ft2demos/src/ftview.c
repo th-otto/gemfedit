@@ -43,8 +43,8 @@
 #endif
 #define CEIL( x )  ( ( (x) + 63 ) >> 6 )
 
-#define START_X  18 * 8
-#define START_Y  3 * HEADER_HEIGHT
+#define START_X  (18 * 8)
+#define START_Y  (3 * HEADER_HEIGHT)
 
 #define INIT_SIZE( size, start_x, start_y, step_y, x, y )        \
           do {                                                   \
@@ -132,7 +132,8 @@ static struct status_
 	1, DIM_X, DIM_Y, RENDER_MODE_ALL, 72, 48, 1, 0.04, 0.04, 0.02, 0.22, 0,
 	{ 0 }, 0, 0, 0, 0, 0, 0, 0, 0, FT_LCD_FILTER_DEFAULT,
 	{ 0x08, 0x4D, 0x56, 0x4D, 0x08 },
-2 };
+	2
+};
 
 
 static FTDemo_Display *display;
@@ -979,7 +980,7 @@ static int event_font_change(int delta)
 }
 
 
-static int Process_Event(grEvent * event)
+static int Process_Event(grEvent *event)
 {
 	int ret = 0;
 
@@ -1277,7 +1278,6 @@ static void write_header(FT_Error error_code)
 {
 	char buf[256];
 	int line = 4;
-
 
 	FTDemo_Draw_Header(handle, display, status.ptsize, status.res,
 					   status.render_mode != RENDER_MODE_TEXT &&

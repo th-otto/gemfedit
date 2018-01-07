@@ -4081,8 +4081,8 @@ FT_EXPORT_DEF(FT_Error) FT_Remove_Module(FT_Library library, FT_Module module)
 
 
 static FT_Error ft_property_do(FT_Library library,
-	const FT_String * module_name,
-	const FT_String * property_name, void *value, FT_Bool set, FT_Bool value_is_string)
+	const FT_String *module_name,
+	const FT_String *property_name, void *value, FT_Bool set, FT_Bool value_is_string)
 {
 	FT_Module *cur;
 	FT_Module *limit;
@@ -4136,9 +4136,9 @@ static FT_Error ft_property_do(FT_Library library,
 	service = (FT_Service_Properties) interface;
 
 	if (set)
-		missing_func = (FT_Bool) (!service->set_property);
+		missing_func = service->set_property == 0;
 	else
-		missing_func = (FT_Bool) (!service->get_property);
+		missing_func = service->get_property == 0;
 
 	if (missing_func)
 	{
@@ -4146,19 +4146,18 @@ static FT_Error ft_property_do(FT_Library library,
 		return FT_THROW(Unimplemented_Feature);
 	}
 
-	return set ? service->set_property(cur[0],
-									   property_name,
-									   value, value_is_string) : service->get_property(cur[0], property_name, value);
+	return set ? service->set_property(cur[0], property_name, value, value_is_string) :
+	             service->get_property(cur[0], property_name, value);
 }
 
 
-FT_EXPORT_DEF(FT_Error) FT_Property_Set(FT_Library library, const FT_String * module_name, const FT_String * property_name, const void *value)
+FT_EXPORT_DEF(FT_Error) FT_Property_Set(FT_Library library, const FT_String *module_name, const FT_String *property_name, const void *value)
 {
 	return ft_property_do(library, module_name, property_name, (void *) value, TRUE, FALSE);
 }
 
 
-FT_EXPORT_DEF(FT_Error) FT_Property_Get(FT_Library library, const FT_String * module_name, const FT_String * property_name, void *value)
+FT_EXPORT_DEF(FT_Error) FT_Property_Get(FT_Library library, const FT_String *module_name, const FT_String *property_name, void *value)
 {
 	return ft_property_do(library, module_name, property_name, value, FALSE, FALSE);
 }
@@ -4170,7 +4169,7 @@ FT_EXPORT_DEF(FT_Error) FT_Property_Get(FT_Library library, const FT_String * mo
 /* environment variable                                      */
 
 FT_BASE_DEF(FT_Error) ft_property_string_set(FT_Library library,
-	const FT_String * module_name, const FT_String * property_name, FT_String * value)
+	const FT_String *module_name, const FT_String * property_name, FT_String * value)
 {
 	return ft_property_do(library, module_name, property_name, (void *) value, TRUE, TRUE);
 }

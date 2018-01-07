@@ -109,7 +109,6 @@ static void LogMessage(const char *fmt, ...)
 {
 	va_list ap;
 
-
 	va_start(ap, fmt);
 	vfprintf(stderr, fmt, ap);
 	va_end(ap);
@@ -117,7 +116,7 @@ static void LogMessage(const char *fmt, ...)
 #endif
 
 
-  /* PanicZ */
+/* PanicZ */
 static void PanicZ(const char *message)
 {
 	fprintf(stderr, "%s\n  error = 0x%04x\n", message, error);
@@ -129,7 +128,6 @@ static unsigned long make_tag(char *s)
 {
 	int i;
 	unsigned long l = 0;
-
 
 	for (i = 0; i < 4; i++)
 	{
@@ -155,11 +153,10 @@ static void parse_design_coords(char *s)
 }
 
 
-  /* Clears the Bit bitmap/pixmap */
+/* Clears the Bit bitmap/pixmap */
 static void Clear_Display(void)
 {
 	long bitmap_size = (long) bit.pitch * bit.rows;
-
 
 	if (bitmap_size < 0)
 		bitmap_size = -bitmap_size;
@@ -167,7 +164,7 @@ static void Clear_Display(void)
 }
 
 
-  /* Initialize the display bitmap named `bit' */
+/* Initialize the display bitmap named `bit' */
 static void Init_Display(void)
 {
 	grInitDevices();
@@ -185,13 +182,11 @@ static void Init_Display(void)
 }
 
 
-  /* Render a single glyph with the `grays' component */
+/* Render a single glyph with the `grays' component */
 static FT_Error Render_Glyph(int x_offset, int y_offset)
 {
 	grBitmap bit3;
-	FT_Pos x_top,
-	 y_top;
-
+	FT_Pos x_top, y_top;
 
 	/* first, render the glyph image into a bitmap */
 	if (glyph->format != FT_GLYPH_FORMAT_BITMAP)
@@ -239,7 +234,6 @@ static FT_Error LoadChar(unsigned int idx, int hint)
 {
 	int flags;
 
-
 	flags = FT_LOAD_DEFAULT;
 
 	if (!hint)
@@ -254,13 +248,8 @@ static FT_Error LoadChar(unsigned int idx, int hint)
 
 static FT_Error Render_All(unsigned int first_glyph, int pt_size)
 {
-	FT_F26Dot6 start_x,
-	 start_y,
-	 step_y,
-	 x,
-	 y;
+	FT_F26Dot6 start_x, start_y, step_y, x,y;
 	unsigned int i;
-
 
 	start_x = 4;
 	start_y = pt_size + (used_num_axis > MAX_MM_AXES / 2 ? 52 : 44);
@@ -314,15 +303,10 @@ static FT_Error Render_All(unsigned int first_glyph, int pt_size)
 
 static FT_Error Render_Text(unsigned int first_glyph, int pt_size)
 {
-	FT_F26Dot6 start_x,
-	 start_y,
-	 step_y,
-	 x,
-	 y;
+	FT_F26Dot6 start_x, start_y, step_y, x, y;
 	unsigned int i;
 
 	const unsigned char *p;
-
 
 	start_x = 4;
 	start_y = pt_size + (used_num_axis > MAX_MM_AXES / 2 ? 52 : 44);
@@ -383,12 +367,9 @@ static void Help(void)
 	char version[64];
 
 	const char *format;
-	FT_Int major,
-	 minor,
-	 patch;
+	FT_Int major, minor, patch;
 
 	grEvent dummy_event;
-
 
 	FT_Library_Version(library, &major, &minor, &patch);
 
@@ -447,7 +428,6 @@ static void cff_hinting_engine_change(int delta)
 {
 	int new_cff_hinting_engine = 0;
 
-
 	if (delta)
 		new_cff_hinting_engine = ((int) cff_hinting_engine + delta + N_CFF_HINTING_ENGINES) % N_CFF_HINTING_ENGINES;
 
@@ -466,11 +446,10 @@ static void tt_interpreter_version_change(void)
 }
 
 
-static int Process_Event(grEvent * event)
+static int Process_Event(grEvent *event)
 {
 	int i;
 	unsigned int axis;
-
 
 	switch (event->key)
 	{
@@ -641,7 +620,6 @@ static int Process_Event(grEvent * event)
 		FT_Var_Axis *a = multimaster->axis + axis;
 		FT_Fixed pos = design_pos[axis];
 
-
 		/*
 		 * Normalize i.  Changing by 20 is all very well for PostScript fonts,
 		 * which tend to have a range of ~1000 per axis, but it's not useful
@@ -663,7 +641,6 @@ static int Process_Event(grEvent * event)
 		else
 		{
 			double x;
-
 
 			x = design_pos[axis] / 65536.0 * 100.0;
 			x += x < 0.0 ? -0.5 : 0.5;
@@ -727,9 +704,8 @@ static void usage(char *execname)
 
 int main(int argc, char *argv[])
 {
-	int old_ptsize,
-	 orig_ptsize,
-	 file;
+	int old_ptsize, orig_ptsize;
+	int file;
 	int first_glyph = 0;
 	int XisSetup = 0;
 	char *execname;
@@ -742,11 +718,11 @@ int main(int argc, char *argv[])
 
 	unsigned int dflt_tt_interpreter_version;
 
-	unsigned int versions[3] = { TT_INTERPRETER_VERSION_35,
+	unsigned int versions[3] = {
+		TT_INTERPRETER_VERSION_35,
 		TT_INTERPRETER_VERSION_38,
 		TT_INTERPRETER_VERSION_40
 	};
-
 
 	execname = ft_basename(argv[0]);
 
@@ -805,10 +781,7 @@ int main(int argc, char *argv[])
 
 		case 'v':
 			{
-				FT_Int major,
-				 minor,
-				 patch;
-
+				FT_Int major, minor, patch;
 
 				FT_Library_Version(library, &major, &minor, &patch);
 
@@ -934,7 +907,6 @@ int main(int argc, char *argv[])
 	{
 		int key;
 
-
 		Clear_Display();
 
 		if (file_loaded >= 1)
@@ -969,7 +941,6 @@ int main(int argc, char *argv[])
 				{
 					char temp[100];
 
-
 					sprintf(temp, "  %.50s: %.02f", multimaster->axis[n].name, design_pos[n] / 65536.0);
 					strncat(Header, temp, sizeof(Header) - strlen(Header) - 1);
 				}
@@ -980,13 +951,11 @@ int main(int argc, char *argv[])
 			{
 				unsigned int limit = used_num_axis;
 
-
 				sprintf(Header, "     ");
 
 				for (n = MAX_MM_AXES / 2; n < limit; n++)
 				{
 					char temp[100];
-
 
 					sprintf(temp, "  %.50s: %.02f", multimaster->axis[n].name, design_pos[n] / 65536.0);
 					strncat(Header, temp, sizeof(Header) - strlen(Header) - 1);
@@ -997,7 +966,6 @@ int main(int argc, char *argv[])
 
 			{
 				unsigned int tt_ver = tt_interpreter_versions[tt_interpreter_version_idx];
-
 
 				sprintf(Header, "at %d points, first glyph = %d, format = %s",
 						ptsize,
