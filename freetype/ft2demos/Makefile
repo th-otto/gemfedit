@@ -1,9 +1,11 @@
 ifeq ($(CROSS),win32)
 CROSS_PREFIX=i686-pc-mingw32-
+EXEEXT=.exe
 endif
 
 ifeq ($(CROSS),mint)
 CROSS_PREFIX=m68k-atari-mint-
+EXEEXT=.ttp
 endif
 
 CC = $(CROSS_PREFIX)gcc

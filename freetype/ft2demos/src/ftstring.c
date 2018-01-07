@@ -32,38 +32,40 @@ static const char *Sample[] = {
 
 	/* Luís argüia à Júlia que «brações, fé, chá, óxido, pôr, zângão» */
 	/* eram palavras do português */
-	"Lu\u00EDs arg\u00FCia \u00E0 J\u00FAlia que \u00ABbra\u00E7\u00F5es, "
-		"f\u00E9, ch\u00E1, \u00F3xido, p\u00F4r, z\u00E2ng\u00E3o\u00BB eram " "palavras do portugu\u00EAs",
+	"Lu\303\255s arg\303\274ia \303\240 J\303\272lia que \302\253bra\303\247\303\265es, "
+	"f\303\251, ch\303\241, \303\263xido, p\303\264r, z\303\242ng\303\243o\302\273 eram "
+	"palavras do portugu\303\252s",
 
 	/* Ο καλύμνιος σφουγγαράς ψιθύρισε πως θα βουτήξει χωρίς να διστάζει */
-	"\u039F \u03BA\u03B1\u03BB\u03CD\u03BC\u03BD\u03B9\u03BF\u03C2 \u03C3"
-		"\u03C6\u03BF\u03C5\u03B3\u03B3\u03B1\u03C1\u03AC\u03C2 \u03C8\u03B9"
-		"\u03B8\u03CD\u03C1\u03B9\u03C3\u03B5 \u03C0\u03C9\u03C2 \u03B8\u03B1 "
-		"\u03B2\u03BF\u03C5\u03C4\u03AE\u03BE\u03B5\u03B9 \u03C7\u03C9\u03C1"
-		"\u03AF\u03C2 \u03BD\u03B1 \u03B4\u03B9\u03C3\u03C4\u03AC\u03B6\u03B5" "\u03B9",
+	"\316\237 \316\272\316\261\316\273\317\215\316\274\316\275\316\271\316\277\317\202 \317\203"
+	"\317\206\316\277\317\205\316\263\316\263\316\261\317\201\316\254\317\202 \317\210\316\271"
+	"\316\270\317\215\317\201\316\271\317\203\316\265 \317\200\317\211\317\202 \316\270\316\261 "
+	"\316\262\316\277\317\205\317\204\316\256\316\276\316\265\316\271 \317\207\317\211\317\201"
+	"\316\257\317\202 \316\275\316\261 \316\264\316\271\317\203\317\204\316\254\316\266\316\265\316\271",
 
 	/* Съешь ещё этих мягких французских булок да выпей же чаю */
-	"\u0421\u044A\u0435\u0448\u044C \u0435\u0449\u0451 \u044D\u0442\u0438"
-		"\u0445 \u043C\u044F\u0433\u043A\u0438\u0445 \u0444\u0440\u0430\u043D"
-		"\u0446\u0443\u0437\u0441\u043A\u0438\u0445 \u0431\u0443\u043B\u043E"
-		"\u043A \u0434\u0430 \u0432\u044B\u043F\u0435\u0439 \u0436\u0435 " "\u0447\u0430\u044E",
+	"\320\241\321\212\320\265\321\210\321\214 \320\265\321\211\321\221 \321\215\321\202\320\270"
+	"\321\205 \320\274\321\217\320\263\320\272\320\270\321\205 \321\204\321\200\320\260\320\275"
+	"\321\206\321\203\320\267\321\201\320\272\320\270\321\205 \320\261\321\203\320\273\320\276"
+	"\320\272 \320\264\320\260 \320\262\321\213\320\277\320\265\320\271 \320\266\320\265 \321\207\320\260\321\216",
 
 	/* 天地玄黃，宇宙洪荒。日月盈昃，辰宿列張。寒來暑往，秋收冬藏。 */
-	"\u5929\u5730\u7384\u9EC3\uFF0C\u5B87\u5B99\u6D2A\u8352\u3002\u65E5"
-		"\u6708\u76C8\u6603\uFF0C\u8FB0\u5BBF\u5217\u5F35\u3002\u5BD2\u4F86"
-		"\u6691\u5F80\uFF0C\u79CB\u6536\u51AC\u85CF\u3002",
+	"\345\244\251\345\234\260\347\216\204\351\273\203\357\274\214\345\256\207\345\256\231\346\264\252\350\215\222\343\200\202\346\227\245"
+	"\346\234\210\347\233\210\346\230\203\357\274\214\350\276\260\345\256\277\345\210\227\345\274\265\343\200\202\345\257\222\344\276\206"
+	"\346\232\221\345\276\200\357\274\214\347\247\213\346\224\266\345\206\254\350\227\217\343\200\202",
 
 	/* いろはにほへと ちりぬるを わかよたれそ つねならむ */
 	/* うゐのおくやま けふこえて あさきゆめみし ゑひもせす */
-	"\u3044\u308D\u306F\u306B\u307B\u3078\u3068 \u3061\u308A\u306C\u308B"
-		"\u3092 \u308F\u304B\u3088\u305F\u308C\u305D \u3064\u306D\u306A\u3089"
-		"\u3080 \u3046\u3090\u306E\u304A\u304F\u3084\u307E \u3051\u3075\u3053"
-		"\u3048\u3066 \u3042\u3055\u304D\u3086\u3081\u307F\u3057 \u3091\u3072" "\u3082\u305B\u3059",
+	"\343\201\204\343\202\215\343\201\257\343\201\253\343\201\273\343\201\270\343\201\250 \343\201\241\343\202\212\343\201\254\343\202\213"
+	"\343\202\222 \343\202\217\343\201\213\343\202\210\343\201\237\343\202\214\343\201\235 \343\201\244\343\201\255\343\201\252\343\202\211"
+	"\343\202\200 \343\201\206\343\202\220\343\201\256\343\201\212\343\201\217\343\202\204\343\201\276 \343\201\221\343\201\265\343\201\223"
+	"\343\201\210\343\201\246 \343\201\202\343\201\225\343\201\215\343\202\206\343\202\201\343\201\277\343\201\227 \343\202\221\343\201\262"
+	"\343\202\202\343\201\233\343\201\231",
 
 	/* 키스의 고유조건은 입술끼리 만나야 하고 특별한 기술은 필요치 않다 */
-	"\uD0A4\uC2A4\uC758 \uACE0\uC720\uC870\uAC74\uC740 \uC785\uC220\uB07C"
-		"\uB9AC \uB9CC\uB098\uC57C \uD558\uACE0 \uD2B9\uBCC4\uD55C \uAE30"
-		"\uC220\uC740 \uD544\uC694\uCE58 \uC54A\uB2E4"
+	"\355\202\244\354\212\244\354\235\230 \352\263\240\354\234\240\354\241\260\352\261\264\354\235\200 \354\236\205\354\210\240\353\201\274"
+	"\353\246\254 \353\247\214\353\202\230\354\225\274 \355\225\230\352\263\240 \355\212\271\353\263\204\355\225\234 \352\270\260"
+	"\354\210\240\354\235\200 \355\225\204\354\232\224\354\271\230 \354\225\212\353\213\244"
 };
 
 enum
@@ -90,7 +92,7 @@ static struct status_
 	FT_Byte gamma_ramp[256];			/* for show only */
 	FT_Matrix trans_matrix;
 	int font_index;
-	char *header;
+	const char *header;
 	char header_buffer[256];
 
 } status =
@@ -342,7 +344,7 @@ static void event_render_mode_change(int delta)
 		break;
 
 	case RENDER_MODE_KERNCMP:
-		status.header = (char *) "Kerning comparison";
+		status.header = "Kerning comparison";
 		break;
 	}
 }
@@ -376,7 +378,7 @@ static int Process_Event(grEvent *event)
 	case grKEY('b'):
 		handle->use_sbits = !handle->use_sbits;
 		status.header = handle->use_sbits
-			? (char *) "embedded bitmaps are now used when available" : (char *) "embedded bitmaps are now ignored";
+			? "embedded bitmaps are now used when available" : "embedded bitmaps are now ignored";
 
 		FTDemo_Update_Current_Flags(handle);
 		break;
@@ -384,7 +386,7 @@ static int Process_Event(grEvent *event)
 	case grKEY('f'):
 		handle->autohint = !handle->autohint;
 		status.header = handle->autohint
-			? (char *) "forced auto-hinting is now on" : (char *) "forced auto-hinting is now off";
+			? "forced auto-hinting is now on" : "forced auto-hinting is now off";
 
 		FTDemo_Update_Current_Flags(handle);
 		break;
@@ -392,7 +394,7 @@ static int Process_Event(grEvent *event)
 	case grKEY('h'):
 		handle->hinted = !handle->hinted;
 		status.header = handle->hinted
-			? (char *) "glyph hinting is now active" : (char *) "glyph hinting is now ignored";
+			? "glyph hinting is now active" : "glyph hinting is now ignored";
 
 		FTDemo_Update_Current_Flags(handle);
 		break;
@@ -407,20 +409,20 @@ static int Process_Event(grEvent *event)
 		sc->kerning_mode = (sc->kerning_mode + 1) % N_KERNING_MODES;
 		status.header =
 			sc->kerning_mode == KERNING_MODE_SMART
-			? (char *) "pair kerning and side bearing correction is now active"
+			? "pair kerning and side bearing correction is now active"
 			: sc->kerning_mode == KERNING_MODE_NORMAL
-			? (char *) "pair kerning is now active" : (char *) "pair kerning is now ignored";
+			? "pair kerning is now active" : "pair kerning is now ignored";
 		break;
 
 	case grKEY('t'):
 		sc->kerning_degree = (sc->kerning_degree + 1) % N_KERNING_DEGREES;
 		status.header =
 			sc->kerning_degree == KERNING_DEGREE_NONE
-			? (char *) "no track kerning"
+			? "no track kerning"
 			: sc->kerning_degree == KERNING_DEGREE_LIGHT
-			? (char *) "light track kerning active"
+			? "light track kerning active"
 			: sc->kerning_degree == KERNING_DEGREE_MEDIUM
-			? (char *) "medium track kerning active" : (char *) "tight track kerning active";
+			? "medium track kerning active" : "tight track kerning active";
 		break;
 
 	case grKeySpace:
@@ -434,7 +436,7 @@ static int Process_Event(grEvent *event)
 
 	case grKEY('V'):
 		sc->vertical = !sc->vertical;
-		status.header = sc->vertical ? (char *) "using vertical layout" : (char *) "using horizontal layout";
+		status.header = sc->vertical ? "using vertical layout" : "using horizontal layout";
 		break;
 
 	case grKEY('g'):
@@ -520,8 +522,8 @@ static void usage(char *execname)
 	fprintf(stderr,
 			"\n"
 			"ftstring: string viewer -- part of the FreeType project\n"
-			"-------------------------------------------------------\n" "\n");
-	fprintf(stderr, "Usage: %s [options] pt font ...\n" "\n", execname);
+			"-------------------------------------------------------\n\n");
+	fprintf(stderr, "Usage: %s [options] pt font ...\n\n", execname);
 	fprintf(stderr,
 			"  pt        The point size for the given resolution.\n"
 			"            If resolution is 72dpi, this directly gives the\n"
@@ -529,16 +531,18 @@ static void usage(char *execname)
 	fprintf(stderr,
 			"  font      The font file(s) to display.\n"
 			"            For Type 1 font files, ftstring also tries to attach\n"
-			"            the corresponding metrics file (with extension\n" "            `.afm' or `.pfm').\n" "\n");
+			"            the corresponding metrics file (with extension\n"
+			"            `.afm' or `.pfm').\n\n");
 	fprintf(stderr,
 			"  -w W      Set the window width to W pixels (default: %dpx).\n"
-			"  -h H      Set the window height to H pixels (default: %dpx).\n" "\n", DIM_X, DIM_Y);
+			"  -h H      Set the window height to H pixels (default: %dpx).\n\n", DIM_X, DIM_Y);
 	fprintf(stderr,
 			"  -r R      Use resolution R dpi (default: 72dpi).\n"
 			"  -e enc    Specify encoding tag (default: no encoding).\n"
 			"            Common values: `unic' (Unicode), `symb' (symbol),\n"
 			"            `ADOB' (Adobe standard), `ADBC' (Adobe custom).\n"
-			"  -m text   Use `text' for rendering.\n" "\n" "  -v        Show version.\n" "\n");
+			"  -m text   Use `text' for rendering.\n\n"
+			"  -v        Show version.\n\n");
 
 	exit(1);
 }
