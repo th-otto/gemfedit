@@ -230,7 +230,7 @@ static int init_surface(grSurface *surface, grBitmap *bitmap)
 	return 1;
 }
 
-grDevice gr_alleg_device = {
+grDevice const gr_alleg_device = {
 	sizeof(grSurface),
 	"Allegro",
 

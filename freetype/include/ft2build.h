@@ -16,19 +16,19 @@
 /***************************************************************************/
 
 
-  /*************************************************************************/
-  /*                                                                       */
-  /* This is the `entry point' for FreeType header file inclusions.  It is */
-  /* the only header file which should be included directly; all other     */
-  /* FreeType header files should be accessed with macro names (after      */
-  /* including `ft2build.h').                                              */
-  /*                                                                       */
-  /* A typical example is                                                  */
-  /*                                                                       */
-  /*   #include <ft2build.h>                                               */
-  /*   #include FT_FREETYPE_H                                              */
-  /*                                                                       */
-  /*************************************************************************/
+/*************************************************************************/
+/*                                                                       */
+/* This is the `entry point' for FreeType header file inclusions.  It is */
+/* the only header file which should be included directly; all other     */
+/* FreeType header files should be accessed with macro names (after      */
+/* including `ft2build.h').                                              */
+/*                                                                       */
+/* A typical example is                                                  */
+/*                                                                       */
+/*   #include <ft2build.h>                                               */
+/*   #include FT_FREETYPE_H                                              */
+/*                                                                       */
+/*************************************************************************/
 
 
 #ifndef __FT2BUILD_H__
@@ -50,10 +50,9 @@
 
 #endif
 
+#define FT2_STATIC 1
+
 /* `<prefix>/include/freetype2' must be in your current inclusion path */
 #include <freetype/config/ftheader.h>
 
 #endif /* FT2BUILD_H_ */
-
-
-/* END */

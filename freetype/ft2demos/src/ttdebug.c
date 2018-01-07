@@ -14,37 +14,18 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#ifdef UNIX
-
-#ifndef HAVE_POSIX_TERMIOS
-
-#include <sys/ioctl.h>
-#include <termio.h>
-
-#else /* HAVE_POSIX_TERMIOS */
-
-#ifndef HAVE_TCGETATTR
-#define HAVE_TCGETATTR
-#endif
-
-#ifndef HAVE_TCSETATTR
-#define HAVE_TCSETATTR
-#endif
-
+#ifdef __unix__
 #include <termios.h>
-
-#endif /* HAVE_POSIX_TERMIOS */
-
-#endif /* UNIX */
+#endif
 
 
-  /* Define the `getch()' function.  On Unix systems, it is an alias  */
-  /* for `getchar()', and the debugger front end must ensure that the */
-  /* `stdin' file descriptor is not in line-by-line input mode.       */
-#ifndef UNIX
+/* Define the `getch()' function.  On Unix systems, it is an alias  */
+/* for `getchar()', and the debugger front end must ensure that the */
+/* `stdin' file descriptor is not in line-by-line input mode.       */
+#ifdef _WIN32
 #include <conio.h>
 #else
-#define getch  getchar
+#define getch getchar
 #endif
 
 
@@ -673,7 +654,7 @@ static const FT_String *OpStr[256] = {
  *
  *********************************************************************/
 
-#ifdef UNIX
+#ifdef __unix__
 
 static struct termios old_termio;
 
@@ -682,11 +663,7 @@ static void Init_Keyboard(void)
 {
 	struct termios termio;
 
-#ifndef HAVE_TCGETATTR
-	ioctl(0, TCGETS, &old_termio);
-#else
 	tcgetattr(0, &old_termio);
-#endif
 
 	termio = old_termio;
 
@@ -696,24 +673,16 @@ static void Init_Keyboard(void)
 	termio.c_lflag &= (tcflag_t) ~ (ICANON + ECHO + ECHOE + ECHOK + ECHONL);
 #endif
 
-#ifndef HAVE_TCSETATTR
-	ioctl(0, TCSETS, &termio);
-#else
 	tcsetattr(0, TCSANOW, &termio);
-#endif
 }
 
 
 static void Reset_Keyboard(void)
 {
-#ifndef HAVE_TCSETATTR
-	ioctl(0, TCSETS, &old_termio);
-#else
 	tcsetattr(0, TCSANOW, &old_termio);
-#endif
 }
 
-#else /* !UNIX */
+#else
 
 static void Init_Keyboard(void)
 {
@@ -723,7 +692,7 @@ static void Reset_Keyboard(void)
 {
 }
 
-#endif /* !UNIX */
+#endif
 
 
 static void Abort(const char *message)

@@ -369,7 +369,7 @@ typedef FT_UINT64 FT_UInt64;
 #define FT_LOCAL_ARRAY_DEF( x )  const  x
 
 
-#ifdef _WIN32
+#if defined(_WIN32) && !defined(FT2_STATIC)
 #ifdef FT2_BUILD_LIBRARY
 #define _FT_DLL_EXPORT __declspec(dllexport)
 #else

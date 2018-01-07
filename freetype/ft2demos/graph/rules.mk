@@ -57,47 +57,56 @@ COMPILE_GRAPH_LIB = $(AR) -r $@ $(GRAPH_OBJS)
 # Add the rules used to detect and compile graphics driver depending
 # on the current platform.
 
-# test for the `ALLEGRO' environment variable. This is non-optimal.
-ifdef ALLEGRO
-GRAPH_OBJS += $(GRAPH_DIR)/allegro/gralleg.o
-GRAPH_LINK += -lalleg
-GRAPH_INCLUDES += -I$(GRAPH_DIR)/allegro
-DEVICES = ALLEGRO
-endif
+DEVICES =
 
 ifdef OS2_SHELL
 GRAPH_OBJS += $(GRAPH_DIR)/os2/gros2pm.o
 GRAPH_LINK += $(GRAPH_DIR)/os2/gros2pm.def
 GRAPH_INCLUDES += -I$(GRAPH_DIR)/os2
-DEVICES = OS2_PM
+DEVICES += -DDEVICE_OS2_PM
 endif
 
 ifeq ($(OS),Windows_NT)
 GRAPH_OBJS += $(GRAPH_DIR)/win32/grwin32.o
 GRAPH_LINK += -luser32 -lgdi32
 GRAPH_INCLUDES += -I$(GRAPH_DIR)/win32
-DEVICES = WIN32
+DEVICES += -DDEVICE_WIN32
+endif
+
+ifeq ($(CROSS),win32)
+GRAPH_OBJS += $(GRAPH_DIR)/win32/grwin32.o
+GRAPH_LINK += -luser32 -lgdi32
+GRAPH_INCLUDES += -I$(GRAPH_DIR)/win32
+DEVICES += -DDEVICE_WIN32
 endif
 
 ifeq ($(shell uname -s),Darwin)
 GRAPH_OBJS += $(GRAPH_DIR)/mac/grmac.o
 GRAPH_LINK += 
 GRAPH_INCLUDES += -I$(GRAPH_DIR)/mac
-DEVICES = MAC
+DEVICES += -DDEVICE_MAC
 endif
 
 ifeq ($(shell uname -s),BeOS)
 GRAPH_OBJS += $(GRAPH_DIR)/beos/grbeos.o
 GRAPH_LINK += 
 GRAPH_INCLUDES += -I$(GRAPH_DIR)/beos
-DEVICES = BEOS
+DEVICES += -DDEVICE_BEOS
 endif
 
 ifeq ($(DEVICES),)
 GRAPH_OBJS += $(GRAPH_DIR)/grx11.o
 GRAPH_LINK += -lX11
 GRAPH_INCLUDES += -I$(GRAPH_DIR)/x11
-DEVICES = X11
+DEVICES += -DDEVICE_X11
+endif
+
+# test for the `ALLEGRO' environment variable. This is non-optimal.
+ifdef ALLEGRO
+GRAPH_OBJS += $(GRAPH_DIR)/allegro/gralleg.o
+GRAPH_LINK += -lalleg
+GRAPH_INCLUDES += -I$(GRAPH_DIR)/allegro
+DEVICES += -DDEVICE_ALLEGRO
 endif
 
 
@@ -117,22 +126,22 @@ $(GRAPH_LIB): $(GRAPH_OBJS)
 # pattern rule for normal sources
 #
 $(GRAPH_DIR)/%.o: $(GRAPH_DIR)/%.c $(GRAPH_H)
-	$(COMPILE) $(GRAPH_INCLUDES) -DDEVICE_$(DEVICES)
+	$(COMPILE) $(GRAPH_INCLUDES) $(DEVICES)
 
 $(GRAPH_DIR)/grx11.o: $(GRAPH_DIR)/x11/grx11.c $(GRAPH_DIR)/x11/grx11.h
-	$(COMPILE) $(GRAPH_INCLUDES) -DDEVICE_$(DEVICES)
+	$(COMPILE) $(GRAPH_INCLUDES) $(DEVICES)
 
 $(GRAPH_DIR)/gralleg.o: $(GRAPH_DIR)/allegro/gralleg.c
-	$(COMPILE) $(GRAPH_INCLUDES) -DDEVICE_$(DEVICES)
+	$(COMPILE) $(GRAPH_INCLUDES) $(DEVICES)
 
 $(GRAPH_DIR)/gros2pm.o: $(GRAPH_DIR)/os2/gros2pm.c
-	$(COMPILE) $(GRAPH_INCLUDES) -DDEVICE_$(DEVICES)
+	$(COMPILE) $(GRAPH_INCLUDES) $(DEVICES)
 
 $(GRAPH_DIR)/grwin32.o: $(GRAPH_DIR)/win32/grwin32.c
-	$(COMPILE) $(GRAPH_INCLUDES) -DDEVICE_$(DEVICES)
+	$(COMPILE) $(GRAPH_INCLUDES) $(DEVICES)
 
 $(GRAPH_DIR)/grbeos.o: $(GRAPH_DIR)/beos/grbeos.c
-	$(COMPILE) $(GRAPH_INCLUDES) -DDEVICE_$(DEVICES)
+	$(COMPILE) $(GRAPH_INCLUDES) $(DEVICES)
 
 $(GRAPH_DIR)/grmac.o: $(GRAPH_DIR)/mac/grmac.c
-	$(COMPILE) $(GRAPH_INCLUDES) -DDEVICE_$(DEVICES)
+	$(COMPILE) $(GRAPH_INCLUDES) $(DEVICES)

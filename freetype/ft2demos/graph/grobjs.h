@@ -94,7 +94,7 @@ typedef int (*grListenEventFunc) (grSurface *surface, int event_mode, grEvent *e
 
 struct grSurface_
 {
-	grDevice *device;
+	const grDevice *device;
 	grBitmap bitmap;
 	grBool refresh;
 	grBool owner;

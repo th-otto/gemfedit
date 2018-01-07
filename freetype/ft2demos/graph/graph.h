@@ -284,36 +284,6 @@ typedef struct grDevice_ grDevice;
 
 /**********************************************************************
  *
- * <Struct>
- *    grDeviceChain
- *
- * <Description>
- *    a simple structure used to implement a linked list of
- *    graphics device descriptors. The list is called a
- *    "device chain"
- *
- * <Fields>
- *    name   :: ASCII name of the device, e.g. "x11", "os2pm", etc..
- *    device :: handle to the device descriptor.
- *    next   :: next element in chain
- *
- * <Note>
- *    the 'device' field is a blind pointer; it is thus unusable by
- *    client applications..
- *
- **********************************************************************/
-typedef struct grDeviceChain_ grDeviceChain;
-
-struct grDeviceChain_
-{
-	const char *name;
-	grDevice *device;
-	grDeviceChain *next;
-};
-
-
-/**********************************************************************
- *
  * <Function>
  *    grInitDevices
  *
@@ -337,7 +307,7 @@ struct grDeviceChain_
  *    If no driver could be initialised, this function returns NULL.
  *
  **********************************************************************/
-grDeviceChain *grInitDevices(void);
+int grInitDevices(void);
 
 
 /**********************************************************************
@@ -390,7 +360,7 @@ void grDoneDevices(void);
  *    the bitmap descriptor.
  *
  **********************************************************************/
-void grGetDeviceModes(const char *device_name, int *num_modes, grPixelMode **pixel_modes);
+void grGetDeviceModes(const char *device_name, int *num_modes, const grPixelMode **pixel_modes);
 
 
 

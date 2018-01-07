@@ -357,7 +357,7 @@ static void done_device(void)
 	/* won't get called either :-( */
 }
 
-grDevice gr_mac_device = {
+grDevice const gr_mac_device = {
 	sizeof(grSurface),
 	"mac",
 

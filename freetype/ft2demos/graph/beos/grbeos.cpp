@@ -158,7 +158,7 @@ class Window:public BWindow
 static int init_device();
 static void done_device(void);
 
-grDevice gr_beos_device = {
+grDevice const gr_beos_device = {
 	sizeof(grBeOSSurface),
 	"beos",
 
@@ -167,14 +167,12 @@ grDevice gr_beos_device = {
 
 	Window::init_surface,
 
-	0,
-	0
+	sizeof(pixel_modes) / sizeof(pixel_modes[0]),
+	pixel_modes
 };
 
 static int init_device()
 {
-	gr_beos_device.num_pixel_modes = 2;
-	gr_beos_device.pixel_modes = (grPixelMode *) pixel_modes;
 	new BApplication("application/x.mp.freetype.test");
 
 	return 0;

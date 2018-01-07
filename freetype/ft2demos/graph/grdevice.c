@@ -3,27 +3,27 @@
 #include <stdlib.h>
 #include <string.h>
 
-grDeviceChain gr_device_chain[GR_MAX_DEVICES];
+const grDevice *gr_devices[GR_MAX_DEVICES];
 int gr_num_devices = 0;
 
-static grDevice *find_device(const char *device_name)
+static const grDevice *find_device(const char *device_name)
 {
 	int idx = 0;
 
 	if (device_name)
 	{
 		for (idx = gr_num_devices - 1; idx > 0; idx--)
-			if (strcmp(device_name, gr_device_chain[idx].name) == 0)
+			if (strcmp(device_name, gr_devices[idx]->device_name) == 0)
 				break;
 	}
 
-	if (idx < 0 || gr_num_devices <= 0 || !gr_device_chain[idx].device)
+	if (idx < 0 || gr_num_devices <= 0 || !gr_devices[idx])
 	{
 		grError = gr_err_invalid_device;
 		return 0;
 	}
 
-	return gr_device_chain[idx].device;
+	return gr_devices[idx];
 }
 
 
@@ -67,9 +67,9 @@ static grDevice *find_device(const char *device_name)
  *
  **********************************************************************/
 
-void grGetDeviceModes(const char *device_name, int *num_modes, grPixelMode * *pixel_modes)
+void grGetDeviceModes(const char *device_name, int *num_modes, const grPixelMode **pixel_modes)
 {
-	grDevice *device;
+	const grDevice *device;
 
 	*num_modes = 0;
 	*pixel_modes = 0;
@@ -131,7 +131,7 @@ void grGetDeviceModes(const char *device_name, int *num_modes, grPixelMode * *pi
  **********************************************************************/
 grSurface *grNewSurface(const char *device_name, grBitmap * bitmap)
 {
-	grDevice *device;
+	const grDevice *device;
 	grSurface *surface;
 
 	/* Now find the device */

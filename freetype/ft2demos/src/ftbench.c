@@ -35,7 +35,7 @@
 #include <freetype/ftttdrv.h>
 #include <freetype/ftlcdfil.h>
 
-#ifdef UNIX
+#ifdef __unix__
 #include <unistd.h>
 #else
 #include "mlgetopt.h"

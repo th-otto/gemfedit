@@ -2,9 +2,6 @@
 #include "grdevice.h"
 #include <stdio.h>
 
-#define GR_INIT_DEVICE_CHAIN   ((grDeviceChain*)0)
-#define GR_INIT_BUILD
-
 #ifdef DEVICE_X11
 #include "x11/grx11.h"
 #endif
@@ -55,52 +52,48 @@
  *    If no driver could be initialised, this function returns NULL.
  *
  **********************************************************************/
-grDeviceChain *grInitDevices(void)
+int grInitDevices(void)
 {
-	grDeviceChain *chain = GR_INIT_DEVICE_CHAIN;
-	grDeviceChain *cur = gr_device_chain;
+	const grDevice *device;
+	
+	gr_num_devices = 0;
+#define INIT_DEVICE(dev) \
+	device = dev; \
+	if (device->init_device() == 0 && gr_num_devices < GR_MAX_DEVICES) \
+		gr_devices[gr_num_devices++] = device;
 
-	while (chain)
-	{
-		/* initialize the device */
-		grDevice *device;
-
-		device = chain->device;
-		if (device->init() == 0 && gr_num_devices < GR_MAX_DEVICES)
-
-		{
-			/* successful device initialisation - add it to our chain */
-			cur->next = 0;
-			cur->device = device;
-			cur->name = device->device_name;
-
-			if (cur > gr_device_chain)
-				cur[-1].next = cur;
-
-			cur++;
-			gr_num_devices++;
-		}
-		chain = chain->next;
-	}
-
-	return (gr_num_devices > 0 ? gr_device_chain : 0);
+#ifdef DEVICE_X11
+	INIT_DEVICE(&gr_x11_device);
+#endif
+#ifdef DEVICE_OS2_PM
+	INIT_DEVICE(&gr_os2pm_device);
+#endif
+#ifdef DEVICE_WIN32
+	INIT_DEVICE(&gr_win32_device);
+#endif
+#ifdef DEVICE_MAC
+	INIT_DEVICE(&gr_mac_device);
+#endif
+#ifdef DEVICE_ALLEGRO
+	INIT_DEVICE(&gr_alleg_device);
+#endif
+#ifdef DEVICE_BEOS
+	INIT_DEVICE(&gr_beos_device);
+#endif
+	return gr_num_devices;
+#undef INIT_DEVICE
 }
 
 
 void grDoneDevices(void)
 {
 	int i;
-	grDeviceChain *chain = gr_device_chain;
 
 	for (i = 0; i < gr_num_devices; i++)
 	{
-		chain->device->done();
-
-		chain->next = 0;
-		chain->device = 0;
-		chain->name = 0;
-
-		chain++;
+		const grDevice *device = gr_devices[i];
+		device->done_device();
+		gr_devices[i] = 0;
 	}
 
 	gr_num_devices = 0;

@@ -653,7 +653,7 @@ MRESULT EXPENTRY Message_Process(HWND handle, ULONG mess, MPARAM parm1, MPARAM p
 
 
 
-grDevice gr_os2pm_device = {
+grDevice const gr_os2pm_device = {
 	sizeof(grPMSurface),
 	"os2pm",
 

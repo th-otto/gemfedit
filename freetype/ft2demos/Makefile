@@ -1,6 +1,14 @@
-CC = gcc
-AR = ar
-RANLIB = ranlib
+ifeq ($(CROSS),win32)
+CROSS_PREFIX=i686-pc-mingw32-
+endif
+
+ifeq ($(CROSS),mint)
+CROSS_PREFIX=m68k-atari-mint-
+endif
+
+CC = $(CROSS_PREFIX)gcc
+AR = $(CROSS_PREFIX)ar
+RANLIB = $(CROSS_PREFIX)ranlib
 
 ft2_srcdir   = ..
 TOP_DIR_2 = .
@@ -10,7 +18,7 @@ OBJ_DIR_2 = .
 WARN = -fno-common -Wall -W -Wunused -Wundef -Wstrict-prototypes -Wmissing-prototypes
 CFLAGS = -O2 -g -fomit-frame-pointer $(WARN) -I$(ft2_srcdir)/../include -I$(ft2_srcdir)/include
 LDFLAGS = -s
-LIBS= -lm -lrt -lz -lbz2 `pkg-config --libs libpng harfbuzz`
+LIBS= -lm -lz -lbz2 `pkg-config --libs libpng harfbuzz`
 
 all: exes
 
@@ -62,7 +70,7 @@ distclean:: clean
 #
 # POSIX TERMIOS: Do not define if you use OLD U*ix like 4.2BSD.
 #
-EXTRAFLAGS = -DUNIX -DHAVE_POSIX_TERMIOS
+EXTRAFLAGS = 
 
 
 ###################################################################

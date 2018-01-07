@@ -77,8 +77,8 @@ typedef int (*grDeviceInitSurfaceFunc) (grSurface *surface, grBitmap *bitmap);
  *                      this device.
  *
  *   device_name :: name of device, e.g. "x11", "os2pm", "directx" etc..
- *   init        :: device initialisation routine
- *   done        :: device finalisation
+ *   init_device :: device initialisation routine
+ *   done_device :: device finalisation
  *   new_surface :: function used to create a new surface (screen or
  *                  window) from the device
  *
@@ -92,7 +92,7 @@ typedef int (*grDeviceInitSurfaceFunc) (grSurface *surface, grBitmap *bitmap);
  *
  * <Note>
  *   the fields "num_pixel_modes" and "pixel_modes" must be
- *   set by the "init" function.
+ *   set by the "init_device" function.
  *
  *   This allows windowed devices to "discover" at run-time the
  *   available pixel modes they can provide depending on the
@@ -104,20 +104,18 @@ struct grDevice_
 	unsigned int surface_objsize;
 	const char *device_name;			/* name of device                 */
 
-	grDeviceInitFunc init;
-	grDeviceDoneFunc done;
+	grDeviceInitFunc init_device;
+	grDeviceDoneFunc done_device;
 
 	grDeviceInitSurfaceFunc init_surface;
 
 	int num_pixel_modes;
-	grPixelMode *pixel_modes;
+	const grPixelMode *pixel_modes;
 };
 
 
-extern grDevice *gr_devices[];
-extern grDeviceChain gr_device_chain[];
+extern const grDevice *gr_devices[];
 extern int gr_num_devices;
-extern int gr_max_devices;
 
 
 #endif /* GRDEVICE_H_ */

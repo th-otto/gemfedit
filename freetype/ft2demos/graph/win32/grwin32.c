@@ -297,7 +297,7 @@ static void gr_win32_surface_listen_event(grWin32Surface * surface, int event_ma
  */
 
 
-static grWin32Surface *gr_win32_surface_init(grSurface *surface_, grBitmap * bitmap)
+static int gr_win32_init_surface(grSurface *surface_, grBitmap * bitmap)
 {
 	grWin32Surface * surface = (grWin32Surface *)surface_;
 	static RGBQUAD black = { 0, 0, 0, 0 };
@@ -422,7 +422,7 @@ static grWin32Surface *gr_win32_surface_init(grSurface *surface_, grBitmap * bit
 	surface->root.set_title = (grSetTitleFunc) gr_win32_surface_set_title;
 	surface->root.listen_event = (grListenEventFunc) gr_win32_surface_listen_event;
 
-	return surface;
+	return 1;
 }
 
 
@@ -562,7 +562,7 @@ LRESULT CALLBACK Message_Process(HWND handle, UINT mess, WPARAM wParam, LPARAM l
 	return 0;
 }
 
-static int gr_win32_device_init(void)
+static int gr_win32_init_device(void)
 {
 	WNDCLASS ourClass = {
 		/* UINT    style        */ 0,
@@ -593,20 +593,20 @@ static int gr_win32_device_init(void)
 	return 0;
 }
 
-static void gr_win32_device_done(void)
+static void gr_win32_done_device(void)
 {
 	GlobalDeleteAtom(ourAtom);
 }
 
 
-grDevice gr_win32_device = {
+grDevice const gr_win32_device = {
 	sizeof(grWin32Surface),
 	"win32",
 
-	gr_win32_device_init,
-	gr_win32_device_done,
+	gr_win32_init_device,
+	gr_win32_done_device,
 
-	gr_win32_surface_init,
+	gr_win32_init_surface,
 
 	0,
 	0

@@ -1,6 +1,15 @@
-CC = gcc
-AR = ar
-RANLIB = ranlib
+ifeq ($(CROSS),win32)
+CROSS_PREFIX=i686-pc-mingw32-
+endif
+
+ifeq ($(CROSS),mint)
+CROSS_PREFIX=m68k-atari-mint-
+endif
+
+CC = $(CROSS_PREFIX)gcc
+AR = $(CROSS_PREFIX)ar
+RANLIB = $(CROSS_PREFIX)ranlib
+
 ft2_srcdir = .
 WARN = -fno-common -Wall -W -Wunused -Wundef -Wstrict-prototypes -Wmissing-prototypes
 CFLAGS = -O2 -g -fomit-frame-pointer $(WARN) -I../include -I$(ft2_srcdir)/include

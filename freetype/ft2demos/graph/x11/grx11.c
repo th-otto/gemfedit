@@ -799,7 +799,7 @@ typedef struct grX11DeviceRec_
 static grX11Device x11dev;
 
 
-static void gr_x11_device_done(void)
+static void gr_x11_done_device(void)
 {
 	if (x11dev.display)
 	{
@@ -812,7 +812,7 @@ static void gr_x11_device_done(void)
 }
 
 
-static int gr_x11_device_init(void)
+static int gr_x11_init_device(void)
 {
 	memset(&x11dev, 0, sizeof(x11dev));
 
@@ -1134,7 +1134,7 @@ static void gr_x11_surface_listen_event(grX11Surface * surface, int event_mask, 
 }
 
 
-static int gr_x11_surface_init(grSurface *surface_, grBitmap *bitmap)
+static int gr_x11_init_surface(grSurface *surface_, grBitmap *bitmap)
 {
 	grX11Surface *surface = (grX11Surface *)surface_;
 	Display *display;
@@ -1285,14 +1285,14 @@ static int gr_x11_surface_init(grSurface *surface_, grBitmap *bitmap)
 }
 
 
-grDevice gr_x11_device = {
+grDevice const gr_x11_device = {
 	sizeof(grX11Surface),
 	"x11",
 
-	gr_x11_device_init,
-	gr_x11_device_done,
+	gr_x11_init_device,
+	gr_x11_done_device,
 
-	gr_x11_surface_init,
+	gr_x11_init_surface,
 
 	0,
 	0

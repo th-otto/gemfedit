@@ -32,9 +32,7 @@
  *
  */
 
-#ifdef UNIX
 #include <sys/time.h>
-#endif
 #include "gbench.h"
 
 #define  xxCACHE
@@ -440,9 +438,7 @@ int gblitter_init_rgb24(GBlitter blitter,
 #include <string.h>
 #include <time.h>
 
-#ifdef UNIX
 #include <sys/time.h>
-#endif
 
 typedef int (*bench_t) (int arg);
 
@@ -450,7 +446,7 @@ typedef int (*bench_t) (int arg);
 
 double get_time(void)
 {
-#ifdef UNIX
+#if defined(__unix__) || defined(_WIN32)
 	struct timeval tv;
 
 	gettimeofday(&tv, NULL);
