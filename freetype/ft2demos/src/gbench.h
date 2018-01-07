@@ -60,9 +60,9 @@ typedef struct GBlitterRec_
 } GBlitterRec;
 
 
-extern void ggamma_set(double gamma);
+void ggamma_set(double gamma);
 
-extern int gblitter_init_rgb24(GBlitter blitter, GBitmap src, int dst_x, int dst_y, int dst_width, int dst_height, void *dst_buffer, int dst_pitch);
+int gblitter_init_rgb24(GBlitter blitter, GBitmap src, int dst_x, int dst_y, int dst_width, int dst_height, void *dst_buffer, int dst_pitch);
 
 #define  gblitter_blit(b,c)   (b)->blit( (b), (c) )
 

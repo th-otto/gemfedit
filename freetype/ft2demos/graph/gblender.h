@@ -9,141 +9,123 @@
 #ifndef GBLENDER_H_
 #define GBLENDER_H_
 
-#ifndef GBLENDER_API
-#define GBLENDER_API(x)  extern x
-#endif
-
-#ifndef GBLENDER_APIDEF
-#define GBLENDER_APIDEF(x)   x
-#endif
-
-#define  GBLENDER_SHADE_BITS      4   /* must be <= 7 !! */
+#define  GBLENDER_SHADE_BITS      4		/* must be <= 7 !! */
 #define  GBLENDER_SHADE_COUNT     ( 1 << GBLENDER_SHADE_BITS )
 #define  GBLENDER_SHADE_INDEX(n)  (((n) * (GBLENDER_SHADE_COUNT-1) + 128) >> 8)
-#define  GBLENDER_KEY_COUNT       256  /* must be a power of 2 */
+#define  GBLENDER_KEY_COUNT       256	/* must be a power of 2 */
 #define  GBLENDER_GAMMA_SHIFT     2
 
-#define  xGBLENDER_STORE_BYTES  /* define this to store (R,G,B) values on 3
-                                * bytes, instead of a single 32-bit integer.
-                                * surprisingly, this can speed up
-                                * the blender on certain machines.
-                                * Go figure what's really happening though :-)
-                                */
+#define  xGBLENDER_STORE_BYTES			/* define this to store (R,G,B) values on 3
+										 * bytes, instead of a single 32-bit integer.
+										 * surprisingly, this can speed up
+										 * the blender on certain machines.
+										 * Go figure what's really happening though :-)
+										 */
 
-#define  xGBLENDER_STATS        /* define this to collect statistics in the
-                                * blender
-                                */
+#define  xGBLENDER_STATS				/* define this to collect statistics in the
+										 * blender
+										 */
 
-  typedef unsigned int    GBlenderPixel;  /* needs 32-bits here !! */
+typedef unsigned int GBlenderPixel;		/* needs 32-bits here !! */
 
 #ifdef GBLENDER_STORE_BYTES
-  typedef unsigned char   GBlenderCell;
-# define  GBLENDER_CELL_SIZE    3
+typedef unsigned char GBlenderCell;
+
+#define  GBLENDER_CELL_SIZE    3
 #else
-  typedef GBlenderPixel   GBlenderCell;
-# define GBLENDER_CELL_SIZE     1
+typedef GBlenderPixel GBlenderCell;
+
+#define GBLENDER_CELL_SIZE     1
 #endif
 
 
-  typedef struct
-  {
-    GBlenderPixel  background;
-    GBlenderPixel  foreground;
-    GBlenderCell*  cells;
+typedef struct
+{
+	GBlenderPixel background;
+	GBlenderPixel foreground;
+	GBlenderCell *cells;
 
-  } GBlenderKeyRec, *GBlenderKey;
-
-
-  typedef struct
-  {
-    unsigned short  backfore;  /* (fore << 8) | back               */
-    signed short    index;     /* offset in (unsigned char*)cells  */
-
-  } GBlenderChanKeyRec, *GBlenderChanKey;
+} GBlenderKeyRec, *GBlenderKey;
 
 
-  typedef struct GBlenderRec_
-  {
-    GBlenderKeyRec        keys [ GBLENDER_KEY_COUNT ];
-    GBlenderCell          cells[ GBLENDER_KEY_COUNT*GBLENDER_SHADE_COUNT*GBLENDER_CELL_SIZE ];
+typedef struct
+{
+	unsigned short backfore;			/* (fore << 8) | back               */
+	signed short index;					/* offset in (unsigned char*)cells  */
 
-   /* a small cache for normal modes
-    */
-    GBlenderPixel         cache_back;
-    GBlenderPixel         cache_fore;
-    GBlenderCell*         cache_cells;
+} GBlenderChanKeyRec, *GBlenderChanKey;
 
-   /* a small cache for RGB channels modes
-    */
-    unsigned int          cache_r_back;
-    unsigned int          cache_r_fore;
-    unsigned char*        cache_r_cells;
 
-    unsigned int          cache_g_back;
-    unsigned int          cache_g_fore;
-    unsigned char*        cache_g_cells;
+typedef struct GBlenderRec_
+{
+	GBlenderKeyRec keys[GBLENDER_KEY_COUNT];
+	GBlenderCell cells[GBLENDER_KEY_COUNT * GBLENDER_SHADE_COUNT * GBLENDER_CELL_SIZE];
 
-    unsigned int          cache_b_back;
-    unsigned int          cache_b_fore;
-    unsigned char*        cache_b_cells;
+	/* a small cache for normal modes
+	 */
+	GBlenderPixel cache_back;
+	GBlenderPixel cache_fore;
+	GBlenderCell *cache_cells;
 
-   /* are we in color or channel mode ?
-    */
-    int                   channels;
+	/* a small cache for RGB channels modes
+	 */
+	unsigned int cache_r_back;
+	unsigned int cache_r_fore;
+	unsigned char *cache_r_cells;
 
-   /* the gamma table
-    */
-    unsigned short        gamma_ramp[256];                              /* voltage to linear */
-    unsigned char         gamma_ramp_inv[256 << GBLENDER_GAMMA_SHIFT];  /* linear to voltage */
+	unsigned int cache_g_back;
+	unsigned int cache_g_fore;
+	unsigned char *cache_g_cells;
+
+	unsigned int cache_b_back;
+	unsigned int cache_b_fore;
+	unsigned char *cache_b_cells;
+
+	/* are we in color or channel mode ?
+	 */
+	int channels;
+
+	/* the gamma table
+	 */
+	unsigned short gamma_ramp[256];		/* voltage to linear */
+	unsigned char gamma_ramp_inv[256 << GBLENDER_GAMMA_SHIFT];	/* linear to voltage */
 
 #ifdef GBLENDER_STATS
-    long                  stat_hits;    /* number of direct hits             */
-    long                  stat_lookups; /* number of table lookups           */
-    long                  stat_keys;    /* number of table key recomputation */
-    long                  stat_clears;  /* number of table clears            */
+	long stat_hits;						/* number of direct hits             */
+	long stat_lookups;					/* number of table lookups           */
+	long stat_keys;						/* number of table key recomputation */
+	long stat_clears;					/* number of table clears            */
 #endif
 
-  } GBlenderRec, *GBlender;
+} GBlenderRec, *GBlender;
 
 
  /* initialize with a given gamma */
-  GBLENDER_API( void )
-  gblender_init( GBlender  blender,
-                 double    gamma );
+void gblender_init(GBlender blender, double gamma);
 
 
  /* clear blender, and reset stats */
-  GBLENDER_API( void )
-  gblender_reset( GBlender  blender );
+void gblender_reset(GBlender blender);
 
 
-  GBLENDER_API( void )
-  gblender_use_channels( GBlender  blender,
-                         int       channels );
+void gblender_use_channels(GBlender blender, int channels);
 
  /* lookup a cell range for a given (background,foreground) pair
   */
-  GBLENDER_API( GBlenderCell* )
-  gblender_lookup( GBlender       blender,
-                   GBlenderPixel  background,
-                   GBlenderPixel  foreground );
+GBlenderCell *gblender_lookup(GBlender blender, GBlenderPixel background, GBlenderPixel foreground);
 
-  GBLENDER_API( unsigned char* )
-  gblender_lookup_channel( GBlender      blender,
-                           unsigned int  background,
-                           unsigned int  foreground );
+unsigned char *gblender_lookup_channel(GBlender blender, unsigned int background, unsigned int foreground);
 
 #ifdef GBLENDER_STATS
-  GBLENDER_API( void )
-  gblender_dump_stats( GBlender  blender );
+void gblender_dump_stats(GBlender blender);
 #else
-# define gblender_dump_stats(b)  do { } while (0);
+#define gblender_dump_stats(b)  do { } while (0);
 #endif
 
 #ifdef GBLENDER_STATS
 #define GBLENDER_STAT_HIT(gb)   (gb)->stat_hits++
 #else
-#define GBLENDER_STAT_HIT(gb)   /* nothing */
+#define GBLENDER_STAT_HIT(gb)			/* nothing */
 #endif
 
 

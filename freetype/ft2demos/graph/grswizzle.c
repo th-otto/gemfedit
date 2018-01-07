@@ -79,32 +79,21 @@
 /************************************************************************/
 
 /* the type of a line filtering function, see below for usage */
-typedef void
-(*filter_func_t)( unsigned char**  lines,
-                  unsigned char*   write,
-                  int              width,
-                  int              offset );
+typedef void (*filter_func_t) (unsigned char **lines, unsigned char *write, int width, int offset);
 
-static void
-copy_line_generic( unsigned char*    from,
-                   unsigned char*    to,
-                   int               x,
-                   int               width,
-                   int               buff_width,
-                   int               pix_bytes )
+static void copy_line_generic(unsigned char *from, unsigned char *to, int x, int width, int buff_width, int pix_bytes)
 {
-  if (x > 0)
-  {
-    width += 1;
-    from  -= pix_bytes;
-  }
-  else
-    to += pix_bytes;
+	if (x > 0)
+	{
+		width += 1;
+		from -= pix_bytes;
+	} else
+		to += pix_bytes;
 
-  if (x+width < buff_width)
-    width += 1;
+	if (x + width < buff_width)
+		width += 1;
 
-  memcpy( to, from, (unsigned int)( width * pix_bytes ) );
+	memcpy(to, from, (unsigned int) (width * pix_bytes));
 }
 
 
@@ -131,99 +120,90 @@ copy_line_generic( unsigned char*    from,
  *  temp_lines   :: a work buffer of at least '3*(width+2)*pix_bytes' bytes
  */
 static void
-filter_rect_generic( unsigned char*   read_buff,
-                     int              read_pitch,
-                     unsigned char*   write_buff,
-                     int              write_pitch,
-                     int              buff_width,
-                     int              buff_height,
-                     int              x,
-                     int              y,
-                     int              width,
-                     int              height,
-                     int              pix_bytes,
-                     filter_func_t    filter_func,
-                     unsigned char*   temp_lines )
+filter_rect_generic(unsigned char *read_buff,
+					int read_pitch,
+					unsigned char *write_buff,
+					int write_pitch,
+					int buff_width,
+					int buff_height,
+					int x,
+					int y, int width, int height, int pix_bytes, filter_func_t filter_func, unsigned char *temp_lines)
 {
-  unsigned char*  lines[3];
-  int             offset   = (x+y) % 3;
-  int             delta, height2;
+	unsigned char *lines[3];
+	int offset = (x + y) % 3;
+	int delta, height2;
 
-  /* clip rectangle, just to be sure */
-  if (x < 0)
-  {
-    width += x;
-    x      = 0;
-  }
-  delta = x+width - buff_width;
-  if (delta > 0)
-    width -= delta;
+	/* clip rectangle, just to be sure */
+	if (x < 0)
+	{
+		width += x;
+		x = 0;
+	}
+	delta = x + width - buff_width;
+	if (delta > 0)
+		width -= delta;
 
-  if (y < 0)
-  {
-    height += y;
-    y       = 0;
-  }
-  delta = y+height - buff_height;
-  if (delta > 0)
-    height -= delta;
+	if (y < 0)
+	{
+		height += y;
+		y = 0;
+	}
+	delta = y + height - buff_height;
+	if (delta > 0)
+		height -= delta;
 
-  if (width <= 0 || height <= 0)  /* nothing to do */
-    return;
+	if (width <= 0 || height <= 0)		/* nothing to do */
+		return;
 
-  /* now setup the three work lines */
-  read_buff  += y*read_pitch  + pix_bytes*x;
-  write_buff += y*write_pitch + pix_bytes*x;
+	/* now setup the three work lines */
+	read_buff += y * read_pitch + pix_bytes * x;
+	write_buff += y * write_pitch + pix_bytes * x;
 
-  memset( temp_lines, 0, (unsigned int)(3 * pix_bytes * ( width + 2 ) ) );
+	memset(temp_lines, 0, (unsigned int) (3 * pix_bytes * (width + 2)));
 
-  lines[0] = (unsigned char*) temp_lines;
-  lines[1] = lines[0] + pix_bytes*(width+2);
-  lines[2] = lines[1] + pix_bytes*(width+2);
+	lines[0] = (unsigned char *) temp_lines;
+	lines[1] = lines[0] + pix_bytes * (width + 2);
+	lines[2] = lines[1] + pix_bytes * (width + 2);
 
-  /* lines[0] correspond to the pixels of the line above
-   */
-   if (y > 0)
-     copy_line_generic( read_buff - read_pitch, lines[0],
-                        x, width, buff_width, pix_bytes );
+	/* lines[0] correspond to the pixels of the line above
+	 */
+	if (y > 0)
+		copy_line_generic(read_buff - read_pitch, lines[0], x, width, buff_width, pix_bytes);
 
-  /* lines[1] correspond to the pixels of the current line
-   */
-   copy_line_generic( read_buff, lines[1],
-                      x, width, buff_width, pix_bytes );
+	/* lines[1] correspond to the pixels of the current line
+	 */
+	copy_line_generic(read_buff, lines[1], x, width, buff_width, pix_bytes);
 
-  /* process all lines, except the last one */
-  for ( height2 = height; height2 > 1; height2-- )
-  {
-    unsigned char*   tmp;
+	/* process all lines, except the last one */
+	for (height2 = height; height2 > 1; height2--)
+	{
+		unsigned char *tmp;
 
-    /* lines[2] correspond to the pixels of the line below */
-    copy_line_generic( read_buff + read_pitch, lines[2],
-                       x, width, buff_width, pix_bytes );
+		/* lines[2] correspond to the pixels of the line below */
+		copy_line_generic(read_buff + read_pitch, lines[2], x, width, buff_width, pix_bytes);
 
-    filter_func( lines, write_buff, width, offset );
+		filter_func(lines, write_buff, width, offset);
 
-    if (++offset == 3)
-      offset = 0;
+		if (++offset == 3)
+			offset = 0;
 
-    /* scroll the work lines */
-    tmp      = lines[0];
-    lines[0] = lines[1];
-    lines[1] = lines[2];
-    lines[2] = tmp;
+		/* scroll the work lines */
+		tmp = lines[0];
+		lines[0] = lines[1];
+		lines[1] = lines[2];
+		lines[2] = tmp;
 
-    read_buff  += read_pitch;
-    write_buff += write_pitch;
-  }
+		read_buff += read_pitch;
+		write_buff += write_pitch;
+	}
 
-  /* process last line */
-  if (y+height == buff_height)
-    memset( lines[2], 0, (unsigned int)( ( width + 2 ) * pix_bytes ) );
-  else
-    copy_line_generic( read_buff + read_pitch, lines[2],
-                       x, width, buff_width, pix_bytes );
+	/* process last line */
+	if (y + height == buff_height)
+		memset(lines[2], 0, (unsigned int) ((width + 2) * pix_bytes));
+	else
+		copy_line_generic(read_buff + read_pitch, lines[2], x, width, buff_width, pix_bytes);
 
-  filter_func ( lines, write_buff, width, offset );
+	filter_func(lines, write_buff, width, offset);
 }
 
 
@@ -238,44 +218,37 @@ filter_rect_generic( unsigned char*   read_buff,
 
 /* this function performs AA+swizzling of a given line from/to RGB24 buffers
  */
-static void
-swizzle_line_rgb24( unsigned char**  lines,
-                    unsigned char*   write,
-                    int              width,
-                    int              offset )
+static void swizzle_line_rgb24(unsigned char **lines, unsigned char *write, int width, int offset)
 {
-  unsigned char*  above   = lines[0] + 3;
-  unsigned char*  current = lines[1] + 3;
-  unsigned char*  below   = lines[2] + 3;
-  int             nn;
+	unsigned char *above = lines[0] + 3;
+	unsigned char *current = lines[1] + 3;
+	unsigned char *below = lines[2] + 3;
+	int nn;
 
-  width *= 3;
-  for ( nn = 0; nn < width; nn += 3 )
-  {
-    unsigned int  sum;
-    int           off = nn + offset;
+	width *= 3;
+	for (nn = 0; nn < width; nn += 3)
+	{
+		unsigned int sum;
+		int off = nn + offset;
 
 #ifdef ANTIALIAS
-    sum  = (unsigned int)current[off] << 2;
+		sum = (unsigned int) current[off] << 2;
 
-    sum += current[off-3] +
-           current[off+3] +
-           above  [off]   +
-           below  [off]   ;
+		sum += current[off - 3] + current[off + 3] + above[off] + below[off];
 
-    /* performance trick: use shifts to avoid jumps */
-    sum = (sum >> 3) << (offset*8);
+		/* performance trick: use shifts to avoid jumps */
+		sum = (sum >> 3) << (offset * 8);
 #else /* !ANTIALIAS */
-    sum = current[off] << (offset*8);
+		sum = current[off] << (offset * 8);
 #endif
 
-    write[nn]   = (unsigned char) sum;
-    write[nn+1] = (unsigned char)(sum >> 8);
-    write[nn+2] = (unsigned char)(sum >> 16);
+		write[nn] = (unsigned char) sum;
+		write[nn + 1] = (unsigned char) (sum >> 8);
+		write[nn + 2] = (unsigned char) (sum >> 16);
 
-    if ( ++offset == 3 )
-      offset = 0;
-  }
+		if (++offset == 3)
+			offset = 0;
+	}
 }
 
 
@@ -310,42 +283,36 @@ swizzle_line_rgb24( unsigned char**  lines,
  * green pixels on its right and below it, and the average of the blue pixels
  * on its left and above it.
  */
-static void
-postprocess_line_rgb24( unsigned char** lines,
-                        unsigned char*  write,
-                        int             width,
-                        int             offset )
+static void postprocess_line_rgb24(unsigned char **lines, unsigned char *write, int width, int offset)
 {
-  unsigned char*  above   = lines[0] + 3;
-  unsigned char*  current = lines[1] + 3;
-  unsigned char*  below   = lines[2] + 3;
-  int             nn;
+	unsigned char *above = lines[0] + 3;
+	unsigned char *current = lines[1] + 3;
+	unsigned char *below = lines[2] + 3;
+	int nn;
 
-  width *= 3;
-  for ( nn = 0; nn < width; nn += 3 )
-  {
-    if (offset == 0)  /* red */
-    {
-      write[nn]   = current[nn];
-      write[nn+1] = (unsigned char)((current[nn+4] + below[nn+1]) >> 1);
-      write[nn+2] = (unsigned char)((current[nn-1] + above[nn+2]) >> 1);
-      offset      = 1;
-    }
-    else if (offset == 1)  /* green */
-    {
-      write[nn]   = (unsigned char)((current[nn-3] + above[nn]) >> 1);
-      write[nn+1] = current[nn+1];
-      write[nn+2] = (unsigned char)((current[nn+5] + below[nn+2]) >> 1);
-      offset      = 2;
-    }
-    else  /* blue */
-    {
-      write[nn]   = (unsigned char)((current[nn+3] + below[nn])   >> 1);
-      write[nn+1] = (unsigned char)((current[nn-2] + above[nn+1]) >> 1);
-      write[nn+2] = current[nn+2];
-      offset      = 0;
-    }
-  }
+	width *= 3;
+	for (nn = 0; nn < width; nn += 3)
+	{
+		if (offset == 0)				/* red */
+		{
+			write[nn] = current[nn];
+			write[nn + 1] = (unsigned char) ((current[nn + 4] + below[nn + 1]) >> 1);
+			write[nn + 2] = (unsigned char) ((current[nn - 1] + above[nn + 2]) >> 1);
+			offset = 1;
+		} else if (offset == 1)			/* green */
+		{
+			write[nn] = (unsigned char) ((current[nn - 3] + above[nn]) >> 1);
+			write[nn + 1] = current[nn + 1];
+			write[nn + 2] = (unsigned char) ((current[nn + 5] + below[nn + 2]) >> 1);
+			offset = 2;
+		} else							/* blue */
+		{
+			write[nn] = (unsigned char) ((current[nn + 3] + below[nn]) >> 1);
+			write[nn + 1] = (unsigned char) ((current[nn - 2] + above[nn + 1]) >> 1);
+			write[nn + 2] = current[nn + 2];
+			offset = 0;
+		}
+	}
 }
 
 
@@ -362,81 +329,71 @@ postprocess_line_rgb24( unsigned char** lines,
 
 /* this function performs AA+swizzling of a given line from/to RGB565 buffers
  */
-static void
-swizzle_line_rgb565( unsigned char** lines,
-                     unsigned char*  _write,
-                     int             width,
-                     int             offset )
+static void swizzle_line_rgb565(unsigned char **lines, unsigned char *_write, int width, int offset)
 {
-  unsigned short*  above   = (unsigned short*) lines[0] + 1;
-  unsigned short*  current = (unsigned short*) lines[1] + 1;
-  unsigned short*  below   = (unsigned short*) lines[2] + 1;
-  unsigned short*  write   = (unsigned short*) _write;
-  int              nn;
+	unsigned short *above = (unsigned short *) lines[0] + 1;
+	unsigned short *current = (unsigned short *) lines[1] + 1;
+	unsigned short *below = (unsigned short *) lines[2] + 1;
+	unsigned short *write = (unsigned short *) _write;
+	int nn;
 
-  static const unsigned int    masks[3] = { 0xf800, 0x07e0, 0x001f };
+	static const unsigned int masks[3] = { 0xf800, 0x07e0, 0x001f };
 
-  for (nn = 0; nn < width; nn++)
-  {
-    unsigned int   mask = masks[offset];
+	for (nn = 0; nn < width; nn++)
+	{
+		unsigned int mask = masks[offset];
+
 #ifdef ANTIALIAS
-    unsigned int   sum;
+		unsigned int sum;
 
-    sum  = ((unsigned int)current[nn] & mask) << 2;
+		sum = ((unsigned int) current[nn] & mask) << 2;
 
-    sum += ((unsigned int)current[nn-1] & mask) +
-           ((unsigned int)current[nn+1] & mask) +
-           ((unsigned int)above[nn] & mask)     +
-           ((unsigned int)below[nn] & mask);
+		sum += ((unsigned int) current[nn - 1] & mask) +
+			((unsigned int) current[nn + 1] & mask) +
+			((unsigned int) above[nn] & mask) + ((unsigned int) below[nn] & mask);
 
-    write[nn] = (unsigned short)( (sum >> 3) & mask );
+		write[nn] = (unsigned short) ((sum >> 3) & mask);
 #else
-    write[nn] = (unsigned short)( current[nn] & mask );
+		write[nn] = (unsigned short) (current[nn] & mask);
 #endif
 
-    if (++offset == 3)
-      offset = 0;
-  }
+		if (++offset == 3)
+			offset = 0;
+	}
 }
 
 
-static void
-postprocess_line_rgb565( unsigned char** lines,
-                         unsigned char*  _write,
-                         int             width,
-                         int             offset )
+static void postprocess_line_rgb565(unsigned char **lines, unsigned char *_write, int width, int offset)
 {
-  unsigned short*  above   = (unsigned short*) lines[0] + 1;
-  unsigned short*  current = (unsigned short*) lines[1] + 1;
-  unsigned short*  below   = (unsigned short*) lines[2] + 1;
-  unsigned short*  write   = (unsigned short*) _write;
-  int              nn;
+	unsigned short *above = (unsigned short *) lines[0] + 1;
+	unsigned short *current = (unsigned short *) lines[1] + 1;
+	unsigned short *below = (unsigned short *) lines[2] + 1;
+	unsigned short *write = (unsigned short *) _write;
+	int nn;
 
-  static const unsigned int  masks[5] = { 0xf800, 0x07e0, 0x001f, 0xf800, 0x07e0 };
+	static const unsigned int masks[5] = { 0xf800, 0x07e0, 0x001f, 0xf800, 0x07e0 };
 
-  unsigned int     l_mask, r_mask, c_mask;
+	unsigned int l_mask, r_mask, c_mask;
 
-  l_mask = masks[offset];
-  c_mask = masks[offset+1];
-  r_mask = masks[offset+2];
+	l_mask = masks[offset];
+	c_mask = masks[offset + 1];
+	r_mask = masks[offset + 2];
 
-  for ( nn = 0; nn < width; nn += 1 )
-  {
-    unsigned int  left, right, center, tmp;
+	for (nn = 0; nn < width; nn += 1)
+	{
+		unsigned int left, right, center, tmp;
 
-    center =   current[nn];
-    left   = ((current[nn-1] & l_mask) + (above[nn] & l_mask)) >> 1;
-    right  = ((current[nn+1] & r_mask) + (below[nn] & r_mask)) >> 1;
+		center = current[nn];
+		left = ((current[nn - 1] & l_mask) + (above[nn] & l_mask)) >> 1;
+		right = ((current[nn + 1] & r_mask) + (below[nn] & r_mask)) >> 1;
 
-    write[nn] = (unsigned short)( (left & l_mask)   |
-                                  (right & r_mask)  |
-                                  (center & c_mask) );
+		write[nn] = (unsigned short) ((left & l_mask) | (right & r_mask) | (center & c_mask));
 
-    tmp    = l_mask;
-    l_mask = c_mask;
-    c_mask = r_mask;
-    r_mask = tmp;
-  }
+		tmp = l_mask;
+		l_mask = c_mask;
+		c_mask = r_mask;
+		r_mask = tmp;
+	}
 }
 
 
@@ -453,221 +410,159 @@ postprocess_line_rgb565( unsigned char** lines,
 /* this function performs AA+swizzling of a given line from/to 32-bit ARGB or RGB
  * buffers
  */
-static void
-swizzle_line_xrgb32( unsigned char**  lines,
-                     unsigned char*   _write,
-                     int              width,
-                     int              offset )
+static void swizzle_line_xrgb32(unsigned char **lines, unsigned char *_write, int width, int offset)
 {
-  unsigned int*  above   = (unsigned int*) lines[0] + 1;
-  unsigned int*  current = (unsigned int*) lines[1] + 1;
-  unsigned int*  below   = (unsigned int*) lines[2] + 1;
-  unsigned int*  write   = (unsigned int*) _write;
-  int            nn;
-  unsigned int   mask    = (0xff0000) >> (offset*8);
+	unsigned int *above = (unsigned int *) lines[0] + 1;
+	unsigned int *current = (unsigned int *) lines[1] + 1;
+	unsigned int *below = (unsigned int *) lines[2] + 1;
+	unsigned int *write = (unsigned int *) _write;
+	int nn;
+	unsigned int mask = (0xff0000) >> (offset * 8);
 
-  for (nn = 0; nn < width; nn++)
-  {
+	for (nn = 0; nn < width; nn++)
+	{
 #ifdef ANTIALIAS
-    unsigned int   sum;
+		unsigned int sum;
 
-    sum  = (current[nn] & mask) << 2;
+		sum = (current[nn] & mask) << 2;
 
-    sum += (current[nn-1] & mask) +
-           (current[nn+1] & mask) +
-           (above[nn]     & mask) +
-           (below[nn]     & mask);
+		sum += (current[nn - 1] & mask) + (current[nn + 1] & mask) + (above[nn] & mask) + (below[nn] & mask);
 
-    write[nn] = (sum >> 3) & mask;  /* should we set ALPHA to 0xFF ? */
+		write[nn] = (sum >> 3) & mask;	/* should we set ALPHA to 0xFF ? */
 #else
-    write[nn] = current[nn] & mask;
+		write[nn] = current[nn] & mask;
 #endif
 
-    mask >>= 8;
-    if (mask == 0)
-      mask = 0x00ff0000;
-  }
+		mask >>= 8;
+		if (mask == 0)
+			mask = 0x00ff0000;
+	}
 }
 
 
-static void
-postprocess_line_xrgb32( unsigned char** lines,
-                         unsigned char*  _write,
-                         int             width,
-                         int             offset )
+static void postprocess_line_xrgb32(unsigned char **lines, unsigned char *_write, int width, int offset)
 {
-  unsigned int*  above   = (unsigned int*) lines[0] + 1;
-  unsigned int*  current = (unsigned int*) lines[1] + 1;
-  unsigned int*  below   = (unsigned int*) lines[2] + 1;
-  unsigned int*  write   = (unsigned int*) _write;
-  int             nn;
+	unsigned int *above = (unsigned int *) lines[0] + 1;
+	unsigned int *current = (unsigned int *) lines[1] + 1;
+	unsigned int *below = (unsigned int *) lines[2] + 1;
+	unsigned int *write = (unsigned int *) _write;
+	int nn;
 
-  static const unsigned int  masks[5] =
-                      { 0xff0000, 0x00ff00, 0x0000ff, 0xff0000, 0x00ff00 };
+	static const unsigned int masks[5] = { 0xff0000, 0x00ff00, 0x0000ff, 0xff0000, 0x00ff00 };
 
-  unsigned int     l_mask, r_mask, c_mask;
+	unsigned int l_mask, r_mask, c_mask;
 
-  l_mask = masks[offset];
-  c_mask = masks[offset+1];
-  r_mask = masks[offset+2];
+	l_mask = masks[offset];
+	c_mask = masks[offset + 1];
+	r_mask = masks[offset + 2];
 
-  for ( nn = 0; nn < width; nn += 1 )
-  {
-    unsigned int  left, right, center, tmp;
+	for (nn = 0; nn < width; nn += 1)
+	{
+		unsigned int left, right, center, tmp;
 
-    center =   current[nn];
-    left   = ((current[nn-1] & l_mask) + (above[nn] & l_mask)) >> 1;
-    right  = ((current[nn+1] & r_mask) + (below[nn] & r_mask)) >> 1;
+		center = current[nn];
+		left = ((current[nn - 1] & l_mask) + (above[nn] & l_mask)) >> 1;
+		right = ((current[nn + 1] & r_mask) + (below[nn] & r_mask)) >> 1;
 
-    write[nn] = (unsigned int)( (left   & l_mask)   |
-                                (right  & r_mask)  |
-                                (center & c_mask) );
+		write[nn] = (unsigned int) ((left & l_mask) | (right & r_mask) | (center & c_mask));
 
-    tmp    = l_mask;
-    l_mask = c_mask;
-    c_mask = r_mask;
-    r_mask = tmp;
-  }
+		tmp = l_mask;
+		l_mask = c_mask;
+		c_mask = r_mask;
+		r_mask = tmp;
+	}
 }
 
 
 
 static void
-gr_swizzle_generic( unsigned char*    read_buff,
-                   int                read_pitch,
-                   unsigned char*     write_buff,
-                   int                write_pitch,
-                   int                buff_width,
-                   int                buff_height,
-                   int                x,
-                   int                y,
-                   int                width,
-                   int                height,
-                   int                pixbytes,
-                   filter_func_t      swizzle_func,
-                   filter_func_t      postprocess_func )
+gr_swizzle_generic(unsigned char *read_buff,
+				   int read_pitch,
+				   unsigned char *write_buff,
+				   int write_pitch,
+				   int buff_width,
+				   int buff_height,
+				   int x,
+				   int y,
+				   int width, int height, int pixbytes, filter_func_t swizzle_func, filter_func_t postprocess_func)
 {
-  unsigned char*  temp_lines;
-  unsigned char   temp_local[ 2048 ];
-  unsigned int    temp_size;
+	unsigned char *temp_lines;
+	unsigned char temp_local[2048];
+	unsigned int temp_size;
 
-  if ( height <= 0 || width <= 0 )
-    return;
+	if (height <= 0 || width <= 0)
+		return;
 
-  if ( read_pitch < 0 )
-    read_buff -= (buff_height-1)*read_pitch;
+	if (read_pitch < 0)
+		read_buff -= (buff_height - 1) * read_pitch;
 
-  if ( write_pitch < 0 )
-    write_buff -= (buff_height-1)*write_pitch;
+	if (write_pitch < 0)
+		write_buff -= (buff_height - 1) * write_pitch;
 
- /* we allocate a work buffer that will be used to hold three
-  * working 'lines', each of them having width+2 pixels. the first
-  * and last pixels being always 0
-  */
-  temp_size = (unsigned int)( ( width + 2 ) * 3 * pixbytes );
-  if ( temp_size <= sizeof ( temp_local ) )
-  {
-    /* try to use stack allocation, which is a lot faster than malloc */
-    temp_lines = temp_local;
-  }
-  else
-  {
-    temp_lines = (unsigned char*)malloc( temp_size );
-    if ( temp_lines == NULL )
-      return;
-  }
+	/* we allocate a work buffer that will be used to hold three
+	 * working 'lines', each of them having width+2 pixels. the first
+	 * and last pixels being always 0
+	 */
+	temp_size = (unsigned int) ((width + 2) * 3 * pixbytes);
+	if (temp_size <= sizeof(temp_local))
+	{
+		/* try to use stack allocation, which is a lot faster than malloc */
+		temp_lines = temp_local;
+	} else
+	{
+		temp_lines = (unsigned char *) malloc(temp_size);
+		if (temp_lines == NULL)
+			return;
+	}
 
-  filter_rect_generic( read_buff, read_pitch, write_buff, write_pitch,
-                       buff_width, buff_height, x, y, width, height,
-                       pixbytes, swizzle_func, temp_lines );
+	filter_rect_generic(read_buff, read_pitch, write_buff, write_pitch,
+						buff_width, buff_height, x, y, width, height, pixbytes, swizzle_func, temp_lines);
 
 
 #ifdef POSTPROCESS
-  /* perform darkness correction */
-  if ( postprocess_func )
-    filter_rect_generic( write_buff, write_pitch, write_buff, write_pitch,
-                         buff_width, buff_height, x, y, width, height,
-                         pixbytes, postprocess_func,
-                         temp_lines );
+	/* perform darkness correction */
+	if (postprocess_func)
+		filter_rect_generic(write_buff, write_pitch, write_buff, write_pitch,
+							buff_width, buff_height, x, y, width, height, pixbytes, postprocess_func, temp_lines);
 #endif
 
-  /* free work buffer if needed */
-  if (temp_lines != temp_local)
-    free( temp_lines );
+	/* free work buffer if needed */
+	if (temp_lines != temp_local)
+		free(temp_lines);
 }
 
 
 
-extern void
-gr_swizzle_rect_rgb24( unsigned char*    read_buff,
-                       int               read_pitch,
-                       unsigned char*    write_buff,
-                       int               write_pitch,
-                       int               buff_width,
-                       int               buff_height,
-                       int               x,
-                       int               y,
-                       int               width,
-                       int               height )
+void gr_swizzle_rect_rgb24(unsigned char *read_buff,
+					  int read_pitch,
+					  unsigned char *write_buff,
+					  int write_pitch, int buff_width, int buff_height, int x, int y, int width, int height)
 {
-  gr_swizzle_generic( read_buff, read_pitch,
-                      write_buff, write_pitch,
-                      buff_width,
-                      buff_height,
-                      x, y, width, height,
-                      3,
-                      swizzle_line_rgb24,
-                      postprocess_line_rgb24 );
+	gr_swizzle_generic(read_buff, read_pitch,
+					   write_buff, write_pitch,
+					   buff_width, buff_height, x, y, width, height, 3, swizzle_line_rgb24, postprocess_line_rgb24);
 }
 
 
 
-extern void
-gr_swizzle_rect_rgb565( unsigned char*    read_buff,
-                        int               read_pitch,
-                        unsigned char*    write_buff,
-                        int               write_pitch,
-                        int               buff_width,
-                        int               buff_height,
-                        int               x,
-                        int               y,
-                        int               width,
-                        int               height )
+void gr_swizzle_rect_rgb565(unsigned char *read_buff,
+					   int read_pitch,
+					   unsigned char *write_buff,
+					   int write_pitch, int buff_width, int buff_height, int x, int y, int width, int height)
 {
-  gr_swizzle_generic( read_buff, read_pitch,
-                      write_buff, write_pitch,
-                      buff_width,
-                      buff_height,
-                      x, y, width, height,
-                      2,
-                      swizzle_line_rgb565,
-                      postprocess_line_rgb565 );
+	gr_swizzle_generic(read_buff, read_pitch,
+					   write_buff, write_pitch,
+					   buff_width, buff_height, x, y, width, height, 2, swizzle_line_rgb565, postprocess_line_rgb565);
 }
 
 
 
-extern void
-gr_swizzle_rect_xrgb32( unsigned char*    read_buff,
-                        int               read_pitch,
-                        unsigned char*    write_buff,
-                        int               write_pitch,
-                        int               buff_width,
-                        int               buff_height,
-                        int               x,
-                        int               y,
-                        int               width,
-                        int               height )
+void gr_swizzle_rect_xrgb32(unsigned char *read_buff,
+					   int read_pitch,
+					   unsigned char *write_buff,
+					   int write_pitch, int buff_width, int buff_height, int x, int y, int width, int height)
 {
-  gr_swizzle_generic( read_buff, read_pitch,
-                      write_buff, write_pitch,
-                      buff_width,
-                      buff_height,
-                      x, y, width, height,
-                      4,
-                      swizzle_line_xrgb32,
-                      postprocess_line_xrgb32 );
+	gr_swizzle_generic(read_buff, read_pitch,
+					   write_buff, write_pitch,
+					   buff_width, buff_height, x, y, width, height, 4, swizzle_line_xrgb32, postprocess_line_xrgb32);
 }
-
-
-
-

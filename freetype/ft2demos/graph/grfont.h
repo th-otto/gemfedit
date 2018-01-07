@@ -5,38 +5,24 @@
 
 #include "graph.h"
 
-  extern const unsigned char  font_8x8[];
+extern const unsigned char font_8x8[];
 
 
-  void
-  grGotobitmap( grBitmap*  bitmap );
+void grGotobitmap(grBitmap *bitmap);
 
-  void
-  grSetMargin( int  right,
-               int  top );
+void grSetMargin(int right, int top);
 
-  void
-  grSetPixelMargin( int  right,
-                    int  top );
+void grSetPixelMargin(int right, int top);
 
-  void
-  grSetLineHeight( int  height );
+void grSetLineHeight(int height);
 
-  void
-  grGotoxy ( int  x,
-             int  y );
+void grGotoxy(int x, int y);
 
 
-  void
-  grWrite( const char*  string );
+void grWrite(const char *string);
 
-  void
-  grWriteln( const char*  string );
+void grWriteln(const char *string);
 
-  void
-  grLn( void );
+void grLn(void);
 
 #endif /* GRFONT_H_ */
-
-
-/* eof */

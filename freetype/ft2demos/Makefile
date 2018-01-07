@@ -84,7 +84,8 @@ EXES += $(BIN_DIR_2)/ftdiff$(EXEEXT)   \
 	$(BIN_DIR_2)/ftmulti$(EXEEXT)  \
 	$(BIN_DIR_2)/ftstring$(EXEEXT) \
 	$(BIN_DIR_2)/ftview$(EXEEXT) \
-	$(BIN_DIR_2)/ftvalid$(EXEEXT)
+	$(BIN_DIR_2)/ftvalid$(EXEEXT) \
+	$(BIN_DIR_2)/xtest$(EXEEXT)
 
 # The following programs are not compiled automatically; either comment
 # out the affected line or use the program name as a Makefile target.
@@ -148,6 +149,9 @@ $(OBJ_DIR_2)/testname.o: $(SRC_DIR)/testname.c
 
 #  $(OBJ_DIR_2)/ftsbit.o: $(SRC_DIR)/ftsbit.c
 #	  $(COMPILE)
+
+$(OBJ_DIR_2)/xtest.o: graph/xtest.c
+	  $(COMPILE)
 
 
 # We simplify the dependencies on the graphics library by using
@@ -292,3 +296,6 @@ $(BIN_DIR_2)/ftmulti$(EXEEXT): $(OBJ_DIR_2)/ftmulti.o $(FTLIB) $(GRAPH_LIB) $(CO
 
 $(BIN_DIR_2)/ftstring$(EXEEXT): $(OBJ_DIR_2)/ftstring.o $(FTLIB) $(GRAPH_LIB) $(COMMON_OBJ) $(FTCOMMON_OBJ)
 	  $(LINK_NEW)
+
+$(BIN_DIR_2)/xtest$(EXEEXT): $(OBJ_DIR_2)/xtest.o $(FTLIB) $(GRAPH_LIB) $(COMMON_OBJ)
+	  $(LINK_GRAPH)

@@ -14,11 +14,7 @@
 
 #include "grobjs.h"
 
-  int  grBlitMono( grBitmap*  target,
-                   grBitmap*  source,
-                   int        x_offset,
-                   int        y_offset,
-                   grColor    color );
+int grBlitMono(grBitmap *target, grBitmap *source, int x_offset, int y_offset, grColor color);
 
 
 #endif /* GRBLIT_H_ */

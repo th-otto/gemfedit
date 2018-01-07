@@ -62,11 +62,11 @@ extern AF_GlyphHints _af_debug_hints;
 #ifdef __cplusplus
 extern "C" {
 #endif
-extern void af_glyph_hints_dump_segments(AF_GlyphHints hints, FT_Bool to_stdout);
-extern void af_glyph_hints_dump_points(AF_GlyphHints hints, FT_Bool to_stdout);
-extern void af_glyph_hints_dump_edges(AF_GlyphHints hints, FT_Bool to_stdout);
-extern FT_Error af_glyph_hints_get_num_segments(AF_GlyphHints hints, FT_Int dimension, FT_Int *num_segments);
-extern FT_Error af_glyph_hints_get_segment_offset(AF_GlyphHints hints,
+void af_glyph_hints_dump_segments(AF_GlyphHints hints, FT_Bool to_stdout);
+void af_glyph_hints_dump_points(AF_GlyphHints hints, FT_Bool to_stdout);
+void af_glyph_hints_dump_edges(AF_GlyphHints hints, FT_Bool to_stdout);
+FT_Error af_glyph_hints_get_num_segments(AF_GlyphHints hints, FT_Int dimension, FT_Int *num_segments);
+FT_Error af_glyph_hints_get_segment_offset(AF_GlyphHints hints,
 									 FT_Int dimension,
 									 FT_Int idx, FT_Pos *offset, FT_Bool *is_blue, FT_Pos *blue_offset);
 #ifdef __cplusplus

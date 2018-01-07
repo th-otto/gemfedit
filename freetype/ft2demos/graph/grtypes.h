@@ -14,22 +14,15 @@
 #ifndef GRTYPES_H_
 #define GRTYPES_H_
 
-  typedef unsigned char  byte;
+#include <stdint.h>
 
-#if 0
-  typedef signed char    uchar;
+typedef uint8_t byte;
 
-  typedef unsigned long  ulong;
-  typedef unsigned short ushort;
-  typedef unsigned int   uint;
-#endif
-
-  typedef struct grDimension_
-  {
-    int  x;
-    int  y;
-
-  } grDimension;
+typedef struct grDimension_
+{
+	int x;
+	int y;
+} grDimension;
 
 #define gr_err_ok                    0
 #define gr_err_memory               -1
@@ -40,13 +33,5 @@
 #define gr_err_conversion_overflow  -6
 #define gr_err_invalid_device       -7
 
-
-#ifdef GR_MAKE_OPTION_SINGLE_OBJECT
-#define  GR_LOCAL_DECL    static
-#define  GR_LOCAL_FUNC    static
-#else
-#define  GR_LOCAL_DECL    extern
-#define  GR_LOCAL_FUNC    /* void */
-#endif
 
 #endif /* GRTYPES_H_ */

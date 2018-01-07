@@ -13,13 +13,13 @@
 #endif
 
 #ifdef GBLENDER_STORE_BYTES
-#  ifndef GDST_STOREB
-#    error "GDST_STOREB not defined"
-#  endif
+#ifndef GDST_STOREB
+#error "GDST_STOREB not defined"
+#endif
 #else
-#  ifndef GDST_STOREP
-#    error "GDST_STOREP not defined"
-#  endif
+#ifndef GDST_STOREP
+#error "GDST_STOREP not defined"
+#endif
 #endif /* !STORE_BYTES */
 
 #ifndef GDST_STOREC
@@ -40,88 +40,71 @@
 #define GCONCATX(x,y)  x ## y
 
 
-static void
-GCONCAT( _gblender_blit_gray8_, GDST_TYPE )( GBlenderBlit   blit,
-                                             GBlenderPixel  color )
+static void GCONCAT(_gblender_blit_gray8_, GDST_TYPE) (GBlenderBlit blit, GBlenderPixel color)
 {
-  GBlender      blender = blit->blender;
-  unsigned int  r       = (color >> 16) & 255;
-  unsigned int  g       = (color >> 8)  & 255;
-  unsigned int  b       = (color)       & 255;
+	GBlender blender = blit->blender;
+	unsigned int r = (color >> 16) & 255;
+	unsigned int g = (color >> 8) & 255;
+	unsigned int b = (color) & 255;
 
-  GDST_COPY_VAR
-
+	GDST_COPY_VAR
 #include "gblcolor.h"
 }
 
 
-static void
-GCONCAT( _gblender_blit_hrgb_, GDST_TYPE )( GBlenderBlit   blit,
-                                            GBlenderPixel  color )
+static void GCONCAT(_gblender_blit_hrgb_, GDST_TYPE) (GBlenderBlit blit, GBlenderPixel color)
 {
-  GBlender      blender = blit->blender;
-  unsigned int  r       = (color >> 16) & 255;
-  unsigned int  g       = (color >> 8)  & 255;
-  unsigned int  b       = (color)       & 255;
+	GBlender blender = blit->blender;
+	unsigned int r = (color >> 16) & 255;
+	unsigned int g = (color >> 8) & 255;
+	unsigned int b = (color) & 255;
 
-  GDST_COPY_VAR
-
+	GDST_COPY_VAR
 #include "gblhrgb.h"
 }
 
 
-static void
-GCONCAT( _gblender_blit_hbgr_, GDST_TYPE )( GBlenderBlit   blit,
-                                            GBlenderPixel  color )
+static void GCONCAT(_gblender_blit_hbgr_, GDST_TYPE) (GBlenderBlit blit, GBlenderPixel color)
 {
-  GBlender      blender = blit->blender;
-  unsigned int  r       = (color >> 16) & 255;
-  unsigned int  g       = (color >> 8)  & 255;
-  unsigned int  b       = (color)       & 255;
+	GBlender blender = blit->blender;
+	unsigned int r = (color >> 16) & 255;
+	unsigned int g = (color >> 8) & 255;
+	unsigned int b = (color) & 255;
 
-  GDST_COPY_VAR
-
+	GDST_COPY_VAR
 #include "gblhbgr.h"
 }
 
 
-static void
-GCONCAT( _gblender_blit_vrgb_, GDST_TYPE )( GBlenderBlit   blit,
-                                            GBlenderPixel  color )
+static void GCONCAT(_gblender_blit_vrgb_, GDST_TYPE) (GBlenderBlit blit, GBlenderPixel color)
 {
-  GBlender      blender = blit->blender;
-  unsigned int  r       = (color >> 16) & 255;
-  unsigned int  g       = (color >> 8)  & 255;
-  unsigned int  b       = (color)       & 255;
+	GBlender blender = blit->blender;
+	unsigned int r = (color >> 16) & 255;
+	unsigned int g = (color >> 8) & 255;
+	unsigned int b = (color) & 255;
 
-  GDST_COPY_VAR
-
+	GDST_COPY_VAR
 #include "gblvrgb.h"
 }
 
 
-static void
-GCONCAT( _gblender_blit_vbgr_, GDST_TYPE )( GBlenderBlit   blit,
-                                            GBlenderPixel  color )
+static void GCONCAT(_gblender_blit_vbgr_, GDST_TYPE) (GBlenderBlit blit, GBlenderPixel color)
 {
-  GBlender      blender = blit->blender;
-  unsigned int  r       = (color >> 16) & 255;
-  unsigned int  g       = (color >> 8)  & 255;
-  unsigned int  b       = (color)       & 255;
+	GBlender blender = blit->blender;
+	unsigned int r = (color >> 16) & 255;
+	unsigned int g = (color >> 8) & 255;
+	unsigned int b = (color) & 255;
 
-  GDST_COPY_VAR
-
+	GDST_COPY_VAR
 #include "gblvbgr.h"
 }
 
 
-static void
-GCONCAT( _gblender_blit_bgra_, GDST_TYPE )( GBlenderBlit   blit,
-                                            GBlenderPixel  color )
+static void GCONCAT(_gblender_blit_bgra_, GDST_TYPE) (GBlenderBlit blit, GBlenderPixel color)
 {
-  GBlender  blender = blit->blender;
+	GBlender blender = blit->blender;
 
-  (void)color; /* unused */
+	(void) color;						/* unused */
 
 #include "gblbgra.h"
 }
@@ -140,5 +123,3 @@ GCONCAT( _gblender_blit_bgra_, GDST_TYPE )( GBlenderBlit   blit,
 #undef GDST_STOREP
 #undef GDST_STOREC
 #undef GDST_COPY_VAR
-
-/* EOF */

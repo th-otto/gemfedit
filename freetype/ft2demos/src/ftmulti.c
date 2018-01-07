@@ -197,8 +197,8 @@ static FT_Error Render_Glyph(int x_offset, int y_offset)
 	}
 
 	/* now blit it to our display screen */
-	bit3.rows = (int) glyph->bitmap.rows;
-	bit3.width = (int) glyph->bitmap.width;
+	bit3.rows = glyph->bitmap.rows;
+	bit3.width = glyph->bitmap.width;
 	bit3.pitch = glyph->bitmap.pitch;
 	bit3.buffer = glyph->bitmap.buffer;
 
@@ -212,6 +212,7 @@ static FT_Error Render_Glyph(int x_offset, int y_offset)
 	case FT_PIXEL_MODE_GRAY:
 		bit3.mode = gr_pixel_mode_gray;
 		bit3.grays = glyph->bitmap.num_grays;
+		break;
 	}
 
 	/* Then, blit the image to the target surface */
@@ -226,7 +227,7 @@ static FT_Error Render_Glyph(int x_offset, int y_offset)
 
 static void Reset_Scale(int pointSize)
 {
-	(void) FT_Set_Char_Size(face, pointSize << 6, pointSize << 6, (FT_UInt) res, (FT_UInt) res);
+	FT_Set_Char_Size(face, pointSize << 6, pointSize << 6, (FT_UInt) res, (FT_UInt) res);
 }
 
 
@@ -610,7 +611,7 @@ static int Process_Event(grEvent *event)
 		goto Do_Glyph;
 
 	default:
-		;
+		break;
 	}
 	return 1;
 
@@ -853,8 +854,10 @@ int main(int argc, char *argv[])
 		fprintf(stderr, "only handling first %d GX axes (of %d)\n", MAX_MM_AXES, multimaster->num_axis);
 		used_num_axis = MAX_MM_AXES;
 	} else
+	{
 		used_num_axis = multimaster->num_axis;
-
+	}
+	
 	for (n = 0; n < used_num_axis; n++)
 	{
 		design_pos[n] = n < requested_cnt ? requested_pos[n] : multimaster->axis[n].def;
@@ -919,6 +922,7 @@ int main(int argc, char *argv[])
 
 			default:
 				Render_All((unsigned int) Num, ptsize);
+				break;
 			}
 
 			sprintf(Header, "%.50s %.50s (file %.100s)", face->family_name, face->style_name, ft_basename(argv[file]));
