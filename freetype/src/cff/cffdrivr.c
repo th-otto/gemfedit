@@ -864,8 +864,6 @@
 #endif
       {
         FT_Bool*  no_stem_darkening = (FT_Bool*)value;
-
-
         driver->no_stem_darkening = *no_stem_darkening;
       }
 
@@ -886,8 +884,10 @@
       }
       else
 #endif
-        random_seed = *(FT_Int32*)value;
-
+	  {
+	    FT_Int32 *pvalue = (FT_Int32 *)value;
+        random_seed = *pvalue;
+	  }
       if ( random_seed < 0 )
         random_seed = 0;
 
@@ -905,7 +905,7 @@
   static FT_Error
   cff_property_get( FT_Module    module,         /* CFF_Driver */
                     const char*  property_name,
-                    const void*  value )
+                    void*  value )
   {
     FT_Error    error  = FT_Err_Ok;
     CFF_Driver  driver = (CFF_Driver)module;
@@ -958,8 +958,8 @@
   FT_DEFINE_SERVICE_PROPERTIESREC(
     cff_service_properties,
 
-    (FT_Properties_SetFunc)cff_property_set,      /* set_property */
-    (FT_Properties_GetFunc)cff_property_get )     /* get_property */
+    cff_property_set,      /* set_property */
+    cff_property_get )     /* get_property */
 
 
 #ifdef TT_CONFIG_OPTION_GX_VAR_SUPPORT

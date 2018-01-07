@@ -347,8 +347,22 @@ FT_EXPORT(FT_Error) FT_Remove_Module(FT_Library library, FT_Module module);
  *  @since:
  *    2.4.11
  *
+ * autofitter:fallback-script:FT_Uint (G/S)
+ * autofitter:default-script:FT_Uint (G/S)
+ * autofitter:increase-x-height:FT_Prop_IncreaseXHeight (G/S)
+ * autofitter:warping:FT_Bool (G/S)
+ * autofitter:darkening-parameters:FT_Int[8] (G/S)
+ * autofitter:no-stem-darkening:FT_Bool (G/S)
+ * autofitter:glyph-to-script-map:FT_Prop_GlyphToScriptMap (G)
+ * cff:darkening-parameters:FT_Int[8] (G/S)
+ * cff:hinting-engine:FT_UInt (G/S)
+ * cff:no-stem-darkening:FT_Bool (G/S)
+ * cff:random-seed:FT_Int32 (S)
+ * pcf:no-long-family-names:FT_Bool (G/S)
+ * truetype:interpreter-version:FT_UInt (G/S)
+ *
  */
-FT_EXPORT(FT_Error) FT_Property_Set(FT_Library library, const FT_String * module_name, const FT_String * property_name, const void *value);
+FT_EXPORT(FT_Error) FT_Property_Set(FT_Library library, const FT_String *module_name, const FT_String *property_name, const void *value);
 
 
 /**********************************************************************
@@ -408,7 +422,7 @@ FT_EXPORT(FT_Error) FT_Property_Set(FT_Library library, const FT_String * module
  *    2.4.11
  *
  */
-FT_EXPORT(FT_Error) FT_Property_Get(FT_Library library, const FT_String * module_name, const FT_String * property_name, void *value);
+FT_EXPORT(FT_Error) FT_Property_Get(FT_Library library, const FT_String *module_name, const FT_String *property_name, void *value);
 
 
 /*************************************************************************/

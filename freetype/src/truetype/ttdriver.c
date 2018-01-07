@@ -123,7 +123,7 @@ ANONYMOUS_STRUCT_DUMMY(FT_IncrementalRec_)
   static FT_Error
   tt_property_get( FT_Module    module,         /* TT_Driver */
                    const char*  property_name,
-                   const void*  value )
+                   void*  value )
   {
     FT_Error   error  = FT_Err_Ok;
     TT_Driver  driver = (TT_Driver)module;
@@ -150,8 +150,8 @@ ANONYMOUS_STRUCT_DUMMY(FT_IncrementalRec_)
   FT_DEFINE_SERVICE_PROPERTIESREC(
     tt_service_properties,
 
-    (FT_Properties_SetFunc)tt_property_set,     /* set_property */
-    (FT_Properties_GetFunc)tt_property_get      /* get_property */
+    tt_property_set,     /* set_property */
+    tt_property_get      /* get_property */
   )
 
 

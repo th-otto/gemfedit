@@ -738,7 +738,7 @@ THE SOFTWARE.
   static FT_Error
   pcf_property_get( FT_Module    module,         /* PCF_Driver */
                     const char*  property_name,
-                    const void*  value )
+                    void*  value )
   {
 #ifdef PCF_CONFIG_OPTION_LONG_FAMILY_NAMES
 
@@ -776,8 +776,8 @@ THE SOFTWARE.
   FT_DEFINE_SERVICE_PROPERTIESREC(
     pcf_service_properties,
 
-    (FT_Properties_SetFunc)pcf_property_set,      /* set_property */
-    (FT_Properties_GetFunc)pcf_property_get )     /* get_property */
+    pcf_property_set,      /* set_property */
+    pcf_property_get )     /* get_property */
 
 
  /*
