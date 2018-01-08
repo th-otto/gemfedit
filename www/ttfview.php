@@ -170,7 +170,8 @@ function js_escape($string)
 
 class ttf {
 	public $files;
-	public function ttf($opt) {
+	public function ttf($opt)
+	{
 		$this->files = array();
 	}
 	public function __destruct()
@@ -185,26 +186,35 @@ class ttf {
 			return -1;
 		return $a > $b;
 	}
-
 }
 
+$filelist = '';
+
+function add_files($dirname)
 {
-	$filelist = '';
+	global $filelist;
+	global $ttf;
+}
+
+if (is_dir($ttffontdir))
+{
+	$filelist .= "Local files:\n\n";
+	$ttf = new ttf(array());
+
 	if ($dir = opendir($ttffontdir))
 	{
-		$filelist .= "Local files:\n\n";
-		$ttf = new ttf(array());
-		while (false !== ($entry = readdir($dir))) {
+		while (false !== ($entry = readdir($dir)))
+		{
 			if ($entry == ".") continue;
 			if ($entry == "..") continue;
 			if (fnmatch(".*", $entry)) continue;
 			if (fnmatch("*.dir", $entry)) continue;
-			if (fnmatch("*.scale", $entry)) continue;
+			if (fnmatch("*.scale*", $entry)) continue;
+			if (fnmatch("*.afm", $entry)) continue;
 			
 			$info = fopen("$ttffontdir/$entry", "rb");
 			if (is_resource($info))
 			{
-				$fontname = '';
 				if (fnmatch("*.pfa", $entry))
 				{
 					$ttf->files[$entry] = array();
@@ -217,7 +227,7 @@ class ttf {
 						if ($end >= 0)
 						{
 							$pos += 11;
-							$fontname = substr($test, $pos, $end - $pos);
+							$ttf->files[$entry]['fontname'] = htmlspecialchars(substr($test, $pos, $end - $pos));
 						}
 					}
 				} else if (fnmatch("*.pfb", $entry))
@@ -229,23 +239,67 @@ class ttf {
 					fnmatch("*.ttc", $entry) ||
 					fnmatch("*.otc", $entry))
 				{
-					$ttf->files[$entry] = array();
-					$ttf->files[$entry]['name'] = $entry;
-				} else if (fnmatch("*.otf", $entry))
-				{
-					$ttf->files[$entry] = array();
-					$ttf->files[$entry]['name'] = $entry;
-				} else if (fnmatch("*.afm", $entry))
-				{
+					$test = fread($info, 12);
+					$header = unpack("Nversion/nnumtables/nsearchrange/nentryselector/nrangeshift", $test);
+					if ($header['version'] == 0x10000 || $header['version'] == 0x4f54544f)
+					{
+						$ttf->files[$entry] = array();
+						$ttf->files[$entry]['name'] = $entry;
+						$ttf->files[$entry]['fontname'] = '';
+						for ($i = 0; $i < $header['numtables']; $i++)
+						{
+							$test = fread($info, 16);
+							$offset = unpack("a4tag/Nchecksum/Noffset/Nlength", $test);
+							$pos = ftell($info);
+							if ($offset['tag'] == 'head')
+							{
+								fseek($info, $offset['offset']);
+								$test = fread($info, $offset['length']);
+								$head = unpack('nmajor/nminor/Nrevision/Nchecksum/Nmagic/nflags/nunitsperem/Jcreated/Jmodified/nxmin/nymin/nxmax/nymax/nmacstyle/nlowestppem/ndirection/nindexformat/ndataformat', $test);
+								$ttf->files[$entry]['head'] = $head;
+							}
+							if ($offset['tag'] == 'name')
+							{
+								fseek($info, $offset['offset']);
+								$test = fread($info, 6);
+								$name = unpack('nformat/ncount/noffset', $test);
+								$ttf->files[$entry]['name'] = array();
+								for ($j = 0; $j < $name['count']; $j++)
+								{
+									$test = fread($info, 12);
+									$rec = unpack('nplatform/nencoding/nlanguage/nname/nlength/noffset', $test);
+									if ($rec['length'] > 0)
+									{
+										$pos2 = ftell($info);
+										fseek($info, $offset['offset'] + $name['offset'] + $rec['offset']);
+										$rec['value'] = fread($info, $rec['length']);
+										fseek($info, $pos2);
+									} else
+									{
+										$rec['value'] = '';
+									}
+									if ($rec['name'] == 1)
+									{
+//										if (($rec['platform'] == 0) ||
+//											($rec['platform'] == 3 && $rec['encoding'] == 1))
+										{
+											$ttf->files[$entry]['fontname'] .= htmlspecialchars($rec['value']) . "<br />\n";
+											// $ttf->files[$entry]['fontname'] .= '<pre>' . htmlspecialchars(print_r($rec, 1)) . '</pre>';
+											$ttf->files[$entry]['fontname'] .= 'platform: ' . $rec['platform'] . "<br />\n";
+											$ttf->files[$entry]['fontname'] .= 'encoding: ' . $rec['encoding'] . "<br />\n";
+										}
+									}
+									$ttf->files[$entry]['name'][$rec['name']] = $rec;
+								}
+							}
+							fseek($info, $pos);
+						}
+					}
 				} else
 				{
 					$ttf->files[$entry] = array();
 					$ttf->files[$entry]['name'] = $entry;
-					$fontname = 'unknown file format';
-				}
-				if ($fontname != '')
-				{
-					$ttf->files[$entry]['fontname'] = $fontname;
+					$ttf->files[$entry]['fontname'] = 'unknown file format';
 				}
 				fclose($info);
 			} else
@@ -255,20 +309,23 @@ class ttf {
 				$ttf->files[$entry]['fontname'] = 'no such file';
 			}
 	    }
-	
-	    uksort($ttf->files, array($ttf, 'cmp_name'));
-		$filelist .= "<ul>\n";
-	    foreach ($ttf->files as $name => $entry) {
-	    	$filelist .= '<li><a href="javascript: submitUrl(&quot;' . dirname($_SERVER['SCRIPT_NAME']) . "/$ttffontdir/" . js_escape($name) . '&quot;);">' . htmlspecialchars($name, ENT_QUOTES, 'UTF-8') . "</a>";
-			if (isset($entry['fontname']))
-				$filelist .= "&nbsp;" . htmlspecialchars($entry['fontname']);
-			$filelist .= "</li>\n";
-	    }
 	 	closedir($dir);
-		$filelist .= "</ul>\n";
 	}
+
+    uksort($ttf->files, array($ttf, 'cmp_name'));
+	$filelist .= "<table>\n";
+    foreach ($ttf->files as $name => $entry)
+    {
+    	$filelist .= '<tr><td valign="top"><ul><li>';
+    	$filelist .= '<a href="javascript: submitUrl(&quot;' . dirname($_SERVER['SCRIPT_NAME']) . "/$ttffontdir/" . js_escape($name) . '&quot;);">' . htmlspecialchars($name, ENT_QUOTES, 'UTF-8') . "</a>";
+		$filelist .= "</li></ul></td>\n";
+		if (isset($entry['fontname']))
+			$filelist .= '<td valign="top">' . $entry['fontname'] . '</td>';
+		$filelist .= "</tr>\n";
+    }
+	$filelist .= "</table>\n";
+	echo $filelist;
 }
-echo $filelist;
 ?>
 
 
