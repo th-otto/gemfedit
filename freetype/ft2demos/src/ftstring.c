@@ -27,7 +27,7 @@
 #define MAXPTSIZE          500			/* dtp */
 
 
-static const char *Sample[] = {
+static const char *const Sample[] = {
 	"The quick brown fox jumps over the lazy dog",
 
 	/* Luís argüia à Júlia que «brações, fé, chá, óxido, pôr, zângão» */

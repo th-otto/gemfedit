@@ -138,7 +138,7 @@ static unsigned int cff_hinting_engines[2];
 static int num_cff_hinting_engines;
 static unsigned int dflt_cff_hinting_engine;
 
-static char cff_hinting_engine_names[2][10] = {
+static char const cff_hinting_engine_names[2][10] = {
 	"freetype",
 	"adobe"
 };
@@ -741,7 +741,7 @@ int main(int argc, char **argv)
 		FT_CFF_HINTING_ADOBE
 	};
 	int version;
-	char *engine;
+	const char *engine;
 
 	if (FT_Init_FreeType(&lib))
 	{

@@ -1397,9 +1397,7 @@ static void write_header(FT_Error error_code)
 				hinting_engine = "Adobe";
 				break;
 			}
-		}
-
-		else if (!strcmp(module->clazz->module_name, "truetype"))
+		} else if (!strcmp(module->clazz->module_name, "truetype"))
 		{
 			switch (status.tt_interpreter_versions[status.tt_interpreter_version_idx])
 			{
@@ -1601,7 +1599,7 @@ int main(int argc, char *argv[])
 	unsigned int dflt_tt_interpreter_version;
 	int i;
 
-	unsigned int versions[3] = {
+	static unsigned int const versions[3] = {
 		TT_INTERPRETER_VERSION_35,
 		TT_INTERPRETER_VERSION_38,
 		TT_INTERPRETER_VERSION_40

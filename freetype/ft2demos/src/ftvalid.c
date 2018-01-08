@@ -62,7 +62,7 @@ typedef struct TableSpecRec_
 
 #define MAKE_TABLE_SPEC( x ) { TTAG_##x, FT_VALIDATE_##x }
 
-static TableSpecRec ot_table_spec[] = {
+static TableSpecRec const ot_table_spec[] = {
 	MAKE_TABLE_SPEC(BASE),
 	MAKE_TABLE_SPEC(GDEF),
 	MAKE_TABLE_SPEC(GPOS),
@@ -73,7 +73,7 @@ static TableSpecRec ot_table_spec[] = {
 
 #define N_OT_TABLE_SPEC  ( sizeof ( ot_table_spec ) / sizeof ( TableSpecRec ) )
 
-static TableSpecRec gx_table_spec[] = {
+static TableSpecRec const gx_table_spec[] = {
 	MAKE_TABLE_SPEC(feat),
 	MAKE_TABLE_SPEC(mort),
 	MAKE_TABLE_SPEC(morx),
@@ -97,13 +97,13 @@ typedef struct ValidatorRec_
 	const char *unimplemented_message;
 	int (*is_implemented) (FT_Library library);
 
-	 FT_Error(*run) (FT_Face face, const char *tables, int validation_level);
+	FT_Error (*run) (FT_Face face, const char *tables, int validation_level);
 	int (*list_tables) (FT_Face face);
 
-	TableSpec table_spec;
+	const TableSpecRec *table_spec;
 	unsigned int n_table_spec;
 
-} ValidatorRec, *Validator;
+} ValidatorRec;
 
 static int is_ot_validator_implemented(FT_Library library);
 static int is_gx_validator_implemented(FT_Library library);
@@ -118,7 +118,7 @@ static int list_gx_tables(FT_Face face);
 static int list_ckern_tables(FT_Face face);
 
 
-static ValidatorRec validators[] = {
+static ValidatorRec const validators[] = {
 	{
 	 OT_VALIDATE,
 	 "ot",
@@ -186,7 +186,7 @@ static void print_tag(FILE *stream, FT_UInt tag)
 static void print_usage(FT_Library library_initializer)
 {
 	unsigned int i, j;
-	Validator v;
+	const ValidatorRec *v;
 	static FT_Library library;
 
 	if (library_initializer)
