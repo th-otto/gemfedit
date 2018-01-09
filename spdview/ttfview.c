@@ -55,6 +55,7 @@ static long point_size = 120;
 static int x_res = 72;
 static int y_res = 72;
 static int quality = 1;
+static gboolean optimize_output = TRUE;
 
 #define HAVE_MKSTEMPS
 
@@ -365,6 +366,9 @@ static gboolean gen_ttf_font(GString *body)
 	uint16_t j;
 	charinfo *c;
 	GString *font_info;
+	size_t page_start;
+	size_t line_start;
+	gboolean any_defined_page, any_defined_line;
 	
 	make_font_filename(fontfilename, fontname);
 	font_info = get_font_info(face);
@@ -530,6 +534,8 @@ static gboolean gen_ttf_font(GString *body)
 #endif
 		
 	g_string_append(body, "<table cellspacing=\"0\" cellpadding=\"0\">\n");
+	page_start = body->len;
+	any_defined_page = FALSE;
 	for (id = 0; id < num_ids; id += CHAR_COLUMNS)
 	{
 		gboolean defined[CHAR_COLUMNS];
@@ -538,8 +544,16 @@ static gboolean gen_ttf_font(GString *body)
 		static char const vert_line[] = "<td class=\"vertical_line\"></td>\n";
 		
 		if (id != 0 && (id % PAGE_SIZE) == 0)
+		{
+			if (optimize_output && !any_defined_page)
+			{
+				g_string_truncate(body, page_start);
+			}
+			page_start = body->len;
+			any_defined_page = FALSE;
 			g_string_append(body, "<tr><td width=\"1\" height=\"10\" style=\"padding: 0px; margin:0px;\"></td></tr>\n");
-
+		}
+		
 		columns = CHAR_COLUMNS;
 		if ((id + columns) > num_ids)
 			columns = num_ids - id;
@@ -547,6 +561,8 @@ static gboolean gen_ttf_font(GString *body)
 		if ((id % PAGE_SIZE) == 0)
 			gen_hor_line(body, columns);
 		
+		line_start = body->len;
+		any_defined_line = FALSE;
 		g_string_append(body, "<tr>\n");
 		for (j = 0; j < columns; j++)
 		{
@@ -558,6 +574,8 @@ static gboolean gen_ttf_font(GString *body)
 			if (c->char_id != UNDEFINED)
 			{
 				defined[j] = TRUE;
+				any_defined_line |= TRUE;
+				any_defined_page |= TRUE;
 				if (c->url != NULL)
 					img[j] = c->url;
 			}
@@ -637,9 +655,15 @@ static gboolean gen_ttf_font(GString *body)
 		g_string_append(body, vert_line);
 		g_string_append(body, "</tr>\n");
 		gen_hor_line(body, columns);
+		if (optimize_output && !any_defined_line)
+		{
+			g_string_truncate(body, line_start);
+		}	
 	}
 	if ((id % PAGE_SIZE) != 0)
 		gen_hor_line(body, columns);
+	if (optimize_output && !any_defined_page)
+		g_string_truncate(body, page_start);
 	g_string_append(body, "</table>\n");
 
 	for (char_id = 0; char_id < num_ids; char_id++)

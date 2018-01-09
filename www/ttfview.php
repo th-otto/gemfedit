@@ -23,7 +23,7 @@ li {
 </style>
 <!-- BEGIN CONFIGURATION -->
 <?php
-error_reporting(E_ALL | E_WARNING);
+error_reporting(E_ALL & ~E_WARNING);
 ini_set("display_errors", 1);
 $ttffontdir = 'ttffonts';
 ?>
@@ -237,11 +237,12 @@ function add_files($dirname)
 			$info = fopen("${ttffontdir}/${name}", "rb");
 			if (is_resource($info))
 			{
-				if (fnmatch("*.pfa", $entry))
+				if (fnmatch("*.pfa", $entry) ||
+					fnmatch("*.pfb", $entry))
 				{
 					$ttf->files[$namei] = array();
 					$ttf->files[$namei]['name'] = $name;
-					$test = fread($info, 1024);
+					$test = fread($info, 4096);
 					$pos = strpos($test, '/FullName (');
 					if ($pos >= 0)
 					{
@@ -252,10 +253,6 @@ function add_files($dirname)
 							$ttf->files[$namei]['fontname'] = htmlspecialchars(substr($test, $pos, $end - $pos));
 						}
 					}
-				} else if (fnmatch("*.pfb", $entry))
-				{
-					$ttf->files[$namei] = array();
-					$ttf->files[$namei]['name'] = $name;
 				} else if (fnmatch("*.ttf", $entry) ||
 					fnmatch("*.otf", $entry) ||
 					fnmatch("*.ttc", $entry) ||
@@ -303,7 +300,8 @@ function add_files($dirname)
 									if ($rec['name'] == 4)
 									{
 										if (($rec['platform'] == 0) ||
-											($rec['platform'] == 3 && $rec['encoding'] == 1))
+											($rec['platform'] == 3 && $rec['encoding'] == 1) ||
+											($rec['platform'] == 2 && $rec['encoding'] == 1))
 										{
 											$rec['value'] = iconv('UTF-16BE', 'UTF-8', $rec['value']);
 											$ttf->files[$namei]['fontname'] = htmlspecialchars($rec['value']);

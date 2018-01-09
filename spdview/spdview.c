@@ -40,6 +40,7 @@ static long point_size = 120;
 static int x_res = 72;
 static int y_res = 72;
 static int quality = 1;
+static gboolean optimize_output = TRUE;
 
 static specs_t specs;
 
@@ -613,10 +614,17 @@ static void update_bbox(charinfo *c, glyphinfo_t *box)
 static gboolean gen_speedo_font(GString *body)
 {
 	gboolean decode_ok = TRUE;
+	time_t t;
+	struct tm tm;
+	char *basename;
+	int columns;
 	const ufix8 *key;
 	uint16_t i, id, j;
 	uint16_t num_ids;
 	GString *font_info;
+	size_t page_start;
+	size_t line_start;
+	gboolean any_defined_page, any_defined_line;
 	
 	/* init */
 	sp_reset();
@@ -678,294 +686,306 @@ static gboolean gen_speedo_font(GString *body)
 	g_string_free(font_info, TRUE);
 	
 	if (!sp_set_specs(&specs, &font))
+		return FALSE;
+
+	t = time(NULL);
+	tm = *gmtime(&t);
+	basename = g_strdup_printf("%s_%04d%02d%02d%02d%02d%02d_",
+		fontfilename,
+		tm.tm_year + 1900,
+		tm.tm_mon + 1,
+		tm.tm_mday,
+		tm.tm_hour,
+		tm.tm_min,
+		tm.tm_sec);
+	
+	num_ids = 0;
+	for (i = 0; i < num_chars; i++)
 	{
-		decode_ok = FALSE;
-	} else
+		char_index = i + first_char_index;
+		char_id = sp_get_char_id(char_index);
+		if (char_id != SP_UNDEFINED && char_id != UNDEFINED && char_id >= num_ids)
+			num_ids = char_id + 1;
+	}
+	
+	if (num_ids == 0)
 	{
-		time_t t;
-		struct tm tm;
-		char *basename;
-		int columns;
-		
-		t = time(NULL);
-		tm = *gmtime(&t);
-		basename = g_strdup_printf("%s_%04d%02d%02d%02d%02d%02d_",
-			fontfilename,
-			tm.tm_year + 1900,
-			tm.tm_mon + 1,
-			tm.tm_mday,
-			tm.tm_hour,
-			tm.tm_min,
-			tm.tm_sec);
-		
-		num_ids = 0;
-		for (i = 0; i < num_chars; i++)
-		{
-			char_index = i + first_char_index;
-			char_id = sp_get_char_id(char_index);
-			if (char_id != SP_UNDEFINED && char_id != UNDEFINED && char_id >= num_ids)
-				num_ids = char_id + 1;
-		}
-		
-		if (num_ids == 0)
-		{
-			g_string_append(errorout, "no characters in font\n");
-			return FALSE;
-		} 
+		g_string_append(errorout, "no characters in font\n");
+		return FALSE;
+	} 
 #if 0
-		num_ids = sp_get_char_id(num_chars + first_char_index - 1) + 1;
-		num_ids = ((num_ids + CHAR_COLUMNS - 1) / CHAR_COLUMNS) * CHAR_COLUMNS;
+	num_ids = sp_get_char_id(num_chars + first_char_index - 1) + 1;
+	num_ids = ((num_ids + CHAR_COLUMNS - 1) / CHAR_COLUMNS) * CHAR_COLUMNS;
 #endif
-		
-		infos = g_new(charinfo, num_ids);
-		if (infos == NULL)
-		{
-			g_string_append_printf(errorout, "%s\n", strerror(errno));
-			return FALSE;
-		}
-		
-		for (i = 0; i < num_ids; i++)
-		{
-			infos[i].char_index = 0;
-			infos[i].char_id = UNDEFINED;
-			infos[i].local_filename = NULL;
-			infos[i].url = NULL;
-		}
+	
+	infos = g_new(charinfo, num_ids);
+	if (infos == NULL)
+	{
+		g_string_append_printf(errorout, "%s\n", strerror(errno));
+		return FALSE;
+	}
+	
+	for (i = 0; i < num_ids; i++)
+	{
+		infos[i].char_index = 0;
+		infos[i].char_id = UNDEFINED;
+		infos[i].local_filename = NULL;
+		infos[i].url = NULL;
+	}
 
-		/*
-		 * determine the average width of all the glyphs in the font
-		 */
-		{
-			unsigned long total_width;
-			uint16_t num_glyphs;
-			glyphinfo_t max_bb;
-			fix15 max_lbearing;
-			fix15 min_descent;
-			fix15 average_width;
-			
-			total_width = 0;
-			num_glyphs = 0;
-			max_bb.width = 0;
-			max_bb.height = 0;
-			max_bb.off_vert = 0;
-			max_bb.ascent = -32000;
-			max_bb.descent = -32000;
-			max_bb.rbearing = -32000;
-			max_bb.lbearing = 32000;
-			max_bb.xmin = 32000L << 16;
-			max_bb.ymin = 32000L << 16;
-			max_bb.xmax = -(32000L << 16);
-			max_bb.ymax = -(32000L << 16);
-			max_lbearing = -32000;
-			min_descent = 32000;
-			for (i = 0; i < num_chars; i++)
-			{
-				char_index = i + first_char_index;
-				char_id = sp_get_char_id(char_index);
-				if (char_id != SP_UNDEFINED && char_id != UNDEFINED)
-				{
-					charinfo *c = &infos[char_id];
-					
-					if (c->char_id != UNDEFINED)
-					{
-						if (debug)
-							g_string_append_printf(errorout, "char 0x%x (0x%x) already defined\n", char_index, char_id);
-					} else
-					{
-						c->char_index = char_index;
-						c->char_id = char_id;
-						update_bbox(c, &max_bb);
-						max_lbearing = MAX(max_lbearing, c->bbox.lbearing);
-						min_descent = MIN(min_descent, c->bbox.descent);
-						total_width += c->bbox.width;
-						num_glyphs++;
-					}
-				}
-			}
-			if (num_glyphs == 0)
-				average_width = max_bb.width;
-			else
-				average_width = (fix15)(total_width / num_glyphs);
-			if (debug)
-			{
-				g_string_append_printf(errorout, "max height %d max width %d average width %d\n", max_bb.height, max_bb.width, average_width);
-			}
-			
-			max_bb.height = max_bb.ascent + max_bb.descent;
-			max_bb.width = max_bb.rbearing - max_bb.lbearing;
-
-			if (debug)
-			{
-				fix15 xmin, ymin, xmax, ymax;
-				long fwidth, fheight;
-				long pixel_size = (point_size * x_res + 360) / 720;
-				
-				xmin = read_2b(font_buffer + FH_FXMIN);
-				ymin = read_2b(font_buffer + FH_FYMIN);
-				xmax = read_2b(font_buffer + FH_FXMAX);
-				ymax = read_2b(font_buffer + FH_FYMAX);
-				fwidth = xmax - xmin;
-				fwidth = fwidth * pixel_size / sp_globals.orus_per_em;
-				fheight = ymax - ymin;
-				fheight = fheight * pixel_size / sp_globals.orus_per_em;
-				g_string_append_printf(errorout, "bbox: %d %d ascent %d descent %d lb %d rb %d\n",
-					max_bb.width, max_bb.height,
-					max_bb.ascent, max_bb.descent,
-					max_bb.lbearing, max_bb.rbearing);
-				g_string_append_printf(errorout, "bbox (header): %d %d %d %d; %ld %ld %ld %ld\n",
-					xmin, ymin,
-					xmax, ymax,
-					xmin * pixel_size / sp_globals.orus_per_em,
-					ymin * pixel_size / sp_globals.orus_per_em,
-					xmax * pixel_size / sp_globals.orus_per_em,
-					ymax * pixel_size / sp_globals.orus_per_em);
-			}
-			
-			font_bb = max_bb;
-		}
+	/*
+	 * determine the average width of all the glyphs in the font
+	 */
+	{
+		unsigned long total_width;
+		uint16_t num_glyphs;
+		glyphinfo_t max_bb;
+		fix15 max_lbearing;
+		fix15 min_descent;
+		fix15 average_width;
 		
+		total_width = 0;
+		num_glyphs = 0;
+		max_bb.width = 0;
+		max_bb.height = 0;
+		max_bb.off_vert = 0;
+		max_bb.ascent = -32000;
+		max_bb.descent = -32000;
+		max_bb.rbearing = -32000;
+		max_bb.lbearing = 32000;
+		max_bb.xmin = 32000L << 16;
+		max_bb.ymin = 32000L << 16;
+		max_bb.xmax = -(32000L << 16);
+		max_bb.ymax = -(32000L << 16);
+		max_lbearing = -32000;
+		min_descent = 32000;
 		for (i = 0; i < num_chars; i++)
 		{
 			char_index = i + first_char_index;
 			char_id = sp_get_char_id(char_index);
 			if (char_id != SP_UNDEFINED && char_id != UNDEFINED)
 			{
-				const char *ext = specs.output_mode == MODE_OUTLINE ? ".svg" : ".png";
-				infos[char_id].local_filename = g_strdup_printf("%s/%schr%04x%s", output_dir, basename, char_id, ext);
-				infos[char_id].url = g_strdup_printf("%s/%schr%04x%s", output_url, basename, char_id, ext);
-				if (!sp_make_char(char_index))
+				charinfo *c = &infos[char_id];
+				
+				if (c->char_id != UNDEFINED)
 				{
-					g_string_append_printf(errorout, "can't make char 0x%x (0x%x)\n", char_index, char_id);
+					if (debug)
+						g_string_append_printf(errorout, "char 0x%x (0x%x) already defined\n", char_index, char_id);
+				} else
+				{
+					c->char_index = char_index;
+					c->char_id = char_id;
+					update_bbox(c, &max_bb);
+					max_lbearing = MAX(max_lbearing, c->bbox.lbearing);
+					min_descent = MIN(min_descent, c->bbox.descent);
+					total_width += c->bbox.width;
+					num_glyphs++;
 				}
 			}
 		}
-		
-#if 0
-		qsort(infos, num_chars, sizeof(infos[0]), cmp_info);
-#endif
-		
-		g_string_append(body, "<table cellspacing=\"0\" cellpadding=\"0\">\n");
-		for (id = 0; id < num_ids; id += CHAR_COLUMNS)
+		if (num_glyphs == 0)
+			average_width = max_bb.width;
+		else
+			average_width = (fix15)(total_width / num_glyphs);
+		if (debug)
 		{
-			gboolean defined[CHAR_COLUMNS];
-			const char *klass;
-			const char *img[CHAR_COLUMNS];
-			static char const vert_line[] = "<td class=\"vertical_line\"></td>\n";
-			
-			if (id != 0 && (id % PAGE_SIZE) == 0)
-				g_string_append(body, "<tr><td width=\"1\" height=\"10\" style=\"padding: 0px; margin:0px;\"></td></tr>\n");
-
-			columns = CHAR_COLUMNS;
-			if ((id + columns) > num_ids)
-				columns = num_ids - id;
-			
-			if ((id % PAGE_SIZE) == 0)
-				gen_hor_line(body, columns);
-			
-			g_string_append(body, "<tr>\n");
-			for (j = 0; j < columns; j++)
-			{
-				uint16_t char_id = id + j;
-				charinfo *c = &infos[char_id];
-				
-				defined[j] = FALSE;
-				img[j] = NULL;
-				if (c->char_id != UNDEFINED)
-				{
-					defined[j] = TRUE;
-					if (c->url != NULL)
-						img[j] = c->url;
-				}
-				klass = defined[j] ? "spd_glyph_defined" : "spd_glyph_undefined";
-				
-				g_string_append(body, vert_line);
-				
-				g_string_append_printf(body,
-					"<td class=\"%s\">%x</td>\n",
-					klass,
-					id + j);
-			}				
-				
-			g_string_append(body, vert_line);
-			g_string_append(body, "</tr>\n");
-			gen_hor_line(body, columns);
-				
-			g_string_append(body, "<tr>\n");
-			for (j = 0; j < columns; j++)
-			{
-				uint16_t char_id = id + j;
-				charinfo *c = &infos[char_id];
-				
-				g_string_append(body, vert_line);
-				
-				if (img[j] != NULL)
-				{
-					uint16_t unicode;
-					char *debuginfo = NULL;
-					char *src;
-					
-					unicode = c->char_index < BICS_COUNT ? Bics2Unicode[c->char_index] : UNDEFINED;
-					if (debug)
-					{
-						debuginfo = g_strdup_printf("Width: %u Height %u&#10;Ascent: %d Descent: %d lb: %d rb: %d&#10;",
-							c->bbox.width, c->bbox.height, c->bbox.ascent, c->bbox.descent, c->bbox.lbearing, c->bbox.rbearing);
-					}
-					if (specs.output_mode == MODE_OUTLINE)
-						src = g_strdup_printf("<svg width=\"%d\" height=\"%d\"><use xlink:href=\"%s#chr%04x\" style=\"text-align: left; vertical-align: top;\"></use></svg>",
-							font_bb.width, font_bb.height,
-							img[j], char_id);
-					else
-						src = g_strdup_printf("<img alt=\"\" style=\"text-align: left; vertical-align: top; position: relative; left: %dpx; top: %dpx\" src=\"%s\">",
-							-(font_bb.lbearing - c->bbox.lbearing),
-							font_bb.ascent - c->bbox.ascent,
-							img[j]);
-					g_string_append_printf(body,
-						"<td class=\"spd_glyph_image\" style=\"width: %dpx; height: %dpx; min-width: %dpx; min-height: %dpx;\" title=\""
-						"Index: 0x%x (%u)&#10;"
-						"ID: 0x%04x&#10;"
-						"Unicode: 0x%04x &#%u;&#10;"
-						"%s&#10;"
-						"Xmin: %7.2f Ymin: %7.2f&#10;"
-						"Xmax: %7.2f Ymax: %7.2f&#10;%s"
-						"\">%s</td>",
-						font_bb.width, font_bb.height,
-						font_bb.width, font_bb.height,
-						c->char_index, c->char_index,
-						c->char_id,
-						unicode, unicode,
-						get_uniname(unicode),
-						(double)c->bbox.xmin / 65536.0,
-						(double)c->bbox.ymin / 65536.0,
-						(double)c->bbox.xmax / 65536.0,
-						(double)c->bbox.ymax / 65536.0,
-						debuginfo ? debuginfo : "",
-						src);
-					g_free(debuginfo);
-					g_free(src);
-				} else
-				{
-					g_string_append_printf(body,
-						"<td class=\"spd_glyph_image\" style=\"width: %dpx; height: %dpx;\"></td>", 0, 0);
-				}
-			}				
-				
-			g_string_append(body, vert_line);
-			g_string_append(body, "</tr>\n");
-			gen_hor_line(body, columns);
+			g_string_append_printf(errorout, "max height %d max width %d average width %d\n", max_bb.height, max_bb.width, average_width);
 		}
-		if ((id % PAGE_SIZE) != 0)
-			gen_hor_line(body, columns);
-		g_string_append(body, "</table>\n");
+		
+		max_bb.height = max_bb.ascent + max_bb.descent;
+		max_bb.width = max_bb.rbearing - max_bb.lbearing;
 
-		for (i = 0; i < num_ids; i++)
+		if (debug)
 		{
-			g_free(infos[i].local_filename);
-			g_free(infos[i].url);
+			fix15 xmin, ymin, xmax, ymax;
+			long fwidth, fheight;
+			long pixel_size = (point_size * x_res + 360) / 720;
+			
+			xmin = read_2b(font_buffer + FH_FXMIN);
+			ymin = read_2b(font_buffer + FH_FYMIN);
+			xmax = read_2b(font_buffer + FH_FXMAX);
+			ymax = read_2b(font_buffer + FH_FYMAX);
+			fwidth = xmax - xmin;
+			fwidth = fwidth * pixel_size / sp_globals.orus_per_em;
+			fheight = ymax - ymin;
+			fheight = fheight * pixel_size / sp_globals.orus_per_em;
+			g_string_append_printf(errorout, "bbox: %d %d ascent %d descent %d lb %d rb %d\n",
+				max_bb.width, max_bb.height,
+				max_bb.ascent, max_bb.descent,
+				max_bb.lbearing, max_bb.rbearing);
+			g_string_append_printf(errorout, "bbox (header): %d %d %d %d; %ld %ld %ld %ld\n",
+				xmin, ymin,
+				xmax, ymax,
+				xmin * pixel_size / sp_globals.orus_per_em,
+				ymin * pixel_size / sp_globals.orus_per_em,
+				xmax * pixel_size / sp_globals.orus_per_em,
+				ymax * pixel_size / sp_globals.orus_per_em);
 		}
-		g_free(infos);
-		infos = NULL;
-		g_free(basename);
+		
+		font_bb = max_bb;
 	}
+	
+	for (i = 0; i < num_chars; i++)
+	{
+		char_index = i + first_char_index;
+		char_id = sp_get_char_id(char_index);
+		if (char_id != SP_UNDEFINED && char_id != UNDEFINED)
+		{
+			const char *ext = specs.output_mode == MODE_OUTLINE ? ".svg" : ".png";
+			infos[char_id].local_filename = g_strdup_printf("%s/%schr%04x%s", output_dir, basename, char_id, ext);
+			infos[char_id].url = g_strdup_printf("%s/%schr%04x%s", output_url, basename, char_id, ext);
+			if (!sp_make_char(char_index))
+			{
+				g_string_append_printf(errorout, "can't make char 0x%x (0x%x)\n", char_index, char_id);
+			}
+		}
+	}
+	
+#if 0
+	qsort(infos, num_chars, sizeof(infos[0]), cmp_info);
+#endif
+	
+	page_start = body->len;
+	any_defined_page = FALSE;
+	g_string_append(body, "<table cellspacing=\"0\" cellpadding=\"0\">\n");
+	for (id = 0; id < num_ids; id += CHAR_COLUMNS)
+	{
+		gboolean defined[CHAR_COLUMNS];
+		const char *klass;
+		const char *img[CHAR_COLUMNS];
+		static char const vert_line[] = "<td class=\"vertical_line\"></td>\n";
+		
+		if (id != 0 && (id % PAGE_SIZE) == 0)
+		{
+			if (optimize_output && !any_defined_page)
+			{
+				g_string_truncate(body, page_start);
+			}
+			page_start = body->len;
+			any_defined_page = FALSE;
+			g_string_append(body, "<tr><td width=\"1\" height=\"10\" style=\"padding: 0px; margin:0px;\"></td></tr>\n");
+		}
+		
+		columns = CHAR_COLUMNS;
+		if ((id + columns) > num_ids)
+			columns = num_ids - id;
+		
+		if ((id % PAGE_SIZE) == 0)
+			gen_hor_line(body, columns);
+		
+		line_start = body->len;
+		any_defined_line = FALSE;
+		g_string_append(body, "<tr>\n");
+		for (j = 0; j < columns; j++)
+		{
+			uint16_t char_id = id + j;
+			charinfo *c = &infos[char_id];
+			
+			defined[j] = FALSE;
+			img[j] = NULL;
+			if (c->char_id != UNDEFINED)
+			{
+				defined[j] = TRUE;
+				any_defined_line |= TRUE;
+				any_defined_page |= TRUE;
+				if (c->url != NULL)
+					img[j] = c->url;
+			}
+			klass = defined[j] ? "spd_glyph_defined" : "spd_glyph_undefined";
+			
+			g_string_append(body, vert_line);
+			
+			g_string_append_printf(body,
+				"<td class=\"%s\">%x</td>\n",
+				klass,
+				id + j);
+		}				
+			
+		g_string_append(body, vert_line);
+		g_string_append(body, "</tr>\n");
+		gen_hor_line(body, columns);
+			
+		g_string_append(body, "<tr>\n");
+		for (j = 0; j < columns; j++)
+		{
+			uint16_t char_id = id + j;
+			charinfo *c = &infos[char_id];
+			
+			g_string_append(body, vert_line);
+			
+			if (img[j] != NULL)
+			{
+				uint16_t unicode;
+				char *debuginfo = NULL;
+				char *src;
+				
+				unicode = c->char_index < BICS_COUNT ? Bics2Unicode[c->char_index] : UNDEFINED;
+				if (debug)
+				{
+					debuginfo = g_strdup_printf("Width: %u Height %u&#10;Ascent: %d Descent: %d lb: %d rb: %d&#10;",
+						c->bbox.width, c->bbox.height, c->bbox.ascent, c->bbox.descent, c->bbox.lbearing, c->bbox.rbearing);
+				}
+				if (specs.output_mode == MODE_OUTLINE)
+					src = g_strdup_printf("<svg width=\"%d\" height=\"%d\"><use xlink:href=\"%s#chr%04x\" style=\"text-align: left; vertical-align: top;\"></use></svg>",
+						font_bb.width, font_bb.height,
+						img[j], char_id);
+				else
+					src = g_strdup_printf("<img alt=\"\" style=\"text-align: left; vertical-align: top; position: relative; left: %dpx; top: %dpx\" src=\"%s\">",
+						-(font_bb.lbearing - c->bbox.lbearing),
+						font_bb.ascent - c->bbox.ascent,
+						img[j]);
+				g_string_append_printf(body,
+					"<td class=\"spd_glyph_image\" style=\"width: %dpx; height: %dpx; min-width: %dpx; min-height: %dpx;\" title=\""
+					"Index: 0x%x (%u)&#10;"
+					"ID: 0x%04x&#10;"
+					"Unicode: 0x%04x &#%u;&#10;"
+					"%s&#10;"
+					"Xmin: %7.2f Ymin: %7.2f&#10;"
+					"Xmax: %7.2f Ymax: %7.2f&#10;%s"
+					"\">%s</td>",
+					font_bb.width, font_bb.height,
+					font_bb.width, font_bb.height,
+					c->char_index, c->char_index,
+					c->char_id,
+					unicode, unicode,
+					get_uniname(unicode),
+					(double)c->bbox.xmin / 65536.0,
+					(double)c->bbox.ymin / 65536.0,
+					(double)c->bbox.xmax / 65536.0,
+					(double)c->bbox.ymax / 65536.0,
+					debuginfo ? debuginfo : "",
+					src);
+				g_free(debuginfo);
+				g_free(src);
+			} else
+			{
+				g_string_append_printf(body,
+					"<td class=\"spd_glyph_image\" style=\"width: %dpx; height: %dpx;\"></td>", 0, 0);
+			}
+		}				
+			
+		g_string_append(body, vert_line);
+		g_string_append(body, "</tr>\n");
+		gen_hor_line(body, columns);
+		if (optimize_output && !any_defined_line)
+		{
+			g_string_truncate(body, line_start);
+		}	
+	}
+	if ((id % PAGE_SIZE) != 0)
+		gen_hor_line(body, columns);
+	if (optimize_output && !any_defined_page)
+		g_string_truncate(body, page_start);
+	g_string_append(body, "</table>\n");
+
+	for (i = 0; i < num_ids; i++)
+	{
+		g_free(infos[i].local_filename);
+		g_free(infos[i].url);
+	}
+	g_free(infos);
+	infos = NULL;
+	g_free(basename);
 		
 	return decode_ok;
 }

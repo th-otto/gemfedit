@@ -40,7 +40,6 @@ extern char *output_url;
 extern char *html_referer_url;
 extern GString *errorout;
 extern FILE *errorfile;
-extern size_t body_start;
 extern gboolean cgi_cached;
 extern gboolean hidemenu;
 extern gboolean debug;

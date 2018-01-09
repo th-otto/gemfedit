@@ -38,9 +38,9 @@ char *output_url;
 char *html_referer_url;
 GString *errorout;
 FILE *errorfile;
-size_t body_start;
 gboolean cgi_cached;
 
+static size_t body_start;
 static int force_crlf = FALSE;
 
 /*****************************************************************************/
