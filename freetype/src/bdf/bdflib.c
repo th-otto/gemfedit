@@ -22,13 +22,13 @@
  * THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-  /*************************************************************************/
-  /*                                                                       */
-  /*  This file is based on bdf.c,v 1.22 2000/03/16 20:08:50               */
-  /*                                                                       */
-  /*  taken from Mark Leisher's xmbdfed package                            */
-  /*                                                                       */
-  /*************************************************************************/
+/*************************************************************************/
+/*                                                                       */
+/*  This file is based on bdf.c,v 1.22 2000/03/16 20:08:50               */
+/*                                                                       */
+/*  taken from Mark Leisher's xmbdfed package                            */
+/*                                                                       */
+/*************************************************************************/
 
 
 #include <ft2bld.h>
@@ -43,21 +43,21 @@
 #include "bdferror.h"
 
 
-  /*************************************************************************/
-  /*                                                                       */
-  /* The macro FT_COMPONENT is used in trace mode.  It is an implicit      */
-  /* parameter of the FT_TRACE() and FT_ERROR() macros, used to print/log  */
-  /* messages during execution.                                            */
-  /*                                                                       */
+/*************************************************************************/
+/*                                                                       */
+/* The macro FT_COMPONENT is used in trace mode.  It is an implicit      */
+/* parameter of the FT_TRACE() and FT_ERROR() macros, used to print/log  */
+/* messages during execution.                                            */
+/*                                                                       */
 #undef  FT_COMPONENT
 #define FT_COMPONENT  trace_bdflib
 
 
-  /*************************************************************************/
-  /*                                                                       */
-  /* Default BDF font options.                                             */
-  /*                                                                       */
-  /*************************************************************************/
+/*************************************************************************/
+/*                                                                       */
+/* Default BDF font options.                                             */
+/*                                                                       */
+/*************************************************************************/
 
 
 static const bdf_options_t _bdf_opts = {
@@ -68,14 +68,14 @@ static const bdf_options_t _bdf_opts = {
 };
 
 
-  /*************************************************************************/
-  /*                                                                       */
-  /* Builtin BDF font properties.                                          */
-  /*                                                                       */
-  /*************************************************************************/
+/*************************************************************************/
+/*                                                                       */
+/* Builtin BDF font properties.                                          */
+/*                                                                       */
+/*************************************************************************/
 
-  /* List of most properties that might appear in a font.  Doesn't include */
-  /* the RAW_* and AXIS_* properties in X11R6 polymorphic fonts.           */
+/* List of most properties that might appear in a font.  Doesn't include */
+/* the RAW_* and AXIS_* properties in X11R6 polymorphic fonts.           */
 
 static const bdf_property_t _bdf_properties[] = {
 	{ "ADD_STYLE_NAME",          BDF_ATOM,     1, {0}},
@@ -166,10 +166,10 @@ static const bdf_property_t _bdf_properties[] = {
 static const unsigned long _num_bdf_properties = sizeof(_bdf_properties) / sizeof(_bdf_properties[0]);
 
 
-  /* An auxiliary macro to parse properties, to be used in conditionals. */
-  /* It behaves like `strncmp' but also tests the following character    */
-  /* whether it is a whitespace or NULL.                                 */
-  /* `property' is a constant string of length `n' to compare with.      */
+/* An auxiliary macro to parse properties, to be used in conditionals. */
+/* It behaves like `strncmp' but also tests the following character    */
+/* whether it is a whitespace or NULL.                                 */
+/* `property' is a constant string of length `n' to compare with.      */
 #define _bdf_strncmp( name, property, n )      \
           ( ft_strncmp( name, property, n ) || \
             !( name[n] == ' '  ||              \
@@ -178,7 +178,7 @@ static const unsigned long _num_bdf_properties = sizeof(_bdf_properties) / sizeo
                name[n] == '\r' ||              \
                name[n] == '\t' )            )
 
-  /* Auto correction messages. */
+/* Auto correction messages. */
 #define ACMSG1   "FONT_ASCENT property missing.  " \
                  "Added `FONT_ASCENT %hd'.\n"
 #define ACMSG2   "FONT_DESCENT property missing.  " \
@@ -200,7 +200,7 @@ static const unsigned long _num_bdf_properties = sizeof(_bdf_properties) / sizeo
 #define ACMSG16  "Glyph %ld missing columns padded with zero bits.\n"
 #define ACMSG17  "Adjusting number of glyphs to %ld.\n"
 
-  /* Error messages. */
+/* Error messages. */
 #define ERRMSG1  "[line %ld] Missing `%s' line.\n"
 #define ERRMSG2  "[line %ld] Font header corrupted or missing fields.\n"
 #define ERRMSG3  "[line %ld] Font glyphs corrupted or missing fields.\n"
@@ -211,24 +211,24 @@ static const unsigned long _num_bdf_properties = sizeof(_bdf_properties) / sizeo
 #define ERRMSG8  "[line %ld] Invalid `%s' value.\n"
 #define ERRMSG9  "[line %ld] Invalid keyword.\n"
 
-  /* Debug messages. */
+/* Debug messages. */
 #define DBGMSG1  "  [%6ld] %s"			/* no \n */
 #define DBGMSG2  " (0x%lX)\n"
 
 
-  /*************************************************************************/
-  /*                                                                       */
-  /* Utility types and functions.                                          */
-  /*                                                                       */
-  /*************************************************************************/
+/*************************************************************************/
+/*                                                                       */
+/* Utility types and functions.                                          */
+/*                                                                       */
+/*************************************************************************/
 
 
-  /* Function type for parsing lines of a BDF font. */
+/* Function type for parsing lines of a BDF font. */
 
 typedef FT_Error (*_bdf_line_func_t) (char *line, unsigned long linelen, unsigned long lineno, void *call_data, void *client_data);
 
 
-  /* List structure for splitting lines into fields. */
+/* List structure for splitting lines into fields. */
 
 typedef struct _bdf_list_t_
 {
@@ -240,7 +240,7 @@ typedef struct _bdf_list_t_
 } _bdf_list_t;
 
 
-  /* Structure used while loading BDF fonts. */
+/* Structure used while loading BDF fonts. */
 
 typedef struct _bdf_parse_t_
 {
@@ -345,7 +345,7 @@ static void _bdf_list_shift(_bdf_list_t * list, unsigned long n)
 }
 
 
-  /* An empty string for empty fields. */
+/* An empty string for empty fields. */
 
 static const char empty[1] = { 0 };		/* XXX eliminate this */
 
@@ -379,9 +379,9 @@ static char *_bdf_list_join(_bdf_list_t * list, int c, unsigned long *alen)
 }
 
 
-  /* The code below ensures that we have at least 4 + 1 `field' */
-  /* elements in `list' (which are possibly NULL) so that we    */
-  /* don't have to check the number of fields in most cases.    */
+/* The code below ensures that we have at least 4 + 1 `field' */
+/* elements in `list' (which are possibly NULL) so that we    */
+/* don't have to check the number of fields in most cases.    */
 
 static FT_Error _bdf_list_split(_bdf_list_t *list, const char *separators, char *line, unsigned long linelen)
 {
@@ -619,7 +619,7 @@ static FT_Error _bdf_readstream(FT_Stream stream, _bdf_line_func_t callback, voi
 }
 
 
-  /* XXX: make this work with EBCDIC also */
+/* XXX: make this work with EBCDIC also */
 
 static const unsigned char a2i[128] = {
 	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
@@ -650,7 +650,7 @@ static const unsigned char hdigits[32] = {
 };
 
 
-  /* Routine to convert a decimal ASCII string to an unsigned long integer. */
+/* Routine to convert a decimal ASCII string to an unsigned long integer. */
 static unsigned long _bdf_atoul(char *s)
 {
 	unsigned long v;
@@ -674,7 +674,7 @@ static unsigned long _bdf_atoul(char *s)
 }
 
 
-  /* Routine to convert a decimal ASCII string to a signed long integer. */
+/* Routine to convert a decimal ASCII string to a signed long integer. */
 static long _bdf_atol(char *s)
 {
 	long v, neg;
@@ -706,7 +706,7 @@ static long _bdf_atol(char *s)
 }
 
 
-  /* Routine to convert a decimal ASCII string to an unsigned short integer. */
+/* Routine to convert a decimal ASCII string to an unsigned short integer. */
 static unsigned short _bdf_atous(char *s)
 {
 	unsigned short v;
@@ -730,7 +730,7 @@ static unsigned short _bdf_atous(char *s)
 }
 
 
-  /* Routine to convert a decimal ASCII string to a signed short integer. */
+/* Routine to convert a decimal ASCII string to a signed short integer. */
 static short _bdf_atos(char *s)
 {
 	short v, neg;
@@ -762,7 +762,7 @@ static short _bdf_atos(char *s)
 }
 
 
-  /* Routine to compare two glyphs by encoding so they can be sorted. */
+/* Routine to compare two glyphs by encoding so they can be sorted. */
 static int by_encoding(const void *a, const void *b)
 {
 	bdf_glyph_t *c1, *c2;
@@ -824,7 +824,7 @@ static FT_Error bdf_create_property(const char *name, int format, bdf_font_t * f
 }
 
 
-FT_LOCAL_DEF(bdf_property_t *) bdf_get_property(char *name, bdf_font_t * font)
+FT_LOCAL_DEF(bdf_property_t *) bdf_get_property(const char *name, bdf_font_t * font)
 {
 	size_t *propid;
 
@@ -841,14 +841,14 @@ FT_LOCAL_DEF(bdf_property_t *) bdf_get_property(char *name, bdf_font_t * font)
 }
 
 
-  /*************************************************************************/
-  /*                                                                       */
-  /* BDF font file parsing flags and functions.                            */
-  /*                                                                       */
-  /*************************************************************************/
+/*************************************************************************/
+/*                                                                       */
+/* BDF font file parsing flags and functions.                            */
+/*                                                                       */
+/*************************************************************************/
 
 
-  /* Parse flags. */
+/* Parse flags. */
 
 #define BDF_START_      0x0001U
 #define BDF_FONT_NAME_  0x0002U
@@ -897,8 +897,8 @@ static FT_Error _bdf_add_comment(bdf_font_t * font, char *comment, unsigned long
 }
 
 
-  /* Set the spacing from the font name if it exists, or set it to the */
-  /* default specified in the options.                                 */
+/* Set the spacing from the font name if it exists, or set it to the */
+/* default specified in the options.                                 */
 static FT_Error _bdf_set_default_spacing(bdf_font_t * font, bdf_options_t * opts, unsigned long lineno)
 {
 	size_t len;
@@ -963,8 +963,8 @@ static FT_Error _bdf_set_default_spacing(bdf_font_t * font, bdf_options_t * opts
 }
 
 
-  /* Determine whether the property is an atom or not.  If it is, then */
-  /* clean it up so the double quotes are removed if they exist.       */
+/* Determine whether the property is an atom or not.  If it is, then */
+/* clean it up so the double quotes are removed if they exist.       */
 static int _bdf_is_atom(char *line, unsigned long linelen, char **name, char **value, bdf_font_t * font)
 {
 	int hold;
@@ -1175,7 +1175,7 @@ static const unsigned char nibble_mask[8] = {
 };
 
 
-  /* Actually parse the glyph info and bitmaps. */
+/* Actually parse the glyph info and bitmaps. */
 static FT_Error _bdf_parse_glyphs(char *line, unsigned long linelen, unsigned long lineno, void *call_data, void *client_data)
 {
 	int c, mask_index;
@@ -1665,7 +1665,7 @@ static FT_Error _bdf_parse_glyphs(char *line, unsigned long linelen, unsigned lo
 }
 
 
-  /* Load the font properties. */
+/* Load the font properties. */
 static FT_Error _bdf_parse_properties(char *line, unsigned long linelen, unsigned long lineno, void *call_data, void *client_data)
 {
 	unsigned long vlen;
@@ -1760,7 +1760,7 @@ static FT_Error _bdf_parse_properties(char *line, unsigned long linelen, unsigne
 }
 
 
-  /* Load the font header. */
+/* Load the font header. */
 static FT_Error _bdf_parse_start(char *line, unsigned long linelen, unsigned long lineno, void *call_data, void *client_data)
 {
 	unsigned long slen;
@@ -2050,11 +2050,11 @@ static FT_Error _bdf_parse_start(char *line, unsigned long linelen, unsigned lon
 }
 
 
-  /*************************************************************************/
-  /*                                                                       */
-  /* API.                                                                  */
-  /*                                                                       */
-  /*************************************************************************/
+/*************************************************************************/
+/*                                                                       */
+/* API.                                                                  */
+/*                                                                       */
+/*************************************************************************/
 
 
 FT_LOCAL_DEF(FT_Error) bdf_load_font(FT_Stream stream, FT_Memory extmemory, bdf_options_t * opts, bdf_font_t * *font)
@@ -2288,6 +2288,3 @@ FT_LOCAL_DEF(bdf_property_t *) bdf_get_font_property(bdf_font_t * font, const ch
 
 	return propid ? (font->props + *propid) : 0;
 }
-
-
-/* END */

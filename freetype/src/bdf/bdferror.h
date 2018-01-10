@@ -40,6 +40,3 @@
 #include <freetype/fterrors.h>
 
 #endif /* BDFERROR_H_ */
-
-
-/* END */

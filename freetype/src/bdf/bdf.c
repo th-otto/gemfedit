@@ -31,6 +31,3 @@ THE SOFTWARE.
 
 #include "bdflib.c"
 #include "bdfdrivr.c"
-
-
-/* END */

@@ -76,6 +76,3 @@ FT_END_HEADER
 
 
 #endif /* BDFDRIVR_H_ */
-
-
-/* END */

@@ -44,12 +44,12 @@ THE SOFTWARE.
 ANONYMOUS_STRUCT_DUMMY(FT_RasterRec_)
 ANONYMOUS_STRUCT_DUMMY(FT_IncrementalRec_)
 
-  /*************************************************************************/
-  /*                                                                       */
-  /* The macro FT_COMPONENT is used in trace mode.  It is an implicit      */
-  /* parameter of the FT_TRACE() and FT_ERROR() macros, used to print/log  */
-  /* messages during execution.                                            */
-  /*                                                                       */
+/*************************************************************************/
+/*                                                                       */
+/* The macro FT_COMPONENT is used in trace mode.  It is an implicit      */
+/* parameter of the FT_TRACE() and FT_ERROR() macros, used to print/log  */
+/* messages during execution.                                            */
+/*                                                                       */
 #undef  FT_COMPONENT
 #define FT_COMPONENT  trace_bdfdriver
 typedef struct BDF_CMapRec_
@@ -912,8 +912,7 @@ FT_CALLBACK_TABLE_DEF const FT_Driver_ClassRec bdf_driver_class = {
 	 NULL,								/* FT_Module_Constructor  module_init   */
 	 NULL,								/* FT_Module_Destructor   module_done   */
 	 bdf_driver_requester				/* FT_Module_Requester    get_interface */
-	 }
-	,
+	},
 
 	sizeof(BDF_FaceRec),
 	sizeof(FT_SizeRec),
@@ -935,6 +934,3 @@ FT_CALLBACK_TABLE_DEF const FT_Driver_ClassRec bdf_driver_class = {
 	BDF_Size_Request,					/* FT_Size_RequestFunc  request_size */
 	BDF_Size_Select						/* FT_Size_SelectFunc   select_size  */
 };
-
-
-/* END */
