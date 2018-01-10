@@ -547,5 +547,3 @@ while (<STDIN>)
   s/ @ ( [A-Za-z0-9_]+? ) @ / emit_diversion($1) /egx;
   print;
 }
-
-# EOF

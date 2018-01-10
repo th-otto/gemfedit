@@ -583,8 +583,7 @@ ANONYMOUS_STRUCT_DUMMY(FT_IncrementalRec_)
     FT_SERVICE_ID_POSTSCRIPT_CMAPS, &PSCMAPS_INTERFACE_GET )
 
 
-  static FT_Pointer
-  psnames_get_service( FT_Module    module,
+  FT_CALLBACK_DEF(FT_Module_Interface) psnames_get_service( FT_Module    module,
                        const char*  service_id )
   {
     /* PSCMAPS_SERVICES_GET dereferences `library' in PIC mode */
@@ -613,8 +612,7 @@ ANONYMOUS_STRUCT_DUMMY(FT_IncrementalRec_)
 #define PUT_PS_NAMES_SERVICE( a )  a
 #endif
 
-  FT_DEFINE_MODULE(
-    psnames_module_class,
+  FT_DEFINE_MODULE(psnames_module_class,
 
     0,  /* this is not a font driver, nor a renderer */
     sizeof ( FT_ModuleRec ),
@@ -626,9 +624,9 @@ ANONYMOUS_STRUCT_DUMMY(FT_IncrementalRec_)
     PUT_PS_NAMES_SERVICE(
       (void*)&PSCMAPS_INTERFACE_GET ),   /* module specific interface */
 
-    (FT_Module_Constructor)NULL,                                       /* module_init   */
-    (FT_Module_Destructor) NULL,                                       /* module_done   */
-    (FT_Module_Requester)  PUT_PS_NAMES_SERVICE( psnames_get_service ) /* get_interface */
+    NULL,                                       /* module_init   */
+    NULL,                                       /* module_done   */
+    PUT_PS_NAMES_SERVICE( psnames_get_service ) /* get_interface */
   )
 
 

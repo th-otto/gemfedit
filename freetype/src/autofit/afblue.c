@@ -22,9 +22,8 @@
 #include "aftypes.h"
 
 
-  FT_LOCAL_ARRAY_DEF( char )
-  af_blue_strings[] =
-  {
+FT_LOCAL_ARRAY_DEF( char ) af_blue_strings[] =
+{
     '\xF0', '\x9E', '\xA4', '\x8C', ' ', '\xF0', '\x9E', '\xA4', '\x85', ' ', '\xF0', '\x9E', '\xA4', '\x88', ' ', '\xF0', '\x9E', '\xA4', '\x8F', ' ', '\xF0', '\x9E', '\xA4', '\x94', ' ', '\xF0', '\x9E', '\xA4', '\x9A',  /* 𞤌 𞤅 𞤈 𞤏 𞤔 𞤚 */
     '\0',
     '\xF0', '\x9E', '\xA4', '\x82', ' ', '\xF0', '\x9E', '\xA4', '\x96',  /* 𞤂 𞤖 */
@@ -430,13 +429,12 @@
 #endif /* AF_CONFIG_OPTION_CJK                */
     '\0',
 
-  };
+};
 
 
-  /* stringsets are specific to styles */
-  FT_LOCAL_ARRAY_DEF( AF_Blue_StringRec )
-  af_blue_stringsets[] =
-  {
+/* stringsets are specific to styles */
+FT_LOCAL_ARRAY_DEF( AF_Blue_StringRec ) af_blue_stringsets[] =
+{
     { AF_BLUE_STRING_ADLAM_CAPITAL_TOP,    AF_BLUE_PROPERTY_LATIN_TOP        },
     { AF_BLUE_STRING_ADLAM_CAPITAL_BOTTOM, 0                                 },
     { AF_BLUE_STRING_ADLAM_SMALL_TOP,      AF_BLUE_PROPERTY_LATIN_TOP      |
@@ -725,4 +723,4 @@
     { AF_BLUE_STRING_MAX,        0                            },
 #endif /* AF_CONFIG_OPTION_CJK                */
 
-  };
+};

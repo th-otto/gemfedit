@@ -26,32 +26,15 @@
 
 FT_BEGIN_HEADER
 
-  FT_Error
-  af_shaper_get_coverage( AF_FaceGlobals  globals,
-                          AF_StyleClass   style_class,
-                          FT_UShort*      gstyles,
-                          FT_Bool         default_script );
+FT_Error af_shaper_get_coverage(AF_FaceGlobals globals, AF_StyleClass style_class, FT_UShort * gstyles, FT_Bool default_script);
 
+void *af_shaper_buf_create(FT_Face face);
 
-  void*
-  af_shaper_buf_create( FT_Face  face );
+void af_shaper_buf_destroy(FT_Face face, void *buf);
 
-  void
-  af_shaper_buf_destroy( FT_Face  face,
-                         void*    buf );
+const char *af_shaper_get_cluster(const char *p, AF_StyleMetrics metrics, void *buf_, unsigned int *count);
 
-  const char*
-  af_shaper_get_cluster( const char*      p,
-                         AF_StyleMetrics  metrics,
-                         void*            buf_,
-                         unsigned int*    count );
-
-  FT_UInt32
-  af_shaper_get_elem( AF_StyleMetrics  metrics,
-                      void*            buf_,
-                      unsigned int     idx,
-                      FT_Long*         x_advance,
-                      FT_Long*         y_offset );
+FT_UInt32 af_shaper_get_elem(AF_StyleMetrics metrics, void *buf_, unsigned int idx, FT_Long * x_advance, FT_Long * y_offset);
 
 FT_END_HEADER
 

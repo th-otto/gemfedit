@@ -76,7 +76,7 @@
 
 FT_BEGIN_HEADER
 
-typedef struct FT_AutoHinterRec_ *FT_AutoHinter;
+typedef FT_Module FT_AutoHinter;
 
 
 /*************************************************************************/

@@ -20,27 +20,27 @@
 #include "aftypes.h"
 
 
-  /*
-   *  We are not using `af_angle_atan' anymore, but we keep the source
-   *  code below just in case...
-   */
+/*
+ *  We are not using `af_angle_atan' anymore, but we keep the source
+ *  code below just in case...
+ */
 
 
 #if 0
 
 
-  /*
-   *  The trick here is to realize that we don't need a very accurate angle
-   *  approximation.  We are going to use the result of `af_angle_atan' to
-   *  only compare the sign of angle differences, or check whether its
-   *  magnitude is very small.
-   *
-   *  The approximation
-   *
-   *    dy * PI / (|dx|+|dy|)
-   *
-   *  should be enough, and much faster to compute.
-   */
+/*
+ *  The trick here is to realize that we don't need a very accurate angle
+ *  approximation.  We are going to use the result of `af_angle_atan' to
+ *  only compare the sign of angle differences, or check whether its
+ *  magnitude is very small.
+ *
+ *  The approximation
+ *
+ *    dy * PI / (|dx|+|dy|)
+ *
+ *  should be enough, and much faster to compute.
+ */
 FT_LOCAL_DEF(AF_Angle) af_angle_atan(FT_Fixed dx, FT_Fixed dy)
 {
 	AF_Angle angle;
@@ -76,8 +76,8 @@ FT_LOCAL_DEF(AF_Angle) af_angle_atan(FT_Fixed dx, FT_Fixed dy)
 #elif 0
 
 
-  /* the following table has been automatically generated with */
-  /* the `mather.py' Python script                             */
+/* the following table has been automatically generated with */
+/* the `mather.py' Python script                             */
 
 #define AF_ATAN_BITS  8
 
@@ -121,7 +121,6 @@ FT_LOCAL_DEF(AF_Angle) af_angle_atan(FT_Fixed dx, FT_Fixed dy)
 {
 	AF_Angle angle;
 
-
 	/* check trivial cases */
 	if (dy == 0)
 	{
@@ -148,7 +147,6 @@ FT_LOCAL_DEF(AF_Angle) af_angle_atan(FT_Fixed dx, FT_Fixed dy)
 	if (dy < 0)
 	{
 		FT_Pos tmp;
-
 
 		tmp = dx;
 		dx = -dy;
@@ -178,10 +176,8 @@ FT_LOCAL_DEF(AF_Angle) af_angle_atan(FT_Fixed dx, FT_Fixed dy)
 
 FT_LOCAL_DEF(void) af_sort_pos(FT_UInt count, FT_Pos * table)
 {
-	FT_UInt i,
-	 j;
+	FT_UInt i, j;
 	FT_Pos swap;
-
 
 	for (i = 1; i < count; i++)
 	{
@@ -200,13 +196,11 @@ FT_LOCAL_DEF(void) af_sort_pos(FT_UInt count, FT_Pos * table)
 
 FT_LOCAL_DEF(void) af_sort_and_quantize_widths(FT_UInt * count, AF_Width table, FT_Pos threshold)
 {
-	FT_UInt i,
-	 j;
+	FT_UInt i, j;
 	FT_UInt cur_idx;
 	FT_Pos cur_val;
 	FT_Pos sum;
 	AF_WidthRec swap;
-
 
 	if (*count == 1)
 		return;

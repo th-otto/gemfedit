@@ -48,32 +48,16 @@
 
 
 #ifdef FT_DEBUG_AUTOFIT
-  /* these variables, structures, and declarations are for  */
-  /* communication with the debugger in the autofit module; */
-  /* normal programs don't need this                        */
+/* these variables, structures, and declarations are for  */
+/* communication with the debugger in the autofit module; */
+/* normal programs don't need this                        */
 struct AF_GlyphHintsRec_;
 typedef struct AF_GlyphHintsRec_ *AF_GlyphHints;
 
-extern int _af_debug_disable_horz_hints;
-extern int _af_debug_disable_vert_hints;
-extern int _af_debug_disable_blue_hints;
-extern AF_GlyphHints _af_debug_hints;
+#include "../src/autofit/aftypes.h"
+#include "../src/autofit/afmodule.h"
 
-#ifdef __cplusplus
-extern "C" {
 #endif
-void af_glyph_hints_dump_segments(AF_GlyphHints hints, FT_Bool to_stdout);
-void af_glyph_hints_dump_points(AF_GlyphHints hints, FT_Bool to_stdout);
-void af_glyph_hints_dump_edges(AF_GlyphHints hints, FT_Bool to_stdout);
-FT_Error af_glyph_hints_get_num_segments(AF_GlyphHints hints, FT_Int dimension, FT_Int *num_segments);
-FT_Error af_glyph_hints_get_segment_offset(AF_GlyphHints hints,
-									 FT_Int dimension,
-									 FT_Int idx, FT_Pos *offset, FT_Bool *is_blue, FT_Pos *blue_offset);
-#ifdef __cplusplus
-}
-#endif
-
-#endif									/* FT_DEBUG_AUTOFIT */
 
 
 #define BUFSIZE  256

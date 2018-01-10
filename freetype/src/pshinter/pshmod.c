@@ -40,8 +40,9 @@ ANONYMOUS_STRUCT_DUMMY(FT_RasterRec_)
 
   /* finalize module */
   FT_CALLBACK_DEF( void )
-  ps_hinter_done( PS_Hinter_Module  module )
+  ps_hinter_done( FT_Module  module_ )
   {
+    PS_Hinter_Module  module = (PS_Hinter_Module) module_;
     module->t1_funcs.hints = NULL;
     module->t2_funcs.hints = NULL;
 
@@ -51,8 +52,9 @@ ANONYMOUS_STRUCT_DUMMY(FT_RasterRec_)
 
   /* initialize module, create hints recorder and the interface */
   FT_CALLBACK_DEF( FT_Error )
-  ps_hinter_init( PS_Hinter_Module  module )
+  ps_hinter_init( FT_Module  module_ )
   {
+    PS_Hinter_Module  module = (PS_Hinter_Module) module_;
     FT_Memory  memory = module->root.memory;
     void*      ph     = &module->ps_hints;
 
@@ -104,9 +106,7 @@ ANONYMOUS_STRUCT_DUMMY(FT_RasterRec_)
   )
 
 
-  FT_DEFINE_MODULE(
-    pshinter_module_class,
-
+  FT_DEFINE_MODULE(pshinter_module_class,
     0,
     sizeof ( PS_Hinter_ModuleRec ),
     "pshinter",
@@ -115,9 +115,7 @@ ANONYMOUS_STRUCT_DUMMY(FT_RasterRec_)
 
     &PSHINTER_INTERFACE_GET,              /* module-specific interface */
 
-    (FT_Module_Constructor)ps_hinter_init,  /* module_init   */
-    (FT_Module_Destructor) ps_hinter_done,  /* module_done   */
-    (FT_Module_Requester)  NULL             /* get_interface */
+    ps_hinter_init,  /* module_init   */
+    ps_hinter_done,  /* module_done   */
+    NULL             /* get_interface */
   )
-
-/* END */

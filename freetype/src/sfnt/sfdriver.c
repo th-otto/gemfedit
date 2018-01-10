@@ -1280,8 +1280,7 @@
   )
 
 
-  FT_DEFINE_MODULE(
-    sfnt_module_class,
+  FT_DEFINE_MODULE(sfnt_module_class,
 
     0,  /* not a font driver or renderer */
     sizeof ( FT_ModuleRec ),
@@ -1292,10 +1291,7 @@
 
     (const void*)&SFNT_INTERFACE_GET,  /* module specific interface */
 
-    (FT_Module_Constructor)NULL,               /* module_init   */
-    (FT_Module_Destructor) NULL,               /* module_done   */
-    (FT_Module_Requester)  sfnt_get_interface  /* get_interface */
+    NULL,               /* module_init   */
+    NULL,               /* module_done   */
+    sfnt_get_interface  /* get_interface */
   )
-
-
-/* END */

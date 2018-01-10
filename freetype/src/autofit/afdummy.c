@@ -22,54 +22,40 @@
 #include "aferrors.h"
 
 
-  static FT_Error
-  af_dummy_hints_init( AF_GlyphHints    hints,
-                       AF_StyleMetrics  metrics )
-  {
-    af_glyph_hints_rescale( hints, metrics );
+static FT_Error af_dummy_hints_init(AF_GlyphHints hints, AF_StyleMetrics metrics)
+{
+	af_glyph_hints_rescale(hints, metrics);
 
-    hints->x_scale = metrics->scaler.x_scale;
-    hints->y_scale = metrics->scaler.y_scale;
-    hints->x_delta = metrics->scaler.x_delta;
-    hints->y_delta = metrics->scaler.y_delta;
+	hints->x_scale = metrics->scaler.x_scale;
+	hints->y_scale = metrics->scaler.y_scale;
+	hints->x_delta = metrics->scaler.x_delta;
+	hints->y_delta = metrics->scaler.y_delta;
 
-    return FT_Err_Ok;
-  }
+	return FT_Err_Ok;
+}
 
 
-  static FT_Error
-  af_dummy_hints_apply( FT_UInt32      glyph_index,
-                        AF_GlyphHints  hints,
-                        FT_Outline*    outline )
-  {
-    FT_Error  error;
+static FT_Error af_dummy_hints_apply(FT_UInt32 glyph_index, AF_GlyphHints hints, FT_Outline *outline, AF_StyleMetrics metrics)
+{
+	FT_Error error;
 
-    FT_UNUSED( glyph_index );
+	FT_UNUSED(glyph_index);
+	FT_UNUSED(metrics);
 
+	error = af_glyph_hints_reload(hints, outline);
+	if (!error)
+		af_glyph_hints_save(hints, outline);
 
-    error = af_glyph_hints_reload( hints, outline );
-    if ( !error )
-      af_glyph_hints_save( hints, outline );
-
-    return error;
-  }
+	return error;
+}
 
 
-  AF_DEFINE_WRITING_SYSTEM_CLASS(
-    af_dummy_writing_system_class,
-
-    AF_WRITING_SYSTEM_DUMMY,
-
-    sizeof ( AF_StyleMetricsRec ),
-
-    (AF_WritingSystem_InitMetricsFunc) NULL,                /* style_metrics_init    */
-    (AF_WritingSystem_ScaleMetricsFunc)NULL,                /* style_metrics_scale   */
-    (AF_WritingSystem_DoneMetricsFunc) NULL,                /* style_metrics_done    */
-    (AF_WritingSystem_GetStdWidthsFunc)NULL,                /* style_metrics_getstdw */
-
-    (AF_WritingSystem_InitHintsFunc)   af_dummy_hints_init, /* style_hints_init      */
-    (AF_WritingSystem_ApplyHintsFunc)  af_dummy_hints_apply /* style_hints_apply     */
-  )
-
-
-/* END */
+AF_DEFINE_WRITING_SYSTEM_CLASS(af_dummy_writing_system_class, AF_WRITING_SYSTEM_DUMMY,
+	sizeof(AF_StyleMetricsRec),
+	NULL,	/* style_metrics_init    */
+	NULL,	/* style_metrics_scale   */
+	NULL,	/* style_metrics_done    */
+	NULL,	/* style_metrics_getstdw */
+	af_dummy_hints_init,	/* style_hints_init      */
+	af_dummy_hints_apply	/* style_hints_apply     */
+)

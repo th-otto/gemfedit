@@ -38,6 +38,3 @@ ANONYMOUS_STRUCT_DUMMY(FT_IncrementalRec_)
 #include "afranges.c"
 #include "afshaper.c"
 #include "afwarp.c"
-
-
-/* END */

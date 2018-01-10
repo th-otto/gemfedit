@@ -652,7 +652,7 @@ FT_EXPORT_DEF(FT_Error) FT_Load_Glyph(FT_Face face, FT_UInt32 glyph_index, FT_In
 			/* load auto-hinted outline */
 			hinting = (FT_AutoHinter_Interface) hinter->clazz->module_interface;
 
-			error = hinting->load_glyph((FT_AutoHinter) hinter, slot, face->size, glyph_index, load_flags);
+			error = hinting->load_glyph(hinter, slot, face->size, glyph_index, load_flags);
 
 			internal->transform_flags = transform_flags;
 		}

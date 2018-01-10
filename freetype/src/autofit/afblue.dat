@@ -1061,6 +1061,3 @@ AF_BLUE_STRINGSET_ENUM AF_BLUE_STRINGSETS_ARRAY AF_BLUE_STRINGSET_MAX_LEN:
     { AF_BLUE_STRING_MAX,        0                            }
 
 #endif /* AF_CONFIG_OPTION_CJK                */
-
-
-// END
