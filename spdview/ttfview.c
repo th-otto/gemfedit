@@ -12,6 +12,7 @@
 #include "cgic.h"
 #include "vdimaps.h"
 #include "cgiutil.h"
+#include "ucd.h"
 #include "version.h"
 
 char const gl_program_name[] = "ttfview.cgi";
@@ -636,7 +637,7 @@ static gboolean gen_ttf_font(GString *body)
 					c->char_index, c->char_index,
 					(unsigned long)c->char_id,
 					(unsigned long)unicode, (unsigned long)unicode,
-					get_uniname(unicode),
+					ucd_get_name(unicode),
 					(double)c->bbox.xmin / 65536.0,
 					(double)c->bbox.ymin / 65536.0,
 					(double)c->bbox.xmax / 65536.0,

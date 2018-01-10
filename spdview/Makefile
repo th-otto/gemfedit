@@ -14,11 +14,11 @@ PROGRAMS = spdview.cgi ttfview.cgi
 
 all: $(PROGRAMS)
 
-spdview.cgi: spdview.o cgic.o glib.o $(SPDLIB) writepng.o cgiutil.o
+spdview.cgi: spdview.o cgic.o glib.o $(SPDLIB) writepng.o cgiutil.o ucd.o
 	$(CC) $(CFLAGS) $(LDFLAGS) $^ $(LIBS) -o $@
 	cp $@ ../www
 
-ttfview.cgi: ttfview.o cgic.o glib.o $(TTFLIB) writepng.o cgiutil.o
+ttfview.cgi: ttfview.o cgic.o glib.o $(TTFLIB) writepng.o cgiutil.o ucd.o
 	$(CC) $(CFLAGS) $(LDFLAGS) $^ -L../freetype -lttf -lbz2 $(LIBS) -o $@
 	cp $@ ../www
 

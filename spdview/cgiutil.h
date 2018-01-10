@@ -60,7 +60,6 @@ gboolean html_out_stylesheet(GString *out);
 gboolean html_out_javascript(GString *out);
 void html_out_header(GString *out, GString *font_info, const char *title, gboolean for_error);
 void html_out_trailer(GString *out, gboolean for_error);
-const char *get_uniname(uint16_t unicode);
 gboolean uri_has_scheme(const char *uri);
 void html_out_response_header(FILE *out, unsigned long len);
 const char *currdate(void);

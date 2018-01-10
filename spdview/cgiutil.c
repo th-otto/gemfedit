@@ -4,7 +4,6 @@
 #include <utime.h>
 #include <unistd.h>
 #include "cgic.h"
-#include "ucbycode.h"
 #include "cgiutil.h"
 #include "version.h"
 
@@ -648,29 +647,6 @@ void html_out_trailer(GString *out, gboolean for_error)
 	
 	g_string_append(out, "</body>\n");
 	g_string_append(out, "</html>\n");
-}
-
-/* ------------------------------------------------------------------------- */
-
-const char *get_uniname(uint16_t unicode)
-{
-	size_t a, b, c;
-	const struct ucd *p;
-	
-	a = 0;
-	b = sizeof(ucd_bycode) / sizeof(ucd_bycode[0]);
-	while (a < b)
-	{
-		c = (a + b) >> 1;				/* == ((a + b) / 2) */
-		p = &ucd_bycode[c];
-		if (p->code == unicode)
-			return p->name;
-		if (p->code > unicode)
-			b = c;
-		else
-			a = c + 1;
-	}
-	return "UNDEFINED";
 }
 
 /* ------------------------------------------------------------------------- */

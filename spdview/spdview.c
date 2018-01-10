@@ -10,6 +10,7 @@
 #include "vdimaps.h"
 #include "bics2uni.h"
 #include "cgiutil.h"
+#include "ucd.h"
 #include "version.h"
 
 char const gl_program_name[] = "spdview.cgi";
@@ -948,7 +949,7 @@ static gboolean gen_speedo_font(GString *body)
 					c->char_index, c->char_index,
 					c->char_id,
 					unicode, unicode,
-					get_uniname(unicode),
+					ucd_get_name(unicode),
 					(double)c->bbox.xmin / 65536.0,
 					(double)c->bbox.ymin / 65536.0,
 					(double)c->bbox.xmax / 65536.0,
