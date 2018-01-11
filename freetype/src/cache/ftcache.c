@@ -31,6 +31,3 @@ ANONYMOUS_STRUCT_DUMMY(FT_IncrementalRec_)
 #include "ftcmanag.c"
 #include "ftcmru.c"
 #include "ftcsbits.c"
-
-
-/* END */
