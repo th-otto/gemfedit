@@ -29,6 +29,3 @@ ANONYMOUS_STRUCT_DUMMY(FT_IncrementalRec_)
 #include "cidobjs.c"
 #include "cidparse.c"
 #include "cidriver.c"
-
-
-/* END */
