@@ -39,13 +39,9 @@ FT_BEGIN_HEADER
 #error "this module does not support PIC yet"
 #endif
 
-
-  FT_EXPORT_VAR( const FT_Module_Class )  gxv_module_class;
+FT_EXPORT_VAR(const FT_Module_Class) gxv_module_class;
 
 
 FT_END_HEADER
 
 #endif /* GXVMOD_H_ */
-
-
-/* END */

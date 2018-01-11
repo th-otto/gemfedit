@@ -25,12 +25,12 @@
 /***************************************************************************/
 
 
-  /*************************************************************************/
-  /*                                                                       */
-  /* This file is used to define the OpenType validation module error      */
-  /* enumeration constants.                                                */
-  /*                                                                       */
-  /*************************************************************************/
+/*************************************************************************/
+/*                                                                       */
+/* This file is used to define the OpenType validation module error      */
+/* enumeration constants.                                                */
+/*                                                                       */
+/*************************************************************************/
 
 #ifndef GXVERROR_H_
 #define GXVERROR_H_
@@ -46,6 +46,3 @@
 #include <freetype/fterrors.h>
 
 #endif /* GXVERROR_H_ */
-
-
-/* END */

@@ -31,7 +31,7 @@
 #include <ft2build.h>
 #include <freetype/freetype.h>
 
-#include "gxverror.h"          /* must come before <freetype/internal/ftvalid.h> */
+#include "gxverror.h"					/* must come before <freetype/internal/ftvalid.h> */
 
 #include <freetype/internal/ftvalid.h>
 #include <freetype/internal/ftstream.h>
@@ -39,70 +39,21 @@
 
 FT_BEGIN_HEADER
 
-
-  FT_LOCAL( void )
-  gxv_feat_validate( FT_Bytes      table,
-                     FT_Face       face,
-                     FT_Validator  valid );
+FT_LOCAL(void) gxv_feat_validate(FT_Bytes table, FT_Face face, FT_Validator valid);
+FT_LOCAL(void) gxv_bsln_validate(FT_Bytes table, FT_Face face, FT_Validator valid);
 
 
-  FT_LOCAL( void )
-  gxv_bsln_validate( FT_Bytes      table,
-                     FT_Face       face,
-                     FT_Validator  valid );
-
-
-  FT_LOCAL( void )
-  gxv_trak_validate( FT_Bytes      table,
-                     FT_Face       face,
-                     FT_Validator  valid );
-
-  FT_LOCAL( void )
-  gxv_just_validate( FT_Bytes      table,
-                     FT_Face       face,
-                     FT_Validator  valid );
-
-  FT_LOCAL( void )
-  gxv_mort_validate( FT_Bytes      table,
-                     FT_Face       face,
-                     FT_Validator  valid );
-
-  FT_LOCAL( void )
-  gxv_morx_validate( FT_Bytes      table,
-                     FT_Face       face,
-                     FT_Validator  valid );
-
-  FT_LOCAL( void )
-  gxv_kern_validate( FT_Bytes      table,
-                     FT_Face       face,
-                     FT_Validator  valid );
-
-  FT_LOCAL( void )
-  gxv_kern_validate_classic( FT_Bytes      table,
-                             FT_Face       face,
-                             FT_Int        dialect_flags,
-                             FT_Validator  valid );
-
-  FT_LOCAL( void )
-  gxv_opbd_validate( FT_Bytes      table,
-                     FT_Face       face,
-                     FT_Validator  valid );
-
-  FT_LOCAL( void )
-  gxv_prop_validate( FT_Bytes      table,
-                     FT_Face       face,
-                     FT_Validator  valid );
-
-  FT_LOCAL( void )
-  gxv_lcar_validate( FT_Bytes      table,
-                     FT_Face       face,
-                     FT_Validator  valid );
+FT_LOCAL(void) gxv_trak_validate(FT_Bytes table, FT_Face face, FT_Validator valid);
+FT_LOCAL(void) gxv_just_validate(FT_Bytes table, FT_Face face, FT_Validator valid);
+FT_LOCAL(void) gxv_mort_validate(FT_Bytes table, FT_Face face, FT_Validator valid);
+FT_LOCAL(void) gxv_morx_validate(FT_Bytes table, FT_Face face, FT_Validator valid);
+FT_LOCAL(void) gxv_kern_validate(FT_Bytes table, FT_Face face, FT_Validator valid);
+FT_LOCAL(void) gxv_kern_validate_classic(FT_Bytes table, FT_Face face, FT_Int dialect_flags, FT_Validator valid);
+FT_LOCAL(void) gxv_opbd_validate(FT_Bytes table, FT_Face face, FT_Validator valid);
+FT_LOCAL(void) gxv_prop_validate(FT_Bytes table, FT_Face face, FT_Validator valid);
+FT_LOCAL(void) gxv_lcar_validate(FT_Bytes table, FT_Face face, FT_Validator valid);
 
 
 FT_END_HEADER
 
-
 #endif /* GXVALID_H_ */
-
-
-/* END */

@@ -46,6 +46,3 @@ ANONYMOUS_STRUCT_DUMMY(FT_IncrementalRec_)
 #include "gxvopbd.c"
 #include "gxvprop.c"
 #include "gxvtrak.c"
-
-
-/* END */
