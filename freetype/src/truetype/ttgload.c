@@ -263,7 +263,7 @@
   TT_Access_Glyph_Frame( TT_Loader  loader,
                          FT_UInt32  glyph_index,
                          FT_ULong   offset,
-                         FT_UInt    byte_count )
+                         FT_ULong    byte_count )
   {
     FT_Error   error;
     FT_Stream  stream = loader->stream;
@@ -1512,7 +1512,7 @@
 
 #endif /* FT_CONFIG_OPTION_INCREMENTAL */
 
-      offset = tt_face_get_location( face, glyph_index,
+      offset = tt_face_get_location( &face->root, glyph_index,
                                      &loader->byte_len );
 
     if ( loader->byte_len > 0 )
@@ -1905,7 +1905,7 @@
         FT_UInt      num_base_subgs = gloader->base.num_subglyphs;
 
         FT_Stream    old_stream     = loader->stream;
-        FT_UInt      old_byte_len   = loader->byte_len;
+        FT_ULong     old_byte_len   = loader->byte_len;
 
 
         FT_GlyphLoader_Add( gloader );

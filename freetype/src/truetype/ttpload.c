@@ -193,10 +193,11 @@
 
 
   FT_LOCAL_DEF( FT_ULong )
-  tt_face_get_location( TT_Face   face,
-                        FT_ULong  gindex,
-                        FT_UInt  *asize )
+  tt_face_get_location( FT_Face   face_,
+                        FT_UInt32  gindex,
+                        FT_ULong  *asize )
   {
+    TT_Face   face = (TT_Face)face_;
     FT_ULong  pos1, pos2;
     FT_Byte*  p;
     FT_Byte*  p_limit;
@@ -278,9 +279,9 @@
     /* We get (intentionally) a wrong, non-zero result in case the  */
     /* `glyf' table is missing.                                     */
     if ( pos2 >= pos1 )
-      *asize = (FT_UInt)( pos2 - pos1 );
+      *asize = pos2 - pos1;
     else
-      *asize = (FT_UInt)( face->glyf_len - pos1 );
+      *asize = face->glyf_len - pos1;
 
     return pos1;
   }

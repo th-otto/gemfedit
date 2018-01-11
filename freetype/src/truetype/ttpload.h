@@ -32,9 +32,9 @@ FT_BEGIN_HEADER
                      FT_Stream  stream );
 
   FT_LOCAL( FT_ULong )
-  tt_face_get_location( TT_Face   face,
-                        FT_ULong   gindex,
-                        FT_UInt  *asize );
+  tt_face_get_location( FT_Face   face,
+                        FT_UInt32   gindex,
+                        FT_ULong  *asize );
 
   FT_LOCAL( void )
   tt_face_done_loca( TT_Face  face );

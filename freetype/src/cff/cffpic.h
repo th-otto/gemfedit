@@ -53,22 +53,22 @@
 
 FT_BEGIN_HEADER
 
-  typedef struct  CffModulePIC_
-  {
-    FT_ServiceDescRec*               cff_services;
-    CFF_Field_Handler*               cff_field_handlers;
-    FT_Service_PsInfoRec             cff_service_ps_info;
-    FT_Service_GlyphDictRec          cff_service_glyph_dict;
-    FT_Service_PsFontNameRec         cff_service_ps_name;
-    FT_Service_TTCMapsRec            cff_service_get_cmap_info;
-    FT_Service_CIDRec                cff_service_cid_info;
-    FT_Service_PropertiesRec         cff_service_properties;
-    FT_Service_MultiMastersRec       cff_service_multi_masters;
-    FT_Service_MetricsVariationsRec  cff_service_metrics_variations;
-    FT_CMap_ClassRec                 cff_cmap_encoding_class_rec;
-    FT_CMap_ClassRec                 cff_cmap_unicode_class_rec;
+typedef struct CffModulePIC_
+{
+	FT_ServiceDescRec *cff_services;
+	CFF_Field_Handler *cff_field_handlers;
+	FT_Service_PsInfoRec cff_service_ps_info;
+	FT_Service_GlyphDictRec cff_service_glyph_dict;
+	FT_Service_PsFontNameRec cff_service_ps_name;
+	FT_Service_TTCMapsRec cff_service_get_cmap_info;
+	FT_Service_CIDRec cff_service_cid_info;
+	FT_Service_PropertiesRec cff_service_properties;
+	FT_Service_MultiMastersRec cff_service_multi_masters;
+	FT_Service_MetricsVariationsRec cff_service_metrics_variations;
+	FT_CMap_ClassRec cff_cmap_encoding_class_rec;
+	FT_CMap_ClassRec cff_cmap_unicode_class_rec;
 
-  } CffModulePIC;
+} CffModulePIC;
 
 
 #define GET_PIC( lib )                                    \
@@ -100,11 +100,9 @@ FT_BEGIN_HEADER
           ( GET_PIC( library )->cff_field_handlers )
 
   /* see cffpic.c for the implementation */
-  void
-  cff_driver_class_pic_free( FT_Library  library );
+void cff_driver_class_pic_free(FT_Library library);
 
-  FT_Error
-  cff_driver_class_pic_init( FT_Library  library );
+FT_Error cff_driver_class_pic_init(FT_Library library);
 
 FT_END_HEADER
 

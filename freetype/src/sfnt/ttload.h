@@ -46,7 +46,7 @@ FT_BEGIN_HEADER
 
 
   FT_LOCAL( FT_Error )
-  tt_face_load_any( TT_Face    face,
+  tt_face_load_any( FT_Face    face,
                     FT_ULong   tag,
                     FT_Long    offset,
                     FT_Byte*   buffer,

@@ -26,13 +26,18 @@
 
 FT_BEGIN_HEADER
 
+FT_DECLARE_DRIVER(cff_driver_class)
 
-  FT_DECLARE_DRIVER( cff_driver_class )
-
+#ifdef FT_CONFIG_OPTION_PIC
+FT_Error FT_Create_Class_cff_services(FT_Library library, FT_ServiceDescRec ** output_class);
+void FT_Destroy_Class_cff_services(FT_Library library, FT_ServiceDescRec * clazz);
+void FT_Init_Class_cff_service_ps_info(FT_Library library, FT_Service_PsInfoRec * clazz);
+void FT_Init_Class_cff_service_glyph_dict(FT_Library library, FT_Service_GlyphDictRec * clazz);
+void FT_Init_Class_cff_service_ps_name(FT_Library library, FT_Service_PsFontNameRec * clazz);
+void FT_Init_Class_cff_service_get_cmap_info(FT_Library library, FT_Service_TTCMapsRec * clazz);
+void FT_Init_Class_cff_service_cid_info(FT_Library library, FT_Service_CIDRec * clazz);
+#endif
 
 FT_END_HEADER
 
 #endif /* CFFDRIVER_H_ */
-
-
-/* END */

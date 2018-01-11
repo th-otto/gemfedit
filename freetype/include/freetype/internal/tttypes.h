@@ -1017,7 +1017,7 @@ typedef FT_Error(*TT_Loader_GotoTableFunc) (TT_Face face, FT_ULong tag, FT_Strea
 /*    but alternative formats (e.g. compressed ones) might use something */
 /*    different.                                                         */
 /*                                                                       */
-typedef FT_Error (*TT_Loader_StartGlyphFunc) (TT_Loader loader, FT_UInt32 glyph_index, FT_ULong offset, FT_UInt byte_count);
+typedef FT_Error (*TT_Loader_StartGlyphFunc) (TT_Loader loader, FT_UInt32 glyph_index, FT_ULong offset, FT_ULong byte_count);
 
 
 /*************************************************************************/
@@ -1613,7 +1613,7 @@ typedef struct TT_LoaderRec_
 	FT_UInt32 glyph_index;
 
 	FT_Stream stream;
-	FT_UInt byte_len;
+	FT_ULong byte_len;
 
 	FT_Short n_contours;
 	FT_BBox bbox;

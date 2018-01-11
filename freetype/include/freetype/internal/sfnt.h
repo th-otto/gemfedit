@@ -157,7 +157,8 @@ typedef void (*TT_Done_Face_Func) (TT_Face face);
 /* <Return>                                                              */
 /*    TrueType error code.  0 means success.                             */
 /*                                                                       */
-typedef FT_Error(*TT_Load_Any_Func) (TT_Face face, FT_ULong tag, FT_Long offset, FT_Byte * buffer, FT_ULong * length);
+/* must be same as FT_SFNT_TableLoadFunc */
+typedef FT_Error(*TT_Load_Any_Func) (FT_Face face, FT_ULong tag, FT_Long offset, FT_Byte * buffer, FT_ULong * length);
 
 
 /*************************************************************************/

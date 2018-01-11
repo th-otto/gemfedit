@@ -58,11 +58,12 @@
    */
 
   static FT_Error
-  t42_get_glyph_name( T42_Face    face,
+  t42_get_glyph_name( FT_Face    face_,
                       FT_UInt32   glyph_index,
                       FT_Pointer  buffer,
                       FT_UInt     buffer_max )
   {
+	T42_Face face = (T42_Face) face_;
     FT_STRCPYN( buffer, face->type1.glyph_names[glyph_index], buffer_max );
 
     return FT_Err_Ok;
@@ -70,9 +71,10 @@
 
 
   static FT_UInt
-  t42_get_name_index( T42_Face    face,
+  t42_get_name_index( FT_Face    face_,
                       FT_String*  glyph_name )
   {
+	T42_Face face = (T42_Face) face_;
     FT_Int  i;
 
 
@@ -92,8 +94,8 @@
 
   static const FT_Service_GlyphDictRec  t42_service_glyph_dict =
   {
-    (FT_GlyphDict_GetNameFunc)  t42_get_glyph_name,    /* get_name   */
-    (FT_GlyphDict_NameIndexFunc)t42_get_name_index     /* name_index */
+    t42_get_glyph_name,    /* get_name   */
+    t42_get_name_index     /* name_index */
   };
 
 

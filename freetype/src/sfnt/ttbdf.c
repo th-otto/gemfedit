@@ -138,10 +138,11 @@
 
 
   FT_LOCAL_DEF( FT_Error )
-  tt_face_find_bdf_prop( TT_Face           face,
+  tt_face_find_bdf_prop( FT_Face           face_,
                          const char*       property_name,
                          BDF_PropertyRec  *aprop )
   {
+    TT_Face       face = (TT_Face)face_;
     TT_BDF     bdf   = &face->bdf;
     FT_Size    size  = FT_FACE(face)->size;
     FT_Error   error = FT_Err_Ok;

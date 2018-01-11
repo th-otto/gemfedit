@@ -466,7 +466,7 @@
     FT_Bool   result = FALSE;
 
     TT_Face   face = (TT_Face)ttface;
-    FT_UInt   asize;
+    FT_ULong   asize;
     FT_ULong  i;
     FT_UInt32 glyph_index = 0;
     FT_UInt   count       = 0;
@@ -474,7 +474,7 @@
 
     for( i = 0; i < face->num_locations; i++ )
     {
-      tt_face_get_location( face, i, &asize );
+      tt_face_get_location( &face->root, i, &asize );
       if ( asize > 0 )
       {
         count += 1;

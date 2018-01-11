@@ -542,7 +542,7 @@ ANONYMOUS_STRUCT_DUMMY(FT_IncrementalRec_)
   FT_DEFINE_SERVICE_TTGLYFREC(
     tt_service_truetype_glyf,
 
-    (TT_Glyf_GetLocationFunc)tt_face_get_location      /* get_location */
+    tt_face_get_location      /* get_location */
   )
 
 

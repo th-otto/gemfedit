@@ -537,12 +537,13 @@
   /*    FreeType error code.  0 means success.                             */
   /*                                                                       */
   FT_LOCAL_DEF( FT_Error )
-  tt_face_load_any( TT_Face    face,
+  tt_face_load_any( FT_Face    face_,
                     FT_ULong   tag,
                     FT_Long    offset,
                     FT_Byte*   buffer,
                     FT_ULong*  length )
   {
+    TT_Face    face = (TT_Face)face_;
     FT_Error   error;
     FT_Stream  stream;
     TT_Table   table;

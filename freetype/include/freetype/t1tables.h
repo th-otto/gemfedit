@@ -84,11 +84,11 @@ FT_BEGIN_HEADER
 /*                                                                       */
 typedef struct PS_FontInfoRec_
 {
-	FT_String *version;
-	FT_String *notice;
-	FT_String *full_name;
-	FT_String *family_name;
-	FT_String *weight;
+	const FT_String *version;
+	const FT_String *notice;
+	const FT_String *full_name;
+	const FT_String *family_name;
+	const FT_String *weight;
 	FT_Long italic_angle;
 	FT_Bool is_fixed_pitch;
 	FT_Short underline_position;

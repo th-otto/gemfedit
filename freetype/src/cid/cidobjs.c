@@ -372,13 +372,13 @@ ANONYMOUS_STRUCT_DUMMY(PSH_GlobalsRec_)
 
       /* get style name -- be careful, some broken fonts only */
       /* have a /FontName dictionary entry!                   */
-      cidface->family_name = info->family_name;
+      cidface->family_name = (FT_String *)info->family_name;
       /* assume "Regular" style if we don't know better */
       cidface->style_name = "Regular";
       if ( cidface->family_name )
       {
-        char*  full   = info->full_name;
-        char*  family = cidface->family_name;
+        const char*  full   = info->full_name;
+        const char*  family = cidface->family_name;
 
 
         if ( full )

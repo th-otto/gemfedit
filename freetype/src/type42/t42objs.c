@@ -239,13 +239,13 @@
 
     /* get style name -- be careful, some broken fonts only */
     /* have a `/FontName' dictionary entry!                 */
-    root->family_name = info->family_name;
+    root->family_name = (FT_String *)info->family_name;
     /* assume "Regular" style if we don't know better */
     root->style_name = "Regular";
     if ( root->family_name )
     {
-      char*  full   = info->full_name;
-      char*  family = root->family_name;
+      const char*  full   = info->full_name;
+      const char*  family = root->family_name;
 
 
       if ( full )

@@ -32,6 +32,7 @@ FT_BEGIN_HEADER
 /*
  * Used to implement FT_Load_Sfnt_Table().
  */
+/* must be same as TT_Load_Any_Func */
 typedef FT_Error (*FT_SFNT_TableLoadFunc) (FT_Face face, FT_ULong tag, FT_Long offset, FT_Byte * buffer, FT_ULong * length);
 
 /*

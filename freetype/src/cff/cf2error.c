@@ -41,13 +41,8 @@
 #include "cf2error.h"
 
 
-  FT_LOCAL_DEF( void )
-  cf2_setError( FT_Error*  error,
-                FT_Error   value )
-  {
-    if ( error && !*error )
-      *error = value;
-  }
-
-
-/* END */
+FT_LOCAL_DEF(void) cf2_setError(FT_Error *error, FT_Error value)
+{
+	if (error && !*error)
+		*error = value;
+}

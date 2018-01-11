@@ -74,9 +74,10 @@
    */
 
   static void*
-  get_sfnt_table( TT_Face      face,
+  get_sfnt_table( FT_Face      face_,
                   FT_Sfnt_Tag  tag )
   {
+    TT_Face    face = (TT_Face)face_;
     void*  table;
 
 
@@ -119,12 +120,13 @@
 
 
   static FT_Error
-  sfnt_table_info( TT_Face    face,
+  sfnt_table_info( FT_Face    face_,
                    FT_UInt    idx,
                    FT_ULong  *tag,
                    FT_ULong  *offset,
                    FT_ULong  *length )
   {
+    TT_Face    face = (TT_Face)face_;
     if ( !offset || !length )
       return FT_THROW( Invalid_Argument );
 
@@ -147,9 +149,9 @@
   FT_DEFINE_SERVICE_SFNT_TABLEREC(
     sfnt_service_sfnt_table,
 
-    (FT_SFNT_TableLoadFunc)tt_face_load_any,     /* load_table */
-    (FT_SFNT_TableGetFunc) get_sfnt_table,       /* get_table  */
-    (FT_SFNT_TableInfoFunc)sfnt_table_info       /* table_info */
+    tt_face_load_any,     /* load_table */
+    get_sfnt_table,       /* get_table  */
+    sfnt_table_info       /* table_info */
   )
 
 
@@ -215,8 +217,8 @@
   FT_DEFINE_SERVICE_GLYPHDICTREC(
     sfnt_service_glyph_dict,
 
-    (FT_GlyphDict_GetNameFunc)  sfnt_get_glyph_name,    /* get_name   */
-    (FT_GlyphDict_NameIndexFunc)sfnt_get_name_index     /* name_index */
+    sfnt_get_glyph_name,    /* get_name   */
+    sfnt_get_name_index     /* name_index */
   )
 
 #endif /* TT_CONFIG_OPTION_POSTSCRIPT_NAMES */
@@ -1035,8 +1037,9 @@
 
 
   static const char*
-  sfnt_get_ps_name( TT_Face  face )
+  sfnt_get_ps_name( FT_Face  face_ )
   {
+    TT_Face face = (TT_Face)face_;
     FT_Int       found, win, apple;
     const char*  result = NULL;
 
@@ -1081,7 +1084,7 @@
   FT_DEFINE_SERVICE_PSFONTNAMEREC(
     sfnt_service_ps_name,
 
-    (FT_PsName_GetFunc)sfnt_get_ps_name       /* get_ps_font_name */
+    sfnt_get_ps_name       /* get_ps_font_name */
   )
 
 
@@ -1098,10 +1101,11 @@
 #ifdef TT_CONFIG_OPTION_BDF
 
   static FT_Error
-  sfnt_get_charset_id( TT_Face       face,
+  sfnt_get_charset_id( FT_Face       face_,
                        const char*  *acharset_encoding,
                        const char*  *acharset_registry )
   {
+    TT_Face       face = (TT_Face)face_;
     BDF_PropertyRec  encoding, registry;
     FT_Error         error;
 
@@ -1112,10 +1116,10 @@
      *      Should we change the BDF table format to include single offsets
      *      for `CHARSET_REGISTRY' and `CHARSET_ENCODING'?
      */
-    error = tt_face_find_bdf_prop( face, "CHARSET_REGISTRY", &registry );
+    error = tt_face_find_bdf_prop( &face->root, "CHARSET_REGISTRY", &registry );
     if ( !error )
     {
-      error = tt_face_find_bdf_prop( face, "CHARSET_ENCODING", &encoding );
+      error = tt_face_find_bdf_prop( &face->root, "CHARSET_ENCODING", &encoding );
       if ( !error )
       {
         if ( registry.type == BDF_PROPERTY_TYPE_ATOM &&
@@ -1136,8 +1140,8 @@
   FT_DEFINE_SERVICE_BDFRec(
     sfnt_service_bdf,
 
-    (FT_BDF_GetCharsetIdFunc)sfnt_get_charset_id,     /* get_charset_id */
-    (FT_BDF_GetPropertyFunc) tt_face_find_bdf_prop    /* get_property   */
+    sfnt_get_charset_id,     /* get_charset_id */
+    tt_face_find_bdf_prop    /* get_property   */
   )
 
 
