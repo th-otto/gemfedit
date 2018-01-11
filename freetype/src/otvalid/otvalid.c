@@ -31,6 +31,3 @@ ANONYMOUS_STRUCT_DUMMY(FT_IncrementalRec_)
 #include "otvjstf.c"
 #include "otvmath.c"
 #include "otvmod.c"
-
-
-/* END */

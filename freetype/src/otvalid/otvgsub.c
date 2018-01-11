@@ -20,568 +20,528 @@
 #include "otvcommn.h"
 
 
-  /*************************************************************************/
-  /*                                                                       */
-  /* The macro FT_COMPONENT is used in trace mode.  It is an implicit      */
-  /* parameter of the FT_TRACE() and FT_ERROR() macros, used to print/log  */
-  /* messages during execution.                                            */
-  /*                                                                       */
+/*************************************************************************/
+/*                                                                       */
+/* The macro FT_COMPONENT is used in trace mode.  It is an implicit      */
+/* parameter of the FT_TRACE() and FT_ERROR() macros, used to print/log  */
+/* messages during execution.                                            */
+/*                                                                       */
 #undef  FT_COMPONENT
 #define FT_COMPONENT  trace_otvgsub
 
 
-  /*************************************************************************/
-  /*************************************************************************/
-  /*****                                                               *****/
-  /*****                  GSUB LOOKUP TYPE 1                           *****/
-  /*****                                                               *****/
-  /*************************************************************************/
-  /*************************************************************************/
+/*************************************************************************/
+/*************************************************************************/
+/*****                                                               *****/
+/*****                  GSUB LOOKUP TYPE 1                           *****/
+/*****                                                               *****/
+/*************************************************************************/
+/*************************************************************************/
 
-  /* uses otvalid->glyph_count */
+/* uses otvalid->glyph_count */
 
-  static void
-  otv_SingleSubst_validate( FT_Bytes       table,
-                            OTV_Validator  otvalid )
-  {
-    FT_Bytes  p = table;
-    FT_UInt   SubstFormat;
+static void otv_SingleSubst_validate(FT_Bytes table, OTV_Validator otvalid)
+{
+	FT_Bytes p = table;
+	FT_UInt SubstFormat;
 
+	OTV_NAME_ENTER("SingleSubst");
 
-    OTV_NAME_ENTER( "SingleSubst" );
+	OTV_LIMIT_CHECK(2);
+	SubstFormat = FT_NEXT_USHORT(p);
 
-    OTV_LIMIT_CHECK( 2 );
-    SubstFormat = FT_NEXT_USHORT( p );
+	OTV_TRACE((" (format %d)\n", SubstFormat));
 
-    OTV_TRACE(( " (format %d)\n", SubstFormat ));
+	switch (SubstFormat)
+	{
+	case 1:							/* SingleSubstFormat1 */
+		{
+			FT_Bytes Coverage;
+			FT_Int DeltaGlyphID;
+			FT_Long idx;
 
-    switch ( SubstFormat )
-    {
-    case 1:     /* SingleSubstFormat1 */
-      {
-        FT_Bytes  Coverage;
-        FT_Int    DeltaGlyphID;
-        FT_Long   idx;
+			OTV_LIMIT_CHECK(4);
+			Coverage = table + FT_NEXT_USHORT(p);
+			DeltaGlyphID = FT_NEXT_SHORT(p);
 
+			otv_Coverage_validate(Coverage, otvalid, -1);
 
-        OTV_LIMIT_CHECK( 4 );
-        Coverage     = table + FT_NEXT_USHORT( p );
-        DeltaGlyphID = FT_NEXT_SHORT( p );
+			idx = (FT_Long) otv_Coverage_get_first(Coverage) + DeltaGlyphID;
+			if (idx < 0)
+				FT_INVALID_DATA;
 
-        otv_Coverage_validate( Coverage, otvalid, -1 );
+			idx = (FT_Long) otv_Coverage_get_last(Coverage) + DeltaGlyphID;
+			if ((FT_UInt) idx >= otvalid->glyph_count)
+				FT_INVALID_DATA;
+		}
+		break;
 
-        idx = (FT_Long)otv_Coverage_get_first( Coverage ) + DeltaGlyphID;
-        if ( idx < 0 )
-          FT_INVALID_DATA;
+	case 2:							/* SingleSubstFormat2 */
+		{
+			FT_UInt Coverage;
+			FT_UInt GlyphCount;
 
-        idx = (FT_Long)otv_Coverage_get_last( Coverage ) + DeltaGlyphID;
-        if ( (FT_UInt)idx >= otvalid->glyph_count )
-          FT_INVALID_DATA;
-      }
-      break;
+			OTV_LIMIT_CHECK(4);
+			Coverage = FT_NEXT_USHORT(p);
+			GlyphCount = FT_NEXT_USHORT(p);
 
-    case 2:     /* SingleSubstFormat2 */
-      {
-        FT_UInt  Coverage, GlyphCount;
+			OTV_TRACE((" (GlyphCount = %d)\n", GlyphCount));
 
+			otv_Coverage_validate(table + Coverage, otvalid, (FT_Int) GlyphCount);
 
-        OTV_LIMIT_CHECK( 4 );
-        Coverage   = FT_NEXT_USHORT( p );
-        GlyphCount = FT_NEXT_USHORT( p );
+			OTV_LIMIT_CHECK(GlyphCount * 2);
 
-        OTV_TRACE(( " (GlyphCount = %d)\n", GlyphCount ));
+			/* Substitute */
+			for (; GlyphCount > 0; GlyphCount--)
+				if (FT_NEXT_USHORT(p) >= otvalid->glyph_count)
+					FT_INVALID_GLYPH_ID;
+		}
+		break;
 
-        otv_Coverage_validate( table + Coverage,
-                               otvalid,
-                               (FT_Int)GlyphCount );
+	default:
+		FT_INVALID_FORMAT;
+	}
 
-        OTV_LIMIT_CHECK( GlyphCount * 2 );
-
-        /* Substitute */
-        for ( ; GlyphCount > 0; GlyphCount-- )
-          if ( FT_NEXT_USHORT( p ) >= otvalid->glyph_count )
-            FT_INVALID_GLYPH_ID;
-      }
-      break;
-
-    default:
-      FT_INVALID_FORMAT;
-    }
-
-    OTV_EXIT;
-  }
+	OTV_EXIT;
+}
 
 
-  /*************************************************************************/
-  /*************************************************************************/
-  /*****                                                               *****/
-  /*****                  GSUB LOOKUP TYPE 2                           *****/
-  /*****                                                               *****/
-  /*************************************************************************/
-  /*************************************************************************/
+/*************************************************************************/
+/*************************************************************************/
+/*****                                                               *****/
+/*****                  GSUB LOOKUP TYPE 2                           *****/
+/*****                                                               *****/
+/*************************************************************************/
+/*************************************************************************/
 
-  /* sets otvalid->extra1 (glyph count) */
+/* sets otvalid->extra1 (glyph count) */
 
-  static void
-  otv_MultipleSubst_validate( FT_Bytes       table,
-                              OTV_Validator  otvalid )
-  {
-    FT_Bytes  p = table;
-    FT_UInt   SubstFormat;
+static void otv_MultipleSubst_validate(FT_Bytes table, OTV_Validator otvalid)
+{
+	FT_Bytes p = table;
+	FT_UInt SubstFormat;
 
+	OTV_NAME_ENTER("MultipleSubst");
 
-    OTV_NAME_ENTER( "MultipleSubst" );
+	OTV_LIMIT_CHECK(2);
+	SubstFormat = FT_NEXT_USHORT(p);
 
-    OTV_LIMIT_CHECK( 2 );
-    SubstFormat = FT_NEXT_USHORT( p );
+	OTV_TRACE((" (format %d)\n", SubstFormat));
 
-    OTV_TRACE(( " (format %d)\n", SubstFormat ));
+	switch (SubstFormat)
+	{
+	case 1:
+		otvalid->extra1 = otvalid->glyph_count;
+		OTV_NEST2(MultipleSubstFormat1, Sequence);
+		OTV_RUN(table, otvalid);
+		break;
 
-    switch ( SubstFormat )
-    {
-    case 1:
-      otvalid->extra1 = otvalid->glyph_count;
-      OTV_NEST2( MultipleSubstFormat1, Sequence );
-      OTV_RUN( table, otvalid );
-      break;
+	default:
+		FT_INVALID_FORMAT;
+	}
 
-    default:
-      FT_INVALID_FORMAT;
-    }
-
-    OTV_EXIT;
-  }
+	OTV_EXIT;
+}
 
 
-  /*************************************************************************/
-  /*************************************************************************/
-  /*****                                                               *****/
-  /*****                    GSUB LOOKUP TYPE 3                         *****/
-  /*****                                                               *****/
-  /*************************************************************************/
-  /*************************************************************************/
+/*************************************************************************/
+/*************************************************************************/
+/*****                                                               *****/
+/*****                    GSUB LOOKUP TYPE 3                         *****/
+/*****                                                               *****/
+/*************************************************************************/
+/*************************************************************************/
 
-  /* sets otvalid->extra1 (glyph count) */
+/* sets otvalid->extra1 (glyph count) */
 
-  static void
-  otv_AlternateSubst_validate( FT_Bytes       table,
-                               OTV_Validator  otvalid )
-  {
-    FT_Bytes  p = table;
-    FT_UInt   SubstFormat;
+static void otv_AlternateSubst_validate(FT_Bytes table, OTV_Validator otvalid)
+{
+	FT_Bytes p = table;
+	FT_UInt SubstFormat;
 
+	OTV_NAME_ENTER("AlternateSubst");
 
-    OTV_NAME_ENTER( "AlternateSubst" );
+	OTV_LIMIT_CHECK(2);
+	SubstFormat = FT_NEXT_USHORT(p);
 
-    OTV_LIMIT_CHECK( 2 );
-    SubstFormat = FT_NEXT_USHORT( p );
+	OTV_TRACE((" (format %d)\n", SubstFormat));
 
-    OTV_TRACE(( " (format %d)\n", SubstFormat ));
+	switch (SubstFormat)
+	{
+	case 1:
+		otvalid->extra1 = otvalid->glyph_count;
+		OTV_NEST2(AlternateSubstFormat1, AlternateSet);
+		OTV_RUN(table, otvalid);
+		break;
 
-    switch ( SubstFormat )
-    {
-    case 1:
-      otvalid->extra1 = otvalid->glyph_count;
-      OTV_NEST2( AlternateSubstFormat1, AlternateSet );
-      OTV_RUN( table, otvalid );
-      break;
+	default:
+		FT_INVALID_FORMAT;
+	}
 
-    default:
-      FT_INVALID_FORMAT;
-    }
-
-    OTV_EXIT;
-  }
+	OTV_EXIT;
+}
 
 
-  /*************************************************************************/
-  /*************************************************************************/
-  /*****                                                               *****/
-  /*****                    GSUB LOOKUP TYPE 4                         *****/
-  /*****                                                               *****/
-  /*************************************************************************/
-  /*************************************************************************/
+/*************************************************************************/
+/*************************************************************************/
+/*****                                                               *****/
+/*****                    GSUB LOOKUP TYPE 4                         *****/
+/*****                                                               *****/
+/*************************************************************************/
+/*************************************************************************/
 
 #define LigatureFunc  otv_Ligature_validate
 
-  /* uses otvalid->glyph_count */
+/* uses otvalid->glyph_count */
 
-  static void
-  otv_Ligature_validate( FT_Bytes       table,
-                         OTV_Validator  otvalid )
-  {
-    FT_Bytes  p = table;
-    FT_UInt   LigatureGlyph, CompCount;
+static void otv_Ligature_validate(FT_Bytes table, OTV_Validator otvalid)
+{
+	FT_Bytes p = table;
+	FT_UInt LigatureGlyph;
+	FT_UInt CompCount;
 
+	OTV_ENTER;
 
-    OTV_ENTER;
+	OTV_LIMIT_CHECK(4);
+	LigatureGlyph = FT_NEXT_USHORT(p);
+	if (LigatureGlyph >= otvalid->glyph_count)
+		FT_INVALID_DATA;
 
-    OTV_LIMIT_CHECK( 4 );
-    LigatureGlyph = FT_NEXT_USHORT( p );
-    if ( LigatureGlyph >= otvalid->glyph_count )
-      FT_INVALID_DATA;
+	CompCount = FT_NEXT_USHORT(p);
 
-    CompCount = FT_NEXT_USHORT( p );
+	OTV_TRACE((" (CompCount = %d)\n", CompCount));
 
-    OTV_TRACE(( " (CompCount = %d)\n", CompCount ));
+	if (CompCount == 0)
+		FT_INVALID_DATA;
 
-    if ( CompCount == 0 )
-      FT_INVALID_DATA;
+	CompCount--;
 
-    CompCount--;
+	OTV_LIMIT_CHECK(CompCount * 2);		/* Component */
 
-    OTV_LIMIT_CHECK( CompCount * 2 );     /* Component */
+	/* no need to check the Component glyph indices */
 
-    /* no need to check the Component glyph indices */
+	OTV_EXIT;
+}
 
-    OTV_EXIT;
-  }
 
+static void otv_LigatureSubst_validate(FT_Bytes table, OTV_Validator otvalid)
+{
+	FT_Bytes p = table;
+	FT_UInt SubstFormat;
 
-  static void
-  otv_LigatureSubst_validate( FT_Bytes       table,
-                              OTV_Validator  otvalid )
-  {
-    FT_Bytes  p = table;
-    FT_UInt   SubstFormat;
+	OTV_NAME_ENTER("LigatureSubst");
 
+	OTV_LIMIT_CHECK(2);
+	SubstFormat = FT_NEXT_USHORT(p);
 
-    OTV_NAME_ENTER( "LigatureSubst" );
+	OTV_TRACE((" (format %d)\n", SubstFormat));
 
-    OTV_LIMIT_CHECK( 2 );
-    SubstFormat = FT_NEXT_USHORT( p );
+	switch (SubstFormat)
+	{
+	case 1:
+		OTV_NEST3(LigatureSubstFormat1, LigatureSet, Ligature);
+		OTV_RUN(table, otvalid);
+		break;
 
-    OTV_TRACE(( " (format %d)\n", SubstFormat ));
+	default:
+		FT_INVALID_FORMAT;
+	}
 
-    switch ( SubstFormat )
-    {
-    case 1:
-      OTV_NEST3( LigatureSubstFormat1, LigatureSet, Ligature );
-      OTV_RUN( table, otvalid );
-      break;
+	OTV_EXIT;
+}
 
-    default:
-      FT_INVALID_FORMAT;
-    }
 
-    OTV_EXIT;
-  }
+/*************************************************************************/
+/*************************************************************************/
+/*****                                                               *****/
+/*****                  GSUB LOOKUP TYPE 5                           *****/
+/*****                                                               *****/
+/*************************************************************************/
+/*************************************************************************/
 
+/* sets otvalid->extra1 (lookup count) */
 
-  /*************************************************************************/
-  /*************************************************************************/
-  /*****                                                               *****/
-  /*****                  GSUB LOOKUP TYPE 5                           *****/
-  /*****                                                               *****/
-  /*************************************************************************/
-  /*************************************************************************/
+static void otv_ContextSubst_validate(FT_Bytes table, OTV_Validator otvalid)
+{
+	FT_Bytes p = table;
+	FT_UInt SubstFormat;
 
-  /* sets otvalid->extra1 (lookup count) */
+	OTV_NAME_ENTER("ContextSubst");
 
-  static void
-  otv_ContextSubst_validate( FT_Bytes       table,
-                             OTV_Validator  otvalid )
-  {
-    FT_Bytes  p = table;
-    FT_UInt   SubstFormat;
+	OTV_LIMIT_CHECK(2);
+	SubstFormat = FT_NEXT_USHORT(p);
 
+	OTV_TRACE((" (format %d)\n", SubstFormat));
 
-    OTV_NAME_ENTER( "ContextSubst" );
+	switch (SubstFormat)
+	{
+	case 1:
+		/* no need to check glyph indices/classes used as input for these */
+		/* context rules since even invalid glyph indices/classes return  */
+		/* meaningful results                                             */
 
-    OTV_LIMIT_CHECK( 2 );
-    SubstFormat = FT_NEXT_USHORT( p );
+		otvalid->extra1 = otvalid->lookup_count;
+		OTV_NEST3(ContextSubstFormat1, SubRuleSet, SubRule);
+		OTV_RUN(table, otvalid);
+		break;
 
-    OTV_TRACE(( " (format %d)\n", SubstFormat ));
+	case 2:
+		/* no need to check glyph indices/classes used as input for these */
+		/* context rules since even invalid glyph indices/classes return  */
+		/* meaningful results                                             */
 
-    switch ( SubstFormat )
-    {
-    case 1:
-      /* no need to check glyph indices/classes used as input for these */
-      /* context rules since even invalid glyph indices/classes return  */
-      /* meaningful results                                             */
+		OTV_NEST3(ContextSubstFormat2, SubClassSet, SubClassRule);
+		OTV_RUN(table, otvalid);
+		break;
 
-      otvalid->extra1 = otvalid->lookup_count;
-      OTV_NEST3( ContextSubstFormat1, SubRuleSet, SubRule );
-      OTV_RUN( table, otvalid );
-      break;
+	case 3:
+		OTV_NEST1(ContextSubstFormat3);
+		OTV_RUN(table, otvalid);
+		break;
 
-    case 2:
-      /* no need to check glyph indices/classes used as input for these */
-      /* context rules since even invalid glyph indices/classes return  */
-      /* meaningful results                                             */
+	default:
+		FT_INVALID_FORMAT;
+	}
 
-      OTV_NEST3( ContextSubstFormat2, SubClassSet, SubClassRule );
-      OTV_RUN( table, otvalid );
-      break;
+	OTV_EXIT;
+}
 
-    case 3:
-      OTV_NEST1( ContextSubstFormat3 );
-      OTV_RUN( table, otvalid );
-      break;
 
-    default:
-      FT_INVALID_FORMAT;
-    }
+/*************************************************************************/
+/*************************************************************************/
+/*****                                                               *****/
+/*****                    GSUB LOOKUP TYPE 6                         *****/
+/*****                                                               *****/
+/*************************************************************************/
+/*************************************************************************/
 
-    OTV_EXIT;
-  }
+/* sets otvalid->extra1 (lookup count)            */
 
+static void otv_ChainContextSubst_validate(FT_Bytes table, OTV_Validator otvalid)
+{
+	FT_Bytes p = table;
+	FT_UInt SubstFormat;
 
-  /*************************************************************************/
-  /*************************************************************************/
-  /*****                                                               *****/
-  /*****                    GSUB LOOKUP TYPE 6                         *****/
-  /*****                                                               *****/
-  /*************************************************************************/
-  /*************************************************************************/
+	OTV_NAME_ENTER("ChainContextSubst");
 
-  /* sets otvalid->extra1 (lookup count)            */
+	OTV_LIMIT_CHECK(2);
+	SubstFormat = FT_NEXT_USHORT(p);
 
-  static void
-  otv_ChainContextSubst_validate( FT_Bytes       table,
-                                  OTV_Validator  otvalid )
-  {
-    FT_Bytes  p = table;
-    FT_UInt   SubstFormat;
+	OTV_TRACE((" (format %d)\n", SubstFormat));
 
+	switch (SubstFormat)
+	{
+	case 1:
+		/* no need to check glyph indices/classes used as input for these */
+		/* context rules since even invalid glyph indices/classes return  */
+		/* meaningful results                                             */
 
-    OTV_NAME_ENTER( "ChainContextSubst" );
+		otvalid->extra1 = otvalid->lookup_count;
+		OTV_NEST3(ChainContextSubstFormat1, ChainSubRuleSet, ChainSubRule);
+		OTV_RUN(table, otvalid);
+		break;
 
-    OTV_LIMIT_CHECK( 2 );
-    SubstFormat = FT_NEXT_USHORT( p );
+	case 2:
+		/* no need to check glyph indices/classes used as input for these */
+		/* context rules since even invalid glyph indices/classes return  */
+		/* meaningful results                                             */
+
+		OTV_NEST3(ChainContextSubstFormat2, ChainSubClassSet, ChainSubClassRule);
+		OTV_RUN(table, otvalid);
+		break;
 
-    OTV_TRACE(( " (format %d)\n", SubstFormat ));
+	case 3:
+		OTV_NEST1(ChainContextSubstFormat3);
+		OTV_RUN(table, otvalid);
+		break;
 
-    switch ( SubstFormat )
-    {
-    case 1:
-      /* no need to check glyph indices/classes used as input for these */
-      /* context rules since even invalid glyph indices/classes return  */
-      /* meaningful results                                             */
+	default:
+		FT_INVALID_FORMAT;
+	}
 
-      otvalid->extra1 = otvalid->lookup_count;
-      OTV_NEST3( ChainContextSubstFormat1,
-                 ChainSubRuleSet, ChainSubRule );
-      OTV_RUN( table, otvalid );
-      break;
+	OTV_EXIT;
+}
 
-    case 2:
-      /* no need to check glyph indices/classes used as input for these */
-      /* context rules since even invalid glyph indices/classes return  */
-      /* meaningful results                                             */
 
-      OTV_NEST3( ChainContextSubstFormat2,
-                 ChainSubClassSet, ChainSubClassRule );
-      OTV_RUN( table, otvalid );
-      break;
+/*************************************************************************/
+/*************************************************************************/
+/*****                                                               *****/
+/*****                    GSUB LOOKUP TYPE 7                         *****/
+/*****                                                               *****/
+/*************************************************************************/
+/*************************************************************************/
 
-    case 3:
-      OTV_NEST1( ChainContextSubstFormat3 );
-      OTV_RUN( table, otvalid );
-      break;
+/* uses otvalid->type_funcs */
 
-    default:
-      FT_INVALID_FORMAT;
-    }
+static void otv_ExtensionSubst_validate(FT_Bytes table, OTV_Validator otvalid)
+{
+	FT_Bytes p = table;
+	FT_UInt SubstFormat;
 
-    OTV_EXIT;
-  }
+	OTV_NAME_ENTER("ExtensionSubst");
 
+	OTV_LIMIT_CHECK(2);
+	SubstFormat = FT_NEXT_USHORT(p);
 
-  /*************************************************************************/
-  /*************************************************************************/
-  /*****                                                               *****/
-  /*****                    GSUB LOOKUP TYPE 7                         *****/
-  /*****                                                               *****/
-  /*************************************************************************/
-  /*************************************************************************/
+	OTV_TRACE((" (format %d)\n", SubstFormat));
 
-  /* uses otvalid->type_funcs */
+	switch (SubstFormat)
+	{
+	case 1:							/* ExtensionSubstFormat1 */
+		{
+			FT_UInt ExtensionLookupType;
+			FT_ULong ExtensionOffset;
+			OTV_Validate_Func validate;
 
-  static void
-  otv_ExtensionSubst_validate( FT_Bytes       table,
-                               OTV_Validator  otvalid )
-  {
-    FT_Bytes  p = table;
-    FT_UInt   SubstFormat;
+			OTV_LIMIT_CHECK(6);
+			ExtensionLookupType = FT_NEXT_USHORT(p);
+			ExtensionOffset = FT_NEXT_ULONG(p);
 
+			if (ExtensionLookupType == 0 || ExtensionLookupType == 7 || ExtensionLookupType > 8)
+				FT_INVALID_DATA;
 
-    OTV_NAME_ENTER( "ExtensionSubst" );
+			validate = otvalid->type_funcs[ExtensionLookupType - 1];
+			validate(table + ExtensionOffset, otvalid);
+		}
+		break;
 
-    OTV_LIMIT_CHECK( 2 );
-    SubstFormat = FT_NEXT_USHORT( p );
+	default:
+		FT_INVALID_FORMAT;
+	}
 
-    OTV_TRACE(( " (format %d)\n", SubstFormat ));
+	OTV_EXIT;
+}
 
-    switch ( SubstFormat )
-    {
-    case 1:     /* ExtensionSubstFormat1 */
-      {
-        FT_UInt            ExtensionLookupType;
-        FT_ULong           ExtensionOffset;
-        OTV_Validate_Func  validate;
 
+/*************************************************************************/
+/*************************************************************************/
+/*****                                                               *****/
+/*****                    GSUB LOOKUP TYPE 8                         *****/
+/*****                                                               *****/
+/*************************************************************************/
+/*************************************************************************/
 
-        OTV_LIMIT_CHECK( 6 );
-        ExtensionLookupType = FT_NEXT_USHORT( p );
-        ExtensionOffset     = FT_NEXT_ULONG( p );
+/* uses otvalid->glyph_count */
 
-        if ( ExtensionLookupType == 0 ||
-             ExtensionLookupType == 7 ||
-             ExtensionLookupType > 8  )
-          FT_INVALID_DATA;
+static void otv_ReverseChainSingleSubst_validate(FT_Bytes table, OTV_Validator otvalid)
+{
+	FT_Bytes p = table;
+	FT_Bytes Coverage;
+	FT_UInt SubstFormat;
+	FT_UInt BacktrackGlyphCount;
+	FT_UInt LookaheadGlyphCount;
+	FT_UInt GlyphCount;
 
-        validate = otvalid->type_funcs[ExtensionLookupType - 1];
-        validate( table + ExtensionOffset, otvalid );
-      }
-      break;
+	OTV_NAME_ENTER("ReverseChainSingleSubst");
 
-    default:
-      FT_INVALID_FORMAT;
-    }
+	OTV_LIMIT_CHECK(2);
+	SubstFormat = FT_NEXT_USHORT(p);
 
-    OTV_EXIT;
-  }
+	OTV_TRACE((" (format %d)\n", SubstFormat));
 
+	switch (SubstFormat)
+	{
+	case 1:							/* ReverseChainSingleSubstFormat1 */
+		OTV_LIMIT_CHECK(4);
+		Coverage = table + FT_NEXT_USHORT(p);
+		BacktrackGlyphCount = FT_NEXT_USHORT(p);
 
-  /*************************************************************************/
-  /*************************************************************************/
-  /*****                                                               *****/
-  /*****                    GSUB LOOKUP TYPE 8                         *****/
-  /*****                                                               *****/
-  /*************************************************************************/
-  /*************************************************************************/
+		OTV_TRACE((" (BacktrackGlyphCount = %d)\n", BacktrackGlyphCount));
 
-  /* uses otvalid->glyph_count */
+		otv_Coverage_validate(Coverage, otvalid, -1);
 
-  static void
-  otv_ReverseChainSingleSubst_validate( FT_Bytes       table,
-                                        OTV_Validator  otvalid )
-  {
-    FT_Bytes  p = table, Coverage;
-    FT_UInt   SubstFormat;
-    FT_UInt   BacktrackGlyphCount, LookaheadGlyphCount, GlyphCount;
+		OTV_LIMIT_CHECK(BacktrackGlyphCount * 2 + 2);
 
+		for (; BacktrackGlyphCount > 0; BacktrackGlyphCount--)
+			otv_Coverage_validate(table + FT_NEXT_USHORT(p), otvalid, -1);
 
-    OTV_NAME_ENTER( "ReverseChainSingleSubst" );
+		LookaheadGlyphCount = FT_NEXT_USHORT(p);
 
-    OTV_LIMIT_CHECK( 2 );
-    SubstFormat = FT_NEXT_USHORT( p );
+		OTV_TRACE((" (LookaheadGlyphCount = %d)\n", LookaheadGlyphCount));
 
-    OTV_TRACE(( " (format %d)\n", SubstFormat ));
+		OTV_LIMIT_CHECK(LookaheadGlyphCount * 2 + 2);
 
-    switch ( SubstFormat )
-    {
-    case 1:     /* ReverseChainSingleSubstFormat1 */
-      OTV_LIMIT_CHECK( 4 );
-      Coverage            = table + FT_NEXT_USHORT( p );
-      BacktrackGlyphCount = FT_NEXT_USHORT( p );
+		for (; LookaheadGlyphCount > 0; LookaheadGlyphCount--)
+			otv_Coverage_validate(table + FT_NEXT_USHORT(p), otvalid, -1);
 
-      OTV_TRACE(( " (BacktrackGlyphCount = %d)\n", BacktrackGlyphCount ));
+		GlyphCount = FT_NEXT_USHORT(p);
 
-      otv_Coverage_validate( Coverage, otvalid, -1 );
+		OTV_TRACE((" (GlyphCount = %d)\n", GlyphCount));
 
-      OTV_LIMIT_CHECK( BacktrackGlyphCount * 2 + 2 );
+		if (GlyphCount != otv_Coverage_get_count(Coverage))
+			FT_INVALID_DATA;
 
-      for ( ; BacktrackGlyphCount > 0; BacktrackGlyphCount-- )
-        otv_Coverage_validate( table + FT_NEXT_USHORT( p ), otvalid, -1 );
+		OTV_LIMIT_CHECK(GlyphCount * 2);
 
-      LookaheadGlyphCount = FT_NEXT_USHORT( p );
+		/* Substitute */
+		for (; GlyphCount > 0; GlyphCount--)
+			if (FT_NEXT_USHORT(p) >= otvalid->glyph_count)
+				FT_INVALID_DATA;
 
-      OTV_TRACE(( " (LookaheadGlyphCount = %d)\n", LookaheadGlyphCount ));
+		break;
 
-      OTV_LIMIT_CHECK( LookaheadGlyphCount * 2 + 2 );
+	default:
+		FT_INVALID_FORMAT;
+	}
 
-      for ( ; LookaheadGlyphCount > 0; LookaheadGlyphCount-- )
-        otv_Coverage_validate( table + FT_NEXT_USHORT( p ), otvalid, -1 );
+	OTV_EXIT;
+}
 
-      GlyphCount = FT_NEXT_USHORT( p );
 
-      OTV_TRACE(( " (GlyphCount = %d)\n", GlyphCount ));
+static const OTV_Validate_Func otv_gsub_validate_funcs[8] = {
+	otv_SingleSubst_validate,
+	otv_MultipleSubst_validate,
+	otv_AlternateSubst_validate,
+	otv_LigatureSubst_validate,
+	otv_ContextSubst_validate,
+	otv_ChainContextSubst_validate,
+	otv_ExtensionSubst_validate,
+	otv_ReverseChainSingleSubst_validate
+};
 
-      if ( GlyphCount != otv_Coverage_get_count( Coverage ) )
-        FT_INVALID_DATA;
 
-      OTV_LIMIT_CHECK( GlyphCount * 2 );
+/*************************************************************************/
+/*************************************************************************/
+/*****                                                               *****/
+/*****                          GSUB TABLE                           *****/
+/*****                                                               *****/
+/*************************************************************************/
+/*************************************************************************/
 
-      /* Substitute */
-      for ( ; GlyphCount > 0; GlyphCount-- )
-        if ( FT_NEXT_USHORT( p ) >= otvalid->glyph_count )
-          FT_INVALID_DATA;
+/* sets otvalid->type_count  */
+/* sets otvalid->type_funcs  */
+/* sets otvalid->glyph_count */
 
-      break;
+FT_LOCAL_DEF(void) otv_GSUB_validate(FT_Bytes table, FT_UInt glyph_count, FT_Validator ftvalid)
+{
+	OTV_ValidatorRec otvalidrec;
+	OTV_Validator otvalid = &otvalidrec;
+	FT_Bytes p = table;
+	FT_UInt ScriptList;
+	FT_UInt FeatureList;
+	FT_UInt LookupList;
 
-    default:
-      FT_INVALID_FORMAT;
-    }
+	otvalid->root = ftvalid;
 
-    OTV_EXIT;
-  }
+	FT_TRACE3(("validating GSUB table\n"));
+	OTV_INIT;
 
+	OTV_LIMIT_CHECK(10);
 
-  static const OTV_Validate_Func  otv_gsub_validate_funcs[8] =
-  {
-    otv_SingleSubst_validate,
-    otv_MultipleSubst_validate,
-    otv_AlternateSubst_validate,
-    otv_LigatureSubst_validate,
-    otv_ContextSubst_validate,
-    otv_ChainContextSubst_validate,
-    otv_ExtensionSubst_validate,
-    otv_ReverseChainSingleSubst_validate
-  };
+	if (FT_NEXT_ULONG(p) != 0x10000UL)	/* Version */
+		FT_INVALID_FORMAT;
 
+	ScriptList = FT_NEXT_USHORT(p);
+	FeatureList = FT_NEXT_USHORT(p);
+	LookupList = FT_NEXT_USHORT(p);
 
-  /*************************************************************************/
-  /*************************************************************************/
-  /*****                                                               *****/
-  /*****                          GSUB TABLE                           *****/
-  /*****                                                               *****/
-  /*************************************************************************/
-  /*************************************************************************/
+	otvalid->type_count = 8;
+	otvalid->type_funcs = (OTV_Validate_Func *) otv_gsub_validate_funcs;
+	otvalid->glyph_count = glyph_count;
 
-  /* sets otvalid->type_count  */
-  /* sets otvalid->type_funcs  */
-  /* sets otvalid->glyph_count */
+	otv_LookupList_validate(table + LookupList, otvalid);
+	otv_FeatureList_validate(table + FeatureList, table + LookupList, otvalid);
+	otv_ScriptList_validate(table + ScriptList, table + FeatureList, otvalid);
 
-  FT_LOCAL_DEF( void )
-  otv_GSUB_validate( FT_Bytes      table,
-                     FT_UInt       glyph_count,
-                     FT_Validator  ftvalid )
-  {
-    OTV_ValidatorRec  otvalidrec;
-    OTV_Validator     otvalid = &otvalidrec;
-    FT_Bytes          p       = table;
-    FT_UInt           ScriptList, FeatureList, LookupList;
-
-
-    otvalid->root = ftvalid;
-
-    FT_TRACE3(( "validating GSUB table\n" ));
-    OTV_INIT;
-
-    OTV_LIMIT_CHECK( 10 );
-
-    if ( FT_NEXT_ULONG( p ) != 0x10000UL )      /* Version */
-      FT_INVALID_FORMAT;
-
-    ScriptList  = FT_NEXT_USHORT( p );
-    FeatureList = FT_NEXT_USHORT( p );
-    LookupList  = FT_NEXT_USHORT( p );
-
-    otvalid->type_count  = 8;
-    otvalid->type_funcs  = (OTV_Validate_Func*)otv_gsub_validate_funcs;
-    otvalid->glyph_count = glyph_count;
-
-    otv_LookupList_validate( table + LookupList,
-                             otvalid );
-    otv_FeatureList_validate( table + FeatureList, table + LookupList,
-                              otvalid );
-    otv_ScriptList_validate( table + ScriptList, table + FeatureList,
-                             otvalid );
-
-    FT_TRACE4(( "\n" ));
-  }
-
-
-/* END */
+	FT_TRACE4(("\n"));
+}
