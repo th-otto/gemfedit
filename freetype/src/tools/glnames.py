@@ -4927,7 +4927,7 @@ class StringTable:
     write( "  extern\n" )
     write( "#endif\n" )
     write( "#endif\n" )
-    write( "  const char  " + self.master_table +
+    write( "  const char " + self.master_table +
            "[" + repr( self.total ) + "]\n" )
     write( "#ifdef  DEFINE_PS_TABLES_DATA\n" )
     write( "  =\n" )
@@ -5379,104 +5379,97 @@ def main():
   #
   write( """\
 #ifdef  DEFINE_PS_TABLES
-  /*
-   *  This function searches the compressed table efficiently.
-   */
-  static unsigned long
-  ft_get_adobe_glyph_index( const char*  name,
-                            const char*  limit )
-  {
-    int                   c = 0;
-    int                   count, min, max;
-    const unsigned char*  p = ft_adobe_glyph_list;
+/*
+ *  This function searches the compressed table efficiently.
+ */
+static unsigned long ft_get_adobe_glyph_index(const char *name, const char *limit)
+{
+	int c = 0;
+	int count, min, max;
+	const unsigned char *p = ft_adobe_glyph_list;
 
+	if (name == 0 || name >= limit)
+		return 0;
 
-    if ( name == 0 || name >= limit )
-      goto NotFound;
+	c = *name++;
+	count = p[1];
+	p += 2;
 
-    c     = *name++;
-    count = p[1];
-    p    += 2;
+	min = 0;
+	max = count;
 
-    min = 0;
-    max = count;
+	while (min < max)
+	{
+		int mid = (min + max) >> 1;
+		const unsigned char *q = p + mid * 2;
+		int c2;
 
-    while ( min < max )
-    {
-      int                   mid = ( min + max ) >> 1;
-      const unsigned char*  q   = p + mid * 2;
-      int                   c2;
+		q = ft_adobe_glyph_list + (((int) q[0] << 8) | q[1]);
 
-
-      q = ft_adobe_glyph_list + ( ( (int)q[0] << 8 ) | q[1] );
-
-      c2 = q[0] & 127;
-      if ( c2 == c )
-      {
-        p = q;
-        goto Found;
-      }
-      if ( c2 < c )
-        min = mid + 1;
-      else
-        max = mid;
-    }
-    goto NotFound;
+		c2 = q[0] & 127;
+		if (c2 == c)
+		{
+			p = q;
+			goto Found;
+		}
+		if (c2 < c)
+			min = mid + 1;
+		else
+			max = mid;
+	}
+	return 0;
 
   Found:
-    for (;;)
-    {
-      /* assert (*p & 127) == c */
+	for (;;)
+	{
+		/* assert (*p & 127) == c */
 
-      if ( name >= limit )
-      {
-        if ( (p[0] & 128) == 0 &&
-             (p[1] & 128) != 0 )
-          return (unsigned long)( ( (int)p[2] << 8 ) | p[3] );
+		if (name >= limit)
+		{
+			if ((p[0] & 128) == 0 && (p[1] & 128) != 0)
+				return (unsigned long) (((int) p[2] << 8) | p[3]);
 
-        goto NotFound;
-      }
-      c = *name++;
-      if ( p[0] & 128 )
-      {
-        p++;
-        if ( c != (p[0] & 127) )
-          goto NotFound;
+			return 0;
+		}
+		c = *name++;
+		if (p[0] & 128)
+		{
+			p++;
+			if (c != (p[0] & 127))
+				return 0;
 
-        continue;
-      }
+			continue;
+		}
 
-      p++;
-      count = p[0] & 127;
-      if ( p[0] & 128 )
-        p += 2;
+		p++;
+		count = p[0] & 127;
+		if (p[0] & 128)
+			p += 2;
 
-      p++;
+		p++;
 
-      for ( ; count > 0; count--, p += 2 )
-      {
-        int                   offset = ( (int)p[0] << 8 ) | p[1];
-        const unsigned char*  q      = ft_adobe_glyph_list + offset;
+		for (; count > 0; count--, p += 2)
+		{
+			int offset = ((int) p[0] << 8) | p[1];
+			const unsigned char *q = ft_adobe_glyph_list + offset;
 
-        if ( c == ( q[0] & 127 ) )
-        {
-          p = q;
-          goto NextIter;
-        }
-      }
-      goto NotFound;
+			if (c == (q[0] & 127))
+			{
+				p = q;
+				goto NextIter;
+			}
+		}
+		return 0;
 
-    NextIter:
-      ;
-    }
+	  NextIter:
+		;
+	}
 
-  NotFound:
-    return 0;
-  }
+	return 0;
+}
 #endif /* DEFINE_PS_TABLES */
 
 #endif /* FT_CONFIG_OPTION_ADOBE_GLYPH_LIST */
-
 """ )
 
   if 0:  # generate unit test, or don't
@@ -5529,12 +5522,7 @@ def main():
 
     write( "#endif /* TEST */\n" )
 
-  write("\n/* END */\n")
-
 
 # Now run the main routine
 #
 main()
-
-
-# END

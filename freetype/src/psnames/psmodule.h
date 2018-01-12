@@ -26,13 +26,8 @@
 
 FT_BEGIN_HEADER
 
-
-  FT_DECLARE_MODULE( psnames_module_class )
-
+FT_DECLARE_MODULE(psnames_module_class)
 
 FT_END_HEADER
 
-#endif /* PSMODULE_H_ */
-
-
-/* END */
+#endif									/* PSMODULE_H_ */

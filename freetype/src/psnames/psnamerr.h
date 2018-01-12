@@ -37,6 +37,3 @@
 #include <freetype/fterrors.h>
 
 #endif /* PSNAMERR_H_ */
-
-
-/* END */
