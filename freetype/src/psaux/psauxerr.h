@@ -37,6 +37,3 @@
 #include <freetype/fterrors.h>
 
 #endif /* PSAUXERR_H_ */
-
-
-/* END */
