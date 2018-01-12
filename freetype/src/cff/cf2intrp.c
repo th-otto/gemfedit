@@ -307,7 +307,7 @@ static void cf2_doFlex(CF2_Stack opStack,
 	vals[0] = *curX;
 	vals[1] = *curY;
 	idx = 0;
-	isHFlex = FT_BOOL(readFromStack[9] == FALSE);
+	isHFlex = readFromStack[9] == FALSE;
 	top = isHFlex ? 9 : 10;
 
 	for (i = 0; i < top; i++)
@@ -708,7 +708,7 @@ FT_LOCAL_DEF(void) cf2_interpT2CharString(CF2_Font font,
 				CF2_UInt idx;
 				CF2_UInt count = cf2_stack_count(opStack);
 
-				FT_Bool isX = FT_BOOL(op1 == cf2_cmdHLINETO);
+				FT_Bool isX = op1 == cf2_cmdHLINETO;
 
 				FT_TRACE4((isX ? " hlineto\n" : " vlineto\n"));
 
@@ -1542,7 +1542,7 @@ FT_LOCAL_DEF(void) cf2_interpT2CharString(CF2_Font font,
 				CF2_UInt count1 = cf2_stack_count(opStack);
 				CF2_UInt idx = 0;
 
-				FT_Bool alternate = FT_BOOL(op1 == cf2_cmdHVCURVETO);
+				FT_Bool alternate = op1 == cf2_cmdHVCURVETO;
 
 				/* if `cf2_stack_count' isn't of the form 8n, 8n+1, */
 				/* 8n+4, or 8n+5, we enforce it by clearing the     */

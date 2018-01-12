@@ -476,7 +476,7 @@ static void af_cjk_metrics_init_blues(AF_CJKMetrics metrics, FT_Face face)
 		{
 			FT_Pos ref = *blue_ref;
 			FT_Pos shoot = *blue_shoot;
-			FT_Bool under_ref = FT_BOOL(shoot < ref);
+			FT_Bool under_ref = shoot < ref;
 
 			/* AF_CJK_IS_TOP_BLUE covers `right' and `top' */
 			if (AF_CJK_IS_TOP_BLUE(bs) ^ under_ref)
@@ -1192,7 +1192,7 @@ static void af_cjk_hints_compute_blue_edges(AF_GlyphHints hints, AF_CJKMetrics m
 			/*                                                                 */
 			/* of course, that's for TrueType                                  */
 			is_top_right_blue = (FT_Byte) ((blue->flags & AF_CJK_BLUE_TOP) != 0);
-			is_major_dir = FT_BOOL(edge->dir == axis->major_dir);
+			is_major_dir = edge->dir == axis->major_dir;
 
 			/* if it is a top zone, the edge must be against the major    */
 			/* direction; if it is a bottom zone, it must be in the major */
@@ -1357,7 +1357,7 @@ af_cjk_compute_stem_width(AF_GlyphHints hints, AF_Dimension dim, FT_Pos width, F
 	AF_CJKAxis axis = &metrics->axis[dim];
 	FT_Pos dist = width;
 	FT_Int sign = 0;
-	FT_Bool vertical = FT_BOOL(dim == AF_DIMENSION_VERT);
+	FT_Bool vertical = dim == AF_DIMENSION_VERT;
 
 	FT_UNUSED(base_flags);
 	FT_UNUSED(stem_flags);
@@ -1988,9 +1988,9 @@ static void af_cjk_align_edge_points(AF_GlyphHints hints, AF_Dimension dim)
 	AF_Edge edge;
 	FT_Bool snapping;
 
-	snapping = FT_BOOL((dim == AF_DIMENSION_HORZ &&
-						AF_LATIN_HINTS_DO_HORZ_SNAP(hints)) ||
-					   (dim == AF_DIMENSION_VERT && AF_LATIN_HINTS_DO_VERT_SNAP(hints)));
+	snapping = (dim == AF_DIMENSION_HORZ &&
+					AF_LATIN_HINTS_DO_HORZ_SNAP(hints)) ||
+				   (dim == AF_DIMENSION_VERT && AF_LATIN_HINTS_DO_VERT_SNAP(hints));
 
 	for (edge = edges; edge < edge_limit; edge++)
 	{

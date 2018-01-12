@@ -143,12 +143,12 @@ static void gxv_mort_subtable_type5_entry_validate(FT_Byte state,
 	FT_UNUSED(state);
 
 #ifdef GXV_LOAD_UNUSED_VARS
-	setMark = FT_BOOL((flags >> 15) & 1);
-	dontAdvance = FT_BOOL((flags >> 14) & 1);
-	currentIsKashidaLike = FT_BOOL((flags >> 13) & 1);
-	markedIsKashidaLike = FT_BOOL((flags >> 12) & 1);
-	currentInsertBefore = FT_BOOL((flags >> 11) & 1);
-	markedInsertBefore = FT_BOOL((flags >> 10) & 1);
+	setMark = ((flags >> 15) & 1) != 0;
+	dontAdvance = ((flags >> 14) & 1) != 0;
+	currentIsKashidaLike = ((flags >> 13) & 1) != 0;
+	markedIsKashidaLike = ((flags >> 12) & 1) != 0;
+	currentInsertBefore = ((flags >> 11) & 1) != 0;
+	markedInsertBefore = ((flags >> 10) & 1) != 0;
 #endif
 
 	currentInsertCount = (FT_Byte) ((flags >> 5) & 0x1F);

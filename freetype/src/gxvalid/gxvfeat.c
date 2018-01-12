@@ -197,7 +197,7 @@ static void gxv_feat_name_validate(FT_Bytes table, FT_Bytes limit, GXV_Validator
 	if ((featureFlags & GXV_FEAT_MASK_UNUSED) == 0)
 		GXV_SET_ERR_IF_PARANOID(FT_INVALID_DATA);
 
-	exclusive = FT_BOOL(featureFlags & GXV_FEAT_MASK_EXCLUSIVE_SETTINGS);
+	exclusive = (featureFlags & GXV_FEAT_MASK_EXCLUSIVE_SETTINGS) != 0;
 	if (exclusive)
 	{
 		FT_Byte dynamic_default;

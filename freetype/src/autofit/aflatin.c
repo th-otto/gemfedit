@@ -640,7 +640,7 @@ static void af_latin_metrics_init_blues(AF_LatinMetrics metrics, FT_Face face)
 							if (prev == best_point)
 								continue;
 
-							left2right = FT_BOOL(points[prev].x < points[best_point].x);
+							left2right = points[prev].x < points[best_point].x;
 
 							first = best_segment_last;
 							last = first;
@@ -698,7 +698,7 @@ static void af_latin_metrics_init_blues(AF_LatinMetrics metrics, FT_Face face)
 										p_first = last;
 								}
 
-								l2r = FT_BOOL(points[first].x < points[last].x);
+								l2r = points[first].x < points[last].x;
 								d = FT_ABS(points[last].x - points[first].x);
 
 								if (l2r == left2right && d >= length_threshold)
@@ -775,9 +775,8 @@ static void af_latin_metrics_init_blues(AF_LatinMetrics metrics, FT_Face face)
 						(FT_ABS(points[best_on_point_last].x - points[best_on_point_first].x)) > flat_threshold)
 						round = 0;
 					else
-						round = FT_BOOL(FT_CURVE_TAG(outline.tags[best_segment_first]) !=
-										FT_CURVE_TAG_ON ||
-										FT_CURVE_TAG(outline.tags[best_segment_last]) != FT_CURVE_TAG_ON);
+						round = FT_CURVE_TAG(outline.tags[best_segment_first]) != FT_CURVE_TAG_ON ||
+								FT_CURVE_TAG(outline.tags[best_segment_last]) != FT_CURVE_TAG_ON;
 
 					if (round && AF_LATIN_IS_NEUTRAL_BLUE(bs))
 					{
@@ -858,7 +857,7 @@ static void af_latin_metrics_init_blues(AF_LatinMetrics metrics, FT_Face face)
 		{
 			FT_Pos ref = *blue_ref;
 			FT_Pos shoot = *blue_shoot;
-			FT_Bool over_ref = FT_BOOL(shoot > ref);
+			FT_Bool over_ref = shoot > ref;
 
 			if ((AF_LATIN_IS_TOP_BLUE(bs) || AF_LATIN_IS_SUB_TOP_BLUE(bs)) ^ over_ref)
 			{
@@ -2260,7 +2259,7 @@ static void af_latin_hints_compute_blue_edges(AF_GlyphHints hints, AF_LatinMetri
 			/* for the orientation of contours                               */
 			is_top_blue = (FT_Byte) ((blue->flags & (AF_LATIN_BLUE_TOP | AF_LATIN_BLUE_SUB_TOP)) != 0);
 			is_neutral_blue = (FT_Byte) ((blue->flags & AF_LATIN_BLUE_NEUTRAL) != 0);
-			is_major_dir = FT_BOOL(edge->dir == axis->major_dir);
+			is_major_dir = edge->dir == axis->major_dir;
 
 			/* neutral blue zones are handled for both directions */
 			if (is_top_blue ^ is_major_dir || is_neutral_blue)
@@ -2287,7 +2286,7 @@ static void af_latin_hints_compute_blue_edges(AF_GlyphHints hints, AF_LatinMetri
 				/* neutral blue zone)                                         */
 				if (edge->flags & AF_EDGE_ROUND && dist != 0 && !is_neutral_blue)
 				{
-					FT_Bool is_under_ref = FT_BOOL(edge->fpos < blue->ref.org);
+					FT_Bool is_under_ref = edge->fpos < blue->ref.org;
 
 					if (is_top_blue ^ is_under_ref)
 					{

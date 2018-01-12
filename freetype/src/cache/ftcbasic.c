@@ -44,8 +44,8 @@ typedef struct FTC_BasicAttrRec_
 } FTC_BasicAttrRec, *FTC_BasicAttrs;
 
 #define FTC_BASIC_ATTR_COMPARE( a, b )                                 \
-          FT_BOOL( FTC_SCALER_COMPARE( &(a)->scaler, &(b)->scaler ) && \
-                   (a)->load_flags == (b)->load_flags               )
+          FTC_SCALER_COMPARE( &(a)->scaler, &(b)->scaler ) && \
+                   (a)->load_flags == (b)->load_flags
 
 #define FTC_BASIC_ATTR_HASH( a )                                     \
           ( FTC_SCALER_HASH( &(a)->scaler ) + 31 * (a)->load_flags )
@@ -179,7 +179,7 @@ FT_CALLBACK_DEF(FT_Bool) ftc_basic_gnode_compare_faceid(FTC_Node ftcgnode, FT_Po
 
 	if (list_changed)
 		*list_changed = FALSE;
-	result = FT_BOOL(family->attrs.scaler.face_id == face_id);
+	result = family->attrs.scaler.face_id == face_id;
 	if (result)
 	{
 		/* we must call this function to avoid this node from appearing

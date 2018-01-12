@@ -132,7 +132,7 @@ static FT_Bool ft_conic_is_small_enough(FT_Vector * base, FT_Angle * angle_in, F
 
 	theta = ft_pos_abs(FT_Angle_Diff(*angle_in, *angle_out));
 
-	return FT_BOOL(theta < FT_SMALL_CONIC_THRESHOLD);
+	return theta < FT_SMALL_CONIC_THRESHOLD;
 }
 
 
@@ -242,7 +242,7 @@ static FT_Bool ft_cubic_is_small_enough(FT_Vector * base, FT_Angle * angle_in, F
 	theta1 = ft_pos_abs(FT_Angle_Diff(*angle_in, *angle_mid));
 	theta2 = ft_pos_abs(FT_Angle_Diff(*angle_mid, *angle_out));
 
-	return FT_BOOL(theta1 < FT_SMALL_CUBIC_THRESHOLD && theta2 < FT_SMALL_CUBIC_THRESHOLD);
+	return theta1 < FT_SMALL_CUBIC_THRESHOLD && theta2 < FT_SMALL_CUBIC_THRESHOLD;
 }
 
 
@@ -885,7 +885,7 @@ static FT_Error ft_stroker_inside(FT_Stroker stroker, FT_Int side, FT_Fixed line
 		/* compute minimum required length of lines */
 		FT_Fixed min_length = ft_pos_abs(FT_MulFix(stroker->radius, FT_Tan(theta)));
 
-		intersect = FT_BOOL(min_length && stroker->line_length >= min_length && line_length >= min_length);
+		intersect = min_length && stroker->line_length >= min_length && line_length >= min_length;
 	}
 
 	if (!intersect)
@@ -938,9 +938,9 @@ static FT_Error ft_stroker_outside(FT_Stroker stroker, FT_Int side, FT_Fixed lin
 
 		rotate = FT_SIDE_TO_ROTATE(side);
 
-		bevel = FT_BOOL(stroker->line_join == FT_STROKER_LINEJOIN_BEVEL);
+		bevel = stroker->line_join == FT_STROKER_LINEJOIN_BEVEL;
 
-		fixed_bevel = FT_BOOL(stroker->line_join != FT_STROKER_LINEJOIN_MITER_VARIABLE);
+		fixed_bevel = stroker->line_join != FT_STROKER_LINEJOIN_MITER_VARIABLE;
 
 		if (!bevel)
 		{
@@ -1591,8 +1591,8 @@ FT_EXPORT_DEF(FT_Error) FT_Stroker_BeginSubPath(FT_Stroker stroker, FT_Vector * 
 	/* be created, because round & miter joins and round & square caps    */
 	/* cover the negative sector created with wide strokes.               */
 	stroker->handle_wide_strokes =
-		FT_BOOL(stroker->line_join != FT_STROKER_LINEJOIN_ROUND ||
-				(stroker->subpath_open && stroker->line_cap == FT_STROKER_LINECAP_BUTT));
+		stroker->line_join != FT_STROKER_LINEJOIN_ROUND ||
+		(stroker->subpath_open && stroker->line_cap == FT_STROKER_LINECAP_BUTT);
 
 	/* record the subpath start point for each border */
 	stroker->subpath_start = *to;

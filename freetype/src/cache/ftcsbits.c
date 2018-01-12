@@ -303,7 +303,7 @@ FT_LOCAL_DEF(FT_Bool) ftc_snode_compare(FTC_Node ftcsnode, FT_Pointer ftcgquery,
 
 	if (list_changed)
 		*list_changed = FALSE;
-	result = FT_BOOL(gnode->family == gquery->family && (FT_UInt) (gindex - gnode->gindex) < snode->count);
+	result = gnode->family == gquery->family && (FT_UInt) (gindex - gnode->gindex) < snode->count;
 	if (result)
 	{
 		/* check if we need to load the glyph bitmap now */

@@ -2033,8 +2033,8 @@
       if ( FT_STREAM_READ_FIELDS( fvar_fields, &fvar_head ) )
         goto Exit;
 
-      usePsName = FT_BOOL( fvar_head.instanceSize ==
-                           6 + 4 * fvar_head.axisCount );
+      usePsName = fvar_head.instanceSize ==
+                           6 + 4 * fvar_head.axisCount;
 
       FT_TRACE2(( "loaded\n" ));
 

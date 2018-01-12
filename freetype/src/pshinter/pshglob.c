@@ -404,9 +404,9 @@
 
     /* 1000 / 64 = 125 / 8 */
     if ( scale >= 0x20C49BAL )
-      blues->no_overshoots = FT_BOOL( scale < blues->blue_scale * 8 / 125 );
+      blues->no_overshoots = scale < blues->blue_scale * 8 / 125;
     else
-      blues->no_overshoots = FT_BOOL( scale * 125 < blues->blue_scale * 8 );
+      blues->no_overshoots = scale * 125 < blues->blue_scale * 8;
 
     /*                                                        */
     /*  The blue threshold is the font units distance under   */

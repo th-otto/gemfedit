@@ -26,6 +26,3 @@
 #include "pfrload.c"
 #include "pfrobjs.c"
 #include "pfrsbit.c"
-
-
-/* END */

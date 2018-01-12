@@ -671,7 +671,7 @@ FT_EXPORT_DEF(FT_Error) FT_Load_Glyph(FT_Face face, FT_UInt32 glyph_index, FT_In
 
 #ifdef GRID_FIT_METRICS
 			if (!(load_flags & FT_LOAD_NO_HINTING))
-				ft_glyphslot_grid_fit_metrics(slot, FT_BOOL(load_flags & FT_LOAD_VERTICAL_LAYOUT));
+				ft_glyphslot_grid_fit_metrics(slot, (load_flags & FT_LOAD_VERTICAL_LAYOUT) != 0);
 #endif
 		}
 	}
@@ -1888,7 +1888,7 @@ static FT_Error ft_open_face_internal(FT_Library library,
 	if ((!aface && face_index >= 0) || !args)
 		return FT_THROW(Invalid_Argument);
 
-	external_stream = FT_BOOL((args->flags & FT_OPEN_STREAM) && args->stream);
+	external_stream = (args->flags & FT_OPEN_STREAM) != 0 && args->stream;
 
 	/* create input stream */
 	error = FT_Stream_New(library, args, &stream);

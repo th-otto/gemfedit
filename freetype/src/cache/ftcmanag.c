@@ -148,7 +148,7 @@ static FT_Bool ftc_size_node_compare_faceid(FTC_MruNode ftcnode, FT_Pointer ftcf
 	FTC_SizeNode node = (FTC_SizeNode) ftcnode;
 	FTC_FaceID face_id = (FTC_FaceID) ftcface_id;
 
-	return FT_BOOL(node->scaler.face_id == face_id);
+	return node->scaler.face_id == face_id;
 }
 
 
@@ -241,7 +241,7 @@ FT_CALLBACK_DEF(FT_Bool) ftc_face_node_compare(FTC_MruNode ftcnode, FT_Pointer f
 	FTC_FaceNode node = (FTC_FaceNode) ftcnode;
 	FTC_FaceID face_id = (FTC_FaceID) ftcface_id;
 
-	return FT_BOOL(node->face_id == face_id);
+	return node->face_id == face_id;
 }
 
 

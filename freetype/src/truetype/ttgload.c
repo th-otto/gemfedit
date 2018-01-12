@@ -1037,9 +1037,9 @@
     current.n_points = gloader->base.outline.n_points -
                          (short)num_base_points;
 
-    have_scale = FT_BOOL( subglyph->flags & ( WE_HAVE_A_SCALE     |
+    have_scale = ( subglyph->flags & ( WE_HAVE_A_SCALE     |
                                               WE_HAVE_AN_XY_SCALE |
-                                              WE_HAVE_A_2X2       ) );
+                                              WE_HAVE_A_2X2       ) ) != 0;
 
     /* perform the transform required for this subglyph */
     if ( have_scale )
@@ -2078,8 +2078,8 @@
         FT_Bool  ignore_x_mode;
 
 
-        ignore_x_mode = FT_BOOL( FT_LOAD_TARGET_MODE( loader->load_flags ) !=
-                                 FT_RENDER_MODE_MONO );
+        ignore_x_mode = FT_LOAD_TARGET_MODE( loader->load_flags ) !=
+                                 FT_RENDER_MODE_MONO;
 
         if ( widthp                                                   &&
              ( ( ignore_x_mode && loader->exec->compatible_widths ) ||
@@ -2277,7 +2277,7 @@
 
 #ifdef TT_USE_BYTECODE_INTERPRETER
     FT_Error   error;
-    FT_Bool    pedantic = FT_BOOL( load_flags & FT_LOAD_PEDANTIC );
+    FT_Bool    pedantic = ( load_flags & FT_LOAD_PEDANTIC ) != 0;
 #if defined TT_SUPPORT_SUBPIXEL_HINTING_INFINALITY || \
     defined TT_SUPPORT_SUBPIXEL_HINTING_MINIMAL
     TT_Driver  driver = (TT_Driver)FT_FACE_DRIVER( (TT_Face)glyph->face );
@@ -2339,18 +2339,18 @@
       if ( driver->interpreter_version == TT_INTERPRETER_VERSION_40 )
       {
         subpixel_hinting_lean =
-          FT_BOOL( FT_LOAD_TARGET_MODE( load_flags ) !=
-                   FT_RENDER_MODE_MONO               );
+          FT_LOAD_TARGET_MODE( load_flags ) !=
+                   FT_RENDER_MODE_MONO;
         grayscale_cleartype =
-          FT_BOOL( subpixel_hinting_lean         &&
+          subpixel_hinting_lean         &&
                    !( ( load_flags         &
                         FT_LOAD_TARGET_LCD )   ||
                       ( load_flags           &
-                        FT_LOAD_TARGET_LCD_V ) ) );
+                        FT_LOAD_TARGET_LCD_V ) );
         exec->vertical_lcd_lean =
-          FT_BOOL( subpixel_hinting_lean    &&
+          subpixel_hinting_lean    &&
                    ( load_flags           &
-                     FT_LOAD_TARGET_LCD_V ) );
+                     FT_LOAD_TARGET_LCD_V );
       }
       else
       {
@@ -2364,9 +2364,9 @@
 
       if ( driver->interpreter_version == TT_INTERPRETER_VERSION_38 )
       {
-        subpixel_hinting = FT_BOOL( ( FT_LOAD_TARGET_MODE( load_flags ) !=
+        subpixel_hinting = ( FT_LOAD_TARGET_MODE( load_flags ) !=
                                       FT_RENDER_MODE_MONO               )  &&
-                                    SPH_OPTION_SET_SUBPIXEL                );
+                                    SPH_OPTION_SET_SUBPIXEL;
 
         if ( subpixel_hinting )
           grayscale = FALSE;
@@ -2397,23 +2397,23 @@
         exec->gray_cleartype        = FALSE;
 #else /* 0 */
         exec->compatible_widths =
-          FT_BOOL( FT_LOAD_TARGET_MODE( load_flags ) !=
-                   TT_LOAD_COMPATIBLE_WIDTHS );
+          FT_LOAD_TARGET_MODE( load_flags ) !=
+                   TT_LOAD_COMPATIBLE_WIDTHS;
         exec->symmetrical_smoothing =
-          FT_BOOL( FT_LOAD_TARGET_MODE( load_flags ) !=
-                   TT_LOAD_SYMMETRICAL_SMOOTHING );
+          FT_LOAD_TARGET_MODE( load_flags ) !=
+                   TT_LOAD_SYMMETRICAL_SMOOTHING;
         exec->bgr =
-          FT_BOOL( FT_LOAD_TARGET_MODE( load_flags ) !=
-                   TT_LOAD_BGR );
+          FT_LOAD_TARGET_MODE( load_flags ) !=
+                   TT_LOAD_BGR;
         exec->vertical_lcd =
-          FT_BOOL( FT_LOAD_TARGET_MODE( load_flags ) !=
-                   TT_LOAD_VERTICAL_LCD );
+          FT_LOAD_TARGET_MODE( load_flags ) !=
+                   TT_LOAD_VERTICAL_LCD;
         exec->subpixel_positioned =
-          FT_BOOL( FT_LOAD_TARGET_MODE( load_flags ) !=
-                   TT_LOAD_SUBPIXEL_POSITIONED );
+          FT_LOAD_TARGET_MODE( load_flags ) !=
+                   TT_LOAD_SUBPIXEL_POSITIONED;
         exec->gray_cleartype =
-          FT_BOOL( FT_LOAD_TARGET_MODE( load_flags ) !=
-                   TT_LOAD_GRAY_CLEARTYPE );
+          FT_LOAD_TARGET_MODE( load_flags ) !=
+                   TT_LOAD_GRAY_CLEARTYPE;
 #endif /* 0 */
 
       }
@@ -2423,11 +2423,11 @@
 
 #ifdef TT_SUPPORT_SUBPIXEL_HINTING_MINIMAL
       if ( driver->interpreter_version == TT_INTERPRETER_VERSION_40 )
-        grayscale = FT_BOOL( !subpixel_hinting_lean               &&
-                             FT_LOAD_TARGET_MODE( load_flags ) != FT_RENDER_MODE_MONO );
+        grayscale = !subpixel_hinting_lean               &&
+                             FT_LOAD_TARGET_MODE( load_flags ) != FT_RENDER_MODE_MONO;
       else
 #endif
-        grayscale = FT_BOOL( FT_LOAD_TARGET_MODE( load_flags ) != FT_RENDER_MODE_MONO );
+        grayscale = FT_LOAD_TARGET_MODE( load_flags ) != FT_RENDER_MODE_MONO;
 
       error = TT_Load_Context( exec, face, size );
       if ( error )
@@ -2532,7 +2532,7 @@
         exec->ignore_x_mode = 0;
 #endif
 
-      exec->pedantic_hinting = FT_BOOL( load_flags & FT_LOAD_PEDANTIC );
+      exec->pedantic_hinting = ( load_flags & FT_LOAD_PEDANTIC ) != 0;
       loader->exec = exec;
       loader->instructions = exec->glyphIns;
     }

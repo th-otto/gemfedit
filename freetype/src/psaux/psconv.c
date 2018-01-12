@@ -107,7 +107,7 @@
 
     if ( *p == '-' || *p == '+' )
     {
-      sign = FT_BOOL( *p == '-' );
+      sign = *p == '-' ;
 
       p++;
       if ( p == limit )
@@ -215,7 +215,7 @@
 
     if ( *p == '-' || *p == '+' )
     {
-      sign = FT_BOOL( *p == '-' );
+      sign = *p == '-';
 
       p++;
       if ( p == limit )

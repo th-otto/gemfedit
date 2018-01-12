@@ -426,8 +426,7 @@
         break;
 
       case AFM_VALUE_TYPE_BOOL:
-        val->u.b = FT_BOOL( len == 4                      &&
-                            !ft_strncmp( str, "true", 4 ) );
+        val->u.b = len == 4 && !ft_strncmp( str, "true", 4 );
         break;
 
       case AFM_VALUE_TYPE_INDEX:

@@ -200,7 +200,7 @@
             case TT_MS_ID_SYMBOL_CS:
             case TT_MS_ID_UNICODE_CS:
             case TT_MS_ID_UCS_4:
-              is_english = FT_BOOL( ( rec->languageID & 0x3FF ) == 0x009 );
+              is_english = ( rec->languageID & 0x3FF ) == 0x009;
               found_win  = n;
               break;
 
@@ -1195,14 +1195,14 @@
 
     /* do we have outlines in there? */
 #ifdef FT_CONFIG_OPTION_INCREMENTAL
-    has_outline = FT_BOOL( face->root.internal->incremental_interface ||
+    has_outline = face->root.internal->incremental_interface ||
                            tt_face_lookup_table( face, TTAG_glyf )    ||
                            tt_face_lookup_table( face, TTAG_CFF )     ||
-                           tt_face_lookup_table( face, TTAG_CFF2 )    );
+                           tt_face_lookup_table( face, TTAG_CFF2 );
 #else
-    has_outline = FT_BOOL( tt_face_lookup_table( face, TTAG_glyf ) ||
+    has_outline = tt_face_lookup_table( face, TTAG_glyf ) ||
                            tt_face_lookup_table( face, TTAG_CFF )  ||
-                           tt_face_lookup_table( face, TTAG_CFF2 ) );
+                           tt_face_lookup_table( face, TTAG_CFF2 );
 #endif
 
     is_apple_sbit = 0;
@@ -1219,7 +1219,7 @@
     if ( !has_outline && sfnt->load_bhed )
     {
       LOAD_( bhed );
-      is_apple_sbit = FT_BOOL( !error );
+      is_apple_sbit = error == 0;
     }
 
     /* load the font header (`head' table) if this isn't an Apple */

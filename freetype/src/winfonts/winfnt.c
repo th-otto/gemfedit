@@ -233,7 +233,7 @@ ANONYMOUS_STRUCT_DUMMY(FT_IncrementalRec_)
       goto Exit;
     }
 
-    new_format = FT_BOOL( font->header.version == 0x300 );
+    new_format = font->header.version == 0x300;
     size       = new_format ? 148 : 118;
 
     if ( header->file_size < size )
@@ -1024,7 +1024,7 @@ ANONYMOUS_STRUCT_DUMMY(FT_IncrementalRec_)
     else
       glyph_index = font->header.default_char; /* the `.notdef' glyph  */
 
-    new_format = FT_BOOL( font->header.version == 0x300 );
+    new_format = font->header.version == 0x300;
     len        = new_format ? 6 : 4;
 
     /* get glyph width and offset */

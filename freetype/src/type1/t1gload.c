@@ -324,8 +324,8 @@
     t1glyph->outline.n_points   = 0;
     t1glyph->outline.n_contours = 0;
 
-    hinting = FT_BOOL( ( load_flags & FT_LOAD_NO_SCALE   ) == 0 &&
-                       ( load_flags & FT_LOAD_NO_HINTING ) == 0 );
+    hinting = ( load_flags & FT_LOAD_NO_SCALE   ) == 0 &&
+              ( load_flags & FT_LOAD_NO_HINTING ) == 0;
 
     t1glyph->format = FT_GLYPH_FORMAT_OUTLINE;
 
@@ -335,7 +335,7 @@
                                  t1glyph,
                                  (FT_Byte**)type1->glyph_names,
                                  face->blend,
-                                 FT_BOOL( hinting ),
+                                 hinting,
                                  FT_LOAD_TARGET_MODE( load_flags ),
                                  T1_Parse_Glyph );
     if ( error )
@@ -343,8 +343,7 @@
 
     must_finish_decoder = TRUE;
 
-    decoder.builder.no_recurse = FT_BOOL(
-                                   ( load_flags & FT_LOAD_NO_RECURSE ) != 0 );
+    decoder.builder.no_recurse = ( load_flags & FT_LOAD_NO_RECURSE ) != 0;
 
     decoder.num_subrs     = type1->num_subrs;
     decoder.subrs         = type1->subrs;

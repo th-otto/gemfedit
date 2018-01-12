@@ -316,8 +316,8 @@ static void af_latin2_metrics_init_blues(AF_LatinMetrics metrics, FT_Face face)
 				} while (end != best_point);
 
 				/* now, set the `round' flag depending on the segment's kind */
-				round = FT_BOOL(FT_CURVE_TAG(glyph->outline.tags[start]) != FT_CURVE_TAG_ON ||
-								FT_CURVE_TAG(glyph->outline.tags[end]) != FT_CURVE_TAG_ON);
+				round = FT_CURVE_TAG(glyph->outline.tags[start]) != FT_CURVE_TAG_ON ||
+						FT_CURVE_TAG(glyph->outline.tags[end]) != FT_CURVE_TAG_ON;
 
 				FT_TRACE5((" (%s)\n", round ? "round" : "flat"));
 			}
@@ -369,7 +369,7 @@ static void af_latin2_metrics_init_blues(AF_LatinMetrics metrics, FT_Face face)
 		{
 			FT_Pos ref = *blue_ref;
 			FT_Pos shoot = *blue_shoot;
-			FT_Bool over_ref = FT_BOOL(shoot > ref);
+			FT_Bool over_ref = shoot > ref;
 
 			if (AF_LATIN_IS_TOP_BLUE(bb) ^ over_ref)
 			{
@@ -1329,7 +1329,7 @@ static void af_latin2_hints_compute_blue_edges(AF_GlyphHints hints, AF_LatinMetr
 			/*                                                                 */
 			/* of course, that's for TrueType                                  */
 			is_top_blue = (FT_Byte) ((blue->flags & AF_LATIN_BLUE_TOP) != 0);
-			is_major_dir = FT_BOOL(edge->dir == axis->major_dir);
+			is_major_dir = edge->dir == axis->major_dir;
 
 			/* if it is a top zone, the edge must be against the major    */
 			/* direction; if it is a bottom zone, it must be in the major */
@@ -1362,7 +1362,7 @@ static void af_latin2_hints_compute_blue_edges(AF_GlyphHints hints, AF_LatinMetr
 				/* top zone, or under the reference position of a bottom zone   */
 				if (edge->flags & AF_EDGE_ROUND && dist != 0)
 				{
-					FT_Bool is_under_ref = FT_BOOL(edge->fpos < blue->ref.org);
+					FT_Bool is_under_ref = edge->fpos < blue->ref.org;
 
 					if (is_top_blue ^ is_under_ref)
 					{

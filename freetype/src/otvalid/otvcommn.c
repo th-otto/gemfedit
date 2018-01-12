@@ -994,7 +994,7 @@ FT_LOCAL_DEF(FT_UInt) otv_GSUBGPOS_have_MarkAttachmentType_flag(FT_Bytes table)
 	FT_UInt count;
 
 	if (!table)
-		return 0;
+		return FALSE;
 
 	/* LookupList */
 	p = table + 8;
@@ -1016,10 +1016,10 @@ FT_LOCAL_DEF(FT_UInt) otv_GSUBGPOS_have_MarkAttachmentType_flag(FT_Bytes table)
 		/* LookupFlag */
 		p = lookup + 2;
 		if (FT_NEXT_USHORT(p) & 0xFF00U)
-			return 1;
+			return TRUE;
 
 		p = oldp;
 	}
 
-	return 0;
+	return FALSE;
 }

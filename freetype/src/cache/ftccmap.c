@@ -148,7 +148,7 @@ ftc_cmap_node_compare(FTC_Node ftcnode, FT_Pointer ftcquery, FTC_Cache cache, FT
 	{
 		FT_UInt32 offset = (FT_UInt32) (query->char_code - node->first);
 
-		return FT_BOOL(offset < FTC_CMAP_INDICES_MAX);
+		return offset < FTC_CMAP_INDICES_MAX;
 	}
 
 	return 0;
@@ -164,7 +164,7 @@ FT_CALLBACK_DEF(FT_Bool) ftc_cmap_node_remove_faceid(FTC_Node ftcnode, FT_Pointe
 
 	if (list_changed)
 		*list_changed = FALSE;
-	return FT_BOOL(node->face_id == face_id);
+	return node->face_id == face_id;
 }
 
 

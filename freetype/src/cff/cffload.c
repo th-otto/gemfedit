@@ -1780,7 +1780,7 @@ static FT_Error cff_subfont_load(CFF_SubFont subfont,
 	CFF_FontRecDict top = &subfont->font_dict;
 	CFF_Private priv = &subfont->private_dict;
 
-	FT_Bool cff2 = FT_BOOL(code == CFF2_CODE_TOPDICT || code == CFF2_CODE_FONTDICT);
+	FT_Bool cff2 = code == CFF2_CODE_TOPDICT || code == CFF2_CODE_FONTDICT;
 	FT_UInt stackSize = cff2 ? CFF2_DEFAULT_STACK : CFF_MAX_STACK_DEPTH;
 
 	/* Note: We use default stack size for CFF2 Font DICT because        */
@@ -2209,7 +2209,7 @@ FT_LOCAL_DEF(FT_Error) cff_font_load(FT_Library library,
 	/* read the Charset and Encoding tables if available */
 	if (!cff2 && font->num_glyphs > 0)
 	{
-		FT_Bool invert = FT_BOOL(dict->cid_registry != 0xFFFFU && pure_cff);
+		FT_Bool invert = dict->cid_registry != 0xFFFFU && pure_cff;
 
 		error = cff_charset_load(&font->charset, font->num_glyphs, stream, base_offset, dict->charset_offset, invert);
 		if (error)

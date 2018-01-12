@@ -37,7 +37,7 @@ static int ft_lzwstate_refill(FT_LzwState state)
 
 	state->buf_size = (FT_UInt) count;
 	state->buf_total += count;
-	state->in_eof = FT_BOOL(count < state->num_bits);
+	state->in_eof = count < state->num_bits;
 	state->buf_offset = 0;
 
 	state->buf_size <<= 3;

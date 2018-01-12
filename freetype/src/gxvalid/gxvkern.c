@@ -505,9 +505,9 @@ static FT_Bool gxv_kern_coverage_new_apple_validate(FT_UShort coverage, FT_UShor
 		return FALSE;
 
 #ifdef GXV_LOAD_TRACE_VARS
-	kernVertical = FT_BOOL((coverage >> 15) & 1);
-	kernCrossStream = FT_BOOL((coverage >> 14) & 1);
-	kernVariation = FT_BOOL((coverage >> 13) & 1);
+	kernVertical = ((coverage >> 15) & 1) != 0;
+	kernCrossStream = ((coverage >> 14) & 1) != 0;
+	kernVariation = ((coverage >> 13) & 1) != 0;
 #endif
 
 	*format = (FT_UShort) (coverage & 0x0003);
@@ -539,8 +539,8 @@ static FT_Bool gxv_kern_coverage_classic_apple_validate(FT_UShort coverage, FT_U
 		return FALSE;
 
 #ifdef GXV_LOAD_TRACE_VARS
-	horizontal = FT_BOOL((coverage >> 15) & 1);
-	cross_stream = FT_BOOL((coverage >> 13) & 1);
+	horizontal = ((coverage >> 15) & 1) != 0;
+	cross_stream = ((coverage >> 13) & 1) != 0;
 #endif
 
 	*format = (FT_UShort) (coverage & 0x0003);
@@ -575,10 +575,10 @@ static FT_Bool gxv_kern_coverage_classic_microsoft_validate(FT_UShort coverage, 
 		return FALSE;
 
 #ifdef GXV_LOAD_TRACE_VARS
-	horizontal = FT_BOOL(coverage & 1);
-	minimum = FT_BOOL((coverage >> 1) & 1);
-	cross_stream = FT_BOOL((coverage >> 2) & 1);
-	override = FT_BOOL((coverage >> 3) & 1);
+	horizontal = (coverage & 1) != 0;
+	minimum = ((coverage >> 1) & 1) != 0;
+	cross_stream = ((coverage >> 2) & 1) != 0;
+	override = ((coverage >> 3) & 1) != 0;
 #endif
 
 	*format = (FT_UShort) ((coverage >> 8) & 0x0003);

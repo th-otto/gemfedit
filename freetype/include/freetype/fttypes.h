@@ -563,7 +563,6 @@ typedef struct FT_ListRec_
 
 
 #define FT_IS_EMPTY( list )  ( (list).head == 0 )
-#define FT_BOOL( x )  ( (FT_Bool)( x ) )
 
 /* see `ftmoderr.h' for descriptions of the following macros */
 

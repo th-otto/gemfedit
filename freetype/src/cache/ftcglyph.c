@@ -64,7 +64,7 @@ FT_LOCAL_DEF(FT_Bool) ftc_gnode_compare(FTC_Node ftcgnode, FT_Pointer ftcgquery,
 
 	if (list_changed)
 		*list_changed = FALSE;
-	return FT_BOOL(gnode->family == gquery->family && gnode->gindex == gquery->gindex);
+	return gnode->family == gquery->family && gnode->gindex == gquery->gindex;
 }
 
 

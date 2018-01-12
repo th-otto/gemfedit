@@ -2649,7 +2649,7 @@ FT_LOCAL_DEF(FT_Error) cff_slot_load(CFF_GlyphSlot glyph, CFF_Size size, FT_UInt
 				(void) ((SFNT_Service) face->sfnt)->get_metrics(face, 0, glyph_index, &dummy, &advance);
 				glyph->root.linearHoriAdvance = advance;
 
-				has_vertical_info = FT_BOOL(face->vertical_info && face->vertical.number_Of_VMetrics > 0);
+				has_vertical_info = face->vertical_info && face->vertical.number_Of_VMetrics > 0;
 
 				/* get the vertical metrics from the vmtx table if we have one */
 				if (has_vertical_info)
@@ -2712,8 +2712,8 @@ FT_LOCAL_DEF(FT_Error) cff_slot_load(CFF_GlyphSlot glyph, CFF_Size size, FT_UInt
 
 	/* top-level code ensures that FT_LOAD_NO_HINTING is set */
 	/* if FT_LOAD_NO_SCALE is active                         */
-	hinting = FT_BOOL((load_flags & FT_LOAD_NO_HINTING) == 0);
-	scaled = FT_BOOL((load_flags & FT_LOAD_NO_SCALE) == 0);
+	hinting = (load_flags & FT_LOAD_NO_HINTING) == 0;
+	scaled = (load_flags & FT_LOAD_NO_SCALE) == 0;
 
 	glyph->hint = hinting;
 	glyph->scaled = scaled;
@@ -2869,7 +2869,7 @@ FT_LOCAL_DEF(FT_Error) cff_slot_load(CFF_GlyphSlot glyph, CFF_Size size, FT_UInt
 
 			glyph->root.internal->glyph_transformed = 0;
 
-			has_vertical_info = FT_BOOL(face->vertical_info && face->vertical.number_Of_VMetrics > 0);
+			has_vertical_info = face->vertical_info && face->vertical.number_Of_VMetrics > 0;
 
 			/* get the vertical metrics from the vmtx table if we have one */
 			if (has_vertical_info)

@@ -431,10 +431,10 @@
       /* test to stop at \r only if it is not used for EOL.              */
 
       pos_lf  = ft_memchr( cur, '\n', (size_t)( limit - cur ) );
-      test_cr = FT_BOOL( !pos_lf                                       ||
+      test_cr = !pos_lf                                       ||
                          pos_lf > ft_memchr( cur,
                                              '\r',
-                                             (size_t)( limit - cur ) ) );
+                                             (size_t)( limit - cur ) );
 
       while ( cur < limit                    &&
               ( *cur == ' '                ||

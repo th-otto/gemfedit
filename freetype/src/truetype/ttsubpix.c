@@ -961,7 +961,7 @@
 
         tt_size_ready_bytecode(
           loader->exec->size,
-          FT_BOOL( loader->load_flags & FT_LOAD_PEDANTIC ) );
+          ( loader->load_flags & FT_LOAD_PEDANTIC ) != 0);
       }
       else
         loader->exec->rasterizer_version = TT_INTERPRETER_VERSION_35;
@@ -976,7 +976,7 @@
 
         tt_size_ready_bytecode(
           loader->exec->size,
-          FT_BOOL( loader->load_flags & FT_LOAD_PEDANTIC ) );
+          ( loader->load_flags & FT_LOAD_PEDANTIC ) != 0);
       }
       else
         loader->exec->rasterizer_version = SPH_OPTION_SET_RASTERIZER_VERSION;

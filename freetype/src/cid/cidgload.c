@@ -280,7 +280,7 @@ FT_LOCAL_DEF(FT_Error) cid_slot_load_glyph(FT_GlyphSlot cidglyph,	/* CID_GlyphSl
 	cidglyph->outline.n_points = 0;
 	cidglyph->outline.n_contours = 0;
 
-	hinting = FT_BOOL((load_flags & FT_LOAD_NO_SCALE) == 0 && (load_flags & FT_LOAD_NO_HINTING) == 0);
+	hinting = (load_flags & FT_LOAD_NO_SCALE) == 0 && (load_flags & FT_LOAD_NO_HINTING) == 0;
 
 	cidglyph->format = FT_GLYPH_FORMAT_OUTLINE;
 
@@ -294,7 +294,7 @@ FT_LOCAL_DEF(FT_Error) cid_slot_load_glyph(FT_GlyphSlot cidglyph,	/* CID_GlyphSl
 	/*       if we ever support CID-keyed multiple master fonts     */
 
 	/* set up the decoder */
-	decoder.builder.no_recurse = FT_BOOL(((load_flags & FT_LOAD_NO_RECURSE) != 0));
+	decoder.builder.no_recurse = (load_flags & FT_LOAD_NO_RECURSE) != 0;
 
 	error = cid_load_glyph(&decoder, glyph_index);
 	if (error)

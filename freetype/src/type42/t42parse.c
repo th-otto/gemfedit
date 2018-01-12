@@ -941,7 +941,7 @@
       if ( *cur == '/' || *cur == '(' )
       {
         FT_UInt  len;
-        FT_Bool  have_literal = FT_BOOL( *cur == '(' );
+        FT_Bool  have_literal = *cur == '(';
 
 
         if ( cur + ( have_literal ? 3 : 2 ) >= limit )

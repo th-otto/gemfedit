@@ -3353,12 +3353,12 @@
         break;
 
       case 0x1B:      /* ELSE */
-        Out = FT_BOOL( nIfs == 1 );
+        Out = nIfs == 1;
         break;
 
       case 0x59:      /* EIF */
         nIfs--;
-        Out = FT_BOOL( nIfs == 0 );
+        Out = nIfs == 0;
         break;
       }
     } while ( Out == 0 );
@@ -5156,7 +5156,7 @@
       /* INSTCTRL modifying flag 3 also has an effect */
       /* outside of the CVT program                   */
       if ( SUBPIXEL_HINTING_INFINALITY )
-        exc->ignore_x_mode = FT_BOOL( L == 4 );
+        exc->ignore_x_mode = L == 4;
 #endif
 
 #ifdef TT_SUPPORT_SUBPIXEL_HINTING_MINIMAL
@@ -5164,7 +5164,7 @@
       /* compatibility hacks and lets them program points to the grid like */
       /* it's 1996.  They might sign a waiver for just one glyph, though.  */
       if ( SUBPIXEL_HINTING_MINIMAL )
-        exc->backward_compatibility = !FT_BOOL( L == 4 );
+        exc->backward_compatibility = L != 4;
 #endif
     }
   }
@@ -5625,9 +5625,9 @@
     FT_Int      B1, B2;
 #endif
 #ifdef TT_SUPPORT_SUBPIXEL_HINTING_MINIMAL
-    FT_Bool     in_twilight = FT_BOOL( exc->GS.gep0 == 0 ||
+    FT_Bool     in_twilight = exc->GS.gep0 == 0 ||
                                        exc->GS.gep1 == 0 ||
-                                       exc->GS.gep2 == 0 );
+                                       exc->GS.gep2 == 0;
 #endif
 
 
