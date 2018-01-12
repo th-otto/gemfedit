@@ -144,12 +144,7 @@ do
 			   cr2nl -n "$thisdir/$i"
 	                   ;;
 			c) cp -a -v "$thisdir/$i" "$otherdir/$i"
-			   case "$i" in */Makefile.in | */Makefile.am | */config* | */*.m4)
-			      ;;
-			   *)
-			      (cd $otherdir; cr2nl -d "$i")
-			      ;;
-                           esac
+			   (cd $otherdir; cr2nl -d "$i")
 			   ;;
 			x) exit 1 ;;
 			*) echo "skipped $thisdir/$i" ;;

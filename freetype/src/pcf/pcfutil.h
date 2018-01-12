@@ -3,7 +3,7 @@
     FreeType font driver for pcf fonts
 
   Copyright 2000, 2001, 2004 by
-  Francesco Zappa Nardelli
+-  Francesco Zappa Nardelli
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -35,21 +35,12 @@ THE SOFTWARE.
 
 FT_BEGIN_HEADER
 
-  FT_LOCAL( void )
-  BitOrderInvert( unsigned char*  buf,
-                  size_t          nbytes );
+FT_LOCAL(void) BitOrderInvert(unsigned char *buf, size_t nbytes);
 
-  FT_LOCAL( void )
-  TwoByteSwap( unsigned char*  buf,
-               size_t          nbytes );
+FT_LOCAL(void) TwoByteSwap(unsigned char *buf, size_t nbytes);
 
-  FT_LOCAL( void )
-  FourByteSwap( unsigned char*  buf,
-                size_t          nbytes );
+FT_LOCAL(void) FourByteSwap(unsigned char *buf, size_t nbytes);
 
 FT_END_HEADER
 
 #endif /* PCFUTIL_H_ */
-
-
-/* END */

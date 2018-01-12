@@ -37,12 +37,8 @@ FT_BEGIN_HEADER
 #error "this module does not support PIC yet"
 #endif
 
-  FT_EXPORT_VAR( const FT_Driver_ClassRec )  pcf_driver_class;
+FT_EXPORT_VAR(const FT_Driver_ClassRec) pcf_driver_class;
 
 FT_END_HEADER
 
-
 #endif /* PCFDRIVR_H_ */
-
-
-/* END */

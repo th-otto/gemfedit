@@ -135,9 +135,9 @@
 
     &psaux_interface,  /* module-specific interface */
 
-    (FT_Module_Constructor)NULL,  /* module_init   */
-    (FT_Module_Destructor) NULL,  /* module_done   */
-    (FT_Module_Requester)  NULL   /* get_interface */
+    NULL,  /* module_init   */
+    NULL,  /* module_done   */
+    NULL   /* get_interface */
   };
 
 

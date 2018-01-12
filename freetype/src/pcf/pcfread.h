@@ -33,13 +33,8 @@ THE SOFTWARE.
 
 FT_BEGIN_HEADER
 
-  FT_LOCAL( PCF_Property )
-  pcf_find_property( PCF_Face          face,
-                     const FT_String*  prop );
+FT_LOCAL(PCF_Property) pcf_find_property(PCF_Face face, const FT_String * prop);
 
 FT_END_HEADER
 
 #endif /* PCFREAD_H_ */
-
-
-/* END */
