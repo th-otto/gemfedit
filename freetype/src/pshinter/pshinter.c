@@ -26,7 +26,4 @@ ANONYMOUS_STRUCT_DUMMY(T2_HintsRec_)
 #include "pshalgo.c"
 #include "pshglob.c"
 #include "pshmod.c"
-#include "pshpic.c"
 #include "pshrec.c"
-
-/* END */

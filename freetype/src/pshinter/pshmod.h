@@ -26,14 +26,8 @@
 
 FT_BEGIN_HEADER
 
-
-  FT_DECLARE_MODULE( pshinter_module_class )
-
+FT_DECLARE_MODULE(pshinter_module_class)
 
 FT_END_HEADER
 
-
-#endif /* PSHMOD_H_ */
-
-
-/* END */
+#endif									/* PSHMOD_H_ */
