@@ -37,6 +37,3 @@
 #include <freetype/fterrors.h>
 
 #endif /* RASTERRS_H_ */
-
-
-/* END */

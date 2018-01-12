@@ -63,21 +63,11 @@ struct FT_Glyph_Class_
 };
 
 
-typedef FT_Error (*FT_Renderer_RenderFunc) (FT_Renderer renderer, FT_GlyphSlot slot, FT_UInt mode, const FT_Vector * origin);
-
+typedef FT_Error (*FT_Renderer_RenderFunc) (FT_Renderer renderer, FT_GlyphSlot slot, FT_Render_Mode mode, const FT_Vector * origin);
 typedef FT_Error (*FT_Renderer_TransformFunc) (FT_Renderer renderer, FT_GlyphSlot slot, const FT_Matrix * matrix, const FT_Vector * delta);
-
-
 typedef void (*FT_Renderer_GetCBoxFunc) (FT_Renderer renderer, FT_GlyphSlot slot, FT_BBox * cbox);
-
-
 typedef FT_Error(*FT_Renderer_SetModeFunc) (FT_Renderer renderer, FT_ULong mode_tag, FT_Pointer mode_ptr);
 
-/* deprecated identifiers */
-#define FTRenderer_render  FT_Renderer_RenderFunc
-#define FTRenderer_transform  FT_Renderer_TransformFunc
-#define FTRenderer_getCBox  FT_Renderer_GetCBoxFunc
-#define FTRenderer_setMode  FT_Renderer_SetModeFunc
 
 
 /*************************************************************************/
@@ -117,7 +107,7 @@ typedef struct FT_Renderer_Class_
 	FT_Renderer_GetCBoxFunc get_glyph_cbox;
 	FT_Renderer_SetModeFunc set_mode;
 
-	FT_Raster_Funcs *raster_class;
+	const FT_Raster_Funcs *raster_class;
 
 } FT_Renderer_Class;
 

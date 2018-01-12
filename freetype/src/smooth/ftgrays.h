@@ -28,7 +28,7 @@
 #include "ftimage.h"
 #else
 #include <ft2build.h>
-#include <freetype/config/ftconfig.h> /* for FT_CONFIG_OPTION_PIC */
+#include <freetype/config/ftconfig.h>
 #include <freetype/fttypes.h>
 #include <freetype/ftsystem.h>
 #include <freetype/ftimage.h>

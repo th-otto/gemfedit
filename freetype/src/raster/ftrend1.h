@@ -26,13 +26,8 @@
 
 FT_BEGIN_HEADER
 
-
-  FT_DECLARE_RENDERER( ft_raster1_renderer_class )
-
+FT_DECLARE_RENDERER(ft_raster1_renderer_class)
 
 FT_END_HEADER
 
-#endif /* FTREND1_H_ */
-
-
-/* END */
+#endif									/* FTREND1_H_ */

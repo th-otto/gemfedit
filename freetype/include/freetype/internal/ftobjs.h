@@ -1069,15 +1069,20 @@ FT_EXPORT_VAR(FT_Raster_Funcs) ft_default_raster;
   FT_CALLBACK_TABLE_DEF                      \
   const FT_Renderer_Class  class_ =          \
   {                                          \
-    FT_DEFINE_ROOT_MODULE( flags_,           \
-                           size_,            \
-                           name_,            \
-                           version_,         \
-                           requires_,        \
-                           interface_,       \
-                           init_,            \
-                           done_,            \
-                           get_interface_ )  \
+  {                             \
+    flags_,                     \
+    size_,                      \
+                                \
+    name_,                      \
+    version_,                   \
+    requires_,                  \
+                                \
+    interface_,                 \
+                                \
+    init_,                      \
+    done_,                      \
+    get_interface_,             \
+  }, \
     glyph_format_,                           \
                                              \
     render_glyph_,                           \
@@ -1089,67 +1094,6 @@ FT_EXPORT_VAR(FT_Raster_Funcs) ft_default_raster;
   };
 
 #else /* FT_CONFIG_OPTION_PIC */
-
-#define FT_DECLARE_RENDERER( class_ )  FT_DECLARE_MODULE( class_ )
-
-#define FT_DEFINE_RENDERER( class_, flags_, size_, name_, version_, requires_, interface_, init_, done_, get_interface_, glyph_format_, render_glyph_, transform_glyph_, get_glyph_cbox_, set_mode_, raster_class_ )                    \
-  void                                                           \
-  FT_Destroy_Class_ ## class_( FT_Library        library,        \
-                               FT_Module_Class*  clazz )         \
-  {                                                              \
-    FT_Renderer_Class*  rclazz = (FT_Renderer_Class*)clazz;      \
-    FT_Memory           memory = library->memory;                \
-                                                                 \
-                                                                 \
-    class_ ## _pic_free( library );                              \
-    if ( rclazz ) {                                              \
-      FT_FREE( rclazz );                                         \
-    }                                                            \
-  }                                                              \
-                                                                 \
-                                                                 \
-  FT_Error                                                       \
-  FT_Create_Class_ ## class_( FT_Library         library,        \
-                              FT_Module_Class**  output_class )  \
-  {                                                              \
-    FT_Renderer_Class*  clazz = NULL;                            \
-    FT_Error            error;                                   \
-    FT_Memory           memory = library->memory;                \
-                                                                 \
-                                                                 \
-    if ( FT_ALLOC( clazz, sizeof ( *clazz ) ) )                  \
-      return error;                                              \
-                                                                 \
-    error = class_ ## _pic_init( library );                      \
-    if ( error )                                                 \
-    {                                                            \
-      FT_FREE( clazz );                                          \
-      return error;                                              \
-    }                                                            \
-                                                                 \
-    FT_DEFINE_ROOT_MODULE( flags_,                               \
-                           size_,                                \
-                           name_,                                \
-                           version_,                             \
-                           requires_,                            \
-                           interface_,                           \
-                           init_,                                \
-                           done_,                                \
-                           get_interface_ )                      \
-                                                                 \
-    clazz->glyph_format    = glyph_format_;                      \
-                                                                 \
-    clazz->render_glyph    = render_glyph_;                      \
-    clazz->transform_glyph = transform_glyph_;                   \
-    clazz->get_glyph_cbox  = get_glyph_cbox_;                    \
-    clazz->set_mode        = set_mode_;                          \
-                                                                 \
-    clazz->raster_class    = raster_class_;                      \
-                                                                 \
-    *output_class = (FT_Module_Class*)clazz;                     \
-                                                                 \
-    return FT_Err_Ok;                                            \
-  }
 
 #endif /* FT_CONFIG_OPTION_PIC */
 
@@ -1243,22 +1187,6 @@ typedef void (*FT_Module_Destroyer) (FT_Memory memory, FT_Module_Class * clazz);
   FT_CALLBACK_TABLE                  \
   const FT_Module_Class  class_;
 
-#define FT_DEFINE_ROOT_MODULE( flags_, size_, name_, version_, requires_, interface_, init_, done_, get_interface_ )      \
-  {                             \
-    flags_,                     \
-    size_,                      \
-                                \
-    name_,                      \
-    version_,                   \
-    requires_,                  \
-                                \
-    interface_,                 \
-                                \
-    init_,                      \
-    done_,                      \
-    get_interface_,             \
-  },
-
 #define FT_DEFINE_MODULE( class_, flags_, size_, name_, version_, requires_, interface_, init_, done_, get_interface_ )        \
   FT_CALLBACK_TABLE_DEF           \
   const FT_Module_Class class_ =  \
@@ -1280,76 +1208,6 @@ typedef void (*FT_Module_Destroyer) (FT_Memory memory, FT_Module_Class * clazz);
 
 #else /* FT_CONFIG_OPTION_PIC */
 
-#define FT_DECLARE_MODULE( class_ )                               \
-  FT_Error                                                        \
-  FT_Create_Class_ ## class_( FT_Library         library,         \
-                              FT_Module_Class**  output_class );  \
-  void                                                            \
-  FT_Destroy_Class_ ## class_( FT_Library        library,         \
-                               FT_Module_Class*  clazz );
-
-#define FT_DEFINE_ROOT_MODULE( flags_, size_, name_, version_, requires_, interface_, init_, done_, get_interface_ )      \
-    clazz->root.module_flags     = flags_;          \
-    clazz->root.module_size      = size_;           \
-    clazz->root.module_name      = name_;           \
-    clazz->root.module_version   = version_;        \
-    clazz->root.module_requires  = requires_;       \
-                                                    \
-    clazz->root.module_interface = interface_;      \
-                                                    \
-    clazz->root.module_init      = init_;           \
-    clazz->root.module_done      = done_;           \
-    clazz->root.get_interface    = get_interface_;
-
-#define FT_DEFINE_MODULE( class_, flags_, size_, name_, version_, requires_, interface_, init_, done_, get_interface_ )        \
-  void                                                           \
-  FT_Destroy_Class_ ## class_( FT_Library        library,        \
-                               FT_Module_Class*  clazz )         \
-  {                                                              \
-    FT_Memory memory = library->memory;                          \
-                                                                 \
-                                                                 \
-    class_ ## _pic_free( library );                              \
-    if ( clazz ) {                                               \
-      FT_FREE( clazz );                                          \
-    }                                                            \
-  }                                                              \
-                                                                 \
-                                                                 \
-  FT_Error                                                       \
-  FT_Create_Class_ ## class_( FT_Library         library,        \
-                              FT_Module_Class**  output_class )  \
-  {                                                              \
-    FT_Memory         memory = library->memory;                  \
-    FT_Module_Class*  clazz  = NULL;                             \
-    FT_Error          error;                                     \
-                                                                 \
-                                                                 \
-    if ( FT_ALLOC( clazz, sizeof ( *clazz ) ) )                  \
-      return error;                                              \
-    error = class_ ## _pic_init( library );                      \
-    if ( error )                                                 \
-    {                                                            \
-      FT_FREE( clazz );                                          \
-      return error;                                              \
-    }                                                            \
-                                                                 \
-    clazz->module_flags     = flags_;                            \
-    clazz->module_size      = size_;                             \
-    clazz->module_name      = name_;                             \
-    clazz->module_version   = version_;                          \
-    clazz->module_requires  = requires_;                         \
-                                                                 \
-    clazz->module_interface = interface_;                        \
-                                                                 \
-    clazz->module_init      = init_;                             \
-    clazz->module_done      = done_;                             \
-    clazz->get_interface    = get_interface_;                    \
-                                                                 \
-    *output_class = clazz;                                       \
-                                                                 \
-    return FT_Err_Ok;                                            \
-  }
 
 #endif /* FT_CONFIG_OPTION_PIC */
 

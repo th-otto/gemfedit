@@ -32,8 +32,9 @@ ANONYMOUS_STRUCT_DUMMY(FT_IncrementalRec_)
 
   /* initialize renderer -- init its raster */
   static FT_Error
-  ft_smooth_init( FT_Renderer  render )
+  ft_smooth_init( FT_Module  render_ )
   {
+	FT_Renderer render = (FT_Renderer)render_;
     render->clazz->raster_class->raster_reset( render->raster, NULL, 0 );
 
     return 0;
@@ -536,18 +537,18 @@ ANONYMOUS_STRUCT_DUMMY(FT_IncrementalRec_)
 
       NULL,    /* module specific interface */
 
-      (FT_Module_Constructor)ft_smooth_init,  /* module_init   */
-      (FT_Module_Destructor) NULL,            /* module_done   */
-      (FT_Module_Requester)  NULL,            /* get_interface */
+      ft_smooth_init,  /* module_init   */
+      NULL,            /* module_done   */
+      NULL,            /* get_interface */
 
     FT_GLYPH_FORMAT_OUTLINE,
 
-    (FT_Renderer_RenderFunc)   ft_smooth_render,     /* render_glyph    */
-    (FT_Renderer_TransformFunc)ft_smooth_transform,  /* transform_glyph */
-    (FT_Renderer_GetCBoxFunc)  ft_smooth_get_cbox,   /* get_glyph_cbox  */
-    (FT_Renderer_SetModeFunc)  ft_smooth_set_mode,   /* set_mode        */
+    ft_smooth_render,     /* render_glyph    */
+    ft_smooth_transform,  /* transform_glyph */
+    ft_smooth_get_cbox,   /* get_glyph_cbox  */
+    ft_smooth_set_mode,   /* set_mode        */
 
-    (FT_Raster_Funcs*)&FT_GRAYS_RASTER_GET           /* raster_class    */
+    &FT_GRAYS_RASTER_GET           /* raster_class    */
   )
 
 
@@ -563,18 +564,18 @@ ANONYMOUS_STRUCT_DUMMY(FT_IncrementalRec_)
 
       NULL,    /* module specific interface */
 
-      (FT_Module_Constructor)ft_smooth_init,  /* module_init   */
-      (FT_Module_Destructor) NULL,            /* module_done   */
-      (FT_Module_Requester)  NULL,            /* get_interface */
+      ft_smooth_init,  /* module_init   */
+      NULL,            /* module_done   */
+      NULL,            /* get_interface */
 
     FT_GLYPH_FORMAT_OUTLINE,
 
-    (FT_Renderer_RenderFunc)   ft_smooth_render_lcd,  /* render_glyph    */
-    (FT_Renderer_TransformFunc)ft_smooth_transform,   /* transform_glyph */
-    (FT_Renderer_GetCBoxFunc)  ft_smooth_get_cbox,    /* get_glyph_cbox  */
-    (FT_Renderer_SetModeFunc)  ft_smooth_set_mode,    /* set_mode        */
+    ft_smooth_render_lcd,  /* render_glyph    */
+    ft_smooth_transform,   /* transform_glyph */
+    ft_smooth_get_cbox,    /* get_glyph_cbox  */
+    ft_smooth_set_mode,    /* set_mode        */
 
-    (FT_Raster_Funcs*)&FT_GRAYS_RASTER_GET            /* raster_class    */
+    &FT_GRAYS_RASTER_GET            /* raster_class    */
   )
 
 
@@ -590,18 +591,18 @@ ANONYMOUS_STRUCT_DUMMY(FT_IncrementalRec_)
 
       NULL,    /* module specific interface */
 
-      (FT_Module_Constructor)ft_smooth_init,  /* module_init   */
-      (FT_Module_Destructor) NULL,            /* module_done   */
-      (FT_Module_Requester)  NULL,            /* get_interface */
+      ft_smooth_init,  /* module_init   */
+      NULL,            /* module_done   */
+      NULL,            /* get_interface */
 
     FT_GLYPH_FORMAT_OUTLINE,
 
-    (FT_Renderer_RenderFunc)   ft_smooth_render_lcd_v,  /* render_glyph    */
-    (FT_Renderer_TransformFunc)ft_smooth_transform,     /* transform_glyph */
-    (FT_Renderer_GetCBoxFunc)  ft_smooth_get_cbox,      /* get_glyph_cbox  */
-    (FT_Renderer_SetModeFunc)  ft_smooth_set_mode,      /* set_mode        */
+    ft_smooth_render_lcd_v,  /* render_glyph    */
+    ft_smooth_transform,     /* transform_glyph */
+    ft_smooth_get_cbox,      /* get_glyph_cbox  */
+    ft_smooth_set_mode,      /* set_mode        */
 
-    (FT_Raster_Funcs*)&FT_GRAYS_RASTER_GET              /* raster_class    */
+    &FT_GRAYS_RASTER_GET              /* raster_class    */
   )
 
 

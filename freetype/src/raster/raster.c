@@ -24,7 +24,3 @@ ANONYMOUS_STRUCT_DUMMY(FT_RasterRec_)
 
 #include "ftraster.c"
 #include "ftrend1.c"
-#include "rastpic.c"
-
-
-/* END */
