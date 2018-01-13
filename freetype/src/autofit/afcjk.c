@@ -27,7 +27,6 @@
 #include <freetype/internal/ftdebug.h>
 
 #include "afglobal.h"
-#include "afpic.h"
 #include "aflatin.h"
 #include "afcjk.h"
 
@@ -92,7 +91,7 @@ FT_LOCAL_DEF(void) af_cjk_metrics_init_widths(AF_CJKMetrics metrics, FT_Face fac
 #endif
 
 		AF_StyleClass style_class = metrics->root.style_class;
-		AF_ScriptClass script_class = AF_SCRIPT_CLASSES_GET[style_class->script];
+		AF_ScriptClass script_class = af_script_classes[style_class->script];
 
 		void *shaper_buf;
 		const char *p;

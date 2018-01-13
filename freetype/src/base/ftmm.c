@@ -59,7 +59,7 @@ static FT_Error ft_face_get_mm_service(FT_Face face, FT_Service_MultiMasters * a
 }
 
 
-static FT_Error ft_face_get_mvar_service(FT_Face face, FT_Service_MetricsVariations * aservice)
+static FT_Error ft_face_get_mvar_service(FT_Face face, const FT_Service_MetricsVariationsRec **aservice)
 {
 	FT_Error error;
 
@@ -159,7 +159,7 @@ FT_EXPORT_DEF(FT_Error) FT_Set_Var_Design_Coordinates(FT_Face face, FT_UInt num_
 {
 	FT_Error error;
 	FT_Service_MultiMasters service_mm = NULL;
-	FT_Service_MetricsVariations service_mvar = NULL;
+	const FT_Service_MetricsVariationsRec *service_mvar = NULL;
 
 	/* check of `face' delayed to `ft_face_get_mm_service' */
 
@@ -219,7 +219,7 @@ FT_EXPORT_DEF(FT_Error) FT_Set_MM_Blend_Coordinates(FT_Face face, FT_UInt num_co
 {
 	FT_Error error;
 	FT_Service_MultiMasters service_mm = NULL;
-	FT_Service_MetricsVariations service_mvar = NULL;
+	const FT_Service_MetricsVariationsRec *service_mvar = NULL;
 
 	/* check of `face' delayed to `ft_face_get_mm_service' */
 
@@ -260,7 +260,7 @@ FT_EXPORT_DEF(FT_Error) FT_Set_Var_Blend_Coordinates(FT_Face face, FT_UInt num_c
 {
 	FT_Error error;
 	FT_Service_MultiMasters service_mm = NULL;
-	FT_Service_MetricsVariations service_mvar = NULL;
+	const FT_Service_MetricsVariationsRec *service_mvar = NULL;
 
 	/* check of `face' delayed to `ft_face_get_mm_service' */
 

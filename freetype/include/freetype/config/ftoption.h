@@ -236,7 +236,9 @@ FT_BEGIN_HEADER
 /*                                                                       */
 /*   Define this macro if you want to enable this `feature'.             */
 /*                                                                       */
-#undef FT_CONFIG_OPTION_USE_PNG
+#ifdef __GNUC__
+#define FT_CONFIG_OPTION_USE_PNG
+#endif
 
 /*************************************************************************/
 /*                                                                       */

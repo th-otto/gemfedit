@@ -21,7 +21,6 @@
 #include "afhints.h"
 #include "aferrors.h"
 #include "afmodule.h"
-#include "afpic.h"
 
 #include <freetype/internal/ftcalc.h>
 
@@ -106,7 +105,7 @@ static FT_Error af_loader_embolden_glyph_in_slot(AF_Loader loader, FT_Face face,
 	 *  standard widths for the script of the glyph we are looking at.  If
 	 *  it can't deliver, stem darkening is disabled.
 	 */
-	writing_system_class = AF_WRITING_SYSTEM_CLASSES_GET[style_metrics->style_class->writing_system];
+	writing_system_class = af_writing_system_classes[style_metrics->style_class->writing_system];
 
 	if (writing_system_class->style_metrics_getstdw)
 		writing_system_class->style_metrics_getstdw(style_metrics, &stdHW, &stdVW);
@@ -267,7 +266,7 @@ FT_LOCAL_DEF(FT_Error) af_loader_load_glyph(AF_Loader loader, AF_Module module, 
 		goto Exit;
 
 	style_class = style_metrics->style_class;
-	writing_system_class = AF_WRITING_SYSTEM_CLASSES_GET[style_class->writing_system];
+	writing_system_class = af_writing_system_classes[style_class->writing_system];
 
 	loader->metrics = style_metrics;
 

@@ -26,13 +26,8 @@
 
 FT_BEGIN_HEADER
 
-
-  FT_DECLARE_MODULE( sfnt_module_class )
-
+FT_DECLARE_MODULE(sfnt_module_class)
 
 FT_END_HEADER
 
-#endif /* SFDRIVER_H_ */
-
-
-/* END */
+#endif									/* SFDRIVER_H_ */

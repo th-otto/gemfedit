@@ -515,7 +515,10 @@ FT_DEFINE_SERVICE_PSCMAPSREC(pscmaps_interface,
 )
 #endif
 
-FT_DEFINE_SERVICEDESCREC1(pscmaps_services, FT_SERVICE_ID_POSTSCRIPT_CMAPS, &pscmaps_interface)
+static const FT_ServiceDescRec pscmaps_services[] = {
+	{ FT_SERVICE_ID_POSTSCRIPT_CMAPS, &pscmaps_interface },
+	{ NULL, NULL }
+};
 
 FT_CALLBACK_DEF(FT_Module_Interface) psnames_get_service(FT_Module module, const char *service_id)
 {

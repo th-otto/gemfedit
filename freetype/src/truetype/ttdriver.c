@@ -507,8 +507,7 @@ ANONYMOUS_STRUCT_DUMMY(FT_IncrementalRec_)
     tt_done_blend           /* done_blend     */
   )
 
-  FT_DEFINE_SERVICE_METRICSVARIATIONSREC(
-    tt_service_metrics_variations,
+  static const FT_Service_MetricsVariationsRec tt_service_metrics_variations = {
 
     tt_hadvance_adjust,     /* hadvance_adjust */
     NULL,                   /* lsb_adjust      */
@@ -520,7 +519,7 @@ ANONYMOUS_STRUCT_DUMMY(FT_IncrementalRec_)
     NULL,                   /* vorg_adjust     */
 
     tt_apply_mvar           /* metrics_adjust  */
-  )
+  };
 
 #endif /* TT_CONFIG_OPTION_GX_VAR_SUPPORT */
 
@@ -546,26 +545,18 @@ ANONYMOUS_STRUCT_DUMMY(FT_IncrementalRec_)
   )
 
 
+static const FT_ServiceDescRec tt_services[] = {
+
+    { FT_SERVICE_ID_FONT_FORMAT,        FT_FONT_FORMAT_TRUETYPE },
 #ifdef TT_CONFIG_OPTION_GX_VAR_SUPPORT
-  FT_DEFINE_SERVICEDESCREC6(
-    tt_services,
-
-    FT_SERVICE_ID_FONT_FORMAT,        FT_FONT_FORMAT_TRUETYPE,
-    FT_SERVICE_ID_MULTI_MASTERS,      &TT_SERVICE_GX_MULTI_MASTERS_GET,
-    FT_SERVICE_ID_METRICS_VARIATIONS, &TT_SERVICE_METRICS_VARIATIONS_GET,
-    FT_SERVICE_ID_TRUETYPE_ENGINE,    &tt_service_truetype_engine,
-    FT_SERVICE_ID_TT_GLYF,            &TT_SERVICE_TRUETYPE_GLYF_GET,
-    FT_SERVICE_ID_PROPERTIES,         &TT_SERVICE_PROPERTIES_GET )
-#else
-  FT_DEFINE_SERVICEDESCREC4(
-    tt_services,
-
-    FT_SERVICE_ID_FONT_FORMAT,     FT_FONT_FORMAT_TRUETYPE,
-    FT_SERVICE_ID_TRUETYPE_ENGINE, &tt_service_truetype_engine,
-    FT_SERVICE_ID_TT_GLYF,         &TT_SERVICE_TRUETYPE_GLYF_GET,
-    FT_SERVICE_ID_PROPERTIES,      &TT_SERVICE_PROPERTIES_GET )
+    { FT_SERVICE_ID_MULTI_MASTERS,      &TT_SERVICE_GX_MULTI_MASTERS_GET },
+    { FT_SERVICE_ID_METRICS_VARIATIONS, &TT_SERVICE_METRICS_VARIATIONS_GET},
 #endif
-
+    { FT_SERVICE_ID_TRUETYPE_ENGINE,    &tt_service_truetype_engine },
+    { FT_SERVICE_ID_TT_GLYF,            &TT_SERVICE_TRUETYPE_GLYF_GET },
+    { FT_SERVICE_ID_PROPERTIES,         &TT_SERVICE_PROPERTIES_GET },
+	{ NULL, NULL }
+};
 
   FT_CALLBACK_DEF( FT_Module_Interface )
   tt_get_interface( FT_Module    driver,    /* TT_Driver */

@@ -896,7 +896,7 @@ FT_DEFINE_SERVICE_MULTIMASTERSREC(cff_service_multi_masters,
 static FT_Error cff_hadvance_adjust(FT_Face face_, FT_UInt gindex, FT_Int * avalue)
 {
 	CFF_Face face = (CFF_Face) face_;
-	FT_Service_MetricsVariations var = (FT_Service_MetricsVariations) face->var;
+	const FT_Service_MetricsVariations var = (FT_Service_MetricsVariations) face->var;
 
 	return var->hadvance_adjust(FT_FACE(face), gindex, avalue);
 }
@@ -905,13 +905,13 @@ static FT_Error cff_hadvance_adjust(FT_Face face_, FT_UInt gindex, FT_Int * aval
 static void cff_metrics_adjust(FT_Face face_)
 {
 	CFF_Face face = (CFF_Face) face_;
-	FT_Service_MetricsVariations var = (FT_Service_MetricsVariations) face->var;
+	const FT_Service_MetricsVariations var = (FT_Service_MetricsVariations) face->var;
 
 	var->metrics_adjust(FT_FACE(face));
 }
 
 
-FT_DEFINE_SERVICE_METRICSVARIATIONSREC(cff_service_metrics_variations,
+static const FT_Service_MetricsVariationsRec cff_service_metrics_variations = {
 	cff_hadvance_adjust,	/* hadvance_adjust */
 	NULL,	/* lsb_adjust      */
 	NULL,	/* rsb_adjust      */
@@ -920,7 +920,8 @@ FT_DEFINE_SERVICE_METRICSVARIATIONSREC(cff_service_metrics_variations,
 	NULL,	/* bsb_adjust      */
 	NULL,	/* vorg_adjust     */
 	cff_metrics_adjust	/* metrics_adjust  */
-)
+};
+
 #endif
 
 /*************************************************************************/
@@ -935,48 +936,25 @@ FT_DEFINE_SERVICE_METRICSVARIATIONSREC(cff_service_metrics_variations,
 /*************************************************************************/
 /*************************************************************************/
 
-#if !defined FT_CONFIG_OPTION_NO_GLYPH_NAMES && \
-     defined TT_CONFIG_OPTION_GX_VAR_SUPPORT
-	FT_DEFINE_SERVICEDESCREC9(cff_services,
-						  FT_SERVICE_ID_FONT_FORMAT, FT_FONT_FORMAT_CFF,
-						  FT_SERVICE_ID_MULTI_MASTERS, &CFF_SERVICE_MULTI_MASTERS_GET,
-						  FT_SERVICE_ID_METRICS_VARIATIONS, &CFF_SERVICE_METRICS_VAR_GET,
-						  FT_SERVICE_ID_POSTSCRIPT_INFO, &CFF_SERVICE_PS_INFO_GET,
-						  FT_SERVICE_ID_POSTSCRIPT_FONT_NAME, &CFF_SERVICE_PS_NAME_GET,
-						  FT_SERVICE_ID_GLYPH_DICT, &CFF_SERVICE_GLYPH_DICT_GET,
-						  FT_SERVICE_ID_TT_CMAP, &CFF_SERVICE_GET_CMAP_INFO_GET,
-						  FT_SERVICE_ID_CID, &CFF_SERVICE_CID_INFO_GET,
-						  FT_SERVICE_ID_PROPERTIES, &CFF_SERVICE_PROPERTIES_GET)
-#elif !defined FT_CONFIG_OPTION_NO_GLYPH_NAMES
-	FT_DEFINE_SERVICEDESCREC7(cff_services,
-						  FT_SERVICE_ID_FONT_FORMAT, FT_FONT_FORMAT_CFF,
-						  FT_SERVICE_ID_POSTSCRIPT_INFO, &CFF_SERVICE_PS_INFO_GET,
-						  FT_SERVICE_ID_POSTSCRIPT_FONT_NAME, &CFF_SERVICE_PS_NAME_GET,
-						  FT_SERVICE_ID_GLYPH_DICT, &CFF_SERVICE_GLYPH_DICT_GET,
-						  FT_SERVICE_ID_TT_CMAP, &CFF_SERVICE_GET_CMAP_INFO_GET,
-						  FT_SERVICE_ID_CID, &CFF_SERVICE_CID_INFO_GET,
-						  FT_SERVICE_ID_PROPERTIES, &CFF_SERVICE_PROPERTIES_GET)
-#elif defined TT_CONFIG_OPTION_GX_VAR_SUPPORT
-	FT_DEFINE_SERVICEDESCREC8(cff_services,
-						  FT_SERVICE_ID_FONT_FORMAT, FT_FONT_FORMAT_CFF,
-						  FT_SERVICE_ID_MULTI_MASTERS, &CFF_SERVICE_MULTI_MASTERS_GET,
-						  FT_SERVICE_ID_METRICS_VARIATIONS, &CFF_SERVICE_METRICS_VAR_GET,
-						  FT_SERVICE_ID_POSTSCRIPT_INFO, &CFF_SERVICE_PS_INFO_GET,
-						  FT_SERVICE_ID_POSTSCRIPT_FONT_NAME, &CFF_SERVICE_PS_NAME_GET,
-						  FT_SERVICE_ID_TT_CMAP, &CFF_SERVICE_GET_CMAP_INFO_GET,
-						  FT_SERVICE_ID_CID, &CFF_SERVICE_CID_INFO_GET,
-						  FT_SERVICE_ID_PROPERTIES, &CFF_SERVICE_PROPERTIES_GET)
-#else
-	FT_DEFINE_SERVICEDESCREC6(cff_services,
-						  FT_SERVICE_ID_FONT_FORMAT, FT_FONT_FORMAT_CFF,
-						  FT_SERVICE_ID_POSTSCRIPT_INFO, &CFF_SERVICE_PS_INFO_GET,
-						  FT_SERVICE_ID_POSTSCRIPT_FONT_NAME, &CFF_SERVICE_PS_NAME_GET,
-						  FT_SERVICE_ID_TT_CMAP, &CFF_SERVICE_GET_CMAP_INFO_GET,
-						  FT_SERVICE_ID_CID, &CFF_SERVICE_CID_INFO_GET,
-						  FT_SERVICE_ID_PROPERTIES, &CFF_SERVICE_PROPERTIES_GET)
+static const FT_ServiceDescRec cff_services[] = {
+	{ FT_SERVICE_ID_FONT_FORMAT, FT_FONT_FORMAT_CFF },
+#if defined TT_CONFIG_OPTION_GX_VAR_SUPPORT
+	{ FT_SERVICE_ID_MULTI_MASTERS, &CFF_SERVICE_MULTI_MASTERS_GET },
 #endif
-	FT_CALLBACK_DEF(FT_Module_Interface) cff_get_interface(FT_Module driver,	/* CFF_Driver */
-														   const char *module_interface)
+#if !defined FT_CONFIG_OPTION_NO_GLYPH_NAMES
+	{ FT_SERVICE_ID_METRICS_VARIATIONS, &CFF_SERVICE_METRICS_VAR_GET },
+#endif
+	{ FT_SERVICE_ID_POSTSCRIPT_INFO, &CFF_SERVICE_PS_INFO_GET },
+	{ FT_SERVICE_ID_POSTSCRIPT_FONT_NAME, &CFF_SERVICE_PS_NAME_GET },
+	{ FT_SERVICE_ID_GLYPH_DICT, &CFF_SERVICE_GLYPH_DICT_GET },
+	{ FT_SERVICE_ID_TT_CMAP, &CFF_SERVICE_GET_CMAP_INFO_GET },
+	{ FT_SERVICE_ID_CID, &CFF_SERVICE_CID_INFO_GET },
+	{ FT_SERVICE_ID_PROPERTIES, &CFF_SERVICE_PROPERTIES_GET },
+	{ NULL, NULL }
+};
+
+
+FT_CALLBACK_DEF(FT_Module_Interface) cff_get_interface(FT_Module driver, const char *module_interface)
 {
 	FT_Library library;
 	FT_Module sfnt;

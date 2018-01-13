@@ -22,7 +22,6 @@
 #include <freetype/internal/ftdebug.h>
 
 #include "afglobal.h"
-#include "afpic.h"
 #include "aflatin.h"
 #include "aferrors.h"
 
@@ -85,7 +84,7 @@ FT_LOCAL_DEF(void) af_latin_metrics_init_widths(AF_LatinMetrics metrics, FT_Face
 #endif
 
 		AF_StyleClass style_class = metrics->root.style_class;
-		AF_ScriptClass script_class = AF_SCRIPT_CLASSES_GET[style_class->script];
+		AF_ScriptClass script_class = af_script_classes[style_class->script];
 
 		void *shaper_buf;
 		const char *p;
@@ -1881,7 +1880,7 @@ FT_LOCAL_DEF(FT_Error) af_latin_hints_compute_edges(AF_GlyphHints hints, AF_Dime
 #endif
 
 	AF_StyleClass style_class = hints->metrics->style_class;
-	AF_ScriptClass script_class = AF_SCRIPT_CLASSES_GET[style_class->script];
+	AF_ScriptClass script_class = af_script_classes[style_class->script];
 
 	FT_Bool top_to_bottom_hinting = 0;
 
@@ -2676,7 +2675,7 @@ static void af_latin_hint_edges(AF_GlyphHints hints, AF_Dimension dim)
 #endif
 
 	AF_StyleClass style_class = hints->metrics->style_class;
-	AF_ScriptClass script_class = AF_SCRIPT_CLASSES_GET[style_class->script];
+	AF_ScriptClass script_class = af_script_classes[style_class->script];
 
 	FT_Bool top_to_bottom_hinting = 0;
 

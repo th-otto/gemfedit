@@ -26,7 +26,6 @@ ANONYMOUS_STRUCT_DUMMY(GX_BlendRec_)
 
 #include "pngshim.c"
 #include "sfdriver.c"
-#include "sfntpic.c"
 #include "sfobjs.c"
 #include "ttbdf.c"
 #include "ttcmap.c"
@@ -35,6 +34,3 @@ ANONYMOUS_STRUCT_DUMMY(GX_BlendRec_)
 #include "ttmtx.c"
 #include "ttpost.c"
 #include "ttsbit.c"
-
-
-/* END */
