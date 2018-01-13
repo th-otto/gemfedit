@@ -682,9 +682,10 @@ static FT_Error pcf_property_get(FT_Module module,	/* PCF_Driver */
 }
 
 
-FT_DEFINE_SERVICE_PROPERTIESREC(pcf_service_properties,
+static const FT_Service_PropertiesRec pcf_service_properties = {
 	pcf_property_set,	/* set_property */
-	pcf_property_get)	/* get_property */
+	pcf_property_get	/* get_property */
+};
 
 /*
  *  SERVICE LIST

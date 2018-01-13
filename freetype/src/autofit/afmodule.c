@@ -350,7 +350,10 @@ static FT_Error af_property_get(FT_Module ft_module, const char *property_name, 
 }
 
 
-FT_DEFINE_SERVICE_PROPERTIESREC(af_service_properties, af_property_set,	af_property_get)
+static const FT_Service_PropertiesRec af_service_properties = {
+	af_property_set,
+	af_property_get
+};
 
 static const FT_ServiceDescRec af_services[] = {
 	{ FT_SERVICE_ID_PROPERTIES, &af_service_properties },

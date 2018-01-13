@@ -58,41 +58,6 @@ FT_DEFINE_SERVICE(MultiMasters)
 };
 
 
-#ifndef FT_CONFIG_OPTION_PIC
-
-#define FT_DEFINE_SERVICE_MULTIMASTERSREC( class_, get_mm_, set_mm_design_, set_mm_blend_, get_mm_blend_, get_mm_var_, set_var_design_, get_var_design_, get_var_blend_, done_blend_ ) \
-  static const FT_Service_MultiMastersRec  class_ =          \
-  {                                                          \
-    get_mm_,                                                 \
-    set_mm_design_,                                          \
-    set_mm_blend_,                                           \
-    get_mm_blend_,                                           \
-    get_mm_var_,                                             \
-    set_var_design_,                                         \
-    get_var_design_,                                         \
-    get_var_blend_,                                          \
-    done_blend_                                              \
-  };
-
-#else /* FT_CONFIG_OPTION_PIC */
-
-#define FT_DEFINE_SERVICE_MULTIMASTERSREC( class_, get_mm_, set_mm_design_, set_mm_blend_, get_mm_blend_, get_mm_var_, set_var_design_, get_var_design_, get_var_blend_, done_blend_ ) \
-  void                                                           \
-  FT_Init_Class_ ## class_( FT_Service_MultiMastersRec*  clazz ) \
-  {                                                              \
-    clazz->get_mm         = get_mm_;                             \
-    clazz->set_mm_design  = set_mm_design_;                      \
-    clazz->set_mm_blend   = set_mm_blend_;                       \
-    clazz->get_mm_blend   = get_mm_blend_;                       \
-    clazz->get_mm_var     = get_mm_var_;                         \
-    clazz->set_var_design = set_var_design_;                     \
-    clazz->get_var_design = get_var_design_;                     \
-    clazz->get_var_blend  = get_var_blend_;                      \
-    clazz->done_blend     = done_blend_;                         \
-  }
-
-#endif /* FT_CONFIG_OPTION_PIC */
-
 FT_END_HEADER
 
 #endif /* SVMM_H_ */

@@ -26,7 +26,7 @@
 
 FT_BEGIN_HEADER
 
-FT_DECLARE_DRIVER(cff_driver_class)
+FT_CALLBACK_TABLE const FT_Driver_ClassRec cff_driver_class;
 
 #ifdef FT_CONFIG_OPTION_PIC
 FT_Error FT_Create_Class_cff_services(FT_Library library, FT_ServiceDescRec ** output_class);

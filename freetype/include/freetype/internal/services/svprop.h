@@ -34,27 +34,6 @@ FT_DEFINE_SERVICE(Properties)
 };
 
 
-#ifndef FT_CONFIG_OPTION_PIC
-
-#define FT_DEFINE_SERVICE_PROPERTIESREC( class_, set_property_, get_property_ )  \
-  static const FT_Service_PropertiesRec  class_ =         \
-  {                                                       \
-    set_property_,                                        \
-    get_property_                                         \
-  };
-
-#else /* FT_CONFIG_OPTION_PIC */
-
-#define FT_DEFINE_SERVICE_PROPERTIESREC( class_, set_property_, get_property_ )  \
-  void                                                          \
-  FT_Init_Class_ ## class_( FT_Service_PropertiesRec*  clazz )  \
-  {                                                             \
-    clazz->set_property = set_property_;                        \
-    clazz->get_property = get_property_;                        \
-  }
-
-#endif /* FT_CONFIG_OPTION_PIC */
-
 FT_END_HEADER
 
 #endif /* SVPROP_H_ */

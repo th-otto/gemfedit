@@ -823,9 +823,10 @@ static FT_Error cff_property_get(FT_Module module,	/* CFF_Driver */
 }
 
 
-FT_DEFINE_SERVICE_PROPERTIESREC(cff_service_properties,
+static const FT_Service_PropertiesRec cff_service_properties = {
 	cff_property_set,	/* set_property */
-	cff_property_get)	/* get_property */
+	cff_property_get	/* get_property */
+};
 
 #ifdef TT_CONFIG_OPTION_GX_VAR_SUPPORT
 /*
@@ -877,7 +878,7 @@ static FT_Error cff_get_var_design(FT_Face face_, FT_UInt num_coords, FT_Fixed *
 }
 
 
-FT_DEFINE_SERVICE_MULTIMASTERSREC(cff_service_multi_masters,
+static const FT_Service_MultiMastersRec cff_service_multi_masters = {
 	NULL,	/* get_mm         */
 	NULL,	/* set_mm_design  */
 	cff_set_mm_blend,	/* set_mm_blend   */
@@ -887,7 +888,7 @@ FT_DEFINE_SERVICE_MULTIMASTERSREC(cff_service_multi_masters,
 	cff_get_var_design,	/* get_var_design */
 	cff_get_var_blend,	/* get_var_blend  */
 	cff_done_blend	/* done_blend     */
-)
+};
 
 /*
  *  METRICS VARIATIONS SERVICE
@@ -996,16 +997,18 @@ FT_CALLBACK_DEF(FT_Module_Interface) cff_get_interface(FT_Module driver, const c
 #define CFF_SIZE_SELECT 0
 #endif
 
-FT_DEFINE_DRIVER(cff_driver_class,
-	FT_MODULE_FONT_DRIVER | FT_MODULE_DRIVER_SCALABLE | FT_MODULE_DRIVER_HAS_HINTER | FT_MODULE_DRIVER_HINTS_LIGHTLY,
-	sizeof(CFF_DriverRec),
-	"cff",
-	0x10000L,
-	0x20000L,
-	NULL,					/* module-specific interface */
-	cff_driver_init,		/* FT_Module_Constructor  module_init   */
-	cff_driver_done,		/* FT_Module_Destructor   module_done   */
-	cff_get_interface,		/* FT_Module_Requester    get_interface */
+FT_CALLBACK_TABLE_DEF const FT_Driver_ClassRec cff_driver_class = {
+	{
+		FT_MODULE_FONT_DRIVER | FT_MODULE_DRIVER_SCALABLE | FT_MODULE_DRIVER_HAS_HINTER | FT_MODULE_DRIVER_HINTS_LIGHTLY,
+		sizeof(CFF_DriverRec),
+		"cff",
+		0x10000L,
+		0x20000L,
+		NULL,					/* module-specific interface */
+		cff_driver_init,		/* FT_Module_Constructor  module_init   */
+		cff_driver_done,		/* FT_Module_Destructor   module_done   */
+		cff_get_interface,		/* FT_Module_Requester    get_interface */
+	},
 	sizeof(TT_FaceRec),
 	sizeof(CFF_SizeRec),
 	sizeof(CFF_GlyphSlotRec),
@@ -1021,4 +1024,4 @@ FT_DEFINE_DRIVER(cff_driver_class,
 	cff_get_advances,		/* FT_Face_GetAdvancesFunc  get_advances */
 	cff_size_request,		/* FT_Size_RequestFunc  request_size */
 	CFF_SIZE_SELECT			/* FT_Size_SelectFunc   select_size  */
-)
+};
