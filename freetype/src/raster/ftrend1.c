@@ -203,20 +203,22 @@ static FT_Error ft_raster1_render(FT_Renderer render, FT_GlyphSlot slot, FT_Rend
 }
 
 
-FT_DEFINE_RENDERER(ft_raster1_renderer_class,
-	FT_MODULE_RENDERER,
-	sizeof(FT_RendererRec),
-	"raster1",
-	0x10000L,
-	0x20000L,
-	NULL,	/* module specific interface */
-	ft_raster1_init,	/* module_init   */
-	NULL,	/* module_done   */
-	NULL,	/* get_interface */
+FT_CALLBACK_TABLE_DEF const FT_Renderer_Class ft_raster1_renderer_class = {
+	{
+		FT_MODULE_RENDERER,
+		sizeof(FT_RendererRec),
+		"raster1",
+		0x10000L,
+		0x20000L,
+		NULL,	/* module specific interface */
+		ft_raster1_init,	/* module_init   */
+		NULL,	/* module_done   */
+		NULL	/* get_interface */
+	},
 	FT_GLYPH_FORMAT_OUTLINE,
 	ft_raster1_render,	/* render_glyph    */
 	ft_raster1_transform,	/* transform_glyph */
 	ft_raster1_get_cbox,	/* get_glyph_cbox  */
 	ft_raster1_set_mode,	/* set_mode        */
 	&ft_standard_raster	/* raster_class    */
-)
+};

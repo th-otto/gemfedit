@@ -22,7 +22,3 @@
 
 #include "ftgrays.c"
 #include "ftsmooth.c"
-#include "ftspic.c"
-
-
-/* END */

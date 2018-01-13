@@ -212,17 +212,6 @@
 
 #define ft_memset  memset
 
-#define FT_DEFINE_RASTER_FUNCS( class_, glyph_format_, raster_new_, raster_reset_, raster_set_mode_, raster_render_, raster_done_ )      \
-          const FT_Raster_Funcs class_ =                            \
-          {                                                         \
-            glyph_format_,                                          \
-            raster_new_,                                            \
-            raster_reset_,                                          \
-            raster_set_mode_,                                       \
-            raster_render_,                                         \
-            raster_done_                                            \
-         };
-
 #else /* !STANDALONE_ */
 
 
@@ -2971,11 +2960,11 @@ static int ft_black_render(FT_Raster raster, const FT_Raster_Params * params)
 }
 
 
-FT_DEFINE_RASTER_FUNCS(ft_standard_raster,
+const FT_Raster_Funcs ft_standard_raster = {
 	FT_GLYPH_FORMAT_OUTLINE,
 	ft_black_new,	/* (FT_Raster_NewFunc)      raster_new      */
 	ft_black_reset,	/* (FT_Raster_ResetFunc)    raster_reset    */
 	ft_black_set_mode,	/* (FT_Raster_SetModeFunc)  raster_set_mode */
 	ft_black_render,	/* (FT_Raster_RenderFunc)   raster_render   */
 	ft_black_done	/* (FT_Raster_DoneFunc)     raster_done     */
-)
+};

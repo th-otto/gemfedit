@@ -26,17 +26,10 @@
 
 FT_BEGIN_HEADER
 
-
-  FT_DECLARE_RENDERER( ft_smooth_renderer_class )
-
-  FT_DECLARE_RENDERER( ft_smooth_lcd_renderer_class )
-
-  FT_DECLARE_RENDERER( ft_smooth_lcdv_renderer_class )
-
+FT_DECLARE_RENDERER(ft_smooth_renderer_class)
+FT_DECLARE_RENDERER(ft_smooth_lcd_renderer_class)
+FT_DECLARE_RENDERER(ft_smooth_lcdv_renderer_class)
 
 FT_END_HEADER
 
 #endif /* FTSMOOTH_H_ */
-
-
-/* END */

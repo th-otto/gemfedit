@@ -376,14 +376,15 @@ static int BBox_Cubic_To(const FT_Vector *control1, const FT_Vector *control2, c
 }
 
 
-FT_DEFINE_OUTLINE_FUNCS(bbox_interface,
+static const FT_Outline_Funcs bbox_interface = {
 	BBox_Move_To,	/* FT_Outline_MoveToFunc move_to  */
 	BBox_Line_To,	/* FT_Outline_LineToFunc line_to  */
 	BBox_Conic_To,	/* FT_Outline_ConicToFunc conic_to */
 	BBox_Cubic_To,	/* FT_Outline_CubicToFunc cubic_to */
 	0,				/* shift    */
 	0				/* delta    */
-)
+};
+
 
 FT_EXPORT_DEF(FT_Error) FT_Outline_Get_BBox(FT_Outline * outline, FT_BBox * abbox)
 {
