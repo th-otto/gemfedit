@@ -45,7 +45,7 @@ typedef struct AF_ModuleRec_
 } AF_ModuleRec, *AF_Module;
 
 
-FT_DECLARE_MODULE(autofit_module_class)
+FT_CALLBACK_TABLE const FT_Module_Class autofit_module_class;
 
 #ifdef FT_DEBUG_AUTOFIT
 void af_glyph_hints_dump_segments(AF_GlyphHints hints, FT_Bool to_stdout);

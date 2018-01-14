@@ -460,16 +460,21 @@ FT_CALLBACK_DEF(FT_Error) af_autofitter_load_glyph(FT_AutoHinter hinter, FT_Glyp
 }
 
 
-FT_DEFINE_AUTOHINTER_INTERFACE(af_autofitter_interface, NULL,	/* reset_face */
+FT_CALLBACK_TABLE_DEF const FT_AutoHinter_InterfaceRec af_autofitter_interface = {
+	NULL,	/* reset_face */
 	NULL,	/* get_global_hints */
 	NULL,	/* done_global_hints */
-	af_autofitter_load_glyph)	/* load_glyph */
+	af_autofitter_load_glyph	/* load_glyph */
+};
 
-FT_DEFINE_MODULE(autofit_module_class, FT_MODULE_HINTER, sizeof(AF_ModuleRec), "autofitter",
+FT_CALLBACK_TABLE_DEF const FT_Module_Class autofit_module_class = {
+	FT_MODULE_HINTER,
+	sizeof(AF_ModuleRec),
+	"autofitter",
 	0x10000L,			/* version 1.0 of the autofitter  */
 	0x20000L,			/* requires FreeType 2.0 or above */
 	(const void *) &af_autofitter_interface,
 	af_autofitter_init,	/* module_init   */
 	af_autofitter_done,	/* module_done   */
 	af_get_interface	/* get_interface */
-)
+};

@@ -26,7 +26,7 @@
 
 FT_BEGIN_HEADER
 
-FT_DECLARE_MODULE(psnames_module_class)
+FT_CALLBACK_TABLE const FT_Module_Class psnames_module_class;
 
 FT_END_HEADER
 

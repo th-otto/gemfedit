@@ -99,7 +99,7 @@ typedef struct CffModulePIC_
 #define CFF_FIELD_HANDLERS_GET                       \
           ( GET_PIC( library )->cff_field_handlers )
 
-  /* see cffpic.c for the implementation */
+/* see cffpic.c for the implementation */
 void cff_driver_class_pic_free(FT_Library library);
 
 FT_Error cff_driver_class_pic_init(FT_Library library);

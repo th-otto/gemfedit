@@ -71,3 +71,5 @@ c:\pc\lib\freetype.lib
 ..\..\src\type42\type42.c
 ..\..\src\winfonts\winfnt.c
 ..\..\src\gemfonts\gemfnt.c
+..\..\src\otvalid\otvalid.c
+..\..\src\gxvalid\gxvalid.c

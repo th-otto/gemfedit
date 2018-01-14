@@ -535,7 +535,7 @@ FT_CALLBACK_DEF(FT_Module_Interface) psnames_get_service(FT_Module module, const
 #define PUT_PS_NAMES_SERVICE( a )  a
 #endif
 
-FT_DEFINE_MODULE(psnames_module_class,
+FT_CALLBACK_TABLE_DEF const FT_Module_Class psnames_module_class = {
 	0,	/* this is not a font driver, nor a renderer */
 	sizeof(FT_ModuleRec), "psnames",	/* driver name                         */
 	0x10000L,				/* driver version                      */
@@ -544,4 +544,4 @@ FT_DEFINE_MODULE(psnames_module_class,
 	NULL,					/* module_init   */
 	NULL,					/* module_done   */
 	PUT_PS_NAMES_SERVICE(psnames_get_service)	/* get_interface */
-)
+};

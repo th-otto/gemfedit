@@ -189,9 +189,11 @@ static FT_UInt sfnt_get_name_index(FT_Face face, FT_String * glyph_name)
 }
 
 
-FT_DEFINE_SERVICE_GLYPHDICTREC(sfnt_service_glyph_dict, sfnt_get_glyph_name,	/* get_name   */
-							   sfnt_get_name_index	/* name_index */
-	)
+static const FT_Service_GlyphDictRec sfnt_service_glyph_dict = {
+	sfnt_get_glyph_name,	/* get_name   */
+	sfnt_get_name_index	/* name_index */
+};
+
 #endif /* TT_CONFIG_OPTION_POSTSCRIPT_NAMES */
 
 /*
@@ -963,14 +965,18 @@ static const char *sfnt_get_ps_name(FT_Face face_)
 }
 
 
-FT_DEFINE_SERVICE_PSFONTNAMEREC(sfnt_service_ps_name, sfnt_get_ps_name	/* get_ps_font_name */
-	)
-	/*
-	 *  TT CMAP INFO
-	 */
-	FT_DEFINE_SERVICE_TTCMAPSREC(tt_service_get_cmap_info, tt_get_cmap_info
-																		/* TT_CMap_Info_GetFunc get_cmap_info */
-	)
+static const FT_Service_PsFontNameRec sfnt_service_ps_name = {
+	sfnt_get_ps_name	/* get_ps_font_name */
+};
+
+/*
+ *  TT CMAP INFO
+ */
+static const FT_Service_TTCMapsRec tt_service_get_cmap_info = {
+	tt_get_cmap_info /* TT_CMap_Info_GetFunc get_cmap_info */
+};
+
+
 #ifdef TT_CONFIG_OPTION_BDF
 static FT_Error sfnt_get_charset_id(FT_Face face_, const char * *acharset_encoding, const char * *acharset_registry)
 {
@@ -1004,9 +1010,11 @@ static FT_Error sfnt_get_charset_id(FT_Face face_, const char * *acharset_encodi
 }
 
 
-FT_DEFINE_SERVICE_BDFRec(sfnt_service_bdf, sfnt_get_charset_id,	/* get_charset_id */
-						 tt_face_find_bdf_prop	/* get_property   */
-	)
+static const FT_Service_BDFRec sfnt_service_bdf = {
+	sfnt_get_charset_id,	/* get_charset_id */
+	tt_face_find_bdf_prop	/* get_property   */
+};
+
 #endif /* TT_CONFIG_OPTION_BDF */
 
 /*
@@ -1091,7 +1099,7 @@ static const SFNT_Interface sfnt_interface = {
 	sfnt_get_name_id	/* TT_Get_Name_ID_Func     get_name_id     */
 };
 
-FT_DEFINE_MODULE(sfnt_module_class,
+FT_CALLBACK_TABLE_DEF const FT_Module_Class sfnt_module_class = {
 	0,	/* not a font driver or renderer */
 	sizeof(FT_ModuleRec), "sfnt",	/* driver name                            */
 	0x10000L,			/* driver version 1.0                     */
@@ -1100,4 +1108,4 @@ FT_DEFINE_MODULE(sfnt_module_class,
 	NULL,				/* module_init   */
 	NULL,				/* module_done   */
 	sfnt_get_interface	/* get_interface */
-)
+};

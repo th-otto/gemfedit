@@ -82,7 +82,7 @@ FT_LOCAL_DEF(FT_Error) ps_table_new(PS_Table table, FT_Int count, FT_Memory memo
 	table->capacity = 0;
 	table->cursor = 0;
 
-	*(PS_Table_FuncsRec *) & table->funcs = ps_table_funcs;
+	table->funcs = ps_table_funcs;
 
   Exit:
 	if (error)
@@ -156,7 +156,7 @@ static FT_Error reallocate_t1_table(PS_Table table, FT_Offset new_size)
 /*    FreeType error code.  0 means success.  An error is returned if a  */
 /*    reallocation fails.                                                */
 /*                                                                       */
-FT_LOCAL_DEF(FT_Error) ps_table_add(PS_Table table, FT_Int idx, void *object, FT_UInt length)
+FT_LOCAL_DEF(FT_Error) ps_table_add(PS_Table table, FT_Int idx, const void *object, FT_UInt length)
 {
 	if (idx < 0 || idx >= table->max_elems)
 	{
@@ -171,7 +171,7 @@ FT_LOCAL_DEF(FT_Error) ps_table_add(PS_Table table, FT_Int idx, void *object, FT
 		FT_Offset new_size = table->capacity;
 		FT_PtrDist in_offset;
 
-		in_offset = (FT_Byte *) object - table->block;
+		in_offset = (const FT_Byte *) object - table->block;
 		if (in_offset < 0 || (FT_Offset) in_offset >= table->capacity)
 			in_offset = -1;
 

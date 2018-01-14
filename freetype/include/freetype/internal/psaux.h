@@ -64,10 +64,9 @@ typedef struct PS_Table_FuncsRec_
 
 	void (*done) (PS_Table table);
 
-	 FT_Error(*add) (PS_Table table, FT_Int idx, void *object, FT_UInt length);
+	FT_Error(*add) (PS_Table table, FT_Int idx, const void *object, FT_UInt length);
 
 	void (*release) (PS_Table table);
-
 } PS_Table_FuncsRec;
 
 
@@ -120,7 +119,6 @@ typedef struct PS_TableRec_
 
 	FT_Memory memory;
 	PS_Table_FuncsRec funcs;
-
 } PS_TableRec;
 
 

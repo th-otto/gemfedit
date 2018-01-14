@@ -43,7 +43,7 @@ FT_CALLBACK_TABLE const T1_Builder_FuncsRec t1_builder_funcs;
 
 FT_LOCAL(FT_Error) ps_table_new(PS_Table table, FT_Int count, FT_Memory memory);
 
-FT_LOCAL(FT_Error) ps_table_add(PS_Table table, FT_Int idx, void *object, FT_UInt length);
+FT_LOCAL(FT_Error) ps_table_add(PS_Table table, FT_Int idx, const void *object, FT_UInt length);
 
 FT_LOCAL(void) ps_table_done(PS_Table table);
 

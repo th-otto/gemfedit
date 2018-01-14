@@ -378,11 +378,10 @@ static FT_UInt cff_get_name_index(FT_Face face_, FT_String *glyph_name)
 }
 
 
-FT_DEFINE_SERVICE_GLYPHDICTREC(
-	cff_service_glyph_dict,
+static const FT_Service_GlyphDictRec cff_service_glyph_dict = {
 	cff_get_glyph_name,	/* get_name   */
 	cff_get_name_index	/* name_index */
-)
+};
 
 /*
  *  POSTSCRIPT INFO SERVICE
@@ -465,13 +464,13 @@ static const char *cff_get_ps_name(FT_Face face_)
 			return service->get_ps_font_name(FT_FACE(face));
 	}
 
-	return (const char *) cff->font_name;
+	return cff->font_name;
 }
 
 
-FT_DEFINE_SERVICE_PSFONTNAMEREC(cff_service_ps_name,
+static const FT_Service_PsFontNameRec cff_service_ps_name = {
 	cff_get_ps_name	/* get_ps_font_name */
-)
+};
 
 /*
  * TT CMAP INFO
@@ -508,9 +507,10 @@ static FT_Error cff_get_cmap_info(FT_CharMap charmap, TT_CMapInfo * cmap_info)
 }
 
 
-FT_DEFINE_SERVICE_TTCMAPSREC(cff_service_get_cmap_info,
+static const FT_Service_TTCMapsRec cff_service_get_cmap_info = {
 	cff_get_cmap_info	/* TT_CMap_Info_GetFunc get_cmap_info */
-)
+};
+
 
 /*
  *  CID INFO SERVICE

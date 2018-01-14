@@ -29,6 +29,3 @@ ANONYMOUS_STRUCT_DUMMY(FT_IncrementalRec_)
 #include "t1load.c"
 #include "t1objs.c"
 #include "t1parse.c"
-
-
-/* END */

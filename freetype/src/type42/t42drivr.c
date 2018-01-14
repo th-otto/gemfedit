@@ -106,15 +106,16 @@
    */
 
   static const char*
-  t42_get_ps_font_name( T42_Face  face )
+  t42_get_ps_font_name( FT_Face  face_ )
   {
-    return (const char*)face->type1.font_name;
+    T42_Face  face = (T42_Face)face_;
+    return face->type1.font_name;
   }
 
 
   static const FT_Service_PsFontNameRec  t42_service_ps_font_name =
   {
-    (FT_PsName_GetFunc)t42_get_ps_font_name   /* get_ps_font_name */
+    t42_get_ps_font_name   /* get_ps_font_name */
   };
 
 
@@ -149,7 +150,7 @@
   {
     FT_UNUSED( face );
 
-    return 1;
+    return TRUE;
   }
 
 
@@ -165,12 +166,12 @@
 
   static const FT_Service_PsInfoRec  t42_service_ps_info =
   {
-    (PS_GetFontInfoFunc)   t42_ps_get_font_info,    /* ps_get_font_info    */
-    (PS_GetFontExtraFunc)  t42_ps_get_font_extra,   /* ps_get_font_extra   */
-    (PS_HasGlyphNamesFunc) t42_ps_has_glyph_names,  /* ps_has_glyph_names  */
-    (PS_GetFontPrivateFunc)t42_ps_get_font_private, /* ps_get_font_private */
+    t42_ps_get_font_info,    /* ps_get_font_info    */
+    t42_ps_get_font_extra,   /* ps_get_font_extra   */
+    t42_ps_has_glyph_names,  /* ps_has_glyph_names  */
+    t42_ps_get_font_private, /* ps_get_font_private */
     /* not implemented */
-    (PS_GetFontValueFunc)  NULL                     /* ps_get_font_value   */
+    NULL                     /* ps_get_font_value   */
   };
 
 

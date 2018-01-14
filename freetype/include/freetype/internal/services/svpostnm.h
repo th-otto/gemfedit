@@ -43,28 +43,6 @@ FT_DEFINE_SERVICE(PsFontName)
 };
 
 
-#ifndef FT_CONFIG_OPTION_PIC
-
-#define FT_DEFINE_SERVICE_PSFONTNAMEREC( class_, get_ps_font_name_ ) \
-  static const FT_Service_PsFontNameRec  class_ =                    \
-  {                                                                  \
-    get_ps_font_name_                                                \
-  };
-
-#else /* FT_CONFIG_OPTION_PIC */
-
-#define FT_DEFINE_SERVICE_PSFONTNAMEREC( class_, get_ps_font_name_ ) \
-  void                                                               \
-  FT_Init_Class_ ## class_( FT_Library                 library,      \
-                            FT_Service_PsFontNameRec*  clazz )       \
-  {                                                                  \
-    FT_UNUSED( library );                                            \
-                                                                     \
-    clazz->get_ps_font_name = get_ps_font_name_;                     \
-  }
-
-#endif /* FT_CONFIG_OPTION_PIC */
-
 FT_END_HEADER
 
 #endif /* SVPOSTNM_H_ */
