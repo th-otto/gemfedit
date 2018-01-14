@@ -801,6 +801,3 @@
   }
 
 #endif /* !FT_CONFIG_OPTION_USE_ZLIB */
-
-
-/* END */

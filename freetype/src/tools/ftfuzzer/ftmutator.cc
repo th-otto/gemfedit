@@ -309,6 +309,3 @@
 
     fuzzer::FuzzerDriver( argc, argv, F );
   }
-
-
-// END
