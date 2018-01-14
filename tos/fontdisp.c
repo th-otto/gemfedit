@@ -762,12 +762,14 @@ static _BOOL do_fsel_input(char *path, char *filename, char *mask, const char *t
 	_WORD ret;
 	char *p;
 	
+	wind_update(BEG_UPDATE);
 	p = xbasename(path);
 	strcpy(p, mask);
 	if (gl_ap_version >= 0x0140)
 		ret = fsel_exinput(path, filename, &button, title);
 	else
 		ret = fsel_input(path, filename, &button);
+	wind_update(END_UPDATE);
 	if (ret == 0 || button == 0)
 		return FALSE;
 	p = xbasename(path);
@@ -847,14 +849,15 @@ static void font_info(void)
 }
 
 
-static void do_about(void)
+/* -------------------------------------------------------------------------- */
+
+static _WORD do_dialog(_WORD num)
 {
-	OBJECT *tree = rs_tree(ABOUT_DIALOG);
+	OBJECT *tree = rs_tree(num);
 	GRECT gr;
 	_WORD ret;
 
-	tree[ABOUT_VERSION].ob_spec.free_string = PACKAGE_VERSION;
-	tree[ABOUT_DATE].ob_spec.free_string = PACKAGE_DATE;
+	wind_update(BEG_UPDATE);
 	form_center_grect(tree, &gr);
 	form_dial_grect(FMD_START, &gr, &gr);
 	objc_draw_grect(tree, ROOT, MAX_DEPTH, &gr);
@@ -862,8 +865,26 @@ static void do_about(void)
 	ret &= 0x7fff;
 	tree[ret].ob_state &= ~OS_SELECTED;
 	form_dial_grect(FMD_FINISH, &gr, &gr);
+	wind_update(END_UPDATE);
+	return ret;
 }
 
+/* -------------------------------------------------------------------------- */
+
+static void do_about(void)
+{
+	OBJECT *tree = rs_tree(ABOUT_DIALOG);
+	tree[ABOUT_VERSION].ob_spec.free_string = PACKAGE_VERSION;
+	tree[ABOUT_DATE].ob_spec.free_string = PACKAGE_DATE;
+	do_dialog(ABOUT_DIALOG);
+}
+
+/* -------------------------------------------------------------------------- */
+
+static void do_help(void)
+{
+	do_dialog(HELP_DIALOG);
+}
 
 static void msg_mn_select(_WORD title, _WORD entry)
 {
@@ -914,13 +935,13 @@ static void mainloop(void)
 			default:
 				switch ((k >> 8) & 0xff)
 				{
-				case 0x48:
+				case 0x48: /* cursor up */
 					scalex++;
 					scaley++;
 					resize_window();
 					redraw_win(mainwin);
 					break;
-				case 0x50:
+				case 0x50: /* cursor down */
 					if (scaley > 1)
 					{
 						scalex--;
@@ -929,6 +950,9 @@ static void mainloop(void)
 						redraw_win(mainwin);
 					}
 					break;
+				case 0x62: /* Help */
+					do_help();
+					break;
 				}
 				break;
 			}
@@ -936,7 +960,6 @@ static void mainloop(void)
 		
 		if (event & MU_MESAG)
 		{
-			wind_update(BEG_UPDATE);
 			switch (message[0])
 			{
 			case WM_CLOSED:
@@ -970,10 +993,12 @@ static void mainloop(void)
 				break;
 
 			case WM_REDRAW:
+				wind_update(BEG_UPDATE);
 				if (message[3] == mainwin)
 					mainwin_draw((const GRECT *)&message[4]);
 				else if (message[3] == panelwin)
 					panelwin_draw((const GRECT *)&message[4]);
+				wind_update(END_UPDATE);
 				break;
 
 			case MN_SELECTED:
@@ -995,7 +1020,6 @@ static void mainloop(void)
 				menu_tnormal(menu, message[3], TRUE);
 				break;
 			}
-			wind_update(END_UPDATE);
 		}
 	}
 }

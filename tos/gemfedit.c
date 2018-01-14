@@ -1498,12 +1498,14 @@ static _BOOL do_fsel_input(char *path, char *filename, char *mask, const char *t
 	_WORD ret;
 	char *p;
 	
+	wind_update(BEG_UPDATE);
 	p = xbasename(path);
 	strcpy(p, mask);
 	if (gl_ap_version >= 0x0140)
 		ret = fsel_exinput(path, filename, &button, title);
 	else
 		ret = fsel_input(path, filename, &button);
+	wind_update(END_UPDATE);
 	if (ret == 0 || button == 0)
 		return FALSE;
 	p = xbasename(path);
@@ -2600,6 +2602,7 @@ static _WORD do_dialog(_WORD num)
 	GRECT gr;
 	_WORD ret;
 
+	wind_update(BEG_UPDATE);
 	form_center_grect(tree, &gr);
 	form_dial_grect(FMD_START, &gr, &gr);
 	objc_draw_grect(tree, ROOT, MAX_DEPTH, &gr);
@@ -2607,6 +2610,7 @@ static _WORD do_dialog(_WORD num)
 	ret &= 0x7fff;
 	tree[ret].ob_state &= ~OS_SELECTED;
 	form_dial_grect(FMD_FINISH, &gr, &gr);
+	wind_update(END_UPDATE);
 	return ret;
 }
 
@@ -2741,7 +2745,6 @@ static void char_last(void)
 
 static void handle_message(_WORD *message, _WORD mox, _WORD moy)
 {
-	wind_update(BEG_UPDATE);
 	switch (message[0])
 	{
 	case WM_CLOSED:
@@ -2780,10 +2783,12 @@ static void handle_message(_WORD *message, _WORD mox, _WORD moy)
 		break;
 
 	case WM_REDRAW:
+		wind_update(BEG_UPDATE);
 		if (message[3] == mainwin)
 			mainwin_draw((const GRECT *)&message[4]);
 		else if (message[3] == panelwin)
 			panelwin_draw((const GRECT *)&message[4]);
+		wind_update(END_UPDATE);
 		break;
 
 	case MN_SELECTED:
@@ -2841,7 +2846,6 @@ static void handle_message(_WORD *message, _WORD mox, _WORD moy)
 		menu_tnormal(menu, message[3], TRUE);
 		break;
 	}
-	wind_update(END_UPDATE);
 }
 
 /* -------------------------------------------------------------------------- */

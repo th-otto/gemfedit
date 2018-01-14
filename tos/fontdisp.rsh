@@ -290,7 +290,7 @@ extern _VOID *hfix_objs(RSHDR *_hdr, OBJECT *_ob, _WORD _num_objs);
 #undef NUM_OBS
 #undef NUM_TREE
 #undef NUM_UD
-#define NUM_STRINGS 92
+#define NUM_STRINGS 96
 #define NUM_BB		0
 #define NUM_IB		0
 #define NUM_CIB     0
@@ -298,8 +298,8 @@ extern _VOID *hfix_objs(RSHDR *_hdr, OBJECT *_ob, _WORD _num_objs);
 #define NUM_TI		13
 #define NUM_FRSTR	10
 #define NUM_FRIMG	0
-#define NUM_OBS     66
-#define NUM_TREE	4
+#define NUM_OBS     71
+#define NUM_TREE	5
 #define NUM_UD		0
 #endif
 
@@ -386,29 +386,33 @@ static char fontdisp_string_78[] = "Version";
 static char fontdisp_string_79[] = "Apr 20 2017";
 static char fontdisp_string_80[] = "OK";
 static char fontdisp_string_81[] = "1.99";
-static char fontdisp_string_82[] = "[3][Cannot create window][Abort]";
-static char fontdisp_string_83[] = "[3][Can\'t open|%s][Abort]";
-static char fontdisp_string_84[] = "[3][Not a GEM font.][Abort]";
-static char fontdisp_string_85[] = "[3][Not enough memory.][Abort]";
-static char fontdisp_string_86[] = "Select Font";
-static char fontdisp_string_87[] = "[1][Warning:|File may be truncated.][Continue]";
-static char fontdisp_string_88[] = "[1][Warning:|Flag for horizontal table set,|but there is none.][Continue]";
-static char fontdisp_string_89[] = "[1][Warning:|Horizontal offset table present,|but flag not set.][Continue]";
-static char fontdisp_string_90[] = "[3][Compressed size %lu larger|than uncompressed size %lu.][Abort]";
-static char fontdisp_string_91[] = "[1][Warning:|Wrong endian flag in header.][Continue]";
+static char fontdisp_string_82[] = "Keyboard shortcuts:";
+static char fontdisp_string_83[] = "OK";
+static char fontdisp_string_84[] = "Cursor up   : scale window up";
+static char fontdisp_string_85[] = "Cursor down : scale window down";
+static char fontdisp_string_86[] = "[3][Cannot create window][Abort]";
+static char fontdisp_string_87[] = "[3][Can\'t open|%s][Abort]";
+static char fontdisp_string_88[] = "[3][Not a GEM font.][Abort]";
+static char fontdisp_string_89[] = "[3][Not enough memory.][Abort]";
+static char fontdisp_string_90[] = "Select Font";
+static char fontdisp_string_91[] = "[1][Warning:|File may be truncated.][Continue]";
+static char fontdisp_string_92[] = "[1][Warning:|Flag for horizontal table set,|but there is none.][Continue]";
+static char fontdisp_string_93[] = "[1][Warning:|Horizontal offset table present,|but flag not set.][Continue]";
+static char fontdisp_string_94[] = "[3][Compressed size %lu larger|than uncompressed size %lu.][Abort]";
+static char fontdisp_string_95[] = "[1][Warning:|Wrong endian flag in header.][Continue]";
 
 
 static char *rs_frstr[NUM_FRSTR] = {
-	fontdisp_string_82,
-	fontdisp_string_83,
-	fontdisp_string_84,
-	fontdisp_string_85,
 	fontdisp_string_86,
 	fontdisp_string_87,
 	fontdisp_string_88,
 	fontdisp_string_89,
 	fontdisp_string_90,
-	fontdisp_string_91
+	fontdisp_string_91,
+	fontdisp_string_92,
+	fontdisp_string_93,
+	fontdisp_string_94,
+	fontdisp_string_95
 };
 
 
@@ -506,7 +510,15 @@ static OBJECT rs_object[NUM_OBS] = {
 	{ 5, -1, -1, G_STRING, OF_NONE, OS_NORMAL, C_UNION(fontdisp_string_78), 3,6, 7,1 }, /* ABOUT_VERSION_LABEL */
 	{ 6, -1, -1, G_STRING, OF_NONE, OS_NORMAL, C_UNION(fontdisp_string_79), 3,8, 11,1 }, /* ABOUT_DATE */
 	{ 7, -1, -1, G_BUTTON, 0x607, OS_NORMAL, C_UNION(fontdisp_string_80), 22,11, 8,1 },
-	{ 0, -1, -1, G_STRING, OF_LASTOB, OS_NORMAL, C_UNION(fontdisp_string_81), 11,6, 4,1 } /* ABOUT_VERSION */
+	{ 0, -1, -1, G_STRING, OF_LASTOB, OS_NORMAL, C_UNION(fontdisp_string_81), 11,6, 4,1 }, /* ABOUT_VERSION */
+
+/* HELP_DIALOG */
+
+	{ -1, 1, 4, G_BOX, OF_FL3DBAK, OS_OUTLINED, C_UNION(0x21100L), 0,0, 39,13 },
+	{ 2, -1, -1, G_STRING, OF_NONE, OS_NORMAL, C_UNION(fontdisp_string_82), 3,1, 19,1 },
+	{ 3, -1, -1, G_BUTTON, 0x607, OS_NORMAL, C_UNION(fontdisp_string_83), 29,11, 8,1 },
+	{ 4, -1, -1, G_STRING, OF_NONE, OS_NORMAL, C_UNION(fontdisp_string_84), 3,3, 29,1 },
+	{ 0, -1, -1, G_STRING, OF_LASTOB, OS_NORMAL, C_UNION(fontdisp_string_85), 3,4, 31,1 }
 };
 
 
@@ -514,7 +526,8 @@ static OBJECT *rs_trindex[NUM_TREE] = {
 	&rs_object[0], /* MAINMENU */
 	&rs_object[20], /* FONT_PARAMS */
 	&rs_object[40], /* PANEL */
-	&rs_object[58] /* ABOUT_DIALOG */
+	&rs_object[58], /* ABOUT_DIALOG */
+	&rs_object[66] /* HELP_DIALOG */
 };
 
 
@@ -711,7 +724,7 @@ _WORD fontdisp_rsc_free()
 #endif /* RSC_NAMED_FUNCTIONS */
 
 #else /* !RSC_STATIC_FILE */
-int rs_numstrings = 92;
+int rs_numstrings = 96;
 int rs_numfrstr = 10;
 
 int rs_nuser = 0;
@@ -721,8 +734,8 @@ int rs_numfrimg = 0;
 int rs_numib = 0;
 int rs_numcib = 0;
 int rs_numti = 13;
-int rs_numobs = 66;
-int rs_numtree = 4;
+int rs_numobs = 71;
+int rs_numtree = 5;
 
 char rs_name[] = "fontdisp.rsc";
 
