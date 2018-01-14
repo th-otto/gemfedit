@@ -492,7 +492,7 @@ static const char *ps_get_standard_strings(FT_UInt sid)
 
 
 #ifdef FT_CONFIG_OPTION_ADOBE_GLYPH_LIST
-FT_DEFINE_SERVICE_PSCMAPSREC(pscmaps_interface,
+static const FT_Service_PsCMapsRec pscmaps_interface = {
 	ps_unicode_value,	/* unicode_value         */
 	ps_unicodes_init,	/* unicodes_init         */
 	ps_unicodes_char_index,	/* unicodes_char_index   */
@@ -501,9 +501,9 @@ FT_DEFINE_SERVICE_PSCMAPSREC(pscmaps_interface,
 	ps_get_standard_strings,	/* adobe_std_strings     */
 	t1_standard_encoding,	/* adobe_std_encoding    */
 	t1_expert_encoding	/* adobe_expert_encoding */
-)
+};
 #else
-FT_DEFINE_SERVICE_PSCMAPSREC(pscmaps_interface,
+static const FT_Service_PsCMapsRec pscmaps_interface = {
 	NULL,		/* unicode_value         */
 	NULL,		/* unicodes_init         */
 	NULL,		/* unicodes_char_index   */
@@ -512,7 +512,7 @@ FT_DEFINE_SERVICE_PSCMAPSREC(pscmaps_interface,
 	ps_get_standard_strings,	/* adobe_std_strings     */
 	t1_standard_encoding,	/* adobe_std_encoding    */
 	t1_expert_encoding	/* adobe_expert_encoding */
-)
+};
 #endif
 
 static const FT_ServiceDescRec pscmaps_services[] = {

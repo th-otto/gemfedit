@@ -112,11 +112,6 @@ typedef struct CFF_Field_Handler_
 
 } CFF_Field_Handler;
 
-#ifdef FT_CONFIG_OPTION_PIC
-FT_Error FT_Create_Class_cff_field_handlers(FT_Library library, CFF_Field_Handler ** output_class);
-void FT_Destroy_Class_cff_field_handlers(FT_Library library, CFF_Field_Handler * clazz);
-#endif
-
 FT_END_HEADER
 
 #endif /* CFFPARSE_H_ */

@@ -2209,7 +2209,7 @@ static FT_Error af_latin2_hints_apply(FT_UInt32 glyph_index, AF_GlyphHints hints
 /*************************************************************************/
 
 
-AF_DEFINE_WRITING_SYSTEM_CLASS(af_latin2_writing_system_class,
+FT_CALLBACK_TABLE_DEF const AF_WritingSystemClassRec af_latin2_writing_system_class = {
 	AF_WRITING_SYSTEM_LATIN2,
 	sizeof(AF_LatinMetricsRec),
 	af_latin2_metrics_init,	/* style_metrics_init    */
@@ -2218,7 +2218,7 @@ AF_DEFINE_WRITING_SYSTEM_CLASS(af_latin2_writing_system_class,
 	af_latin2_get_standard_widths,	/* style_metrics_getstdw */
 	af_latin2_hints_init,	/* style_hints_init      */
 	af_latin2_hints_apply	/* style_hints_apply     */
-)
+};
 
 #else /* !FT_OPTION_AUTOFIT2 */
 

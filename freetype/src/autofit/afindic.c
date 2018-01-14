@@ -103,7 +103,8 @@ static void af_indic_get_standard_widths(AF_StyleMetrics metrics_, FT_Pos * stdH
 /*************************************************************************/
 
 
-AF_DEFINE_WRITING_SYSTEM_CLASS(af_indic_writing_system_class, AF_WRITING_SYSTEM_INDIC,
+FT_CALLBACK_TABLE_DEF const AF_WritingSystemClassRec af_indic_writing_system_class = {
+	AF_WRITING_SYSTEM_INDIC,
 	sizeof(AF_CJKMetricsRec),
 	af_indic_metrics_init,	/* style_metrics_init    */
 	af_indic_metrics_scale,	/* style_metrics_scale   */
@@ -111,11 +112,12 @@ AF_DEFINE_WRITING_SYSTEM_CLASS(af_indic_writing_system_class, AF_WRITING_SYSTEM_
 	af_indic_get_standard_widths,	/* style_metrics_getstdw */
 	af_indic_hints_init,	/* style_hints_init      */
 	af_indic_hints_apply	/* style_hints_apply     */
-)
+};
+
 #else /* !AF_CONFIG_OPTION_INDIC */
 
-
-AF_DEFINE_WRITING_SYSTEM_CLASS(af_indic_writing_system_class, AF_WRITING_SYSTEM_INDIC,
+FT_CALLBACK_TABLE_DEF const AF_WritingSystemClassRec af_indic_writing_system_class = {
+	AF_WRITING_SYSTEM_INDIC,
 	sizeof(AF_CJKMetricsRec),
 	NULL,	/* style_metrics_init    */
 	NULL,	/* style_metrics_scale   */
@@ -123,5 +125,6 @@ AF_DEFINE_WRITING_SYSTEM_CLASS(af_indic_writing_system_class, AF_WRITING_SYSTEM_
 	NULL,	/* style_metrics_getstdw */
 	NULL,	/* style_hints_init      */
 	NULL	/* style_hints_apply     */
-)
+};
+
 #endif /* !AF_CONFIG_OPTION_INDIC */

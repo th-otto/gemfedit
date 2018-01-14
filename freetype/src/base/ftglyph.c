@@ -37,8 +37,6 @@
 #include <freetype/ftbitmap.h>
 #include <freetype/internal/ftobjs.h>
 
-#include "basepic.h"
-
 ANONYMOUS_STRUCT_DUMMY(FT_RasterRec_)
 ANONYMOUS_STRUCT_DUMMY(FT_IncrementalRec_)
 
@@ -123,7 +121,7 @@ FT_CALLBACK_DEF(void) ft_bitmap_glyph_bbox(FT_Glyph bitmap_glyph, FT_BBox * cbox
 }
 
 
-FT_DEFINE_GLYPH(ft_bitmap_glyph_class,
+FT_CALLBACK_TABLE_DEF const FT_Glyph_Class ft_bitmap_glyph_class = {
 	sizeof(FT_BitmapGlyphRec), FT_GLYPH_FORMAT_BITMAP,
 	ft_bitmap_glyph_init,	/* FT_Glyph_InitFunc       glyph_init      */
 	ft_bitmap_glyph_done,	/* FT_Glyph_DoneFunc       glyph_done      */
@@ -131,7 +129,7 @@ FT_DEFINE_GLYPH(ft_bitmap_glyph_class,
 	NULL,					/* FT_Glyph_TransformFunc  glyph_transform */
 	ft_bitmap_glyph_bbox,	/* FT_Glyph_GetBBoxFunc    glyph_bbox      */
 	NULL					/* FT_Glyph_PrepareFunc    glyph_prepare   */
-)
+};
 
 /*************************************************************************/
 /*************************************************************************/
@@ -222,7 +220,7 @@ FT_CALLBACK_DEF(FT_Error) ft_outline_glyph_prepare(FT_Glyph outline_glyph, FT_Gl
 }
 
 
-FT_DEFINE_GLYPH(ft_outline_glyph_class,
+FT_CALLBACK_TABLE_DEF const FT_Glyph_Class ft_outline_glyph_class = {
 	sizeof(FT_OutlineGlyphRec),
 	FT_GLYPH_FORMAT_OUTLINE,
 	ft_outline_glyph_init,	/* FT_Glyph_InitFunc       glyph_init      */
@@ -231,7 +229,7 @@ FT_DEFINE_GLYPH(ft_outline_glyph_class,
 	ft_outline_glyph_transform,	/* FT_Glyph_TransformFunc  glyph_transform */
 	ft_outline_glyph_bbox,	/* FT_Glyph_GetBBoxFunc    glyph_bbox      */
 	ft_outline_glyph_prepare	/* FT_Glyph_PrepareFunc    glyph_prepare   */
-)
+};
 
 /*************************************************************************/
 /*************************************************************************/
@@ -323,11 +321,11 @@ FT_EXPORT_DEF(FT_Error) FT_Get_Glyph(FT_GlyphSlot slot, FT_Glyph * aglyph)
 	/* if it is a bitmap, that's easy :-) */
 	if (slot->format == FT_GLYPH_FORMAT_BITMAP)
 	{
-		clazz = FT_BITMAP_GLYPH_CLASS_GET;
+		clazz = &ft_bitmap_glyph_class;
 	} else if (slot->format == FT_GLYPH_FORMAT_OUTLINE)
 	{
 		/* if it is an outline */
-		clazz = FT_OUTLINE_GLYPH_CLASS_GET;
+		clazz = &ft_outline_glyph_class;
 	} else
 	{
 		/* try to find a renderer that supports the glyph image format */
@@ -453,7 +451,6 @@ FT_EXPORT_DEF(FT_Error) FT_Glyph_To_Bitmap(FT_Glyph * the_glyph, FT_Render_Mode 
 	FT_BitmapGlyph bitmap = NULL;
 	const FT_Glyph_Class *clazz;
 
-	/* FT_BITMAP_GLYPH_CLASS_GET dereferences `library' in PIC mode */
 	FT_Library library;
 
 	/* check argument */
@@ -469,7 +466,7 @@ FT_EXPORT_DEF(FT_Error) FT_Glyph_To_Bitmap(FT_Glyph * the_glyph, FT_Render_Mode 
 		goto Bad;
 
 	/* when called with a bitmap glyph, do nothing and return successfully */
-	if (clazz == FT_BITMAP_GLYPH_CLASS_GET)
+	if (clazz == &ft_bitmap_glyph_class)
 		goto Exit;
 
 	if (!clazz->glyph_prepare)
@@ -485,7 +482,7 @@ FT_EXPORT_DEF(FT_Error) FT_Glyph_To_Bitmap(FT_Glyph * the_glyph, FT_Render_Mode 
 	dummy.format = clazz->glyph_format;
 
 	/* create result bitmap glyph */
-	error = ft_new_glyph(library, FT_BITMAP_GLYPH_CLASS_GET, &b);
+	error = ft_new_glyph(library, &ft_bitmap_glyph_class, &b);
 	if (error)
 		goto Exit;
 	bitmap = (FT_BitmapGlyph) b;

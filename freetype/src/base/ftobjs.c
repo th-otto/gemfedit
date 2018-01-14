@@ -4220,13 +4220,6 @@ FT_EXPORT_DEF(FT_Error) FT_New_Library(FT_Memory memory, FT_Library * alibrary)
 
 	library->memory = memory;
 
-#ifdef FT_CONFIG_OPTION_PIC
-	/* initialize position independent code containers */
-	error = ft_pic_container_init(library);
-	if (error)
-		goto Fail;
-#endif
-
 	library->version_major = FREETYPE_MAJOR;
 	library->version_minor = FREETYPE_MINOR;
 	library->version_patch = FREETYPE_PATCH;
@@ -4237,13 +4230,6 @@ FT_EXPORT_DEF(FT_Error) FT_New_Library(FT_Memory memory, FT_Library * alibrary)
 	*alibrary = library;
 
 	return FT_Err_Ok;
-
-#ifdef FT_CONFIG_OPTION_PIC
-  Fail:
-	ft_pic_container_destroy(library);
-	FT_FREE(library);
-	return error;
-#endif
 }
 
 
@@ -4353,11 +4339,6 @@ FT_EXPORT_DEF(FT_Error) FT_Done_Library(FT_Library library)
 			}
 		}
 	}
-#endif
-
-#ifdef FT_CONFIG_OPTION_PIC
-	/* Destroy pic container contents */
-	ft_pic_container_destroy(library);
 #endif
 
 	FT_FREE(library);

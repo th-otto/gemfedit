@@ -35,7 +35,6 @@
 #include <freetype/internal/ftdriver.h>
 #include <freetype/internal/autohint.h>
 #include <freetype/internal/ftserv.h>
-#include <freetype/internal/ftpic.h>
 #include <freetype/internal/ftcalc.h>
 
 #ifdef FT_CONFIG_OPTION_INCREMENTAL
@@ -190,53 +189,7 @@ typedef struct FT_CMap_ClassRec_
 } FT_CMap_ClassRec;
 
 
-#ifndef FT_CONFIG_OPTION_PIC
-
 #define FT_DECLARE_CMAP_CLASS( class_ ) FT_CALLBACK_TABLE const  FT_CMap_ClassRec class_;
-
-#define FT_DEFINE_CMAP_CLASS( class_, size_, init_, done_, char_index_, char_next_, char_var_index_, char_var_default_, variant_list_, charvariant_list_, variantchar_list_ )       \
-  FT_CALLBACK_TABLE_DEF             \
-  const FT_CMap_ClassRec  class_ =  \
-  {                                 \
-    size_,                          \
-    init_,                          \
-    done_,                          \
-    char_index_,                    \
-    char_next_,                     \
-    char_var_index_,                \
-    char_var_default_,              \
-    variant_list_,                  \
-    charvariant_list_,              \
-    variantchar_list_               \
-  };
-
-#else /* FT_CONFIG_OPTION_PIC */
-
-#define FT_DECLARE_CMAP_CLASS( class_ )                  \
-  void                                                   \
-  FT_Init_Class_ ## class_( FT_Library         library,  \
-                            FT_CMap_ClassRec*  clazz );
-
-#define FT_DEFINE_CMAP_CLASS( class_, size_, init_, done_, char_index_, char_next_, char_var_index_, char_var_default_, variant_list_, charvariant_list_, variantchar_list_ )       \
-  void                                                   \
-  FT_Init_Class_ ## class_( FT_Library         library,  \
-                            FT_CMap_ClassRec*  clazz )   \
-  {                                                      \
-    FT_UNUSED( library );                                \
-                                                         \
-    clazz->size             = size_;                     \
-    clazz->init             = init_;                     \
-    clazz->done             = done_;                     \
-    clazz->char_index       = char_index_;               \
-    clazz->char_next        = char_next_;                \
-    clazz->char_var_index   = char_var_index_;           \
-    clazz->char_var_default = char_var_default_;         \
-    clazz->variant_list     = variant_list_;             \
-    clazz->charvariant_list = charvariant_list_;         \
-    clazz->variantchar_list = variantchar_list_;         \
-  }
-
-#endif /* FT_CONFIG_OPTION_PIC */
 
 
 /* create a new charmap and add it to charmap->face */
@@ -806,12 +759,7 @@ typedef struct FT_LibraryRec_
 	FT_Bitmap_LcdFilterFunc lcd_filter_func;	/* filtering callback     */
 #endif
 
-#ifdef FT_CONFIG_OPTION_PIC
-	FT_PIC_Container pic_container;
-#endif
-
 	FT_Int refcount;
-
 } FT_LibraryRec;
 
 
@@ -870,70 +818,6 @@ FT_EXPORT_VAR(FT_Raster_Funcs) ft_default_raster;
 
 
 /*************************************************************************/
-/*************************************************************************/
-/*************************************************************************/
-/****                                                                 ****/
-/****                                                                 ****/
-/****                      P I C   S U P P O R T                      ****/
-/****                                                                 ****/
-/****                                                                 ****/
-/*************************************************************************/
-/*************************************************************************/
-/*************************************************************************/
-
-
-/* PIC support macros for ftrender.h */
-
-
-/*************************************************************************/
-/*                                                                       */
-/* <Macro>                                                               */
-/*    FT_DEFINE_GLYPH                                                    */
-/*                                                                       */
-/* <Description>                                                         */
-/*    Used to initialize an instance of FT_Glyph_Class struct.           */
-/*    When FT_CONFIG_OPTION_PIC is defined an init function will need    */
-/*    to be called with a pre-allocated structure to be filled.          */
-/*    When FT_CONFIG_OPTION_PIC is not defined the struct will be        */
-/*    allocated in the global scope (or the scope where the macro        */
-/*    is used).                                                          */
-/*                                                                       */
-#ifndef FT_CONFIG_OPTION_PIC
-
-#define FT_DEFINE_GLYPH( class_, size_, format_, init_, done_, copy_, transform_, bbox_, prepare_ )              \
-  FT_CALLBACK_TABLE_DEF           \
-  const FT_Glyph_Class  class_ =  \
-  {                               \
-    size_,                        \
-    format_,                      \
-    init_,                        \
-    done_,                        \
-    copy_,                        \
-    transform_,                   \
-    bbox_,                        \
-    prepare_                      \
-  };
-
-#else /* FT_CONFIG_OPTION_PIC */
-
-#define FT_DEFINE_GLYPH( class_, size_, format_, init_, done_, copy_, transform_, bbox_, prepare_ )              \
-  void                                                \
-  FT_Init_Class_ ## class_( FT_Glyph_Class*  clazz )  \
-  {                                                   \
-    clazz->glyph_size      = size_;                   \
-    clazz->glyph_format    = format_;                 \
-    clazz->glyph_init      = init_;                   \
-    clazz->glyph_done      = done_;                   \
-    clazz->glyph_copy      = copy_;                   \
-    clazz->glyph_transform = transform_;              \
-    clazz->glyph_bbox      = bbox_;                   \
-    clazz->glyph_prepare   = prepare_;                \
-  }
-
-#endif /* FT_CONFIG_OPTION_PIC */
-
-
-/*************************************************************************/
 /*                                                                       */
 /* <Macro>                                                               */
 /*    FT_DECLARE_RENDERER                                                */
@@ -943,44 +827,6 @@ FT_EXPORT_VAR(FT_Raster_Funcs) ft_default_raster;
 /*    FT_Renderer_Class struct instance.                                 */
 /*                                                                       */
 #define FT_DECLARE_RENDERER( class_ ) FT_EXPORT_VAR( const FT_Renderer_Class ) class_;
-
-
-/* PIC support macros for ftmodapi.h * */
-
-
-#ifdef FT_CONFIG_OPTION_PIC
-
-/*************************************************************************/
-/*                                                                       */
-/* <FuncType>                                                            */
-/*    FT_Module_Creator                                                  */
-/*                                                                       */
-/* <Description>                                                         */
-/*    A function used to create (allocate) a new module class object.    */
-/*    The object's members are initialized, but the module itself is     */
-/*    not.                                                               */
-/*                                                                       */
-/* <Input>                                                               */
-/*    memory       :: A handle to the memory manager.                    */
-/*    output_class :: Initialized with the newly allocated class.        */
-/*                                                                       */
-typedef FT_Error(*FT_Module_Creator) (FT_Memory memory, FT_Module_Class ** output_class);
-
-/*************************************************************************/
-/*                                                                       */
-/* <FuncType>                                                            */
-/*    FT_Module_Destroyer                                                */
-/*                                                                       */
-/* <Description>                                                         */
-/*    A function used to destroy (deallocate) a module class object.     */
-/*                                                                       */
-/* <Input>                                                               */
-/*    memory :: A handle to the memory manager.                          */
-/*    clazz  :: Module class to destroy.                                 */
-/*                                                                       */
-typedef void (*FT_Module_Destroyer) (FT_Memory memory, FT_Module_Class * clazz);
-
-#endif
 
 
 FT_END_HEADER

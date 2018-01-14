@@ -42,31 +42,27 @@
 
 #undef  SCRIPT
 #define SCRIPT( s, S, d, h, H, ss )         \
-          AF_DEFINE_SCRIPT_CLASS(           \
-            af_ ## s ## _script_class,      \
+          FT_CALLBACK_TABLE_DEF const AF_ScriptClassRec af_ ## s ## _script_class = {\
             AF_SCRIPT_ ## S,                \
             af_ ## s ## _uniranges,         \
             af_ ## s ## _nonbase_uniranges, \
             AF_ ## H,                       \
-            ss )
+            ss };
 
 #include "afscript.h"
 
 
 #undef  STYLE
 #define STYLE( s, S, d, ws, sc, ss, c )  \
-          AF_DEFINE_STYLE_CLASS(         \
-            af_ ## s ## _style_class,    \
+          FT_CALLBACK_TABLE_DEF const AF_StyleClassRec af_ ## s ## _style_class = { \
             AF_STYLE_ ## S,              \
             ws,                          \
             sc,                          \
             ss,                          \
-            c )
+            c };
 
 #include "afstyles.h"
 
-
-#ifndef FT_CONFIG_OPTION_PIC
 
 #undef  WRITING_SYSTEM
 #define WRITING_SYSTEM( ws, WS ) &af_ ## ws ## _writing_system_class,
@@ -103,7 +99,6 @@ FT_LOCAL_ARRAY_DEF(AF_StyleClass) af_style_classes[] =
 	NULL								/* do not remove */
 };
 
-#endif /* !FT_CONFIG_OPTION_PIC */
 
 
 #ifdef FT_DEBUG_LEVEL_TRACE

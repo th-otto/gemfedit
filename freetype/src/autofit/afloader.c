@@ -189,10 +189,6 @@ FT_LOCAL_DEF(FT_Error) af_loader_load_glyph(AF_Loader loader, AF_Module module, 
 	AF_StyleClass style_class;
 	AF_WritingSystemClass writing_system_class;
 
-#ifdef FT_CONFIG_OPTION_PIC
-	AF_FaceGlobals globals = loader->globals;
-#endif
-
 	if (!size)
 		return FT_THROW(Invalid_Size_Handle);
 

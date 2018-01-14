@@ -20,7 +20,6 @@
 #define FT_STRUCTURE  CFF_FontRecDictRec
 #undef  CFFCODE
 #define CFFCODE       CFF_CODE_TOPDICT
-
 CFF_FIELD_STRING(0, version, "Version")
 CFF_FIELD_STRING(1, notice, "Notice")
 CFF_FIELD_STRING(0x100, copyright, "Copyright")
@@ -35,7 +34,8 @@ CFF_FIELD_NUM(0x105, paint_type, "PaintType")
 CFF_FIELD_NUM(0x106, charstring_type, "CharstringType")
 CFF_FIELD_CALLBACK(0x107, font_matrix, "FontMatrix")
 CFF_FIELD_NUM(13, unique_id, "UniqueID")
-CFF_FIELD_CALLBACK(5, font_bbox, "FontBBox") CFF_FIELD_NUM(0x108, stroke_width, "StrokeWidth")
+CFF_FIELD_CALLBACK(5, font_bbox, "FontBBox")
+CFF_FIELD_NUM(0x108, stroke_width, "StrokeWidth")
 #if 0
 CFF_FIELD_DELTA(14, xuid, 16, "XUID")
 #endif
@@ -43,9 +43,11 @@ CFF_FIELD_NUM(15, charset_offset, "charset")
 CFF_FIELD_NUM(16, encoding_offset, "Encoding")
 CFF_FIELD_NUM(17, charstrings_offset, "CharStrings")
 CFF_FIELD_CALLBACK(18, private_dict, "Private")
-CFF_FIELD_NUM(0x114, synthetic_base, "SyntheticBase") CFF_FIELD_STRING(0x115, embedded_postscript, "PostScript")
+CFF_FIELD_NUM(0x114, synthetic_base, "SyntheticBase")
+CFF_FIELD_STRING(0x115, embedded_postscript, "PostScript")
 #if 0
-CFF_FIELD_STRING(0x116, base_font_name, "BaseFontName") CFF_FIELD_DELTA(0x117, base_font_blend, 16, "BaseFontBlend")
+CFF_FIELD_STRING(0x116, base_font_name, "BaseFontName")
+CFF_FIELD_DELTA(0x117, base_font_blend, 16, "BaseFontBlend")
 #endif
 /* the next two operators were removed from the Type2 specification */
 /* in version 16-March-2000                                         */
@@ -60,7 +62,8 @@ CFF_FIELD_NUM(0x121, cid_font_type, "CIDFontType")
 CFF_FIELD_NUM(0x122, cid_count, "CIDCount")
 CFF_FIELD_NUM(0x123, cid_uid_base, "UIDBase")
 CFF_FIELD_NUM(0x124, cid_fd_array_offset, "FDArray")
-CFF_FIELD_NUM(0x125, cid_fd_select_offset, "FDSelect") CFF_FIELD_STRING(0x126, cid_font_name, "FontName")
+CFF_FIELD_NUM(0x125, cid_fd_select_offset, "FDSelect")
+CFF_FIELD_STRING(0x126, cid_font_name, "FontName")
 #if 0
 CFF_FIELD_NUM(0x127, chameleon, "Chameleon")
 #endif
@@ -87,7 +90,8 @@ CFF_FIELD_NUM(0x111, language_group, "LanguageGroup")
 CFF_FIELD_FIXED(0x112, expansion_factor, "ExpansionFactor")
 CFF_FIELD_NUM(0x113, initial_random_seed, "initialRandomSeed")
 CFF_FIELD_NUM(19, local_subrs_offset, "Subrs")
-CFF_FIELD_NUM(20, default_width, "defaultWidthX") CFF_FIELD_NUM(21, nominal_width, "nominalWidthX")
+CFF_FIELD_NUM(20, default_width, "defaultWidthX")
+CFF_FIELD_NUM(21, nominal_width, "nominalWidthX")
 
 #undef  FT_STRUCTURE
 #define FT_STRUCTURE  CFF_FontRecDictRec
@@ -97,13 +101,15 @@ CFF_FIELD_CALLBACK(0x107, font_matrix, "FontMatrix")
 CFF_FIELD_NUM(17, charstrings_offset, "CharStrings")
 CFF_FIELD_NUM(0x124, cid_fd_array_offset, "FDArray")
 CFF_FIELD_NUM(0x125, cid_fd_select_offset, "FDSelect")
-CFF_FIELD_NUM(24, vstore_offset, "vstore") CFF_FIELD_CALLBACK(25, maxstack, "maxstack")
+CFF_FIELD_NUM(24, vstore_offset, "vstore")
+CFF_FIELD_CALLBACK(25, maxstack, "maxstack")
 
 #undef  FT_STRUCTURE
 #define FT_STRUCTURE  CFF_FontRecDictRec
 #undef  CFFCODE
 #define CFFCODE       CFF2_CODE_FONTDICT
-CFF_FIELD_CALLBACK(18, private_dict, "Private") CFF_FIELD_CALLBACK(0x107, font_matrix, "FontMatrix")
+CFF_FIELD_CALLBACK(18, private_dict, "Private")
+CFF_FIELD_CALLBACK(0x107, font_matrix, "FontMatrix")
 
 #undef  FT_STRUCTURE
 #define FT_STRUCTURE  CFF_PrivateRec

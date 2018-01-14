@@ -28,10 +28,6 @@
 
 FT_BEGIN_HEADER
 
-#ifdef FT_CONFIG_OPTION_PIC
-#error "this module does not support PIC yet"
-#endif
-
 typedef struct FNT_FontRec_
 {
 	FT_ULong offset;

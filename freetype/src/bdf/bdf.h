@@ -64,7 +64,8 @@ FT_BEGIN_HEADER
                                     BDF_KEEP_COMMENTS   | \
                                     BDF_KEEP_UNENCODED  | \
                                     BDF_PROPORTIONAL    )
-	typedef struct bdf_options_t_
+
+typedef struct bdf_options_t_
 {
 	int correct_metrics;
 	int keep_unencoded;

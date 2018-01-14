@@ -29,7 +29,6 @@
 #include <freetype/internal/ftdebug.h>
 #include <freetype/internal/ftstream.h>
 #include <freetype/internal/ftrfork.h>
-#include "basepic.h"
 #include "ftbase.h"
 
 #undef  FT_COMPONENT
@@ -341,16 +340,17 @@ static FT_Error raccess_guess_linux_netatalk(FT_Library library,
 							 FT_Stream stream, char *base_file_name, char **result_file_name, FT_Long * result_offset);
 
 
-CONST_FT_RFORK_RULE_ARRAY_BEGIN(ft_raccess_guess_table, ft_raccess_guess_rec)
-CONST_FT_RFORK_RULE_ARRAY_ENTRY(apple_double, apple_double)
-CONST_FT_RFORK_RULE_ARRAY_ENTRY(apple_single, apple_single)
-CONST_FT_RFORK_RULE_ARRAY_ENTRY(darwin_ufs_export, darwin_ufs_export)
-CONST_FT_RFORK_RULE_ARRAY_ENTRY(darwin_newvfs, darwin_newvfs)
-CONST_FT_RFORK_RULE_ARRAY_ENTRY(darwin_hfsplus, darwin_hfsplus)
-CONST_FT_RFORK_RULE_ARRAY_ENTRY(vfat, vfat)
-CONST_FT_RFORK_RULE_ARRAY_ENTRY(linux_cap, linux_cap)
-CONST_FT_RFORK_RULE_ARRAY_ENTRY(linux_double, linux_double)
-CONST_FT_RFORK_RULE_ARRAY_ENTRY(linux_netatalk, linux_netatalk) CONST_FT_RFORK_RULE_ARRAY_END
+static const ft_raccess_guess_rec ft_raccess_guess_table[] = {
+	{ raccess_guess_apple_double, FT_RFork_Rule_apple_double },
+	{ raccess_guess_apple_single, FT_RFork_Rule_apple_single },
+	{ raccess_guess_darwin_ufs_export, FT_RFork_Rule_darwin_ufs_export },
+	{ raccess_guess_darwin_newvfs, FT_RFork_Rule_darwin_newvfs },
+	{ raccess_guess_darwin_hfsplus, FT_RFork_Rule_darwin_hfsplus },
+	{ raccess_guess_vfat, FT_RFork_Rule_vfat },
+	{ raccess_guess_linux_cap, FT_RFork_Rule_linux_cap },
+	{ raccess_guess_linux_double, FT_RFork_Rule_linux_double },
+	{ raccess_guess_linux_netatalk, FT_RFork_Rule_linux_netatalk }
+};
 
 /*************************************************************************/
 /****                                                                 ****/
@@ -380,7 +380,7 @@ FT_BASE_DEF(void) FT_Raccess_Guess(FT_Library library,
 		if (errors[i])
 			continue;
 
-		errors[i] = (FT_RACCESS_GUESS_TABLE_GET[i].func) (library, stream, base_name, &(new_names[i]), &(offsets[i]));
+		errors[i] = (ft_raccess_guess_table[i].func) (library, stream, base_name, &(new_names[i]), &(offsets[i]));
 	}
 
 	return;
@@ -395,7 +395,7 @@ static FT_RFork_Rule raccess_get_rule_type_from_rule_index(FT_Library library, F
 	if (rule_index >= FT_RACCESS_N_RULES)
 		return FT_RFork_Rule_invalid;
 
-	return FT_RACCESS_GUESS_TABLE_GET[rule_index].type;
+	return ft_raccess_guess_table[rule_index].type;
 }
 
 

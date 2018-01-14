@@ -33,7 +33,6 @@ ANONYMOUS_STRUCT_DUMMY(PSH_GlobalsRec_)
 #include "cffload.c"
 #include "cffobjs.c"
 #include "cffparse.c"
-#include "cffpic.c"
 #include "cf2arrst.c"
 #include "cf2blues.c"
 #include "cf2error.c"

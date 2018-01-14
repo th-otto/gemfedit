@@ -91,7 +91,11 @@ FT_CALLBACK_DEF(T2_Hints_Funcs) pshinter_get_t2_funcs(FT_Module module)
 }
 
 
-FT_DEFINE_PSHINTER_INTERFACE(pshinter_interface, pshinter_get_globals_funcs, pshinter_get_t1_funcs, pshinter_get_t2_funcs)
+static const PSHinter_Interface pshinter_interface = {
+	pshinter_get_globals_funcs,
+	pshinter_get_t1_funcs,
+	pshinter_get_t2_funcs
+};
 
 FT_CALLBACK_TABLE_DEF const FT_Module_Class pshinter_module_class = {
 	0,

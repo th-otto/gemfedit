@@ -50,7 +50,7 @@
  *
  * 3. The glyph set corresponding to AF_COVERAGE_DEFAULT is computed
  *    with all lookups specific to the OpenType script activated.  It
- *    relies on the order of AF_DEFINE_STYLE_CLASS entries so that
+ *    relies on the order of AF_StyleClassRec entries so that
  *    special coverages (like `oldstyle figures') don't get overwritten.
  *
  */

@@ -64,43 +64,14 @@ typedef enum FT_RFork_Rule_
 } FT_RFork_Rule;
 
 /* For fast translation between rule index and rule type,
-   * the macros FT_RFORK_xxx should be kept consistent with
-   * the raccess_guess_funcs table
-   */
+ * the macros FT_RFORK_xxx should be kept consistent with
+ * the raccess_guess_funcs table
+ */
 typedef struct ft_raccess_guess_rec_
 {
 	ft_raccess_guess_func func;
 	FT_RFork_Rule type;
 } ft_raccess_guess_rec;
-
-#ifndef FT_CONFIG_OPTION_PIC
-
-/* this array is a storage in non-PIC mode, so ; is needed in END */
-#define CONST_FT_RFORK_RULE_ARRAY_BEGIN( name, type )  \
-          static const type name[] = {
-#define CONST_FT_RFORK_RULE_ARRAY_ENTRY( func_suffix, type_suffix )  \
-          { raccess_guess_ ## func_suffix,                           \
-            FT_RFork_Rule_ ## type_suffix },
-#define CONST_FT_RFORK_RULE_ARRAY_END  };
-
-#else /* FT_CONFIG_OPTION_PIC */
-
-/* this array is a function in PIC mode, so no ; is needed in END */
-#define CONST_FT_RFORK_RULE_ARRAY_BEGIN( name, type )  \
-          void                                         \
-          FT_Init_Table_ ## name( type*  storage )     \
-          {                                            \
-            type*  local = storage;                    \
-                                                       \
-                                                       \
-            int  i = 0;
-#define CONST_FT_RFORK_RULE_ARRAY_ENTRY( func_suffix, type_suffix )  \
-          local[i].func = raccess_guess_ ## func_suffix;             \
-          local[i].type = FT_RFork_Rule_ ## type_suffix;             \
-          i++;
-#define CONST_FT_RFORK_RULE_ARRAY_END  }
-
-#endif /* FT_CONFIG_OPTION_PIC */
 
 #endif /* FT_CONFIG_OPTION_GUESSING_EMBEDDED_RFORK */
 

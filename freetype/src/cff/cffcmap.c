@@ -99,7 +99,7 @@ FT_CALLBACK_DEF(FT_UInt32) cff_cmap_encoding_char_next(FT_CMap cmap_, FT_UInt32 
 }
 
 
-FT_DEFINE_CMAP_CLASS(cff_cmap_encoding_class_rec,
+FT_CALLBACK_TABLE_DEF const FT_CMap_ClassRec cff_cmap_encoding_class_rec = {
 	sizeof(CFF_CMapStdRec),
 	cff_cmap_encoding_init,	/* FT_CMap_InitFunc init       */
 	cff_cmap_encoding_done,	/* FT_CMap_DoneFunc done       */
@@ -110,7 +110,7 @@ FT_DEFINE_CMAP_CLASS(cff_cmap_encoding_class_rec,
 	NULL,				/* FT_CMap_VariantListFunc variant_list     */
 	NULL,				/* FT_CMap_CharVariantListFunc charvariant_list */
 	NULL				/* FT_CMap_VariantCharListFunc variantchar_list */
-)
+};
 
 /*************************************************************************/
 /*************************************************************************/
@@ -187,7 +187,7 @@ FT_CALLBACK_DEF(FT_UInt32) cff_cmap_unicode_char_next(FT_CMap cmap_, FT_UInt32 *
 }
 
 
-FT_DEFINE_CMAP_CLASS(cff_cmap_unicode_class_rec,
+FT_CALLBACK_TABLE_DEF const FT_CMap_ClassRec cff_cmap_unicode_class_rec = {
 	sizeof(PS_UnicodesRec),
 	cff_cmap_unicode_init,	/* FT_CMap_InitFunc init       */
 	cff_cmap_unicode_done,	/* FT_CMap_DoneFunc done       */
@@ -198,4 +198,4 @@ FT_DEFINE_CMAP_CLASS(cff_cmap_unicode_class_rec,
 	NULL,				/* FT_CMap_VariantListFunc variant_list     */
 	NULL,				/* FT_CMap_CharVariantListFunc charvariant_list */
 	NULL				/* FT_CMap_VariantCharListFunc variantchar_list */
-)
+};

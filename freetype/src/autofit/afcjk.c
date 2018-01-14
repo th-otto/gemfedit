@@ -86,10 +86,6 @@ FT_LOCAL_DEF(void) af_cjk_metrics_init_widths(AF_CJKMetrics metrics, FT_Face fac
 		AF_CJKMetricsRec dummy[1];
 		AF_Scaler scaler = &dummy->root.scaler;
 
-#ifdef FT_CONFIG_OPTION_PIC
-		AF_FaceGlobals globals = metrics->root.globals;
-#endif
-
 		AF_StyleClass style_class = metrics->root.style_class;
 		AF_ScriptClass script_class = af_script_classes[style_class->script];
 
@@ -2136,7 +2132,8 @@ FT_LOCAL_DEF(FT_Error) af_cjk_hints_apply(FT_UInt32 glyph_index, AF_GlyphHints h
 /*************************************************************************/
 
 
-AF_DEFINE_WRITING_SYSTEM_CLASS(af_cjk_writing_system_class, AF_WRITING_SYSTEM_CJK,
+FT_CALLBACK_TABLE_DEF const AF_WritingSystemClassRec af_cjk_writing_system_class = {
+	AF_WRITING_SYSTEM_CJK,
 	sizeof(AF_CJKMetricsRec),
 	af_cjk_metrics_init,	/* style_metrics_init    */
 	af_cjk_metrics_scale,	/* style_metrics_scale   */
@@ -2144,11 +2141,12 @@ AF_DEFINE_WRITING_SYSTEM_CLASS(af_cjk_writing_system_class, AF_WRITING_SYSTEM_CJ
 	af_cjk_get_standard_widths,	/* style_metrics_getstdw */
 	af_cjk_hints_init,	/* style_hints_init      */
 	af_cjk_hints_apply	/* style_hints_apply     */
-)
+};
 
 #else /* !AF_CONFIG_OPTION_CJK */
 
-AF_DEFINE_WRITING_SYSTEM_CLASS(af_cjk_writing_system_class, AF_WRITING_SYSTEM_CJK,
+FT_CALLBACK_TABLE_DEF const AF_WritingSystemClassRec af_cjk_writing_system_class = {
+	AF_WRITING_SYSTEM_CJK,
 	sizeof(AF_CJKMetricsRec),
 	NULL,	/* style_metrics_init    */
 	NULL,	/* style_metrics_scale   */
@@ -2156,6 +2154,6 @@ AF_DEFINE_WRITING_SYSTEM_CLASS(af_cjk_writing_system_class, AF_WRITING_SYSTEM_CJ
 	NULL,	/* style_metrics_getstdw */
 	NULL,	/* style_hints_init      */
 	NULL	/* style_hints_apply     */
-)
+};
 
 #endif /* !AF_CONFIG_OPTION_CJK */

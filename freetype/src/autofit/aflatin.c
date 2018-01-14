@@ -79,10 +79,6 @@ FT_LOCAL_DEF(void) af_latin_metrics_init_widths(AF_LatinMetrics metrics, FT_Face
 		AF_LatinMetricsRec dummy[1];
 		AF_Scaler scaler = &dummy->root.scaler;
 
-#ifdef FT_CONFIG_OPTION_PIC
-		AF_FaceGlobals globals = metrics->root.globals;
-#endif
-
 		AF_StyleClass style_class = metrics->root.style_class;
 		AF_ScriptClass script_class = af_script_classes[style_class->script];
 
@@ -1875,10 +1871,6 @@ FT_LOCAL_DEF(FT_Error) af_latin_hints_compute_edges(AF_GlyphHints hints, AF_Dime
 	FT_Memory memory = hints->memory;
 	AF_LatinAxis laxis = &((AF_LatinMetrics) hints->metrics)->axis[dim];
 
-#ifdef FT_CONFIG_OPTION_PIC
-	AF_FaceGlobals globals = hints->metrics->globals;
-#endif
-
 	AF_StyleClass style_class = hints->metrics->style_class;
 	AF_ScriptClass script_class = af_script_classes[style_class->script];
 
@@ -2670,10 +2662,6 @@ static void af_latin_hint_edges(AF_GlyphHints hints, AF_Dimension dim)
 	AF_Edge anchor = NULL;
 	FT_Int has_serifs = 0;
 
-#ifdef FT_CONFIG_OPTION_PIC
-	AF_FaceGlobals globals = hints->metrics->globals;
-#endif
-
 	AF_StyleClass style_class = hints->metrics->style_class;
 	AF_ScriptClass script_class = af_script_classes[style_class->script];
 
@@ -3244,7 +3232,7 @@ static FT_Error af_latin_hints_apply(FT_UInt32 glyph_index, AF_GlyphHints hints,
 /*************************************************************************/
 
 
-AF_DEFINE_WRITING_SYSTEM_CLASS(af_latin_writing_system_class,
+FT_CALLBACK_TABLE_DEF const AF_WritingSystemClassRec af_latin_writing_system_class = {
 	AF_WRITING_SYSTEM_LATIN,
 	sizeof(AF_LatinMetricsRec),
 	af_latin_metrics_init,	/* style_metrics_init    */
@@ -3253,4 +3241,4 @@ AF_DEFINE_WRITING_SYSTEM_CLASS(af_latin_writing_system_class,
 	af_latin_get_standard_widths,	/* style_metrics_getstdw */
 	af_latin_hints_init,	/* style_hints_init      */
 	af_latin_hints_apply	/* style_hints_apply     */
-)
+};

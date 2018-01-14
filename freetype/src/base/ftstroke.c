@@ -25,17 +25,11 @@
 #include <freetype/internal/ftdebug.h>
 #include <freetype/internal/ftobjs.h>
 
-#include "basepic.h"
-
 ANONYMOUS_STRUCT_DUMMY(FT_RasterRec_)
 ANONYMOUS_STRUCT_DUMMY(FT_IncrementalRec_)
 
 /* declare an extern to access `ft_outline_glyph_class' globally     */
-/* allocated  in `ftglyph.c', and use the FT_OUTLINE_GLYPH_CLASS_GET */
-/* macro to access it when FT_CONFIG_OPTION_PIC is defined           */
-#ifndef FT_CONFIG_OPTION_PIC
 FT_CALLBACK_TABLE const FT_Glyph_Class ft_outline_glyph_class;
-#endif
 
 
 FT_EXPORT_DEF(FT_StrokerBorder) FT_Outline_GetInsideBorder(FT_Outline * outline)
@@ -2024,16 +2018,11 @@ FT_EXPORT_DEF(FT_Error) FT_Glyph_Stroke(FT_Glyph * pglyph, FT_Stroker stroker, F
 	FT_Error error = FT_ERR(Invalid_Argument);
 	FT_Glyph glyph = NULL;
 
-#ifdef FT_CONFIG_OPTION_PIC
-	/* for FT_OUTLINE_GLYPH_CLASS_GET (in PIC mode) */
-	FT_Library library = stroker->library;
-#endif
-
 	if (!pglyph)
 		goto Exit;
 
 	glyph = *pglyph;
-	if (!glyph || glyph->clazz != FT_OUTLINE_GLYPH_CLASS_GET)
+	if (!glyph || glyph->clazz != &ft_outline_glyph_class)
 		goto Exit;
 
 	{
@@ -2092,16 +2081,11 @@ FT_EXPORT_DEF(FT_Error) FT_Glyph_StrokeBorder(FT_Glyph * pglyph, FT_Stroker stro
 	FT_Error error = FT_ERR(Invalid_Argument);
 	FT_Glyph glyph = NULL;
 
-#ifdef FT_CONFIG_OPTION_PIC
-	/* for FT_OUTLINE_GLYPH_CLASS_GET (in PIC mode) */
-	FT_Library library = stroker->library;
-#endif
-
 	if (!pglyph)
 		goto Exit;
 
 	glyph = *pglyph;
-	if (!glyph || glyph->clazz != FT_OUTLINE_GLYPH_CLASS_GET)
+	if (!glyph || glyph->clazz != &ft_outline_glyph_class)
 		goto Exit;
 
 	{
