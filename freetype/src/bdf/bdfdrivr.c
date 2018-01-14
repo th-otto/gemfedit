@@ -900,18 +900,18 @@ FT_CALLBACK_DEF(FT_Module_Interface) bdf_driver_requester(FT_Module module, cons
 
 FT_CALLBACK_TABLE_DEF const FT_Driver_ClassRec bdf_driver_class = {
 	{
-	 FT_MODULE_FONT_DRIVER | FT_MODULE_DRIVER_NO_OUTLINES,
-	 sizeof(FT_DriverRec),
+		FT_MODULE_FONT_DRIVER | FT_MODULE_DRIVER_NO_OUTLINES,
+		sizeof(FT_DriverRec),
 
-	 "bdf",
-	 0x10000L,
-	 0x20000L,
+		"bdf",
+		0x10000L,
+		0x20000L,
 
-	 NULL,								/* module-specific interface */
+		NULL,								/* module-specific interface */
 
-	 NULL,								/* FT_Module_Constructor  module_init   */
-	 NULL,								/* FT_Module_Destructor   module_done   */
-	 bdf_driver_requester				/* FT_Module_Requester    get_interface */
+		NULL,								/* FT_Module_Constructor  module_init   */
+		NULL,								/* FT_Module_Destructor   module_done   */
+		bdf_driver_requester				/* FT_Module_Requester    get_interface */
 	},
 
 	sizeof(BDF_FaceRec),

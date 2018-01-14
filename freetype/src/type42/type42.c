@@ -26,6 +26,3 @@ ANONYMOUS_STRUCT_DUMMY(FT_IncrementalRec_)
 #include "t42drivr.c"
 #include "t42objs.c"
 #include "t42parse.c"
-
-
-/* END */

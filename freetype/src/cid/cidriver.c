@@ -172,18 +172,18 @@ FT_CALLBACK_DEF(FT_Module_Interface) cid_get_interface(FT_Module module, const c
 
 FT_CALLBACK_TABLE_DEF const FT_Driver_ClassRec t1cid_driver_class = {
 	{
-	 FT_MODULE_FONT_DRIVER | FT_MODULE_DRIVER_SCALABLE | FT_MODULE_DRIVER_HAS_HINTER,
-	 sizeof(FT_DriverRec),
+		FT_MODULE_FONT_DRIVER | FT_MODULE_DRIVER_SCALABLE | FT_MODULE_DRIVER_HAS_HINTER,
+		sizeof(FT_DriverRec),
 
-	 "t1cid",							/* module name           */
-	 0x10000L,							/* version 1.0 of driver */
-	 0x20000L,							/* requires FreeType 2.0 */
+		"t1cid",							/* module name           */
+		0x10000L,							/* version 1.0 of driver */
+		0x20000L,							/* requires FreeType 2.0 */
 
-	 NULL,								/* module-specific interface */
+		NULL,								/* module-specific interface */
 
-	 cid_driver_init,					/* FT_Module_Constructor  module_init   */
-	 cid_driver_done,					/* FT_Module_Destructor   module_done   */
-	 cid_get_interface					/* FT_Module_Requester    get_interface */
+		cid_driver_init,					/* FT_Module_Constructor  module_init   */
+		cid_driver_done,					/* FT_Module_Destructor   module_done   */
+		cid_get_interface					/* FT_Module_Requester    get_interface */
 	},
 
 	sizeof(CID_FaceRec),
