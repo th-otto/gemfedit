@@ -2432,7 +2432,13 @@ static _BOOL font_import_from_txt(const char *filename)
 			goto error;
 		}
 
-		b = bms + (ch - p.first_ade) * bmsize;
+		ch -= p.first_ade;
+		if (off_tab[ch] != F_NO_CHAR)
+		{
+			sprintf(buf, "[1][Character number %u|was already defined][Abort]", ch + p.first_ade);
+			goto error;
+		}
+		b = bms + ch * bmsize;
 
 		k = 0;
 		width = 0;
@@ -2468,7 +2474,7 @@ static _BOOL font_import_from_txt(const char *filename)
 		}
 		if (!igetline(f, line, max, &lineno) || strcmp(line, "endchar") != 0)
 			goto fail;
-		off_tab[ch - p.first_ade] = width;
+		off_tab[ch] = width;
 	}
 	fclose(f);
 

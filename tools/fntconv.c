@@ -219,9 +219,8 @@ struct font
 	UWORD skew;							/* mask for skewing */
 	UWORD flags;
 
-	UBYTE hor_table[512];				/* horizontal offsets */
-	UWORD widths[256];
-	UWORD off_table[257];				/* character offsets, 0xFFFF if no char present.  */
+	UBYTE *hor_table;					/* horizontal offsets */
+	UWORD *off_table;					/* character offsets, 0xFFFF if no char present.  */
 	UBYTE *dat_table;					/* character definitions */
 	UWORD form_width;
 	UWORD form_height;
@@ -736,7 +735,7 @@ static struct font *read_txt(const char *fname)
 	first = p->first_ade;
 	last = p->last_ade;
 	height = p->form_height;
-	if (first < 0 || last > 255 || first > last)
+	if (first < 0 || last < 0 || first > last)
 	{
 		fatal("wrong char range : first = %d, last = %d", first, last);
 	}
@@ -748,11 +747,9 @@ static struct font *read_txt(const char *fname)
 	/* allocate a big buffer to hold all bitmaps */
 	bmnum = last - first + 1;
 	bmsize = (p->max_cell_width * height + 7) >> 3;
-	bms = calloc(bmsize, bmnum);
-	if (bms == NULL)
-		fatal("memory");
-
-	for (i = 0; i < 256; i++)
+	bms = xmalloc((size_t)bmsize * bmnum);
+	p->off_table = xmalloc(sizeof(*p->off_table) * (bmnum + 1));
+	for (i = 0; i < bmnum; i++)
 	{
 		p->off_table[i] = F_NO_CHAR;
 	}
@@ -769,11 +766,17 @@ static struct font *read_txt(const char *fname)
 		ch = u;
 		if (ch < first || ch > last)
 		{
-			fprintf(stderr, "wrong character number %d\n", ch);
+			fprintf(stderr, "wrong character number %u\n", ch);
 			goto fail;
 		}
 
-		b = bms + (ch - first) * bmsize;
+		ch -= first;
+		if (p->off_table[ch] != F_NO_CHAR)
+		{
+			fprintf(stderr, "character number %u was already defined\n", ch + first);
+			goto fail;
+		}
+		b = bms + ch * bmsize;
 
 		k = 0;
 		for (i = 0; i < height; i++)
@@ -802,46 +805,39 @@ static struct font *read_txt(const char *fname)
 		}
 		if (!igetline(f, line, max) || strcmp(line, "endchar"))
 			goto fail;
-		p->widths[ch] = width;
-		p->off_table[ch] = 0;			/* != F_NO_CHAR, real value filled later */
+		p->off_table[ch] = width;			/* != F_NO_CHAR, real value filled later */
 	}
 	ifclose(f);
 
 	/* compute size of final form, and compute offs from widths */
 	off = 0;
-	for (i = first; i <= last; i++)
+	for (i = 0; i < bmnum; i++)
 	{
-		if (p->off_table[i] != F_NO_CHAR)
-		{
-			p->off_table[i] = off;
-			off += p->widths[i];
-		}
+		width = p->off_table[i];
+		p->off_table[i] = off;
+		if (width != F_NO_CHAR)
+			off += width;
 	}
-	p->off_table[last + 1] = off;
-	p->form_width = (off + 7) / 8;
-	p->dat_table = calloc(height, p->form_width);
-	if (p->dat_table == NULL)
-		fatal("memory");
+	p->off_table[bmnum] = off;
+	p->form_width = ((off + 15) >> 4) << 1;
+	p->dat_table = xmalloc((size_t)height * p->form_width);
 
 	/* now, pack the bitmaps in the destination form */
-	for (i = first; i <= last; i++)
+	for (i = 0; i < bmnum; i++)
 	{
-		if (p->off_table[i] != F_NO_CHAR)
+		off = p->off_table[i];
+		width = p->off_table[i + 1] - off;
+		b = bms + bmsize * i;
+		k = 0;
+		for (j = 0; j < height; j++)
 		{
-			width = p->widths[i];
-			off = p->off_table[i];
-			b = bms + bmsize * (i - first);
-			k = 0;
-			for (j = 0; j < height; j++)
+			for (w = 0; w < width; w++)
 			{
-				for (w = 0; w < width; w++)
+				if (get_bit(b, k))
 				{
-					if (get_bit(b, k))
-					{
-						set_bit(p->dat_table + j * p->form_width, off + w);
-					}
-					k++;
+					set_bit(p->dat_table + j * p->form_width, off + w);
 				}
+				k++;
 			}
 		}
 	}
@@ -867,7 +863,8 @@ static struct font *read_fnt(const char *fname)
 	long off_off_table;
 	long off_dat_table;
 	int bigendian = 0;
-
+	int bmnum;
+	
 	p = malloc(sizeof(struct font));
 	if (p == NULL)
 		fatal("memory");
@@ -947,16 +944,14 @@ static struct font *read_fnt(const char *fname)
 
 	if (fseek(f, off_off_table, SEEK_SET))
 		fatal("seek");
+	bmnum = p->last_ade - p->first_ade + 1;
+	p->off_table = xmalloc(sizeof(*p->off_table) * (bmnum + 1));
+	
 	{
-		int i, j;
+		int i;
 		char buf[2];
-		int off;
-
-		for (i = 0; i < 257; i++)
-		{
-			p->off_table[i] = F_NO_CHAR;
-		}
-		for (i = p->first_ade; i <= p->last_ade + 1; i++)
+		
+		for (i = 0; i <= bmnum; i++)
 		{
 			count = 2;
 			if ((long)fread(buf, 1, count, f) != count)
@@ -967,18 +962,6 @@ static struct font *read_fnt(const char *fname)
 			} else
 			{
 				p->off_table[i] = get_l_word(buf);
-			}
-		}
-		/* compute widths out of offsets */
-		j = p->first_ade;
-		off = 0;
-		for (i = j + 1; i <= p->last_ade + 1; i++)
-		{
-			if (p->off_table[i] != F_NO_CHAR)
-			{
-				p->widths[j] = p->off_table[i] - off;
-				off = p->off_table[i];
-				j = i;
 			}
 		}
 	}
@@ -1002,9 +985,10 @@ static struct font *read_fnt(const char *fname)
 		UBYTE buf[2];
 		int i;
 
+		p->hor_table = xmalloc(bmnum * 2);
 		if (fseek(f, off_hor_table, SEEK_SET))
 			fatal("seek");
-		for (i = p->first_ade; i <= p->last_ade; i++)
+		for (i = 0; i < bmnum; i++)
 		{
 			count = 2;
 			if ((long)fread(buf, 1, count, f) != count)
@@ -1029,11 +1013,14 @@ static void write_fnt(struct font *p, const char *fname)
 	long off_off_table;
 	long off_dat_table;
 	long off;
-
+	int bmnum;
+	
 	f = fopen(fname, "wb");
 	if (f == NULL)
 		fatal("fopen");
 
+	p->flags |= F_STDFORM;
+	
 #define SET_WORD(a) set_b_word(h.a, p->a)
 	SET_WORD(font_id);
 	SET_WORD(point);
@@ -1059,14 +1046,15 @@ static void write_fnt(struct font *p, const char *fname)
 	SET_WORD(form_height);
 #undef SET_WORD
 
+	bmnum = p->last_ade - p->first_ade + 1;
 	off = sizeof(struct font_file_hdr);
 	off_hor_table = off;
 	if (p->flags & F_HORZ_OFF)
 	{
-		off += (p->last_ade - p->first_ade + 1) * 2;
+		off += bmnum * 2;
 	}
 	off_off_table = off;
-	off += (p->last_ade - p->first_ade + 2) * 2;
+	off += (bmnum + 1) * 2;
 	off_dat_table = off;
 
 	set_b_long(h.hor_table, off_hor_table);
@@ -1081,7 +1069,7 @@ static void write_fnt(struct font *p, const char *fname)
 	{
 		fatal("TODO");
 	}
-	for (i = p->first_ade; i <= p->last_ade + 1; i++)
+	for (i = 0; i <= bmnum; i++)
 	{
 		set_b_word(buf, p->off_table[i]);
 		if (2 != fwrite(buf, 1, 2, f))
@@ -1153,11 +1141,12 @@ static void write_txt(struct font *p, const char *filename)
 	{
 		int r, c, w, off;
 
-		off = p->off_table[i];
+		c = i - p->first_ade;
+		off = p->off_table[c];
 		if (off == F_NO_CHAR)
 			continue;
-		w = p->widths[i];
-		if (off + w > 8 * p->form_width)
+		w = p->off_table[c + 1] - off;
+		if ((off + w) > (8 * p->form_width))
 		{
 			fprintf(stderr, "char %d: offset %d + width %d out of range (%d)\n", i, off, w, 8 * p->form_width);
 			continue;
