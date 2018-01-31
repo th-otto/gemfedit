@@ -22,6 +22,8 @@ typedef short WORD;
 typedef unsigned long ULONG;
 typedef long LONG;
 
+#define MAX_ADE 0x7fff
+
 /*
  * internal error routine
  */
@@ -292,10 +294,6 @@ static void iback(IFILE *f)
 		fatal("too far backward");
 	} else
 	{
-		if (f->buf[f->index] == 012)
-		{
-			f->lineno--;
-		}
 		f->index--;
 	}
 }
@@ -332,7 +330,8 @@ static int inextsh(IFILE *f)
 		} else
 		{
 			iback(f);
-			return 015;
+			f->lineno++;
+			return '\n';
 		}
 	} else if (ret == 012)
 	{
@@ -668,8 +667,10 @@ static void set_bit(UBYTE *addr, int i)
 static struct font *read_txt(const char *fname)
 {
 	IFILE *f;
-	int ch, off, i, j, k;
-	int height, width = 0;
+	int ch, i, j, k;
+	long off;
+	int height;
+	int width = 0;
 	int w;
 	UBYTE *bms;
 	int bmsize, bmnum;
@@ -687,15 +688,22 @@ static struct font *read_txt(const char *fname)
 	f = ifopen(fname);
 
 #define EXPECT(a) \
-  if(!igetline(f, line, max) || strcmp(line, a)) goto fail;
-
+  if(!igetline(f, line, max) || strcmp(line, a) != 0) \
+  { \
+    fprintf(stderr, "\"%s\" expected\n", a); \
+  	goto fail; \
+  }
+  
 	EXPECT("GDOSFONT");
 	EXPECT("version 1.0");
 
 #define EXPECTNUM(a) c=line; \
   if(!igetline(f, line, max) || !try_given_string(&c, #a) \
     || !try_white(&c) || !try_unsigned(&c, &u) || !try_eol(&c)) \
+  { \
+    fprintf(stderr, "\"%s\" with number expected\n", #a); \
     goto fail; \
+  } \
   p->a = u;
 
 	EXPECTNUM(font_id);
@@ -704,8 +712,11 @@ static struct font *read_txt(const char *fname)
 	c = line;
 	if (!igetline(f, line, max) || !try_given_string(&c, "name")
 		|| !try_white(&c) || !try_c_string(&c, p->name, 32) || !try_eol(&c))
+    {
+    	fprintf(stderr, "\"%s\" expected\n", "name");
 		goto fail;
-
+	}
+	
 	EXPECTNUM(first_ade);
 	EXPECTNUM(last_ade);
 	EXPECTNUM(top);
@@ -724,7 +735,6 @@ static struct font *read_txt(const char *fname)
 	EXPECTNUM(flags);
 	EXPECTNUM(form_height);
 
-#undef EXPECT
 #undef EXPECTNUM
 
 	if (p->flags & F_HORZ_OFF)
@@ -735,7 +745,7 @@ static struct font *read_txt(const char *fname)
 	first = p->first_ade;
 	last = p->last_ade;
 	height = p->form_height;
-	if (first < 0 || last < 0 || first > last)
+	if (first < 0 || last < 0 || first > MAX_ADE || first > last)
 	{
 		fatal("wrong char range : first = %d, last = %d", first, last);
 	}
@@ -758,11 +768,17 @@ static struct font *read_txt(const char *fname)
 	{									/* for each char */
 		c = line;
 		if (!igetline(f, line, max))
+		{
+	    	fprintf(stderr, "unexpected EOF\n");
 			goto fail;
-		if (!strcmp(line, "endfont"))
+		}
+		if (strcmp(line, "endfont") == 0)
 			break;
 		if (!try_given_string(&c, "char") || !try_white(&c) || !try_unsigned(&c, &u) || !try_eol(&c))
+		{
+	    	fprintf(stderr, "\"%s\" with number expected\n", "char");
 			goto fail;
+		}
 		ch = u;
 		if (ch < first || ch > last)
 		{
@@ -782,7 +798,10 @@ static struct font *read_txt(const char *fname)
 		for (i = 0; i < height; i++)
 		{
 			if (!igetline(f, line, max))
+			{
+		    	fprintf(stderr, "unexpected EOF\n");
 				goto fail;
+			}
 			for (c = line, w = 0; *c; c++, w++)
 			{
 				if (*c == 'X')
@@ -790,8 +809,10 @@ static struct font *read_txt(const char *fname)
 					set_bit(b, k);
 				} else if (*c == '.')
 				{
-				} else
+				} else {
+					fprintf(stderr, "illegal character '%c' in bitmap definition\n", *c);
 					goto fail;
+				}
 				k++;
 			}
 			if (i == 0)
@@ -803,22 +824,27 @@ static struct font *read_txt(const char *fname)
 				goto fail;
 			}
 		}
-		if (!igetline(f, line, max) || strcmp(line, "endchar"))
-			goto fail;
+		EXPECT("endchar");
 		p->off_table[ch] = width;			/* != F_NO_CHAR, real value filled later */
 	}
 	ifclose(f);
+#undef EXPECT
 
 	/* compute size of final form, and compute offs from widths */
 	off = 0;
 	for (i = 0; i < bmnum; i++)
 	{
 		width = p->off_table[i];
-		p->off_table[i] = off;
+		p->off_table[i] = (UWORD)off;
 		if (width != F_NO_CHAR)
 			off += width;
 	}
-	p->off_table[bmnum] = off;
+	p->off_table[bmnum] = (UWORD)off;
+	if (off >= 0x10000L)
+	{
+		fprintf(stderr, "font width exceeded\n");
+		goto fail;
+	}
 	p->form_width = ((off + 15) >> 4) << 1;
 	p->dat_table = xmalloc((size_t)height * p->form_width);
 
@@ -933,7 +959,7 @@ static struct font *read_fnt(const char *fname)
 	{
 		fatal("horizontal offsets not handled");
 	}
-	if (p->last_ade > 255 || p->first_ade >= p->last_ade)
+	if (p->last_ade > MAX_ADE || p->first_ade >= p->last_ade)
 	{
 		fatal("wrong char range : first = %d, last = %d", p->first_ade, p->last_ade);
 	}
@@ -1187,7 +1213,8 @@ static void write_c(struct font *p, const char *filename)
 {
 	FILE *f;
 	int i;
-
+	int bmnum;
+	
 	/* first, write header */
 
 	f = fopen(filename, "w");
@@ -1257,36 +1284,47 @@ static UWORD off_table[], dat_table[];\n\
 	fprintf(f, "    0,  /* struct font * next_font */\n");
 	fprintf(f, "    0   /* UWORD next_seg */\n};\n\n");
 
-	fprintf(f, "static UWORD off_table[] =\n{\n    ");
+	bmnum = p->last_ade - p->first_ade + 1;
+	fprintf(f, "static UWORD off_table[] =\n{\n");
 	{
-		for (i = p->first_ade; i <= p->last_ade + 1; i++)
+		for (i = 0; i <= bmnum; i++)
 		{
-			fprintf(f, "0x%04x, ", p->off_table[i]);
+			if ((i & 7) == 0)
+				fprintf(f, "    ");
+			else
+				fprintf(f, " ");
+			fprintf(f, "0x%04x", p->off_table[i]);
+			if (i != bmnum)
+				fprintf(f, ",");
 			if ((i & 7) == 7)
-			{
-				fprintf(f, "\n    ");
-			}
+				fprintf(f, "\n");
 		}
 	}
 	fprintf(f, "\n};\n\n");
 
-	fprintf(f, "static UWORD dat_table[] =\n{\n    ");
+	fprintf(f, "static UWORD dat_table[] =\n{\n");
 	{
 		int h;
 		unsigned int a;
 
-		h = p->form_height * p->form_width;
-		for (i = 0; i < h / 2; i++)
+		h = (p->form_height * p->form_width) / 2;
+		for (i = 0; i < h; i++)
 		{
+			if ((i & 7) == 0)
+				fprintf(f, "    ");
+			else
+				fprintf(f, " ");
 			a = (p->dat_table[2 * i] << 8) | (p->dat_table[2 * i + 1] & 0xFF);
-			fprintf(f, "0x%04x, ", a);
+			fprintf(f, "0x%04x", a);
+			if (i != (h - 1))
+				fprintf(f, ",");
 			if ((i & 7) == 7)
-			{
-				fprintf(f, "\n    ");
-			}
+				fprintf(f, "\n");
 		}
+		if ((i & 7) != 0)
+			fprintf(f, "\n");
 	}
-	fprintf(f, "\n};\n");
+	fprintf(f, "};\n");
 
 	fclose(f);
 }
@@ -1299,13 +1337,13 @@ static int file_type(const char *c)
 {
 	int n = strlen(c);
 
-	if (n >= 3 && c[n - 2] == '.' && (c[n - 1] == 'c' || c[n - 1] == 'C'))
+	if (n >= 3 && c[n - 2] == '.' && (c[n - 1] == 'c' || c[n - 1] == 'C' || c[n - 1] == 'h' || c[n - 1] == 'H'))
 		return FILE_C;
 	if (n < 5 || c[n - 4] != '.')
 		return 0;
-	if (!strcmp(c + n - 3, "txt") || !strcmp(c + n - 3, "TXT"))
+	if (strcmp(c + n - 3, "txt") == 0 || strcmp(c + n - 3, "TXT") == 0)
 		return FILE_TXT;
-	if (!strcmp(c + n - 3, "fnt") || !strcmp(c + n - 3, "FNT"))
+	if (strcmp(c + n - 3, "fnt") == 0 || strcmp(c + n - 3, "FNT") == 0)
 		return FILE_FNT;
 	return 0;
 }
@@ -1317,11 +1355,11 @@ int main(int argc, char **argv)
 
 	if (argc != 4)
 		goto usage;
-	if (!strcmp(argv[1], "-o"))
+	if (strcmp(argv[1], "-o") == 0)
 	{
 		from = argv[3];
 		to = argv[2];
-	} else if (!strcmp(argv[2], "-o"))
+	} else if (strcmp(argv[2], "-o") == 0)
 	{
 		from = argv[1];
 		to = argv[3];
@@ -1360,7 +1398,6 @@ int main(int argc, char **argv)
 		fatal("wrong file type");
 		return EXIT_FAILURE;
 	}
-	fprintf(stderr, "done.\n");
 	return EXIT_SUCCESS;
 
   usage:

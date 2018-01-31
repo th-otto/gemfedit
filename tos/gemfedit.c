@@ -39,6 +39,8 @@ static _WORD gl_wchar, gl_hchar;
 # define _BOOL int
 #endif
 
+#define MAX_ADE 0x7fff
+
 
 typedef struct
 {
@@ -46,9 +48,12 @@ typedef struct
 } FONTS;
 
 
-#define PANEL_Y_MARGIN 20
 #define PANEL_X_MARGIN 20
-#define PANEL_WKIND (NAME | CLOSER | MOVER)
+#define PANEL_WKIND (NAME | CLOSER | MOVER | VSLIDE | UPARROW | DNARROW)
+#define PANEL_Y_MARGIN (4 * gl_hchar)
+
+#define PANEL_BOX 1
+#define PANEL_FIRST 2
 
 #define MAIN_Y_MARGIN 10
 #define MAIN_X_MARGIN 10
@@ -85,6 +90,11 @@ static fchar_t numoffs;
 static fchar_t cur_char;
 static _BOOL font_changed = FALSE;
 static MFDB screen_fdb;
+static OBJECT *panel_objects;
+static _WORD char_rows;
+static _WORD top_row;
+
+#define PANEL_COLUMNS 16
 
 #define FONT_BIG ((fonthdr.flags & FONTF_BIGENDIAN) != 0)
 
@@ -117,6 +127,26 @@ static char *rs_str(_WORD num)
 	char *str = NULL;
 	rsrc_gaddr(R_STRING, num, &str);
 	return str;
+}
+
+/* -------------------------------------------------------------------------- */
+
+static void *xmalloc(size_t s)
+{
+	void *p = malloc(s);
+	if (p == NULL)
+		form_alert(1, rs_str(AL_NOMEM));
+	return p;
+}
+
+/* -------------------------------------------------------------------------- */
+
+static void *xrealloc(void *p, size_t s)
+{
+	p = realloc(p, s);
+	if (p == NULL)
+		form_alert(1, rs_str(AL_NOMEM));
+	return p;
 }
 
 /* -------------------------------------------------------------------------- */
@@ -203,15 +233,17 @@ static void set_panel_pos(void)
 {
 	GRECT gr, size;
 	_WORD x, y, ox, oy;
-	OBJECT *panel = rs_tree(PANEL);
+	OBJECT *panel = panel_objects;
 	
+	if (panel == NULL)
+		return;
 	wind_get_grect(panelwin, WF_WORKXYWH, &gr);
 	form_center_grect(panel, &size);
 	objc_offset(panel, ROOT, &x, &y);
 	ox = x - size.g_x;
 	oy = y - size.g_y;
 	panel[ROOT].ob_x = gr.g_x + ox;
-	panel[ROOT].ob_y = gr.g_y + oy;
+	panel[ROOT].ob_y = gr.g_y + oy - (top_row * font_ch);
 }
 
 /* -------------------------------------------------------------------------- */
@@ -235,12 +267,15 @@ static void redraw_pixel(_WORD x, _WORD y)
 	message[3] = panelwin;
 	set_panel_pos();
 	wind_get_grect(panelwin, WF_WORKXYWH, &gr);
-	panel = rs_tree(PANEL);
-	objc_offset(panel, PANEL_FIRST + cur_char / 16, &message[4], &message[5]);
-	message[4] += (cur_char % 16) * font_cw;
-	message[6] = font_cw;
-	message[7] = font_ch;
-	appl_write(gl_apid, 16, message);
+	panel = panel_objects;
+	if (panel != NULL)
+	{
+		objc_offset(panel, PANEL_FIRST + cur_char / PANEL_COLUMNS, &message[4], &message[5]);
+		message[4] += (cur_char % PANEL_COLUMNS) * font_cw;
+		message[6] = font_cw;
+		message[7] = font_ch;
+		appl_write(gl_apid, 16, message);
+	}
 }
 
 /* -------------------------------------------------------------------------- */
@@ -492,13 +527,48 @@ static void mainwin_draw(const GRECT *area)
 	v_show_c(vdihandle, 1);
 }
 
+/* ------------------------------------------------------------------------- */
+
+static void calc_vslider(void)
+{
+	GRECT gr;
+	long max_doc;
+	long hh;
+	long val;
+	
+	wind_get_grect(panelwin, WF_WORKXYWH, &gr);
+	hh = (long)font_ch * char_rows;
+	max_doc = hh - gr.g_h;
+	if (hh <= 0)
+	{
+		val = 1000;
+	} else
+	{
+		val = (1000l * gr.g_h) / hh;
+		if (val > 1000)
+			val = 1000;
+	}
+	wind_set_int(panelwin, WF_VSLSIZE, (_WORD)val);
+	if (max_doc <= 0)
+	{
+		val = 0;
+	} else
+	{
+		long yy = (long)top_row * font_ch;
+		val = (1000l * yy) / max_doc;
+	}
+	wind_set_int(panelwin, WF_VSLIDE, (_WORD)val);
+}
+
 /* -------------------------------------------------------------------------- */
 
 static void panelwin_draw(const GRECT *area)
 {
 	GRECT gr;
-	OBJECT *panel = rs_tree(PANEL);
+	OBJECT *panel = panel_objects;
 	
+	if (panel == NULL)
+		return;
 	set_panel_pos();
 	v_hide_c(vdihandle);
 	wind_get_grect(panelwin, WF_FIRSTXYWH, &gr);
@@ -567,16 +637,18 @@ static void maybe_resize_window(void)
 
 static void panel_click(_WORD x, _WORD y)
 {
-	OBJECT *panel = rs_tree(PANEL);
+	OBJECT *panel = panel_objects;
 	_WORD obj;
 	_WORD ox, oy;
 	
+	if (panel == NULL)
+		return;
 	set_panel_pos();
 	obj = objc_find(panel, ROOT, MAX_DEPTH, x, y);
-	if (obj >= PANEL_FIRST && obj <= PANEL_LAST && font_cw > 0)
+	if (obj >= PANEL_FIRST && font_cw > 0)
 	{
 		objc_offset(panel, obj, &ox, &oy);
-		cur_char = (obj - PANEL_FIRST) * 16 + (x - ox) / font_cw;
+		cur_char = (obj - PANEL_FIRST) * PANEL_COLUMNS + (x - ox) / font_cw;
 		maybe_resize_window();
 		redraw_win(mainwin);
 	}
@@ -690,75 +762,6 @@ static _BOOL open_screen(void)
 
 /* -------------------------------------------------------------------------- */
 
-static _BOOL create_panel_window(void)
-{
-	GRECT gr, desk;
-	_WORD wkind;
-	OBJECT *panel = rs_tree(PANEL);
-	
-	/* create a window */
-	form_center_grect(panel, &gr);
-	gr.g_x = 100;
-	gr.g_y = 100;
-	wind_get_grect(DESK, WF_WORKXYWH, &desk);
-	wkind = PANEL_WKIND;
-	wind_calc_grect(WC_BORDER, wkind, &gr, &gr);
-	gr.g_x = 20;
-	gr.g_y = 20;
-	rc_intersect(&desk, &gr);
-	panelwin = wind_create_grect(wkind, &desk);
-	if (panelwin < 0)
-	{
-		form_alert(1, rs_str(AL_NOWINDOW));
-		return FALSE;
-	}
-
-	wind_set_str(panelwin, WF_NAME, "System Font");
-	wind_open_grect(panelwin, &gr);
-	
-	return TRUE;
-}
-
-/* -------------------------------------------------------------------------- */
-
-static _BOOL create_window(void)
-{
-	GRECT gr, desk, panel;
-	_WORD wkind;
-	_WORD width, height;
-	
-	width = MAIN_X_MARGIN * 2 + scalex * font_cw + (font_cw + 1) * scaled_margin;
-	height = MAIN_Y_MARGIN * 2 + scaley * font_ch + (font_ch + 1) * scaled_margin;
-	
-	/* create a window */
-	gr.g_x = 100;
-	gr.g_y = 100;
-	gr.g_w = width;
-	gr.g_h = height;
-	wind_get_grect(DESK, WF_WORKXYWH, &desk);
-	wkind = MAIN_WKIND;
-	wind_calc_grect(WC_BORDER, wkind, &gr, &gr);
-	wind_get_grect(panelwin, WF_CURRXYWH, &panel);
-	gr.g_x = panel.g_x + panel.g_w + 20;
-	gr.g_y = panel.g_y;
-	rc_intersect(&desk, &gr);
-	mainwin = wind_create_grect(wkind, &desk);
-	if (mainwin < 0)
-	{
-		form_alert(1, rs_str(AL_NOWINDOW));
-		return FALSE;
-	}
-
-	wind_set_str(mainwin, WF_NAME, "");
-	wind_calc_grect(WC_WORK, wkind, &gr, &gr);
-	wind_calc_grect(WC_BORDER, wkind, &gr, &gr);
-	wind_open_grect(mainwin, &gr);
-	
-	return TRUE;
-}
-
-/* -------------------------------------------------------------------------- */
-
 #ifdef __PUREC__
 /*
  * the original Pure-C pcgemlib uses static arrays,
@@ -813,7 +816,7 @@ static _WORD __CDECL draw_font(PARMBLK *pb)
 	udef_vsm_color(aeshandle, G_BLACK);
 	udef_vsm_type(aeshandle, 1);
 	udef_vsm_height(aeshandle, 1);
-	basec = (pb->pb_obj - PANEL_FIRST) * 16;
+	basec = (pb->pb_obj - PANEL_FIRST) * PANEL_COLUMNS;
 
 	src.fd_addr = dat_table;
 	src.fd_w = fonthdr.form_width << 3;
@@ -838,7 +841,7 @@ static _WORD __CDECL draw_font(PARMBLK *pb)
 		udef_vr_recfl(aeshandle, pxy);
 	}
 		
-	for (c = 0; c < 16; c++)
+	for (c = 0; c < PANEL_COLUMNS; c++)
 	{
 		ch = basec + c;
 		if (ch < fonthdr.first_ade || ch > fonthdr.last_ade)
@@ -898,9 +901,151 @@ static _WORD __CDECL draw_font(PARMBLK *pb)
 	return 0;
 }
 
+static USERBLK draw_font_userblk = { draw_font, 0 };
+
 /* -------------------------------------------------------------------------- */
 
-static USERBLK draw_font_userblk = { draw_font, 0 };
+static void create_panel_objects(void)
+{
+	_WORD num_objs;
+	OBJECT *panel;
+	_WORD i;
+	
+	free(panel_objects);
+	char_rows = (fonthdr.last_ade + PANEL_COLUMNS - 1) / PANEL_COLUMNS;
+	num_objs = PANEL_FIRST + char_rows;
+	panel_objects = xmalloc(sizeof(OBJECT) * num_objs);
+	panel = panel_objects;
+	if (panel == NULL)
+		return;
+	panel[ROOT].ob_next = NIL;
+	panel[ROOT].ob_head = PANEL_BOX;
+	panel[ROOT].ob_tail = PANEL_BOX;
+	panel[ROOT].ob_type = G_BOX;
+	panel[ROOT].ob_flags = OF_NONE;
+	panel[ROOT].ob_state = OS_NORMAL;
+	panel[ROOT].ob_spec.index = 0x74001100L;
+	panel[ROOT].ob_x = 0;
+	panel[ROOT].ob_y = 0;
+	panel[ROOT].ob_width = 0;
+	panel[ROOT].ob_height = 0;
+	panel[PANEL_BOX].ob_next = ROOT;
+	panel[PANEL_BOX].ob_head = PANEL_FIRST;
+	panel[PANEL_BOX].ob_tail = PANEL_FIRST + char_rows - 1;
+	panel[PANEL_BOX].ob_type = G_BOX;
+	panel[PANEL_BOX].ob_flags = OF_NONE;
+	panel[PANEL_BOX].ob_state = OS_OUTLINED;
+	panel[PANEL_BOX].ob_spec.index = 0x21100L;
+	panel[PANEL_BOX].ob_x = 2 * gl_wchar;
+	panel[PANEL_BOX].ob_y = 1 * gl_hchar;
+	if (char_rows == 0)
+	{
+		panel[PANEL_BOX].ob_head = NIL;
+		panel[PANEL_BOX].ob_tail = NIL;
+		panel[PANEL_BOX].ob_flags |= OF_LASTOB;
+		panel[PANEL_BOX].ob_width = (2 * gl_wchar) * 2 + PANEL_COLUMNS * gl_wchar;
+		panel[PANEL_BOX].ob_height = (1 * gl_hchar) * 2;
+	} else
+	{
+		for (i = PANEL_FIRST; i < num_objs; i++)
+		{
+			panel[i].ob_next = i + 1;
+			panel[i].ob_head = NIL;
+			panel[i].ob_tail = NIL;
+			panel[i].ob_type = G_USERDEF;
+			panel[i].ob_flags = OF_NONE;
+			panel[i].ob_state = OS_NORMAL;
+			panel[i].ob_spec.userblk = &draw_font_userblk;
+			panel[i].ob_x = 2 * gl_wchar;
+			panel[i].ob_y = (i - PANEL_FIRST + 1) * gl_hchar;
+			panel[i].ob_width = 0;
+			panel[i].ob_height = 0;
+		}
+		--i;
+		panel[i].ob_next = PANEL_BOX;
+		panel[i].ob_flags |= OF_LASTOB;
+		panel[PANEL_BOX].ob_width = panel[PANEL_FIRST].ob_x * 2 + PANEL_COLUMNS * gl_wchar;
+		panel[PANEL_BOX].ob_height = panel[PANEL_FIRST].ob_y * 2 + char_rows * gl_hchar;
+	}
+	panel[ROOT].ob_width = panel[PANEL_BOX].ob_width + 2 * panel[PANEL_BOX].ob_x;
+	panel[ROOT].ob_height = panel[PANEL_BOX].ob_height + 2 * panel[PANEL_BOX].ob_y;
+}
+
+/* -------------------------------------------------------------------------- */
+
+static _BOOL create_panel_window(void)
+{
+	GRECT gr, desk;
+	_WORD wkind;
+	OBJECT *panel;
+
+	create_panel_objects();	
+	panel = panel_objects;
+	if (panel == NULL)
+		return FALSE;
+	/* create a window */
+	form_center_grect(panel, &gr);
+	gr.g_x = 100;
+	gr.g_y = 100;
+	wind_get_grect(DESK, WF_WORKXYWH, &desk);
+	wkind = PANEL_WKIND;
+	wind_calc_grect(WC_BORDER, wkind, &gr, &gr);
+	gr.g_x = 20;
+	gr.g_y = 20;
+	rc_intersect(&desk, &gr);
+	panelwin = wind_create_grect(wkind, &desk);
+	if (panelwin < 0)
+	{
+		form_alert(1, rs_str(AL_NOWINDOW));
+		return FALSE;
+	}
+
+	wind_set_str(panelwin, WF_NAME, "System Font");
+	calc_vslider();
+	wind_open_grect(panelwin, &gr);
+	
+	return TRUE;
+}
+
+/* -------------------------------------------------------------------------- */
+
+static _BOOL create_window(void)
+{
+	GRECT gr, desk, panel;
+	_WORD wkind;
+	_WORD width, height;
+	
+	width = MAIN_X_MARGIN * 2 + scalex * font_cw + (font_cw + 1) * scaled_margin;
+	height = MAIN_Y_MARGIN * 2 + scaley * font_ch + (font_ch + 1) * scaled_margin;
+	
+	/* create a window */
+	gr.g_x = 100;
+	gr.g_y = 100;
+	gr.g_w = width;
+	gr.g_h = height;
+	wind_get_grect(DESK, WF_WORKXYWH, &desk);
+	wkind = MAIN_WKIND;
+	wind_calc_grect(WC_BORDER, wkind, &gr, &gr);
+	wind_get_grect(panelwin, WF_CURRXYWH, &panel);
+	gr.g_x = panel.g_x + panel.g_w + 20;
+	gr.g_y = panel.g_y;
+	rc_intersect(&desk, &gr);
+	mainwin = wind_create_grect(wkind, &desk);
+	if (mainwin < 0)
+	{
+		form_alert(1, rs_str(AL_NOWINDOW));
+		return FALSE;
+	}
+
+	wind_set_str(mainwin, WF_NAME, "");
+	wind_calc_grect(WC_WORK, wkind, &gr, &gr);
+	wind_calc_grect(WC_BORDER, wkind, &gr, &gr);
+	wind_open_grect(mainwin, &gr);
+	
+	return TRUE;
+}
+
+/* -------------------------------------------------------------------------- */
 
 /*
  * resize the panel window, and install the
@@ -910,20 +1055,27 @@ static void resize_panel(void)
 {
 	GRECT gr, desk;
 	_WORD wkind;
-	OBJECT *panel = rs_tree(PANEL);
+	OBJECT *panel;
 	_WORD y;
 	_WORD dummy;
 	
-	for (y = 0; y < 16; y++)
+	create_panel_objects();
+	panel = panel_objects;
+	if (panel == NULL)
+		return;
+	char_rows = (fonthdr.last_ade + PANEL_COLUMNS - 1) / PANEL_COLUMNS;
+	top_row = 0;
+	for (y = 0; y < char_rows; y++)
 	{
+		panel[PANEL_FIRST + y].ob_flags &= ~OF_HIDETREE;
 		panel[PANEL_FIRST + y].ob_y = panel[PANEL_FIRST].ob_y + y * font_ch;
 		panel[PANEL_FIRST + y].ob_height = font_ch;
-		panel[PANEL_FIRST + y].ob_width = 16 * font_cw;
+		panel[PANEL_FIRST + y].ob_width = PANEL_COLUMNS * font_cw;
 		panel[PANEL_FIRST + y].ob_type = G_USERDEF;
 		panel[PANEL_FIRST + y].ob_spec.userblk = &draw_font_userblk;
 	}
-	panel[PANEL_BOX].ob_width = panel[PANEL_FIRST].ob_x * 2 + 16 * font_cw;
-	panel[PANEL_BOX].ob_height = panel[PANEL_FIRST].ob_y * 2 + 16 * font_ch;
+	panel[PANEL_BOX].ob_width = panel[PANEL_FIRST].ob_x * 2 + PANEL_COLUMNS * font_cw;
+	panel[PANEL_BOX].ob_height = panel[PANEL_FIRST].ob_y * 2 + char_rows * font_ch;
 	panel[ROOT].ob_width = panel[PANEL_BOX].ob_width + 2 * panel[PANEL_BOX].ob_x;
 	panel[ROOT].ob_height = panel[PANEL_BOX].ob_height + 2 * panel[PANEL_BOX].ob_y;
 	form_center_grect(panel, &gr);
@@ -935,6 +1087,7 @@ static void resize_panel(void)
 	rc_intersect(&desk, &gr);
 
 	wind_set_grect(panelwin, WF_CURRXYWH, &gr);
+	calc_vslider();
 }
 
 /******************************************************************************/
@@ -1073,11 +1226,12 @@ static _BOOL check_gemfnt_header(FONT_HDR *h, unsigned long l)
 		return FALSE;
 	if (!(h->flags & FONTF_COMPRESSED))
 	{
-	UW form_width, form_height;
-	form_width = h->form_width;
-	form_height = h->form_height;
-	if ((dat_offset + (size_t)form_width * form_height) > l)
-		return FALSE;
+		UW form_width, form_height;
+		
+		form_width = h->form_width;
+		form_height = h->form_height;
+		if ((dat_offset + (size_t)form_width * form_height) > l)
+			return FALSE;
 	}
 
 	h->last_ade = lastc;
@@ -1147,8 +1301,10 @@ static _BOOL font_get_tables(unsigned char **m, const char *filename, unsigned l
 			decode_ok = FALSE;
 		} else
 		{
-			*m = h = realloc(h, l - compressed_size + font_file_data_size);
-			compressed = malloc(compressed_size);
+			*m = h = xrealloc(h, l - compressed_size + font_file_data_size);
+			compressed = xmalloc(compressed_size);
+			if (h == NULL || compressed == NULL)
+				return FALSE;
 			memcpy(compressed, h + offset, compressed_size);
 			decode_gemfnt(h + offset, compressed, hdr->form_width, hdr->form_height);
 			free(compressed);
@@ -1372,11 +1528,10 @@ static _BOOL font_load_gemfont(const char *filename)
 	fseek(in, 0, SEEK_END);
 	l = ftell(in);
 	fseek(in, 0, SEEK_SET);
-	h = malloc(l);
+	h = xmalloc(l);
 	if (h == NULL)
 	{
 		fclose(in);
-		form_alert(1, rs_str(AL_NOMEM));
 		return FALSE;
 	}
 	l = fread(h, 1, l, in);
@@ -1472,10 +1627,9 @@ static _BOOL font_load_sysfont(int fontnum)
 	form_size = (size_t)hdr->form_width * (size_t)hdr->form_height;
 	l = SIZEOF_FONT_HDR + offtable_size + form_size;
 
-	m = malloc(l);
+	m = xmalloc(l);
 	if (m == NULL)
 	{
-		form_alert(1, rs_str(AL_NOMEM));
 		return FALSE;
 	}
 	memcpy(m, h, SIZEOF_FONT_HDR);
@@ -1652,7 +1806,7 @@ static _BOOL font_export_as_c(const char *filename)
 {
 	FONT_HDR *hdr = &fonthdr;
 	FILE *fp;
-	fchar_t i, end;
+	fchar_t i;
 	
 	fp = fopen(filename, "rb");
 	if (fp != NULL)
@@ -1685,15 +1839,14 @@ static _BOOL font_export_as_c(const char *filename)
 \n");
 
 	fprintf(fp, "static UWORD const off_table[] =\n{\n");
-	end = hdr->last_ade + 2;
-	for (i = hdr->first_ade; i < end; i++)
+	for (i = 0; i <= numoffs; i++)
 	{
 		if ((i & 7) == 0)
 			fprintf(fp, "    ");
 		else
 			fprintf(fp, " ");
 		fprintf(fp, "0x%04x", off_table[i]);
-		if (i != (end - 1))
+		if (i != numoffs)
 			fprintf(fp, ",");
 		if ((i & 7) == 7)
 			fprintf(fp, "\n");
@@ -1979,7 +2132,8 @@ static int inextsh(FILE *f, int *lineno)
 		{
 			if (ret != EOF)
 				ungetc(ret, f);
-			return 015;
+			(*lineno)++;
+			return '\n';
 		}
 	} else if (ret == 012)
 	{
@@ -2321,7 +2475,7 @@ static _BOOL font_import_from_txt(const char *filename)
 	unsigned short w, width;
 	size_t k;
 	unsigned short j;
-	unsigned short o;
+	unsigned long o;
 	
 	f = fopen(filename, "rb");
 	if (f == NULL)
@@ -2378,7 +2532,7 @@ static _BOOL font_import_from_txt(const char *filename)
 #undef EXPECT
 #undef EXPECTNUM
 
-	if (p.first_ade > 255 || p.last_ade > 255 || p.first_ade > p.last_ade)
+	if (p.first_ade > MAX_ADE || p.last_ade > MAX_ADE || p.first_ade > p.last_ade)
 	{
 		sprintf(buf, rs_str(AL_CHAR_RANGE), p.first_ade, p.last_ade);
 		goto error;
@@ -2399,11 +2553,10 @@ static _BOOL font_import_from_txt(const char *filename)
 	offtable_size = (size_t)(bmnum + 1) * 2;
 	bmsize = (((size_t)p.max_cell_width + 7) >> 3) * (size_t)p.form_height;
 	l = offtable_size + bmsize * bmnum;
-	off_tab = malloc(l);
+	off_tab = xmalloc(l);
 	if (off_tab == NULL)
 	{
 		fclose(f);
-		form_alert(1, rs_str(AL_NOMEM));
 		return FALSE;
 	}
 	memset(off_tab, 0, l);
@@ -2483,12 +2636,18 @@ static _BOOL font_import_from_txt(const char *filename)
 	for (i = 0; i < bmnum; i++)
 	{
 		w = off_tab[i];
-		off_tab[i] = o;
+		off_tab[i] = (uint16_t)o;
 		if (w != F_NO_CHAR)
 			o += w;
 	}
-	off_tab[i] = o;
-
+	off_tab[i] = (uint16_t)o;
+	if (o >= 0x10000UL)
+	{
+		free(off_tab);
+		form_alert(1, rs_str(AL_FONTWIDTH));
+		return FALSE;
+	}
+	
 	/*
 	 * allocate a buffer big enough to hold the
 	 * font header, the offset table and all bitmaps
@@ -2498,11 +2657,10 @@ static _BOOL font_import_from_txt(const char *filename)
 	 */
 	p.form_width = ((o + 15) >> 4) << 1;
 	l = SIZEOF_FONT_HDR + offtable_size + (size_t)p.form_width * p.form_height;
-	h = malloc(l);
+	h = xmalloc(l);
 	if (h == NULL)
 	{
 		free(off_tab);
-		form_alert(1, rs_str(AL_NOMEM));
 		return FALSE;
 	}
 	memset(h, 0, l);
@@ -2705,6 +2863,32 @@ static void msg_mn_select(_WORD title, _WORD entry)
 	appl_write(gl_apid, 16, message);
 }
 
+/* ------------------------------------------------------------------------- */
+
+static void vscroll_to(long yy)
+{
+	GRECT gr;
+	long row;
+	long page_h;
+	
+	if (font_ch == 0)
+		return;
+	wind_get_grect(panelwin, WF_WORKXYWH, &gr);
+	page_h = ((gr.g_h - PANEL_Y_MARGIN) / font_ch) * font_ch;
+
+	if (yy + page_h > char_rows * font_ch)
+		yy = char_rows * font_ch - page_h;
+	if (yy < 0)
+		yy = 0;
+	row = yy / font_ch;
+	if (row != top_row)
+	{
+		top_row = (_WORD)row;
+		calc_vslider();
+		redraw_win(panelwin);
+	}
+}
+
 /* -------------------------------------------------------------------------- */
 
 static void char_prev(void)
@@ -2764,10 +2948,11 @@ static void handle_message(_WORD *message, _WORD mox, _WORD moy)
 	case WM_SIZED:
 		if (message[3] == mainwin)
 		{
-			GRECT gr;
-			
 			wind_set_grect(message[3], WF_CURRXYWH, (GRECT *)&message[4]);
-			wind_get_grect(message[3], WF_WORKXYWH, &gr);
+		} else if (message[3] == panelwin)
+		{
+			wind_set_grect(message[3], WF_CURRXYWH, (GRECT *)&message[4]);
+			calc_vslider();
 		}
 		break;
 
@@ -2778,6 +2963,54 @@ static void handle_message(_WORD *message, _WORD mox, _WORD moy)
 		}
 		break;
 
+	case WM_ARROWED:
+		if (message[3] == panelwin)
+		{
+			long amount;
+			GRECT gr;
+			long yy;
+			long page_h;
+			
+			wind_get_grect(panelwin, WF_WORKXYWH, &gr);
+
+			amount = 0;
+			page_h = ((gr.g_h - PANEL_Y_MARGIN) / font_ch) * font_ch;
+			switch (message[4])
+			{
+			case WA_UPLINE:
+				amount = -font_ch;
+				break;
+			case WA_DNLINE:
+				amount = font_ch;
+				break;
+			case WA_UPPAGE:
+				amount = -page_h;
+				break;
+			case WA_DNPAGE:
+				amount = page_h;
+				break;
+			}
+			yy = (long)top_row * font_ch + amount;
+			vscroll_to(yy);
+		}
+		break;
+		
+	case WM_VSLID:
+		if (message[3] == panelwin)
+		{
+			GRECT gr;
+			long hh;
+			long page_h;
+			long yy;
+			
+			wind_get_grect(panelwin, WF_WORKXYWH, &gr);
+			hh = font_ch * char_rows;
+			page_h = ((gr.g_h - PANEL_Y_MARGIN) / font_ch) * font_ch;
+			yy = ((long)message[4] * (hh - page_h)) / 1000;
+			vscroll_to(yy);
+		}
+		break;
+		
 	case WM_TOPPED:
 		if (message[3] == mainwin)
 		{

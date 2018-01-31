@@ -5,19 +5,19 @@
  */
 
 /*
- * Number of Strings:        137
+ * Number of Strings:        122
  * Number of Bitblks:        0
  * Number of Iconblks:       0
  * Number of Color Iconblks: 0
  * Number of Color Icons:    0
  * Number of Tedinfos:       13
- * Number of Free Strings:   23
+ * Number of Free Strings:   24
  * Number of Free Images:    0
- * Number of Objects:        101
- * Number of Trees:          6
+ * Number of Objects:        83
+ * Number of Trees:          5
  * Number of Userblks:       0
  * Number of Images:         0
- * Total file size:          6036
+ * Total file size:          5374
  */
 
 #undef RSC_NAME
@@ -35,8 +35,8 @@
 # define RSC_STATIC_FILE 0
 #endif
 #if !RSC_STATIC_FILE
-#define NUM_STRINGS 137
-#define NUM_FRSTR 23
+#define NUM_STRINGS 122
+#define NUM_FRSTR 24
 #define NUM_UD 0
 #define NUM_IMAGES 0
 #define NUM_BB 0
@@ -44,8 +44,8 @@
 #define NUM_IB 0
 #define NUM_CIB 0
 #define NUM_TI 13
-#define NUM_OBS 101
-#define NUM_TREE 6
+#define NUM_OBS 83
+#define NUM_TREE 5
 #endif
 
 
@@ -94,18 +94,12 @@
 #define FONT_CANCEL                       19 /* BUTTON in tree FONT_PARAMS */
 #define FONT_OK                           20 /* BUTTON in tree FONT_PARAMS */
 
-#define PANEL                              3 /* unknown form */
-#define PANEL_BG                           0 /* BOX in tree PANEL */
-#define PANEL_BOX                          1 /* BOX in tree PANEL */
-#define PANEL_FIRST                        2 /* STRING in tree PANEL */
-#define PANEL_LAST                        17 /* STRING in tree PANEL */
-
-#define ABOUT_DIALOG                       4 /* form/dialog */
+#define ABOUT_DIALOG                       3 /* form/dialog */
 #define ABOUT_VERSION_LABEL                4 /* STRING in tree ABOUT_DIALOG */
 #define ABOUT_DATE                         5 /* STRING in tree ABOUT_DIALOG */
 #define ABOUT_VERSION                      7 /* STRING in tree ABOUT_DIALOG */
 
-#define HELP_DIALOG                        5 /* form/dialog */
+#define HELP_DIALOG                        4 /* form/dialog */
 
 #define AL_NOWINDOW                        0 /* Alert string */
 /* [3][Cannot create window][Abort] */
@@ -175,6 +169,9 @@
 
 #define AL_ENDIAN_FLAG                    22 /* Alert string */
 /* [1][Warning:|Wrong endian flag in header.][Continue] */
+
+#define AL_FONTWIDTH                      23 /* Alert string */
+/* [3][Maxiumum font width exceeded.][Abort] */
 
 
 
