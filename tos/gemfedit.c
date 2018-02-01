@@ -72,7 +72,6 @@ static const int scaled_margin = 1;
 static _WORD workout[57];
 static _WORD xworkout[57];
 
-#define F_NO_CHAR 0xffffu
 typedef unsigned short fchar_t;
 
 static _WORD font_cw;
@@ -82,6 +81,7 @@ static FONT_HDR fonthdr;
 static unsigned char *fontmem;
 static unsigned char *dat_table;
 static uint16_t *off_table;
+static uint16_t *width_table;
 static int8_t *hor_table;
 static char fontname[VDI_FONTNAMESIZE + 1];
 static const char *fontfilename;
@@ -295,7 +295,9 @@ static _BOOL char_testbit(fchar_t c, _WORD x, _WORD y)
 	if (c < fonthdr.first_ade || c > fonthdr.last_ade)
 		return FALSE;
 	c -= fonthdr.first_ade;
-	width = off_table[c + 1] - off_table[c];
+	width = width_table[c];
+	if ((_UWORD)width == F_NO_CHAR)
+		return FALSE;
 	height = font_ch;
 	if (x < 0 || x >= width || y < 0 || y >= height)
 		return FALSE;
@@ -322,7 +324,9 @@ static _BOOL char_togglebit(fchar_t c, _WORD x, _WORD y)
 	if (c < fonthdr.first_ade || c > fonthdr.last_ade)
 		return FALSE;
 	c -= fonthdr.first_ade;
-	width = off_table[c + 1] - off_table[c];
+	width = width_table[c];
+	if ((_UWORD)width == F_NO_CHAR)
+		return FALSE;
 	height = font_ch;
 	if (x < 0 || x >= width || y < 0 || y >= height)
 		return FALSE;
@@ -351,7 +355,9 @@ static _BOOL char_setbit(fchar_t c, _WORD x, _WORD y)
 	if (c < fonthdr.first_ade || c > fonthdr.last_ade)
 		return FALSE;
 	c -= fonthdr.first_ade;
-	width = off_table[c + 1] - off_table[c];
+	width = width_table[c];
+	if ((_UWORD)width == F_NO_CHAR)
+		return FALSE;
 	height = font_ch;
 	if (x < 0 || x >= width || y < 0 || y >= height)
 		return FALSE;
@@ -383,7 +389,9 @@ static _BOOL char_clearbit(fchar_t c, _WORD x, _WORD y)
 	if (c < fonthdr.first_ade || c > fonthdr.last_ade)
 		return FALSE;
 	c -= fonthdr.first_ade;
-	width = off_table[c + 1] - off_table[c];
+	width = width_table[c];
+	if ((_UWORD)width == F_NO_CHAR)
+		return FALSE;
 	height = font_ch;
 	if (x < 0 || x >= width || y < 0 || y >= height)
 		return FALSE;
@@ -416,7 +424,10 @@ static void draw_char(fchar_t c, _WORD x0, _WORD y0)
 	if (c < fonthdr.first_ade || c > fonthdr.last_ade)
 		return;
 	c -= fonthdr.first_ade;
-	width = off_table[c + 1] - off_table[c];
+	width = width_table[c];
+	if ((_UWORD)width == F_NO_CHAR)
+		return;
+	nf_debugprintf("draw_char: %x: %d\n", cur_char, width);
 	height = font_ch;
 
 	vsf_color(vdihandle, G_BLACK);
@@ -460,7 +471,9 @@ static void mainwin_draw(const GRECT *area)
 	
 	if (is_font_loaded() && cur_char >= fonthdr.first_ade && cur_char <= fonthdr.last_ade)
 	{
-		cw = off_table[cur_char - fonthdr.first_ade + 1] - off_table[cur_char - fonthdr.first_ade];
+		cw = width_table[cur_char - fonthdr.first_ade];
+		if ((_UWORD)cw == F_NO_CHAR)
+			cw = font_cw;
 	} else
 	{
 		cw = font_cw;
@@ -621,7 +634,9 @@ static void maybe_resize_window(void)
 	
 	if (is_font_loaded() && cur_char >= fonthdr.first_ade && cur_char <= fonthdr.last_ade)
 	{
-		cw = off_table[cur_char - fonthdr.first_ade + 1] - off_table[cur_char - fonthdr.first_ade];
+		cw = width_table[cur_char - fonthdr.first_ade];
+		if ((_UWORD)cw == F_NO_CHAR)
+			return;
 	} else
 	{
 		cw = font_cw;
@@ -848,7 +863,9 @@ static _WORD __CDECL draw_font(PARMBLK *pb)
 			continue;
 		ch -= fonthdr.first_ade;
 		o = off_table[ch];
-		width = off_table[ch + 1] - o;
+		width = width_table[ch];
+		if ((_UWORD)width == F_NO_CHAR || width == 0)
+			continue;
 		if (can_use_vrocpy)
 		{
 			pxy[0] = o;
@@ -1240,6 +1257,43 @@ static _BOOL check_gemfnt_header(FONT_HDR *h, unsigned long l)
 
 /* -------------------------------------------------------------------------- */
 
+static _BOOL get_widths(uint16_t *off_tab, fchar_t num)
+{
+	fchar_t i, j;
+	uint16_t off, nextoff;
+	
+	free(width_table);
+	width_table = xmalloc(num * sizeof(*width_table));
+	if (width_table == NULL)
+	{
+		return FALSE;
+	}
+	
+	for (i = 0; i < num; i++)
+	{
+		width_table[i] = F_NO_CHAR;
+		off = off_tab[i];
+		nf_debugprintf("%x: %d-%d\n", i, off_tab[i+1], off_tab[i]);
+		if (off != F_NO_CHAR)
+		{
+			for (j = i + 1; j <= num; j++)
+			{
+				nextoff = off_tab[j];
+				if (nextoff != F_NO_CHAR)
+				{
+					width_table[i] = nextoff - off;
+					i = j - 1;
+					break;
+				}
+			}
+		}	
+	}
+	
+	return TRUE;
+}
+
+/* -------------------------------------------------------------------------- */
+
 static _BOOL font_get_tables(unsigned char **m, const char *filename, unsigned long l)
 {
 	FONT_HDR *hdr = &fonthdr;
@@ -1314,7 +1368,7 @@ static _BOOL font_get_tables(unsigned char **m, const char *filename, unsigned l
 	hor_table = (int8_t *)h + hor_offset;
 	off_table = (uint16_t *)(h + off_offset);
 	dat_table = h + dat_offset;
-
+	
 	hortable_bytes = 0;
 	if ((hdr->flags & FONTF_HORTABLE) && hor_offset != 0 && hor_offset < off_offset)
 	{
@@ -1338,7 +1392,7 @@ static _BOOL font_get_tables(unsigned char **m, const char *filename, unsigned l
 			}
 		}
 	}
-	
+
 	last_offset = off_table[numoffs];
 	if ((((last_offset + 15) >> 4) << 1) != hdr->form_width)
 		nf_debugprintf("%s: warning: %s: offset of last character %u does not match form_width %u\n", program_name, filename, last_offset, hdr->form_width);
@@ -1438,7 +1492,7 @@ static _BOOL font_gen_gemfont(unsigned char **m, const char *filename, unsigned 
 		}
 	}
 	
-	return font_get_tables(m, filename, l);
+	return font_get_tables(m, filename, l) && get_widths(off_table, numoffs);
 }
 
 /* -------------------------------------------------------------------------- */
@@ -1638,6 +1692,9 @@ static _BOOL font_load_sysfont(int fontnum)
 	
 	off_table = (uint16_t *)(m + SIZEOF_FONT_HDR);
 	dat_table = m + SIZEOF_FONT_HDR + offtable_size;
+	
+	if (get_widths(off_table, numoffs) == FALSE)
+		return FALSE;
 	
 	font_loaded(m, filename);
 
@@ -1921,6 +1978,7 @@ static _BOOL font_export_as_c(const char *filename)
 	SET_UWORD(lighten);
 	SET_UWORD(skew);
 	hdr->flags &= ~FONTF_COMPRESSED;
+	hdr->flags |= FONT_BIGENDIAN;
 	SET_UWORD(flags);
 	fprintf(fp, "    0,			/*   UBYTE *hor_table	*/\n");
 	fprintf(fp, "    off_table,		/*   UWORD *off_table	*/\n");
@@ -2023,7 +2081,9 @@ static _BOOL font_export_as_txt(const char *filename)
 		
 		c = i + hdr->first_ade;
 		off = off_table[i];
-		w = off_table[i + 1] - off_table[i];
+		w = width_table[i];
+		if (w == F_NO_CHAR)
+			continue;
 		if (off + w > 8 * hdr->form_width)
 		{
 			nf_debugprintf("char %d: offset %d + width %d out of range (%d)\n", c, off, w, 8 * hdr->form_width);
@@ -2562,9 +2622,19 @@ static _BOOL font_import_from_txt(const char *filename)
 	memset(off_tab, 0, l);
 	bms = (unsigned char *)off_tab + offtable_size;
 	
+	free(width_table);
+	width_table = xmalloc(bmnum * sizeof(*width_table));
+	if (width_table == NULL)
+	{
+		fclose(f);
+		free(off_tab);
+		return FALSE;
+	}
+	
 	for (i = 0; i < bmnum; i++)
 	{
 		off_tab[i] = F_NO_CHAR;
+		width_table[i] = F_NO_CHAR;
 	}
 
 	for (;;)
@@ -2638,7 +2708,10 @@ static _BOOL font_import_from_txt(const char *filename)
 		w = off_tab[i];
 		off_tab[i] = (uint16_t)o;
 		if (w != F_NO_CHAR)
+		{
 			o += w;
+			width_table[i] = w;
+		}
 	}
 	off_tab[i] = (uint16_t)o;
 	if (o >= 0x10000UL)
@@ -2673,7 +2746,9 @@ static _BOOL font_import_from_txt(const char *filename)
 	{
 		o = off_tab[i];
 		off_table[i] = o;
-		width = off_tab[i + 1] - o;
+		width = width_table[i];
+		if (width == F_NO_CHAR)
+			continue;
 		b = bms + bmsize * i;
 		k = 0;
 		for (j = 0; j < p.form_height; j++)
@@ -2709,7 +2784,7 @@ static _BOOL font_import_from_txt(const char *filename)
 	
 	/* free temporary form */
 	free(off_tab);
-
+	
 	font_loaded(h, filename);
 	
 	return TRUE;

@@ -164,7 +164,7 @@ char 0x0f
 .XXX..
 ..XX..
 endchar
-# 0x24ae CIRCLED DIGIT ZERO
+# 0x24ea CIRCLED DIGIT ZERO
 char 0x10
 XXXXX.
 XX..X.
@@ -272,7 +272,7 @@ X..X..
 XXXX..
 ...XXX
 endchar
-# 0x241c FOUNTAIN (upper left of face)
+# 0x26f2 FOUNTAIN (upper left of face)
 char 0x1c
 ...XXX
 ..XXXX
@@ -281,7 +281,7 @@ char 0x1c
 .XXX..
 .X.XX.
 endchar
-# 0x241d FLAG IN HOLE (upper right of face)
+# 0x26f2 FLAG IN HOLE (upper right of face)
 char 0x1d
 XXX...
 XX.X..
@@ -290,7 +290,7 @@ XX.X..
 .XXXX.
 ..X.X.
 endchar
-# 0x241e FERRY (lower left of face)
+# 0x26f3 FERRY (lower left of face)
 char 0x1e
 .X...X
 ..X.XX
@@ -299,7 +299,7 @@ char 0x1e
 XXX.XX
 XX....
 endchar
-# 0x241f SAILBOAT (lower right of face)
+# 0x26f4 SAILBOAT (lower right of face)
 char 0x1f
 ....X.
 XX.X..
@@ -8116,8 +8116,8 @@ XX....
 XX....
 .XXX..
 endchar
-# 0x03be GREEK SMALL LETTER OMICRON
-char 0x3bf
+# 0x03bf GREEK SMALL LETTER OMICRON
+char 0x03bf
 ......
 .XXX..
 X...X.

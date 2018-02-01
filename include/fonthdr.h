@@ -34,6 +34,9 @@ typedef struct FONT_HDR
 /* 90 */
 } FONT_HDR;
 
+#define F_NO_CHAR 0xFFFFu
+#define F_NO_CHARL 0xFFFFFFFFlu
+
 
 /* #define SIZEOF_FONT_HDR 90 in memory only */
 #define SIZEOF_FONT_HDR 88

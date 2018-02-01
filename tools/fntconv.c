@@ -14,6 +14,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdarg.h>
+#include <getopt.h>
 
 typedef unsigned char UBYTE;
 typedef signed char BYTE;
@@ -22,7 +23,17 @@ typedef short WORD;
 typedef unsigned long ULONG;
 typedef long LONG;
 
+#define FILE_C 1
+#define FILE_TXT 2
+#define FILE_FNT 3
+static int convert_from;
+static int convert_to;
+
 #define MAX_ADE 0x7fff
+
+static int all_chars = 0;
+static int for_aranym = 0;
+
 
 /*
  * internal error routine
@@ -222,14 +233,43 @@ struct font
 	UWORD flags;
 
 	UBYTE *hor_table;					/* horizontal offsets */
-	UWORD *off_table;					/* character offsets, 0xFFFF if no char present.  */
+	unsigned long *off_table;			/* character offsets, 0xFFFF if no char present.  */
 	UBYTE *dat_table;					/* character definitions */
-	UWORD form_width;
+	unsigned long form_width;
 	UWORD form_height;
 };
 
 #define F_NO_CHAR 0xFFFFu
+#define F_NO_CHARL 0xFFFFFFFFul
 
+
+
+static FILE *open_output(const char *filename, const char *mode)
+{
+	FILE *f;
+	
+	if (filename == NULL || strcmp(filename, "-") == 0)
+		f = fdopen(fileno(stdout), mode);
+	else
+		f = fopen(filename, mode);
+	if (f == NULL)
+		fatal("can't create %s", filename);
+	return f;
+}
+
+
+static FILE *open_input(const char *filename, const char *mode)
+{
+	FILE *f;
+	
+	if (filename == NULL || strcmp(filename, "-") == 0)
+		f = fdopen(fileno(stdin), mode);
+	else
+		f = fopen(filename, mode);
+	if (f == NULL)
+		fatal("can't open %s", filename);
+	return f;
+}
 
 
 /*
@@ -266,19 +306,22 @@ static IFILE *ifopen(const char *fname)
 {
 	IFILE *f = xmalloc(sizeof(IFILE));
 
-	f->fname = xstrdup(fname);
-	f->fh = fopen(fname, "rb");
-	if (f->fh == 0)
+	f->fh = open_input(fname, "rb");
+	if (f->fh == NULL)
 	{
 		free(f);
 		return NULL;
 	}
+	if (fname == NULL || strcmp(fname, "-") == 0)
+		fname = "<stdin>";
+	f->fname = xstrdup(fname);
 	f->size = 0;
 	f->index = 0;
 	f->ateof = 0;
 	f->lineno = 1;
 	return f;
 }
+
 
 static void ifclose(IFILE *f)
 {
@@ -660,6 +703,28 @@ static void set_bit(UBYTE *addr, int i)
 	addr[i / 8] |= (1 << (7 - (i & 7)));
 }
 
+
+static unsigned long get_width(struct font *p, unsigned short ch)
+{
+	unsigned short next;
+	unsigned short bmnum = p->last_ade - p->first_ade + 1;
+	unsigned long off;
+	
+	off = p->off_table[ch];
+	if (off != F_NO_CHARL)
+	{
+		for (next = ch + 1; next <= bmnum; next++)
+		{
+			unsigned long nextoff = p->off_table[next];
+			if (nextoff != F_NO_CHARL)
+				return nextoff - off;
+		}
+		off = F_NO_CHARL;
+	}
+	return off;
+}
+
+
 /*
  * read functions
  */
@@ -667,10 +732,10 @@ static void set_bit(UBYTE *addr, int i)
 static struct font *read_txt(const char *fname)
 {
 	IFILE *f;
-	int ch, i, j, k;
-	long off;
+	int ch, i, j, k, lastch;
+	unsigned long off;
 	int height;
-	int width = 0;
+	unsigned long width = 0;
 	int w;
 	UBYTE *bms;
 	int bmsize, bmnum;
@@ -761,9 +826,10 @@ static struct font *read_txt(const char *fname)
 	p->off_table = xmalloc(sizeof(*p->off_table) * (bmnum + 1));
 	for (i = 0; i < bmnum; i++)
 	{
-		p->off_table[i] = F_NO_CHAR;
+		p->off_table[i] = F_NO_CHARL;
 	}
 
+	lastch = 0;
 	for (;;)
 	{									/* for each char */
 		c = line;
@@ -782,14 +848,17 @@ static struct font *read_txt(const char *fname)
 		ch = u;
 		if (ch < first || ch > last)
 		{
-			fprintf(stderr, "wrong character number %u\n", ch);
+			fprintf(stderr, "wrong character number 0x%x\n", ch);
 			goto fail;
 		}
+		if (ch < lastch)
+			fprintf(stderr, "warning: %d: char 0x%x less previous char 0x%x\n", f->lineno, ch, lastch);
+		lastch = ch;
 
 		ch -= first;
-		if (p->off_table[ch] != F_NO_CHAR)
+		if (p->off_table[ch] != F_NO_CHARL)
 		{
-			fprintf(stderr, "character number %u was already defined\n", ch + first);
+			fprintf(stderr, "character number 0x%x was already defined\n", lastch);
 			goto fail;
 		}
 		b = bms + ch * bmsize;
@@ -804,16 +873,22 @@ static struct font *read_txt(const char *fname)
 			}
 			for (c = line, w = 0; *c; c++, w++)
 			{
-				if (*c == 'X')
+				if (w >= p->max_cell_width)
+				{
+					fprintf(stderr, "bitmap line to long at line %d.", f->lineno);
+					goto fail;
+				} else if (*c == 'X')
 				{
 					set_bit(b, k);
+					k++;
 				} else if (*c == '.')
 				{
-				} else {
+					k++;
+				} else
+				{
 					fprintf(stderr, "illegal character '%c' in bitmap definition\n", *c);
 					goto fail;
 				}
-				k++;
 			}
 			if (i == 0)
 			{
@@ -826,6 +901,11 @@ static struct font *read_txt(const char *fname)
 		}
 		EXPECT("endchar");
 		p->off_table[ch] = width;			/* != F_NO_CHAR, real value filled later */
+		if ((all_chars || (p->flags & F_MONOSPACE)) && width != p->max_cell_width)
+		{
+			fprintf(stderr, "%s: 0x%x: width %ld != cell width %d\n", fname, lastch, width, p->max_cell_width);
+			goto fail;
+		}
 	}
 	ifclose(f);
 #undef EXPECT
@@ -835,15 +915,27 @@ static struct font *read_txt(const char *fname)
 	for (i = 0; i < bmnum; i++)
 	{
 		width = p->off_table[i];
-		p->off_table[i] = (UWORD)off;
-		if (width != F_NO_CHAR)
+		p->off_table[i] = off;
+		if (width != F_NO_CHARL)
+		{
 			off += width;
+		} else
+		{
+			if (i < 256 && !(i >= 0x80 && i <= 0x9f))
+			{
+				fprintf(stderr, "warning: %s: %x undefined\n", fname, i);
+			}
+			if (all_chars)
+			{
+				off += p->max_cell_width;
+			}
+		}
 	}
-	p->off_table[bmnum] = (UWORD)off;
-	if (off >= 0x10000L)
+	p->off_table[bmnum] = off;
+	if (convert_to == FILE_FNT && off >= 0x10000L)
 	{
-		fprintf(stderr, "font width exceeded\n");
-		goto fail;
+		fprintf(stderr, "%s: last offset %ld too large for generating GEM font\n", fname, off);
+		exit(EXIT_FAILURE);
 	}
 	p->form_width = ((off + 15) >> 4) << 1;
 	p->dat_table = xmalloc((size_t)height * p->form_width);
@@ -852,7 +944,9 @@ static struct font *read_txt(const char *fname)
 	for (i = 0; i < bmnum; i++)
 	{
 		off = p->off_table[i];
-		width = p->off_table[i + 1] - off;
+		width = get_width(p, i);
+		if (width == F_NO_CHARL)
+			continue;
 		b = bms + bmsize * i;
 		k = 0;
 		for (j = 0; j < height; j++)
@@ -894,9 +988,7 @@ static struct font *read_fnt(const char *fname)
 	p = malloc(sizeof(struct font));
 	if (p == NULL)
 		fatal("memory");
-	f = fopen(fname, "rb");
-	if (f == NULL)
-		fatal("fopen");
+	f = open_input(fname, "rb");
 
 	count = fread(&h, 1, sizeof(h), f);
 	if (count != sizeof(h))
@@ -959,7 +1051,7 @@ static struct font *read_fnt(const char *fname)
 	{
 		fatal("horizontal offsets not handled");
 	}
-	if (p->last_ade > MAX_ADE || p->first_ade >= p->last_ade)
+	if (p->last_ade > MAX_ADE || p->first_ade > p->last_ade)
 	{
 		fatal("wrong char range : first = %d, last = %d", p->first_ade, p->last_ade);
 	}
@@ -989,6 +1081,8 @@ static struct font *read_fnt(const char *fname)
 			{
 				p->off_table[i] = get_l_word(buf);
 			}
+			if (p->off_table[i] == F_NO_CHAR)
+				p->off_table[i] = F_NO_CHARL;
 		}
 	}
 	if (fseek(f, off_dat_table, SEEK_SET))
@@ -1041,9 +1135,15 @@ static void write_fnt(struct font *p, const char *fname)
 	long off;
 	int bmnum;
 	
-	f = fopen(fname, "wb");
-	if (f == NULL)
-		fatal("fopen");
+	bmnum = p->last_ade - p->first_ade + 1;
+
+	if (p->off_table[bmnum] >= 0x10000L)
+	{
+		fprintf(stderr, "%s: form width %ld too large for GEM font\n", fname, p->off_table[bmnum]);
+		exit(EXIT_FAILURE);
+	}
+
+	f = open_output(fname, "wb");
 
 	p->flags |= F_STDFORM;
 	
@@ -1072,7 +1172,6 @@ static void write_fnt(struct font *p, const char *fname)
 	SET_WORD(form_height);
 #undef SET_WORD
 
-	bmnum = p->last_ade - p->first_ade + 1;
 	off = sizeof(struct font_file_hdr);
 	off_hor_table = off;
 	if (p->flags & F_HORZ_OFF)
@@ -1116,7 +1215,7 @@ static void write_txt(struct font *p, const char *filename)
 
 	/* first, write header */
 
-	f = fopen(filename, "w");
+	f = open_output(filename, "w");
 	fprintf(f, "GDOSFONT\n");
 	fprintf(f, "version 1.0\n");
 
@@ -1165,16 +1264,17 @@ static void write_txt(struct font *p, const char *filename)
 	/* then, output char bitmaps */
 	for (i = p->first_ade; i <= p->last_ade; i++)
 	{
-		int r, c, w, off;
+		int r, c;
+		unsigned long w;
+		unsigned long off;
 
-		c = i - p->first_ade;
-		off = p->off_table[c];
-		if (off == F_NO_CHAR)
+		off = p->off_table[i - p->first_ade];
+		w = get_width(p, i - p->first_ade);
+		if (w == F_NO_CHARL)
 			continue;
-		w = p->off_table[c + 1] - off;
 		if ((off + w) > (8 * p->form_width))
 		{
-			fprintf(stderr, "char %d: offset %d + width %d out of range (%d)\n", i, off, w, 8 * p->form_width);
+			fprintf(stderr, "char %d: offset %ld + width %ld out of range (%ld)\n", i, off, w, 8 * p->form_width);
 			continue;
 		}
 		if (i < 32 || i > 126)
@@ -1209,15 +1309,22 @@ static void write_txt(struct font *p, const char *filename)
 }
 
 
-static void write_c(struct font *p, const char *filename)
+static void write_c_emutos(struct font *p, const char *filename)
 {
 	FILE *f;
-	int i;
+	unsigned long i;
 	int bmnum;
 	
+	bmnum = p->last_ade - p->first_ade + 1;
+	if (p->off_table[bmnum] >= 0x10000L)
+	{
+		fprintf(stderr, "%s: form width %ld too large for GEM font\n", filename, p->off_table[bmnum]);
+		exit(EXIT_FAILURE);
+	}
+
 	/* first, write header */
 
-	f = fopen(filename, "w");
+	f = open_output(filename, "w");
 	fprintf(f, "\
 /*\n\
  * %s - a font in standard format\n\
@@ -1235,7 +1342,7 @@ static UWORD off_table[], dat_table[];\n\
 	fprintf(f, "struct font_head THISFONT = {\n");
 
 
-#define SET_WORD(a) fprintf(f, "    %u,  /* " #a " */\n", p->a)
+#define SET_WORD(a) fprintf(f, "    %u,  /* " #a " */\n", (unsigned int)p->a)
 	SET_WORD(font_id);
 	SET_WORD(point);
 
@@ -1284,7 +1391,6 @@ static UWORD off_table[], dat_table[];\n\
 	fprintf(f, "    0,  /* struct font * next_font */\n");
 	fprintf(f, "    0   /* UWORD next_seg */\n};\n\n");
 
-	bmnum = p->last_ade - p->first_ade + 1;
 	fprintf(f, "static UWORD off_table[] =\n{\n");
 	{
 		for (i = 0; i <= bmnum; i++)
@@ -1293,7 +1399,7 @@ static UWORD off_table[], dat_table[];\n\
 				fprintf(f, "    ");
 			else
 				fprintf(f, " ");
-			fprintf(f, "0x%04x", p->off_table[i]);
+			fprintf(f, "0x%04lx", p->off_table[i]);
 			if (i != bmnum)
 				fprintf(f, ",");
 			if ((i & 7) == 7)
@@ -1304,7 +1410,7 @@ static UWORD off_table[], dat_table[];\n\
 
 	fprintf(f, "static UWORD dat_table[] =\n{\n");
 	{
-		int h;
+		unsigned long h;
 		unsigned int a;
 
 		h = (p->form_height * p->form_width) / 2;
@@ -1329,14 +1435,82 @@ static UWORD off_table[], dat_table[];\n\
 	fclose(f);
 }
 
-#define FILE_C 1
-#define FILE_TXT 2
-#define FILE_FNT 3
+
+static void write_c_aranym(struct font *p, const char *filename)
+{
+	FILE *f;
+	
+	/* first, write header */
+
+	f = open_output(filename, "w");
+	fprintf(f, "\
+/*\n\
+ * font.h - 8x16 font for Atari ST encoding\n\
+ * modified for the SDL-GUI (added a radio button and a checkbox)\n\
+ * converted using ./fntconv -a -o font.h aranym10.txt\n\
+ *\n\
+ * The fntconv utility can be used to convert the font to text, edit it, and convert it back.\n\
+ *\n\
+ * Copyright (C) 2007  ARAnyM development team\n\
+ * Copyright (C) 2001, 02 The EmuTOS development team\n\
+ *\n\
+ * This program is free software; you can redistribute it and/or modify\n\
+ * it under the terms of the GNU General Public License as published by\n\
+ * the Free Software Foundation; either version 2 of the License, or\n\
+ * (at your option) any later version.\n\
+\n\
+ * This program is distributed in the hope that it will be useful,\n\
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of\n\
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the\n\
+ * GNU General Public License for more details.\n\
+\n\
+ * You should have received a copy of the GNU General Public License\n\
+ * along with this program; if not, write to the Free Software\n\
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA\n\
+ */\n\
+\n\
+\n");
+	fprintf(f, "#define FONTWIDTH %d\n", p->max_cell_width);
+	fprintf(f, "#define FONTHEIGHT %d\n", p->form_height);
+	fprintf(f, "#define FONTCHARS %u\n", p->last_ade + 1);
+	fprintf(f, "#define FORM_WIDTH %lu\n", p->form_width);
+	fprintf(f, "\n");
+	fprintf(f, "static unsigned char const font_bits[] = {\n");
+
+	{
+		unsigned long i, h;
+		unsigned char a;
+
+		h = p->form_height * p->form_width;
+		for (i = 0; i < h; i++)
+		{
+			if ((i & 15) == 0)
+				fprintf(f, "    ");
+			else
+				fprintf(f, " ");
+			a = p->dat_table[i];
+			fprintf(f, "0x%02x", a);
+			if (i != (h - 1))
+				fprintf(f, ",");
+			if ((i & 15) == 15)
+				fprintf(f, "\n");
+		}
+		if ((i & 15) != 0)
+			fprintf(f, "\n");
+	}
+	fprintf(f, "};\n");
+
+	fclose(f);
+}
+
 
 static int file_type(const char *c)
 {
-	int n = strlen(c);
+	int n;
 
+	if (c == NULL || strcmp(c, "-") == 0)
+		return FILE_TXT;
+	n = strlen(c);
 	if (n >= 3 && c[n - 2] == '.' && (c[n - 1] == 'c' || c[n - 1] == 'C' || c[n - 1] == 'h' || c[n - 1] == 'H'))
 		return FILE_C;
 	if (n < 5 || c[n - 4] != '.')
@@ -1348,27 +1522,99 @@ static int file_type(const char *c)
 	return 0;
 }
 
+
+enum opt {
+	OPTION_FLAG_SET = 0,
+	OPTION_ERROR = '?',
+	OPTION_OUTPUT = 'o',
+	OPTION_ARANYM = 'a',
+	OPTION_ALLCHARS = 'A',
+	
+	OPTION_HELP = 'h',
+	OPTION_VERSION = 'V'
+};
+
+
+static struct option const long_options[] = {
+	{ "aranym", no_argument, NULL, OPTION_ARANYM },
+	{ "all-chars", no_argument, NULL, OPTION_ALLCHARS },
+	{ "output", required_argument, NULL, OPTION_OUTPUT },
+	{ "help", no_argument, NULL, OPTION_HELP },
+	{ "version", no_argument, NULL, OPTION_VERSION },
+	{ NULL, no_argument, NULL, 0 }
+};
+
+
+static void print_version(void)
+{
+}
+
+
+static void usage(FILE *f, int errcode)
+{
+	fprintf(f, "\
+Usage: \n\
+  fntconv -o <to> <from>\n\
+    converts BDOS font between types C, TXT, FNT.\n\
+    the file types are inferred from the file extensions.\n\
+    (not all combinations are allowed.)\n");
+	exit(errcode);
+}
+
+
+
+
 int main(int argc, char **argv)
 {
 	struct font *p;
-	char *from,	*to;
+	const char *from = NULL;
+	const char *to = NULL;
+	int c;
+	
+	while ((c = getopt_long_only(argc, argv, "o:aAhV", long_options, NULL)) != EOF)
+	{
+		const char *arg = optarg;
+		switch ((enum opt) c)
+		{
+		case OPTION_OUTPUT:
+			to = arg;
+			break;
+		case OPTION_ARANYM:
+			for_aranym = 1;
+			all_chars = 1;
+			break;
+		case OPTION_ALLCHARS:
+			all_chars = 1;
+			break;
 
-	if (argc != 4)
-		goto usage;
-	if (strcmp(argv[1], "-o") == 0)
-	{
-		from = argv[3];
-		to = argv[2];
-	} else if (strcmp(argv[2], "-o") == 0)
-	{
-		from = argv[1];
-		to = argv[3];
-	} else
-	{
-		goto usage;
+		case OPTION_VERSION:
+			print_version();
+			return EXIT_SUCCESS;
+			
+		case OPTION_HELP:
+			usage(stdout, EXIT_SUCCESS);
+			break;
+		
+		/* returned when only flag was set */
+		case OPTION_FLAG_SET:
+			break;
+		
+		/* returned for unknown/invalid option */
+		case OPTION_ERROR:
+			exit(EXIT_FAILURE);
+			break;
+		}
 	}
 	
-	switch (file_type(from))
+	if ((argc - optind) != 1)
+		usage(stderr, EXIT_FAILURE);
+
+	from = argv[optind];
+	
+	convert_from = file_type(from);
+	convert_to = file_type(to);
+	
+	switch (convert_from)
 	{
 	case FILE_C:
 		fatal("cannot read C files");
@@ -1383,10 +1629,13 @@ int main(int argc, char **argv)
 		fatal("wrong file type");
 		return EXIT_FAILURE;
 	}
-	switch (file_type(to))
+	switch (convert_to)
 	{
 	case FILE_C:
-		write_c(p, to);
+		if (for_aranym)
+			write_c_aranym(p, to);
+		else
+			write_c_emutos(p, to);
 		break;
 	case FILE_TXT:
 		write_txt(p, to);
@@ -1399,15 +1648,4 @@ int main(int argc, char **argv)
 		return EXIT_FAILURE;
 	}
 	return EXIT_SUCCESS;
-
-  usage:
-	fprintf(stderr, "\
-Usage: \n\
-  fntconv <from> -o <to>\n\
-  fntconv -o <to> <from>\n\
-    converts BDOS font between types C, TXT, FNT.\n\
-    the file types are inferred from the file extensions.\n\
-    (not all combinations are allowed.)\n");
-	
-	return EXIT_FAILURE;
 }

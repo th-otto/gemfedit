@@ -44,6 +44,8 @@ static _WORD gl_wchar, gl_hchar;
 #define MAIN_X_MARGIN 10
 #define MAIN_WKIND (NAME | CLOSER | MOVER)
 
+typedef unsigned short fchar_t;
+
 static _WORD app_id = -1;
 static _WORD mainwin = -1;
 static _WORD panelwin = -1;
@@ -61,6 +63,7 @@ static FONT_HDR fonthdr;
 static unsigned char *fontmem;
 static unsigned char *dat_table;
 static uint16_t *off_table;
+static uint16_t *width_table;
 static unsigned char *hor_table;
 static char fontname[VDI_FONTNAMESIZE + 1];
 static unsigned short numoffs;
@@ -114,6 +117,28 @@ static char *xbasename(const char *path)
 	return p;
 }
 
+/* -------------------------------------------------------------------------- */
+
+static void *xmalloc(size_t s)
+{
+	void *p = malloc(s);
+	if (p == NULL)
+		form_alert(1, rs_str(AL_NOMEM));
+	return p;
+}
+
+/* -------------------------------------------------------------------------- */
+
+static void *xrealloc(void *p, size_t s)
+{
+	p = realloc(p, s);
+	if (p == NULL)
+		form_alert(1, rs_str(AL_NOMEM));
+	return p;
+}
+
+/* -------------------------------------------------------------------------- */
+
 static void cleanup(void)
 {
 	if (app_id >= 0)
@@ -163,7 +188,9 @@ static void draw_char(unsigned short c, _WORD x0, _WORD y0)
 	if (c < fonthdr.first_ade || c > fonthdr.last_ade)
 		return;
 	c -= fonthdr.first_ade;
-	width = off_table[c + 1] - off_table[c];
+	width = width_table[c];
+	if ((_UWORD)width == F_NO_CHAR)
+		return;
 	height = font_ch;
 
 	vsf_color(vdihandle, G_BLACK);
@@ -495,6 +522,43 @@ static _BOOL check_gemfnt_header(FONT_HDR *h, unsigned long l)
 
 
 
+/* -------------------------------------------------------------------------- */
+
+static _BOOL get_widths(uint16_t *off_tab, fchar_t num)
+{
+	fchar_t i, j;
+	uint16_t off, nextoff;
+	
+	free(width_table);
+	width_table = xmalloc(num * sizeof(*width_table));
+	if (width_table == NULL)
+	{
+		return FALSE;
+	}
+	
+	for (i = 0; i < num; i++)
+	{
+		width_table[i] = F_NO_CHAR;
+		off = off_tab[i];
+		nf_debugprintf("%x: %d-%d\n", i, off_tab[i+1], off_tab[i]);
+		if (off != F_NO_CHAR)
+		{
+			for (j = i + 1; j <= num; j++)
+			{
+				nextoff = off_tab[j];
+				if (nextoff != F_NO_CHAR)
+				{
+					width_table[i] = nextoff - off;
+					i = j - 1;
+					break;
+				}
+			}
+		}	
+	}
+	
+	return TRUE;
+}
+
 
 
 static _BOOL font_gen_gemfont(unsigned char **m, const char *filename, unsigned long l)
@@ -617,8 +681,10 @@ static _BOOL font_gen_gemfont(unsigned char **m, const char *filename, unsigned 
 			decode_ok = FALSE;
 		} else
 		{
-			*m = h = realloc(h, l - compressed_size + font_file_data_size);
-			compressed = malloc(compressed_size);
+			*m = h = xrealloc(h, l - compressed_size + font_file_data_size);
+			compressed = xmalloc(compressed_size);
+			if (h == NULL || compressed == NULL)
+				return FALSE;
 			memcpy(compressed, h + offset, compressed_size);
 			decode_gemfnt(h + offset, compressed, hdr->form_width, hdr->form_height);
 			free(compressed);
@@ -660,7 +726,10 @@ static _BOOL font_gen_gemfont(unsigned char **m, const char *filename, unsigned 
 
 	font_cw = hdr->max_cell_width;
 	font_ch = hdr->form_height;
-	
+
+	if (get_widths(off_table, numoffs) == FALSE)
+		return FALSE;
+		
 	return decode_ok;
 }
 
@@ -697,11 +766,10 @@ static _BOOL font_load_gemfont(const char *filename)
 	fseek(in, 0, SEEK_END);
 	l = ftell(in);
 	fseek(in, 0, SEEK_SET);
-	h = malloc(l);
+	h = xmalloc(l);
 	if (h == NULL)
 	{
 		fclose(in);
-		form_alert(1, rs_str(AL_NOMEM));
 		return FALSE;
 	}
 	l = fread(h, 1, l, in);

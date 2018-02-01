@@ -18,7 +18,6 @@
 #include "s_endian.h"
 #include "fonthdr.h"
 
-
 #undef access
 
 
@@ -176,6 +175,7 @@ static gboolean check_gemfnt_header(UB *h, unsigned int l)
 	}
 #endif
 
+	/* FIXME: maybe should warn about incorrect value if it was changed */
 	SM_UW(h + 38, lastc);
 	return TRUE;
 }
@@ -275,8 +275,12 @@ static void create_scaled_images(FONT_DESC *sf)
 	for (i = 0; i < numoffs; i++)
 	{
 		if (scaled_pixmaps[i])
+		{
 			XFreePixmap(x_display, scaled_pixmaps[i]);
-		scaled_pixmaps[i] = scale_ximage(char_images[i], scale);
+			scaled_pixmaps[i] = 0;
+		}
+		if (char_images[i])
+			scaled_pixmaps[i] = scale_ximage(char_images[i], scale);
 	}
 }
 #endif
@@ -307,7 +311,15 @@ static void create_scaled_images(FONT_DESC *sf)
 		int pixh = height ? height * scale : 1;
 
 		if (scaled_pixmaps[i])
+		{
 			DeleteObject(scaled_pixmaps[i]);
+			scaled_pixmaps[i] = 0;
+		}
+		if (width == F_NO_CHAR)
+		{
+			/* TODO: display a cross or similar */
+			continue;
+		}
 		pixmap = CreateCompatibleDC(scrdc);
 
 		cbm = CreateCompatibleBitmap(scrdc, pixw, pixh);
@@ -343,6 +355,27 @@ static void create_scaled_images(FONT_DESC *sf)
 	}
 }
 #endif
+
+
+
+static UW get_width(int i, int numoffs)
+{
+	int off = LM_UW(off_table + 2 * i);
+	unsigned short next;
+	
+	off = LM_UW(off_table + 2 * i);
+	if (off != F_NO_CHAR)
+	{
+		for (next = i + 1; next <= numoffs; next++)
+		{
+			int nextoff = LM_UW(off_table + 2 * next);
+			if (nextoff != F_NO_CHAR)
+				return nextoff - off;
+		}
+		off = F_NO_CHAR;
+	}
+	return off;
+}
 
 
 static FONT_DESC *font_gen_gemfont(UB **m, const char *filename, unsigned int l)
@@ -551,15 +584,24 @@ static FONT_DESC *font_gen_gemfont(UB **m, const char *filename, unsigned int l)
 	for (i = 0; i < numoffs; i++)
 	{
 		int j;
-		int o = LM_UW(off_table + 2 * i);
-		int w = LM_UW(off_table + 2 * i + 2) - o;
+		int o;
+		int w;
 		vdi_charinfo *charinfo = &font->per_char[i];
 		
+		o = LM_UW(off_table + 2 * i);
+		w = get_width(i, numoffs);
+		if (w == F_NO_CHAR)
+		{
+			/* TODO: display a cross or similar */
+			continue;
+		}
 		charinfo->lbearing = 0;
 		charinfo->rbearing = w - 1;
 		charinfo->width = w;
 		charinfo->ascent = font->top;
 		charinfo->descent = form_height - font->top;
+		if (w == F_NO_CHAR || w == 0)
+			continue;
 		
 		for (j = 0; j < form_height; j++)
 		{
@@ -597,6 +639,8 @@ static FONT_DESC *font_gen_gemfont(UB **m, const char *filename, unsigned int l)
 			vdi_charinfo *charinfo = &font->per_char[i];
 			int o = LM_UW(off_table + 2 * i);
 			
+			if (charinfo->width == F_NO_CHAR || charinfo->width == 0)
+				continue;
 			char_bytes_per_line = charinfo->width * 4;
 
 			char_data = g_malloc0(char_bytes_per_line * bitmap_height);
@@ -732,7 +776,8 @@ static void draw_window(HDC hdc, RECT *rc)
 				c = sf->default_char;
 			{
 				c -= sf->first_char;
-				BitBlt(hdc, x * (cw * scale + scaled_margin) + scaled_margin, y * (ch * scale + scaled_margin) + scaled_margin, cw * scale, ch * scale, scaled_pixmaps[c], 0, 0, SRCCOPY);
+				if (scaled_pixmaps[c])
+					BitBlt(hdc, x * (cw * scale + scaled_margin) + scaled_margin, y * (ch * scale + scaled_margin) + scaled_margin, cw * scale, ch * scale, scaled_pixmaps[c], 0, 0, SRCCOPY);
 			}
 		}
 	}
@@ -994,7 +1039,8 @@ static void draw_window(void)
 				c = sf->default_char;
 			{
 				c -= sf->first_char;
-				XCopyArea(x_display, scaled_pixmaps[c], win, gc, 0, 0, cw * scale, ch * scale, x * (cw * scale + scaled_margin) + scaled_margin, y * (ch * scale + scaled_margin) + scaled_margin);
+				if (scaled_pixmaps[c])
+					XCopyArea(x_display, scaled_pixmaps[c], win, gc, 0, 0, cw * scale, ch * scale, x * (cw * scale + scaled_margin) + scaled_margin, y * (ch * scale + scaled_margin) + scaled_margin);
 			}
 		}
 	}
