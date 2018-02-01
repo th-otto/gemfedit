@@ -2,9 +2,11 @@
  * fntconv.c : convert Gemdos fonts between FNT, TXT and C formats
  *
  * Copyright (c) 2001 Laurent Vogel
+ * Copyright (c) 2017 Thorsten Otto
  *
  * Authors:
  *  LVL     Laurent Vogel
+ *  THO     Thorsten Otto
  *
  * This file is distributed under the GPL, version 2 or at your
  * option any later version.  See doc/license.txt for details.
@@ -168,9 +170,13 @@ static void set_l_word(void *addr, WORD value)
 
 #define F_DEFAULT    1					/* this is the default font (face and size) */
 #define F_HORZ_OFF   2					/* there are left and right offset tables */
-#define F_STDFORM    4					/* is the font in standard format */
+#define F_STDFORM    4					/* is the font in standard (bigendian) format */
 #define F_MONOSPACE  8					/* is the font monospaced */
 #define F_EXT_HDR    32					/* extended header */
+
+/* flags that this tool supports */
+#define F_SUPPORTED (F_STDFORM|F_MONOSPACE|F_DEFAULT|F_HORZ_OFF|F_EXT_HDR)
+
 
 #define F_EXT_HDR_SIZE 62				/* size of an additional extended header */
 
@@ -235,7 +241,7 @@ struct font
 	UWORD skew;							/* mask for skewing */
 	UWORD flags;
 
-	UBYTE *hor_table;					/* horizontal offsets */
+	UBYTE *hor_table;					/* horizontal offsets, 2 bytes per character */
 	unsigned long *off_table;			/* character offsets, 0xFFFF if no char present.  */
 	UBYTE *dat_table;					/* character definitions */
 	unsigned long form_width;
@@ -1050,10 +1056,6 @@ static struct font *read_fnt(const char *fname)
 #undef GET_WORD
 
 	/* make some checks */
-	if (p->flags & F_HORZ_OFF)
-	{
-		fatal("horizontal offsets not handled");
-	}
 	if (p->last_ade > MAX_ADE || p->first_ade > p->last_ade)
 	{
 		fatal("wrong char range : first = %d, last = %d", p->first_ade, p->last_ade);
@@ -1097,27 +1099,42 @@ static struct font *read_fnt(const char *fname)
 	if ((long)fread(p->dat_table, 1, count, f) != count)
 		fatal("short read");
 
-#if 0
-	if (off_hor_table)
-	{
-		p->flags |= F_HORZ_OFF;
-	}
-#endif
 	if (p->flags & F_HORZ_OFF)
 	{
-		UBYTE buf[2];
-		int i;
-
-		p->hor_table = xmalloc(bmnum * 2);
-		if (fseek(f, off_hor_table, SEEK_SET))
-			fatal("seek");
-		for (i = 0; i < bmnum; i++)
+		long i;
+		int empty;
+		
+		/*
+		 * check wether offset table is really present;
+		 * some fonts have this incorrectly set
+		 */
+		count = 2 * bmnum;
+		if (off_hor_table == 0 || off_hor_table == off_off_table)
 		{
-			count = 2;
-			if ((long)fread(buf, 1, count, f) != count)
+			fprintf(stderr, "%s: ignoring non-existing offset table\n", fname);
+			p->flags &= ~F_HORZ_OFF;
+		} else if ((off_off_table - off_hor_table) < count)
+		{
+			fprintf(stderr, "%s: ignoring offset table of size %ld, should be %ld\n", fname, off_off_table - off_hor_table, count);
+			p->flags &= ~F_HORZ_OFF;
+		} else
+		{
+			p->hor_table = xmalloc(count);
+			if (fseek(f, off_hor_table, SEEK_SET))
+				fatal("seek");
+			if ((long)fread(p->hor_table, 1, count, f) != count)
 				fatal("short read");
-			p->hor_table[2 * i] = buf[0];
-			p->hor_table[2 * i + 1] = buf[1];
+			empty = 1;
+			for (i = 0; i < count; i++)
+			{
+				if (p->hor_table[i] != 0)
+					empty = 0;
+			}
+			if (empty)
+			{
+				fprintf(stderr, "%s: warning: empty horizontal offset table\n", fname);
+				p->flags &= ~F_HORZ_OFF;
+			}
 		}
 	}
 	fclose(f);
@@ -1195,7 +1212,9 @@ static void write_fnt(struct font *p, const char *fname)
 		fatal("write");
 	if (p->flags & F_HORZ_OFF)
 	{
-		fatal("TODO");
+		i = bmnum * 2;
+		if (i != fwrite(p->hor_table, 1, i, f))
+			fatal("write");
 	}
 	for (i = 0; i <= bmnum; i++)
 	{
@@ -1217,6 +1236,11 @@ static void write_txt(struct font *p, const char *filename)
 	int i;
 
 	/* first, write header */
+
+	if (p->flags & F_HORZ_OFF)
+	{
+		fatal("horizontal offsets not handled");
+	}
 
 	f = open_output(filename, "w");
 	fprintf(f, "GDOSFONT\n");
@@ -1318,6 +1342,7 @@ static void write_c_emutos(struct font *p, const char *filename)
 	unsigned long i;
 	int bmnum;
 	const char *off_table_name = "off_table";
+	const char *hor_table_name = "0";
 	
 	bmnum = p->last_ade - p->first_ade + 1;
 	if (p->off_table[bmnum] >= 0x10000L)
@@ -1326,6 +1351,10 @@ static void write_c_emutos(struct font *p, const char *filename)
 		exit(EXIT_FAILURE);
 	}
 
+	/* output is always done bigendian */
+	
+	p->flags |= F_STDFORM;
+	
 	/* first, write header */
 
 	f = open_output(filename, "w");
@@ -1358,7 +1387,7 @@ static void write_c_emutos(struct font *p, const char *filename)
 	{
 		fprintf(f, "static const UWORD %s[] =\n{\n", off_table_name);
 		{
-			for (i = 0; i <= bmnum; i++)
+			for (i = 0; i < bmnum; i++)
 			{
 				if ((i & 7) == 0)
 					fprintf(f, "    ");
@@ -1383,6 +1412,30 @@ static void write_c_emutos(struct font *p, const char *filename)
 			fprintf(f, "extern const UWORD %s[];\n", off_table_name);
 		}
 		fprintf(f, "\n");
+	}
+	
+	if (p->flags & F_HORZ_OFF)
+	{
+		hor_table_name = "hor_table";
+		
+		fprintf(f, "static const UBYTE %s[] =\n{\n", hor_table_name);
+		{
+			unsigned long count = bmnum * 2;
+			
+			for (i = 0; i < count; i++)
+			{
+				if ((i & 7) == 0)
+					fprintf(f, "    ");
+				else
+					fprintf(f, " ");
+				fprintf(f, "0x%02x", p->hor_table[i]);
+				if (i != (count - 1))
+					fprintf(f, ",");
+				if ((i & 7) == 7)
+					fprintf(f, "\n");
+			}
+		}
+		fprintf(f, "\n};\n\n");
 	}
 	
 	fprintf(f, "static const UWORD dat_table[] =\n{\n");
@@ -1449,9 +1502,20 @@ static void write_c_emutos(struct font *p, const char *filename)
 
 	fprintf(f, "    0x%04x, /* lighten */\n", p->lighten);
 	fprintf(f, "    0x%04x, /* skew */\n", p->skew);
-	/* TODO */
-	fprintf(f, "    F_STDFORM | F_MONOSPACE | F_DEFAULT,  /* flags */\n");
-	fprintf(f, "    0,			/*   UBYTE *hor_table	*/\n");
+
+	fprintf(f, "    F_STDFORM");
+	if (p->flags & F_MONOSPACE)
+		fprintf(f, " | F_MONOSPACE");
+	if (p->flags & F_DEFAULT)
+		fprintf(f, " | F_DEFAULT");
+	if (p->flags & F_HORZ_OFF)
+		fprintf(f, " | F_HORZ_OFF");
+	if (p->flags & F_EXT_HDR)
+		fprintf(f, " | F_EXT_HDR");
+	if ((p->flags & ~F_SUPPORTED) != 0)
+		fprintf(f, " | 0x%x", p->flags & ~F_SUPPORTED);
+	fprintf(f, ",  /* flags */\n");
+	fprintf(f, "    %s,			/*   UBYTE *hor_table	*/\n", hor_table_name);
 	fprintf(f, "    %s,		/*   UWORD *off_table	*/\n", off_table_name);
 	fprintf(f, "    dat_table,		/*   UBYTE *dat_table	*/\n");
 
@@ -1470,6 +1534,11 @@ static void write_c_aranym(struct font *p, const char *filename)
 {
 	FILE *f;
 	
+	if (p->flags & F_HORZ_OFF)
+	{
+		fatal("horizontal offsets not handled");
+	}
+
 	/* first, write header */
 
 	f = open_output(filename, "w");

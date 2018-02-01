@@ -50,6 +50,9 @@ typedef struct FONT_HDR
 #define FONTF_COMPRESSED FONTF_EXTENDED
 #define FONTF_FULLID     0x2000            /* Use 'full font ID' */
 
+/* flags that the tools support */
+#define FONTF_SUPPORTED (FONTF_SYSTEM|FONTF_HORTABLE|FONTF_BIGENDIAN|FONTF_MONOSPACED|FONTF_COMPRESSED)
+
 void decode_gemfnt(unsigned char *dst, const unsigned char *src, unsigned short form_width, unsigned short form_height);
 
 #endif /* FONTHDR_H */
