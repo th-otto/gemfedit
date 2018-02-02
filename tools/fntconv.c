@@ -34,7 +34,7 @@ static int convert_to;
 static int scale = 1;
 static int grid = 0;
 
-#define MAX_ADE 0x7fff
+#define MAX_ADE 0x7fffl
 
 static int all_chars = 0;
 static int for_aranym = 0;
@@ -76,7 +76,7 @@ static void *xmalloc(size_t s)
 
 static char *xstrdup(const char *s)
 {
-	int len = strlen(s);
+	size_t len = strlen(s);
 	char *a = xmalloc(len + 1);
 
 	strcpy(a, s);
@@ -307,12 +307,12 @@ static FILE *open_input(const char **filename, const char *mode)
 
 typedef struct ifile
 {
-	int lineno;
+	long lineno;
 	char *fname;
 	FILE *fh;
 	UBYTE buf[BACKSIZ + READSIZ];
-	int size;
-	int index;
+	long size;
+	long index;
 	int ateof;
 } IFILE;
 
@@ -639,7 +639,7 @@ static int try_signed(char **cc, long *val)
 
 static int try_given_string(char **cc, char *s)
 {
-	int n = strlen(s);
+	size_t n = strlen(s);
 
 	if (!strncmp(*cc, s, n))
 	{
@@ -864,7 +864,7 @@ static struct font *read_txt(const char *fname)
 	first = p->first_ade;
 	last = p->last_ade;
 	height = p->form_height;
-	if (first < 0 || last < 0 || first > MAX_ADE || first > last)
+	if (first < 0 || last < 0 || (long)first > MAX_ADE || first > last)
 	{
 		fatal("wrong char range : first = %d, last = %d", first, last);
 	}
@@ -899,7 +899,7 @@ static struct font *read_txt(const char *fname)
 	    	fprintf(stderr, "\"%s\" with number expected\n", "char");
 			goto fail;
 		}
-		ch = u;
+		ch = (int)u;
 		if (ch < first || ch > last)
 		{
 			fprintf(stderr, "wrong character number 0x%x\n", ch);
@@ -1026,6 +1026,7 @@ static struct font *read_txt(const char *fname)
 	fprintf(stderr, "fatal error file %s line %d\n", f->fname, f->lineno - 1);
 	ifclose(f);
 	exit(EXIT_FAILURE);
+	return NULL;
 }
 
 
@@ -1809,7 +1810,7 @@ static int file_type(const char *c)
 
 	if (c == NULL || strcmp(c, "-") == 0)
 		return FILE_TXT;
-	n = strlen(c);
+	n = (int)strlen(c);
 	if (n >= 3 && c[n - 2] == '.' && (c[n - 1] == 'c' || c[n - 1] == 'C' || c[n - 1] == 'h' || c[n - 1] == 'H'))
 		return FILE_C;
 	if (n < 5 || c[n - 4] != '.')
