@@ -354,11 +354,11 @@ static char fontdisp_string_46[] = "Bottom line      : ___";
 static char fontdisp_string_47[] = "9";
 static char fontdisp_string_48[] = "Monospaced";
 static char fontdisp_string_49[] = "Compressed";
-static char fontdisp_string_50[] = "@@@";
-static char fontdisp_string_51[] = "First ascii code : ___";
+static char fontdisp_string_50[] = "@@@@@";
+static char fontdisp_string_51[] = "First ascii code : _____";
 static char fontdisp_string_52[] = "9";
-static char fontdisp_string_53[] = "@@@";
-static char fontdisp_string_54[] = "Last ascii code  : ___";
+static char fontdisp_string_53[] = "@@@@@";
+static char fontdisp_string_54[] = "Last ascii code  : _____";
 static char fontdisp_string_55[] = "9";
 static char fontdisp_string_56[] = "OK";
 static char fontdisp_string_57[] = " \001\002\003\004\005\006\007\b\t\n\013\f\r\016\017";
@@ -427,8 +427,8 @@ static TEDINFO rs_tedinfo[NUM_TI] = {
 	{ fontdisp_string_37, fontdisp_string_38, fontdisp_string_39, IBM, 0, TE_LEFT, 0x1180, 0x0, -1, 4,23 }, /* FONT_HALF */
 	{ fontdisp_string_41, fontdisp_string_42, fontdisp_string_43, IBM, 0, TE_LEFT, 0x1180, 0x0, -1, 4,23 }, /* FONT_DESCENT */
 	{ fontdisp_string_45, fontdisp_string_46, fontdisp_string_47, IBM, 0, TE_LEFT, 0x1180, 0x0, -1, 4,23 }, /* FONT_BOTTOM */
-	{ fontdisp_string_50, fontdisp_string_51, fontdisp_string_52, IBM, 0, TE_LEFT, 0x1180, 0x0, 0, 4,23 }, /* FONT_FIRST_ADE */
-	{ fontdisp_string_53, fontdisp_string_54, fontdisp_string_55, IBM, 0, TE_LEFT, 0x1180, 0x0, 0, 4,23 }, /* FONT_LAST_ADE */
+	{ fontdisp_string_50, fontdisp_string_51, fontdisp_string_52, IBM, 0, TE_LEFT, 0x1180, 0x0, 0, 6,25 }, /* FONT_FIRST_ADE */
+	{ fontdisp_string_53, fontdisp_string_54, fontdisp_string_55, IBM, 0, TE_LEFT, 0x1180, 0x0, 0, 6,25 }, /* FONT_LAST_ADE */
 	{ fontdisp_string_74, fontdisp_string_75, fontdisp_string_76, SMALL, 0, TE_LEFT, 0x1B00, 0x0, -1, 23,1 }
 };
 
@@ -476,8 +476,8 @@ static OBJECT rs_object[NUM_OBS] = {
 	{ 15, -1, -1, G_FTEXT, OF_NONE, OS_NORMAL, C_UNION(&rs_tedinfo[9]), 2,11, 22,1 }, /* FONT_BOTTOM */
 	{ 16, -1, -1, G_BUTTON, OF_NONE, OS_NORMAL, C_UNION(fontdisp_string_48), 28,11, 22,1 }, /* FONT_MONOSPACED */
 	{ 17, -1, -1, G_BUTTON, OF_NONE, OS_NORMAL, C_UNION(fontdisp_string_49), 28,12, 22,1 }, /* FONT_COMPRESSED */
-	{ 18, -1, -1, G_FTEXT, OF_NONE, OS_NORMAL, C_UNION(&rs_tedinfo[10]), 2,13, 22,1 }, /* FONT_FIRST_ADE */
-	{ 19, -1, -1, G_FTEXT, OF_NONE, OS_NORMAL, C_UNION(&rs_tedinfo[11]), 2,14, 22,1 }, /* FONT_LAST_ADE */
+	{ 18, -1, -1, G_FTEXT, OF_NONE, OS_NORMAL, C_UNION(&rs_tedinfo[10]), 2,13, 24,1 }, /* FONT_FIRST_ADE */
+	{ 19, -1, -1, G_FTEXT, OF_NONE, OS_NORMAL, C_UNION(&rs_tedinfo[11]), 2,14, 24,1 }, /* FONT_LAST_ADE */
 	{ 0, -1, -1, G_BUTTON, 0x627, OS_NORMAL, C_UNION(fontdisp_string_56), 44,14, 8,1 }, /* FONT_OK */
 
 /* PANEL */

@@ -31,6 +31,8 @@ typedef long LONG;
 #define FILE_BMP 4
 static int convert_from;
 static int convert_to;
+static int scale = 1;
+static int grid = 0;
 
 #define MAX_ADE 0x7fff
 
@@ -129,7 +131,6 @@ static LONG get_l_long(void *addr)
 }
 
 
-#if 0
 static void set_l_long(void *addr, LONG value)
 {
 	UBYTE *uaddr = (UBYTE *) addr;
@@ -139,7 +140,15 @@ static void set_l_long(void *addr, LONG value)
 	uaddr[1] = value >> 8;
 	uaddr[0] = value;
 }
-#endif
+
+static void set_l_word(void *addr, WORD value)
+{
+	UBYTE *uaddr = (UBYTE *) addr;
+
+	uaddr[1] = value >> 8;
+	uaddr[0] = value;
+}
+
 
 
 static WORD get_l_word(void *addr)
@@ -253,30 +262,38 @@ struct font
 
 
 
-static FILE *open_output(const char *filename, const char *mode)
+static FILE *open_output(const char **filename, const char *mode)
 {
 	FILE *f;
 	
-	if (filename == NULL || strcmp(filename, "-") == 0)
+	if (*filename == NULL || strcmp(*filename, "-") == 0)
+	{
 		f = fdopen(fileno(stdout), mode);
-	else
-		f = fopen(filename, mode);
+		*filename = "<stdout>";
+	} else
+	{
+		f = fopen(*filename, mode);
+	}
 	if (f == NULL)
-		fatal("can't create %s", filename);
+		fatal("can't create %s", *filename);
 	return f;
 }
 
 
-static FILE *open_input(const char *filename, const char *mode)
+static FILE *open_input(const char **filename, const char *mode)
 {
 	FILE *f;
 	
-	if (filename == NULL || strcmp(filename, "-") == 0)
+	if (*filename == NULL || strcmp(*filename, "-") == 0)
+	{
 		f = fdopen(fileno(stdin), mode);
-	else
-		f = fopen(filename, mode);
+		*filename = "<stdin>";
+	} else
+	{
+		f = fopen(*filename, mode);
+	}
 	if (f == NULL)
-		fatal("can't open %s", filename);
+		fatal("can't open %s", *filename);
 	return f;
 }
 
@@ -315,14 +332,12 @@ static IFILE *ifopen(const char *fname)
 {
 	IFILE *f = xmalloc(sizeof(IFILE));
 
-	f->fh = open_input(fname, "rb");
+	f->fh = open_input(&fname, "rb");
 	if (f->fh == NULL)
 	{
 		free(f);
 		return NULL;
 	}
-	if (fname == NULL || strcmp(fname, "-") == 0)
-		fname = "<stdin>";
 	f->fname = xstrdup(fname);
 	f->size = 0;
 	f->index = 0;
@@ -702,12 +717,12 @@ static int try_eol(char **cc)
  * simple bitmap read/write
  */
 
-static int get_bit(UBYTE *addr, int i)
+static int get_bit(UBYTE *addr, long i)
 {
 	return (addr[i / 8] & (1 << (7 - (i & 7)))) ? 1 : 0;
 }
 
-static void set_bit(UBYTE *addr, int i)
+static void set_bit(UBYTE *addr, long i)
 {
 	addr[i / 8] |= (1 << (7 - (i & 7)));
 }
@@ -731,6 +746,36 @@ static unsigned long get_width(struct font *p, unsigned short ch)
 		off = F_NO_CHARL;
 	}
 	return off;
+}
+
+
+static void check_monospaced(struct font *p, const char *filename)
+{
+	int i, bmnum;
+	int mono = 1;
+	unsigned long width, firstwidth;
+	
+	bmnum = p->last_ade - p->first_ade + 1;
+	firstwidth = get_width(p, 0);
+	for (i = 0; i < bmnum; i++)
+	{
+		width = get_width(p, i);
+		if (width == F_NO_CHARL)
+			continue;
+		if (width != 0 && width != firstwidth)
+		{
+			mono = 0;
+			if (p->flags & F_MONOSPACE)
+				fprintf(stderr, "%s: warning: font says it is monospaced, but isn't\n", filename);
+			p->flags &= ~F_MONOSPACE;
+			return;
+		}
+	}
+	if (mono && !(p->flags & F_MONOSPACE))
+	{
+		fprintf(stderr, "%s: warning: font does not say it is monospaced, but is\n", filename);
+		p->flags |= F_MONOSPACE;
+	}
 }
 
 
@@ -861,13 +906,13 @@ static struct font *read_txt(const char *fname)
 			goto fail;
 		}
 		if (ch < lastch)
-			fprintf(stderr, "warning: %d: char 0x%x less previous char 0x%x\n", f->lineno, ch, lastch);
+			fprintf(stderr, "%s:%d: warning: char 0x%x less previous char 0x%x\n", fname, f->lineno, ch, lastch);
 		lastch = ch;
 
 		ch -= first;
 		if (p->off_table[ch] != F_NO_CHARL)
 		{
-			fprintf(stderr, "character number 0x%x was already defined\n", lastch);
+			fprintf(stderr, "%s:%d: character number 0x%x was already defined\n", fname, f->lineno, lastch);
 			goto fail;
 		}
 		b = bms + ch * bmsize;
@@ -932,7 +977,7 @@ static struct font *read_txt(const char *fname)
 		{
 			if (i < 256 && !(i >= 0x80 && i <= 0x9f))
 			{
-				fprintf(stderr, "warning: %s: %x undefined\n", fname, i);
+				fprintf(stderr, "%s: warning: %x undefined\n", fname, i);
 			}
 			if (all_chars)
 			{
@@ -949,6 +994,8 @@ static struct font *read_txt(const char *fname)
 	p->form_width = ((off + 15) >> 4) << 1;
 	p->dat_table = xmalloc((size_t)height * p->form_width);
 
+	check_monospaced(p, fname);
+	
 	/* now, pack the bitmaps in the destination form */
 	for (i = 0; i < bmnum; i++)
 	{
@@ -997,7 +1044,7 @@ static struct font *read_fnt(const char *fname)
 	p = malloc(sizeof(struct font));
 	if (p == NULL)
 		fatal("memory");
-	f = open_input(fname, "rb");
+	f = open_input(&fname, "rb");
 
 	count = fread(&h, 1, sizeof(h), f);
 	if (count != sizeof(h))
@@ -1138,6 +1185,9 @@ static struct font *read_fnt(const char *fname)
 		}
 	}
 	fclose(f);
+
+	check_monospaced(p, fname);
+	
 	return p;
 }
 
@@ -1163,7 +1213,7 @@ static void write_fnt(struct font *p, const char *fname)
 		exit(EXIT_FAILURE);
 	}
 
-	f = open_output(fname, "wb");
+	f = open_output(&fname, "wb");
 
 	p->flags |= F_STDFORM;
 	
@@ -1230,6 +1280,146 @@ static void write_fnt(struct font *p, const char *fname)
 }
 
 
+static void write_bmp(struct font *p, const char *fname)
+{
+	FILE *f;
+	long bmpwidth;
+	long bmpstride;
+	long bmpheight;
+	int bmnum, i;
+	int charrows;
+	long datasize;
+	int cmapsize = 256 * 4;
+	unsigned char *bitmap;
+	
+#define CHAR_COLUMNS 16
+	
+	struct {
+		unsigned char magic[2];			/* BM */
+		unsigned char filesize[4];
+		unsigned char xHotSpot[2];     
+		unsigned char yHotSpot[2];
+		unsigned char offbits[4];		/* offset to data */
+	} fileheader;
+	struct {
+		unsigned char bisize[4];
+		unsigned char width[4];
+		unsigned char height[4];
+		unsigned char planes[2];
+		unsigned char bitcount[2];
+		unsigned char compressed[4];
+		unsigned char datasize[4];
+		unsigned char pix_width[4];
+		unsigned char pix_height[4];
+		unsigned char clr_used[4];
+		unsigned char clr_important[4];
+	} bmpheader;
+	unsigned char palette[256][4];
+	
+	if (p->flags & F_HORZ_OFF)
+	{
+		fatal("horizontal offsets not handled");
+	}
+
+	bmnum = p->last_ade + 1;
+	charrows = (bmnum + CHAR_COLUMNS - 1) / CHAR_COLUMNS;
+	bmpwidth = CHAR_COLUMNS * p->max_cell_width * scale + (CHAR_COLUMNS + 1) * grid;
+	bmpstride = (bmpwidth + 3) & ~3;
+	bmpheight = charrows * p->form_height * scale + (charrows + 1) * grid;
+	datasize = bmpstride * bmpheight;
+	
+	set_b_word(fileheader.magic, 0x424d);
+	set_l_long(fileheader.filesize, sizeof(fileheader) + sizeof(bmpheader) + cmapsize + datasize);
+	set_l_word(fileheader.xHotSpot, 0);
+	set_l_word(fileheader.yHotSpot, 0);
+	set_l_long(fileheader.offbits, sizeof(fileheader) + sizeof(bmpheader) + cmapsize);
+	
+	set_l_long(bmpheader.bisize, sizeof(bmpheader));
+	set_l_long(bmpheader.width, bmpwidth);
+	set_l_long(bmpheader.height, -bmpheight); /* we write it top-down */
+	set_l_word(bmpheader.planes, 1);
+	set_l_word(bmpheader.bitcount, 8);
+	set_l_long(bmpheader.compressed, 0);
+	set_l_long(bmpheader.datasize, datasize);
+	set_l_long(bmpheader.pix_width, 95);
+	set_l_long(bmpheader.pix_height, 95);
+	set_l_long(bmpheader.clr_used, cmapsize / 4);
+	set_l_long(bmpheader.clr_important, grid > 0 ? 3 : 2);
+	memset(palette, 0, sizeof(palette));
+	palette[0][0] = 255;
+	palette[0][1] = 255;
+	palette[0][2] = 255;
+	palette[1][0] = 0;
+	palette[1][1] = 0;
+	palette[1][2] = 0;
+	palette[2][0] = 0;
+	palette[2][1] = 0;
+	palette[2][2] = 255;
+	
+	f = open_output(&fname, "wb");
+
+	bitmap = xmalloc(datasize);
+	
+	if (grid > 0)
+	{
+		int x, y, sy, sx;
+		
+		for (y = 0; y < (charrows + 1); y++)
+		{
+			for (sy = 0; sy < grid; sy++)
+				for (x = 0; x < bmpwidth; x++)
+					bitmap[((y * (p->form_height * scale + grid)) + sy) * bmpstride + x] = 2;
+		}
+		for (x = 0; x < (CHAR_COLUMNS + 1); x++)
+		{
+			for (sx = 0; sx < grid; sx++)
+				for (y = 0; y < bmpheight; y++)
+					bitmap[y * bmpstride + x * (p->max_cell_width * scale + grid) + sx] = 2;
+		}
+	}
+	
+	for (i = 0; i < bmnum; i++)
+	{
+		unsigned long w;
+		unsigned long off;
+		int y0;
+		int x0;
+		int x, y, sx, sy;
+		
+		if (i < p->first_ade)
+			continue;
+		off = p->off_table[i - p->first_ade];
+		w = get_width(p, i - p->first_ade);
+		if (w == F_NO_CHARL)
+			continue;
+		y0 = i / CHAR_COLUMNS;
+		x0 = i % CHAR_COLUMNS;
+		for (y = 0; y < p->form_height; y++)
+		{
+			for (x = 0; x < w; x++)
+			{
+				if (get_bit(p->dat_table + p->form_width * y, off + x))
+				{
+					for (sx = 0; sx < scale; sx++)
+						for (sy = 0; sy < scale; sy++)
+							bitmap[((y0 * p->form_height + y) * scale + y0 * grid + grid + sy) * bmpstride + ((x0 * p->max_cell_width + x) * scale) + x0 * grid + grid + sx] = 1;
+				}
+			}
+		}
+	}
+	
+	if (fwrite(&fileheader, 1, sizeof(fileheader), f) != sizeof(fileheader) ||
+		fwrite(&bmpheader, 1, sizeof(bmpheader), f) != sizeof(bmpheader) ||
+		fwrite(palette, 1, cmapsize, f) != cmapsize ||
+		fwrite(bitmap, 1, datasize, f) != datasize)
+		fatal("write");
+		
+	fclose(f);
+
+#undef CHAR_COLUMNS
+}
+
+
 static void write_txt(struct font *p, const char *filename)
 {
 	FILE *f;
@@ -1242,7 +1432,7 @@ static void write_txt(struct font *p, const char *filename)
 		fatal("horizontal offsets not handled");
 	}
 
-	f = open_output(filename, "w");
+	f = open_output(&filename, "w");
 	fprintf(f, "GDOSFONT\n");
 	fprintf(f, "version 1.0\n");
 
@@ -1357,7 +1547,7 @@ static void write_c_emutos(struct font *p, const char *filename)
 	
 	/* first, write header */
 
-	f = open_output(filename, "w");
+	f = open_output(&filename, "w");
 	fprintf(f, "\
 /*\n\
  * %s - a font in standard format\n\
@@ -1376,18 +1566,23 @@ static void write_c_emutos(struct font *p, const char *filename)
 #include \"fonthdr.h\"\n\
 \n");
 
-	if (p->max_cell_width == 6 && p->form_height == 6)
-		off_table_name = "off_6x6_table";
-	else if (p->max_cell_width == 8 && p->form_height == 8)
-		off_table_name = "off_8x8_table";
-	else if (p->max_cell_width == 8 && p->form_height == 16)
-		off_table_name = "off_8x16_table";
-	
+	if (p->first_ade == 0 && p->last_ade == 255 && (p->flags & F_MONOSPACE))
+	{
+		if (p->max_cell_width == 6 && p->form_height == 6)
+			off_table_name = "off_6x6_table";
+		else if (p->max_cell_width == 8 && p->form_height == 8)
+			off_table_name = "off_8x8_table";
+		else if (p->max_cell_width == 8 && p->form_height == 16)
+			off_table_name = "off_8x16_table";
+		else if (!do_off_table)
+			fatal("unsupported font size for omitting offset table");
+	}
+			
 	if (do_off_table)
 	{
 		fprintf(f, "static const UWORD %s[] =\n{\n", off_table_name);
 		{
-			for (i = 0; i < bmnum; i++)
+			for (i = 0; i <= bmnum; i++)
 			{
 				if ((i & 7) == 0)
 					fprintf(f, "    ");
@@ -1400,10 +1595,13 @@ static void write_c_emutos(struct font *p, const char *filename)
 					fprintf(f, "\n");
 			}
 		}
-		fprintf(f, "\n};\n\n");
+		if ((i & 7) != 7)
+			fprintf(f, "\n");
+		fprintf(f, "};\n\n");
 	} else
 	{
-		if (p->max_cell_width == 8 && p->form_height == 16)
+		if (p->first_ade == 0 && p->last_ade == 255 && (p->flags & F_MONOSPACE) &&
+			p->max_cell_width == 8 && p->form_height == 16)
 		{
 			fprintf(f, "extern const UWORD %s[];\n", "off_8x8_table");
 			fprintf(f, "#define %s %s\n", off_table_name, "off_8x8_table");
@@ -1435,7 +1633,9 @@ static void write_c_emutos(struct font *p, const char *filename)
 					fprintf(f, "\n");
 			}
 		}
-		fprintf(f, "\n};\n\n");
+		if ((i & 7) != 7)
+			fprintf(f, "\n");
+		fprintf(f, "};\n\n");
 	}
 	
 	fprintf(f, "static const UWORD dat_table[] =\n{\n");
@@ -1541,7 +1741,7 @@ static void write_c_aranym(struct font *p, const char *filename)
 
 	/* first, write header */
 
-	f = open_output(filename, "w");
+	f = open_output(&filename, "w");
 	fprintf(f, "\
 /*\n\
  * font.h - 8x16 font for Atari ST encoding\n\
@@ -1632,6 +1832,8 @@ enum opt {
 	OPTION_ALLCHARS = 'A',
 	OPTION_NO_OFFTABLE = 'O',
 	OPTION_VARNAME = 'v',
+	OPTION_SCALE = 's',
+	OPTION_GRID = 'g',
 	
 	OPTION_HELP = 'h',
 	OPTION_VERSION = 'V'
@@ -1644,6 +1846,8 @@ static struct option const long_options[] = {
 	{ "output", required_argument, NULL, OPTION_OUTPUT },
 	{ "varname", required_argument, NULL, OPTION_VARNAME },
 	{ "no-offtable", no_argument, NULL, OPTION_NO_OFFTABLE },
+	{ "scale", required_argument, NULL, OPTION_SCALE },
+	{ "grid", required_argument, NULL, OPTION_GRID },
 	{ "help", no_argument, NULL, OPTION_HELP },
 	{ "version", no_argument, NULL, OPTION_VERSION },
 	{ NULL, no_argument, NULL, 0 }
@@ -1669,6 +1873,8 @@ Options:\n\
   -A, --all-chars       output data also for non-existent chars\n\
   -v, --varname <name>  set the name of the font header variable\n\
   -O, --no-offtable     do not write the offsets table\n\
+  -s, --scale <factor>  scale picture up (BMP only)\n\
+  -g, --grid <width>    draw grid around characters (BMP only)\n\
 ");
 	exit(errcode);
 }
@@ -1683,7 +1889,7 @@ int main(int argc, char **argv)
 	const char *to = NULL;
 	int c;
 	
-	while ((c = getopt_long_only(argc, argv, "o:aAOhV", long_options, NULL)) != EOF)
+	while ((c = getopt_long_only(argc, argv, "o:as:AOhV", long_options, NULL)) != EOF)
 	{
 		const char *arg = optarg;
 		switch ((enum opt) c)
@@ -1703,6 +1909,16 @@ int main(int argc, char **argv)
 			break;
 		case OPTION_VARNAME:
 			varname = optarg;
+			break;
+		case OPTION_SCALE:
+			scale = (int)strtol(optarg, NULL, 0);
+			if (scale <= 0 || scale > 100)
+				usage(stderr, EXIT_FAILURE);
+			break;
+		case OPTION_GRID:
+			grid = (int)strtol(optarg, NULL, 0);
+			if (grid < 0 || grid > 100)
+				usage(stderr, EXIT_FAILURE);
 			break;
 		
 		case OPTION_VERSION:
@@ -1736,13 +1952,16 @@ int main(int argc, char **argv)
 	{
 	case FILE_C:
 		fatal("cannot read C files");
-		return 1;
+		return EXIT_FAILURE;
 	case FILE_TXT:
 		p = read_txt(from);
 		break;
 	case FILE_FNT:
 		p = read_fnt(from);
 		break;
+	case FILE_BMP:
+		fatal("cannot read BMP files");
+		return EXIT_FAILURE;
 	default:
 		fatal("wrong file type");
 		return EXIT_FAILURE;
@@ -1760,6 +1979,9 @@ int main(int argc, char **argv)
 		break;
 	case FILE_FNT:
 		write_fnt(p, to);
+		break;
+	case FILE_BMP:
+		write_bmp(p, to);
 		break;
 	default:
 		fatal("wrong file type");
