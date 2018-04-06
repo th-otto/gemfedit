@@ -1,6 +1,6 @@
-VERSION = 1.0.1
+VERSION = 1.0.2
 
-SUBDIRS = fonts include tools tos unix win32 speedo spdview
+SUBDIRS = fonts include freetype tools tos unix win32 speedo spdview
 
 EXTRA_DIST = Makefile README COPYING
 

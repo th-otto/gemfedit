@@ -29,7 +29,7 @@
 
 /* We always include <setjmp.h>, so make libpng shut up! */
 #define PNG_SKIP_SETJMP_CHECK 1
-#include <png.h>
+#include <libpng12/png.h>
 #include "pngshim.h"
 
 #include "sferrors.h"
@@ -158,13 +158,13 @@ static void convert_bytes_to_data(png_structp png, png_row_infop row_info, png_b
 	for (i = 0; i < row_info->rowbytes; i += 4)
 	{
 		unsigned char *base = &data[i];
-		unsigned int red = base[0];
-		unsigned int green = base[1];
-		unsigned int blue = base[2];
+		unsigned char red = base[0];
+		unsigned char green = base[1];
+		unsigned char blue = base[2];
 
-		base[0] = (unsigned char) blue;
-		base[1] = (unsigned char) green;
-		base[2] = (unsigned char) red;
+		base[0] = blue;
+		base[1] = green;
+		base[2] = red;
 		base[3] = 0xFF;
 	}
 }

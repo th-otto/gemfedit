@@ -1,2 +1,2 @@
-#define PACKAGE_DATE "23 Dec 2017"
-#define PACKAGE_VERSION "1.01"
+#define PACKAGE_DATE "08 Feb 2018"
+#define PACKAGE_VERSION "1.02"

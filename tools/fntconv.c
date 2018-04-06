@@ -141,6 +141,7 @@ static void set_l_long(void *addr, LONG value)
 	uaddr[0] = value;
 }
 
+
 static void set_l_word(void *addr, WORD value)
 {
 	UBYTE *uaddr = (UBYTE *) addr;
@@ -148,7 +149,6 @@ static void set_l_word(void *addr, WORD value)
 	uaddr[1] = value >> 8;
 	uaddr[0] = value;
 }
-
 
 
 static WORD get_l_word(void *addr)
@@ -440,7 +440,7 @@ static int igetline(IFILE *f, char *buf, int max)
 	{
 		if (b >= bmax)
 		{
-			fprintf(stderr, "file %s, line %d too long\n", f->fname, f->lineno);
+			fprintf(stderr, "file %s, line %ld too long\n", f->fname, f->lineno);
 			goto ignore;
 		}
 		*b++ = c;
@@ -812,7 +812,7 @@ static struct font *read_txt(const char *fname)
     fprintf(stderr, "\"%s\" expected\n", a); \
   	goto fail; \
   }
-  
+
 	EXPECT("GDOSFONT");
 	EXPECT("version 1.0");
 
@@ -835,7 +835,7 @@ static struct font *read_txt(const char *fname)
     	fprintf(stderr, "\"%s\" expected\n", "name");
 		goto fail;
 	}
-	
+
 	EXPECTNUM(first_ade);
 	EXPECTNUM(last_ade);
 	EXPECTNUM(top);
@@ -906,13 +906,13 @@ static struct font *read_txt(const char *fname)
 			goto fail;
 		}
 		if (ch < lastch)
-			fprintf(stderr, "%s:%d: warning: char 0x%x less previous char 0x%x\n", fname, f->lineno, ch, lastch);
+			fprintf(stderr, "%s:%ld: warning: char 0x%x less previous char 0x%x\n", fname, f->lineno, ch, lastch);
 		lastch = ch;
 
 		ch -= first;
 		if (p->off_table[ch] != F_NO_CHARL)
 		{
-			fprintf(stderr, "%s:%d: character number 0x%x was already defined\n", fname, f->lineno, lastch);
+			fprintf(stderr, "%s:%ld: character number 0x%x was already defined\n", fname, f->lineno, lastch);
 			goto fail;
 		}
 		b = bms + ch * bmsize;
@@ -929,7 +929,7 @@ static struct font *read_txt(const char *fname)
 			{
 				if (w >= p->max_cell_width)
 				{
-					fprintf(stderr, "bitmap line to long at line %d.", f->lineno);
+					fprintf(stderr, "bitmap line to long at line %ld.", f->lineno);
 					goto fail;
 				} else if (*c == 'X')
 				{
@@ -1023,7 +1023,7 @@ static struct font *read_txt(const char *fname)
 
 	return p;
   fail:
-	fprintf(stderr, "fatal error file %s line %d\n", f->fname, f->lineno - 1);
+	fprintf(stderr, "fatal error file %s line %ld\n", f->fname, f->lineno - 1);
 	ifclose(f);
 	exit(EXIT_FAILURE);
 	return NULL;
@@ -1041,7 +1041,7 @@ static struct font *read_fnt(const char *fname)
 	long off_dat_table;
 	int bigendian = 0;
 	int bmnum;
-	
+
 	p = malloc(sizeof(struct font));
 	if (p == NULL)
 		fatal("memory");
@@ -1121,7 +1121,7 @@ static struct font *read_fnt(const char *fname)
 	{
 		int i;
 		char buf[2];
-		
+
 		for (i = 0; i <= bmnum; i++)
 		{
 			count = 2;
@@ -1890,7 +1890,7 @@ int main(int argc, char **argv)
 	const char *to = NULL;
 	int c;
 	
-	while ((c = getopt_long_only(argc, argv, "o:as:AOhV", long_options, NULL)) != EOF)
+	while ((c = getopt_long_only(argc, argv, "o:ag:s:AOhV", long_options, NULL)) != EOF)
 	{
 		const char *arg = optarg;
 		switch ((enum opt) c)
