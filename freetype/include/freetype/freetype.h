@@ -3661,7 +3661,7 @@ FT_EXPORT(FT_Error) FT_Face_Properties(FT_Face face, FT_UInt num_properties, FT_
 /* <Return>                                                              */
 /*    The glyph index.  0~means `undefined character code'.              */
 /*                                                                       */
-FT_EXPORT(FT_UInt) FT_Get_Name_Index(FT_Face face, FT_String * glyph_name);
+FT_EXPORT(FT_UInt) FT_Get_Name_Index(FT_Face face, const FT_String *glyph_name);
 
 
 /*************************************************************************

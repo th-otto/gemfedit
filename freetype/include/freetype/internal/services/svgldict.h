@@ -32,7 +32,7 @@ FT_BEGIN_HEADER
 #define FT_SERVICE_ID_GLYPH_DICT  "glyph-dict"
 typedef FT_Error (*FT_GlyphDict_GetNameFunc) (FT_Face face, FT_UInt32 glyph_index, FT_Pointer buffer, FT_UInt buffer_max);
 
-typedef FT_UInt(*FT_GlyphDict_NameIndexFunc) (FT_Face face, FT_String * glyph_name);
+typedef FT_UInt(*FT_GlyphDict_NameIndexFunc) (FT_Face face, const FT_String *glyph_name);
 
 
 FT_DEFINE_SERVICE(GlyphDict)

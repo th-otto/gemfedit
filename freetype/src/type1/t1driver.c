@@ -63,7 +63,7 @@ static FT_Error t1_get_glyph_name(FT_Face face_, FT_UInt32 glyph_index, FT_Point
 }
 
 
-static FT_UInt t1_get_name_index(FT_Face face_, FT_String * glyph_name)
+static FT_UInt t1_get_name_index(FT_Face face_, const FT_String *glyph_name)
 {
 	T1_Face face = (T1_Face) face_;
 	FT_Int i;

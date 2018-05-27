@@ -322,7 +322,7 @@ static FT_Error cff_get_glyph_name(FT_Face face_, FT_UInt32 glyph_index, FT_Poin
 }
 
 
-static FT_UInt cff_get_name_index(FT_Face face_, FT_String *glyph_name)
+static FT_UInt cff_get_name_index(FT_Face face_, const FT_String *glyph_name)
 {
 	CFF_Face face = (CFF_Face) face_;
 	CFF_Font cff;
