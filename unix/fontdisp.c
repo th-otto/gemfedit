@@ -772,12 +772,23 @@ static void draw_window(HDC hdc, RECT *rc)
 		for (x = 0; x < 16; x++)
 		{
 			int c = y * 16 + x;
+			int x0 = x * (cw * scale + scaled_margin) + scaled_margin;
+			int y0 = y * (ch * scale + scaled_margin) + scaled_margin;
 			if (c < sf->first_char || c > sf->last_char)
-				c = sf->default_char;
+			{
+				HGDIOBJ pen = CreatePen(PS_SOLID, 1, RGB(255, 0, 0));
+				pen = SelectObject(hdc, pen);
+				MoveToEx(hdc, x0, y0, NULL);
+				LineTo(hdc, x0 + cw * scale, y0 + ch * scale);
+				MoveToEx(hdc, x0, y0 + ch * scale, NULL);
+				LineTo(hdc, x0 + cw * scale, y0);
+				DeleteObject(SelectObject(hdc, pen));
+				continue;
+			}
 			{
 				c -= sf->first_char;
 				if (scaled_pixmaps[c])
-					BitBlt(hdc, x * (cw * scale + scaled_margin) + scaled_margin, y * (ch * scale + scaled_margin) + scaled_margin, cw * scale, ch * scale, scaled_pixmaps[c], 0, 0, SRCCOPY);
+					BitBlt(hdc, x0, y0, cw * scale, ch * scale, scaled_pixmaps[c], 0, 0, SRCCOPY);
 			}
 		}
 	}
@@ -1035,12 +1046,21 @@ static void draw_window(void)
 		for (x = 0; x < 16; x++)
 		{
 			int c = y * 16 + x;
+			int x0 = x * (cw * scale + scaled_margin) + scaled_margin;
+			int y0 = y * (ch * scale + scaled_margin) + scaled_margin;
 			if (c < sf->first_char || c > sf->last_char)
+			{
 				c = sf->default_char;
+				XSetForeground(x_display, gc, 0xff0000);
+				XDrawLine(x_display, win, gc, x0, y0, x0 + cw * scale, y0 + ch * scale);
+				XDrawLine(x_display, win, gc, x0, y0 + ch * scale, x0 + cw * scale, y0);
+				XSetForeground(x_display, gc, BlackPixel(x_display, screen));
+				continue;
+			}
 			{
 				c -= sf->first_char;
 				if (scaled_pixmaps[c])
-					XCopyArea(x_display, scaled_pixmaps[c], win, gc, 0, 0, cw * scale, ch * scale, x * (cw * scale + scaled_margin) + scaled_margin, y * (ch * scale + scaled_margin) + scaled_margin);
+					XCopyArea(x_display, scaled_pixmaps[c], win, gc, 0, 0, cw * scale, ch * scale, x0, y0);
 			}
 		}
 	}
