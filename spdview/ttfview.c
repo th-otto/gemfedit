@@ -30,12 +30,12 @@ typedef struct bbox_tag {
 } bbox_t;
 
 typedef struct _glyphinfo_t {
-	FT_Short ascent;
-	FT_Short descent;
-	FT_Short lbearing;
-	FT_Short rbearing;
-	FT_UShort width;
-	FT_UShort height;
+	FT_Int ascent;
+	FT_Int descent;
+	FT_Int lbearing;
+	FT_Int rbearing;
+	FT_UInt width;
+	FT_UInt height;
 	FT_Int advance;
 } glyphinfo_t;
 
@@ -79,7 +79,7 @@ static int output_mode;
 #define MODE_OUTLINE 1
 
 static FT_Int32 load_flags = FT_LOAD_DEFAULT;
-static FT_Render_Mode render_mode = FT_RENDER_MODE_LCD;
+static FT_Render_Mode render_mode = FT_RENDER_MODE_MONO;
 
 /*****************************************************************************/
 /* ------------------------------------------------------------------------- */
@@ -293,7 +293,6 @@ static gboolean ft_make_char1(charinfo *c)
 		g_string_append(errorout, "invalid glyph format returned!\n");
 		return FALSE;
 	}
-	c->bbox.advance = (slot->advance.x >> 6);
 
 	bitmapglyph = (FT_BitmapGlyph) glyf;
 	source = &bitmapglyph->bitmap;
@@ -313,7 +312,8 @@ static gboolean ft_make_char1(charinfo *c)
 	{
 		for (j = 0; j < source->width; j++)
 		{
-			int xpos, ypos, ind;
+			FT_UInt xpos, ypos;
+			size_t ind;
 			uint8_t *bits;
 			uint8_t b;
 			
@@ -326,13 +326,20 @@ static gboolean ft_make_char1(charinfo *c)
 
 			if (b & (1 << (7 - (j % 8))))
 			{
-				xpos = j + slot->bitmap_left;
+				xpos = j - font_bb.lbearing + slot->bitmap_left;
 				ypos = font_bb.ascent + i - slot->bitmap_top;
 	
 				ind = ypos * bytesPerRow;
 				ind += xpos;
 
-				char1.buffer[ind] = 255;
+				if (xpos >= font_bb.width || ypos >= font_bb.height)
+				{
+					if (debug)
+						g_string_append_printf(errorout, "char %x: position %dx%d outside bitmap %ux%u\n", c->char_id, xpos, ypos, font_bb.width, font_bb.height);
+				} else
+				{
+					char1.buffer[ind] = 255;
+				}
 			}
 		}
 	}
@@ -372,7 +379,6 @@ static gboolean ft_make_char8(charinfo *c)
 		g_string_append(errorout, "invalid glyph format returned!\n");
 		return FALSE;
 	}
-	c->bbox.advance = (slot->advance.x >> 6) / BPP8_MUL;
 
 	bitmapglyph = (FT_BitmapGlyph) glyf;
 	source = &bitmapglyph->bitmap;
@@ -388,22 +394,23 @@ static gboolean ft_make_char8(charinfo *c)
 	char8.palette_mode = 0;
 	char8.palette = 0;
 	
-	for (i = 0; i < source->rows / BPP8_MUL; i++)
+	for (i = 0; i < source->rows; i += BPP8_MUL)
 	{
-		for (j = 0; j < source->width / BPP8_MUL; j++)
+		for (j = 0; j < source->width; j += BPP8_MUL)
 		{
-			int xpos, ypos, ind;
+			FT_UInt xpos, ypos;
+			size_t ind;
 
 			coverage = 0;
 
-			for (i_idx = 0; i_idx < BPP8_MUL; i_idx++)
+			for (i_idx = 0; i_idx < BPP8_MUL && (i + i_idx) < source->rows; i_idx++)
 			{
-				for (j_idx = 0; j_idx < BPP8_MUL; j_idx++)
+				for (j_idx = 0; j_idx < BPP8_MUL && (j + j_idx) < source->width; j_idx++)
 				{
 					uint8_t *bits = source->buffer;
-					uint8_t b = bits[(i * BPP8_MUL + i_idx) * source->pitch + ((j * BPP8_MUL + j_idx) / 8)];
+					uint8_t b = bits[(i + i_idx) * source->pitch + ((j + j_idx) / 8)];
 
-					if (b & (1 << (7 - ((j * BPP8_MUL + j_idx) % 8))))
+					if (b & (1 << (7 - ((j + j_idx) % 8))))
 					{
 						coverage++;
 					}
@@ -414,12 +421,19 @@ static gboolean ft_make_char8(charinfo *c)
 			 * Output character to correct position in bitmap
 			 */
 
-			xpos = j + (slot->bitmap_left / BPP8_MUL);
-			ypos = (font_bb.ascent / BPP8_MUL) + i - (slot->bitmap_top / BPP8_MUL);
+			xpos = (j / BPP8_MUL) - font_bb.lbearing + (slot->bitmap_left / BPP8_MUL);
+			ypos = font_bb.ascent + (i / BPP8_MUL) - (slot->bitmap_top / BPP8_MUL);
 
 			ind = ypos * bytesPerRow;
 			ind += xpos;
-			char8.buffer[ind] = (255 * coverage) / 256;	/* need to be 0..255 range */
+			if (xpos >= font_bb.width || ypos >= font_bb.height)
+			{
+				if (debug)
+					g_string_append_printf(errorout, "char %x: position %dx%d outside bitmap %ux%u\n", c->char_id, xpos, ypos, font_bb.width, font_bb.height);
+			} else
+			{
+				char8.buffer[ind] = (255 * coverage) / 256;	/* need to be 0..255 range */
+			}
 		}
 	}
 	
@@ -485,7 +499,7 @@ static gboolean gen_ttf_font(GString *body)
 		return FALSE;
 	} 
 
-	infos = g_new(charinfo, num_ids);
+	infos = g_new0(charinfo, num_ids);
 	if (infos == NULL)
 	{
 		g_string_append_printf(errorout, "%s\n", strerror(errno));
@@ -509,6 +523,7 @@ static gboolean gen_ttf_font(GString *body)
 		uint16_t num_glyphs;
 		glyphinfo_t max_bb;
 		FT_Short average_width;
+		FT_Int max_lbearing;
 		
 		total_width = 0;
 		num_glyphs = 0;
@@ -516,6 +531,8 @@ static gboolean gen_ttf_font(GString *body)
 		max_bb.height = 0;
 		max_bb.ascent = 0;
 		max_bb.descent = 0;
+		max_bb.lbearing = 0;
+		max_lbearing = 0;
 		
 		for (char_id = 0; char_id < num_ids; char_id++)
 		{
@@ -536,28 +553,34 @@ static gboolean gen_ttf_font(GString *body)
 					c->bbox.ascent = 0;
 					c->bbox.width = 0;
 					c->bbox.height = 0;
+					c->bbox.lbearing = 0;
+					c->bbox.rbearing = 0;
+					c->bbox.advance = 0;
 					if (FT_Load_Glyph(face, c->char_index, load_flags | FT_LOAD_RENDER | FT_LOAD_TARGET_MONO) == FT_Err_Ok)
 					{
 						FT_GlyphSlot slot;
-						FT_Int r;
 						
 						slot = face->glyph;
-						r = slot->bitmap.rows - slot->bitmap_top;
-						if (r > 0)
-							c->bbox.descent = r;
-						r = slot->bitmap.rows;
-						c->bbox.ascent = MAX(0, MAX(slot->bitmap_top, r) - c->bbox.descent);
+						c->bbox.descent = slot->bitmap.rows - slot->bitmap_top;
+						c->bbox.ascent = slot->bitmap.rows - c->bbox.descent;
 						c->bbox.width = slot->bitmap.width;
 						c->bbox.height = slot->bitmap.rows;
+						c->bbox.lbearing = slot->bitmap_left;
+						c->bbox.advance = slot->advance.x;
 						
-						if (c->bbox.descent > max_bb.ascent)
-							max_bb.ascent = c->bbox.descent;
-				
 						if (c->bbox.ascent > max_bb.ascent)
 							max_bb.ascent = c->bbox.ascent;
 				
+						if (c->bbox.descent > max_bb.descent)
+							max_bb.descent = c->bbox.descent;
+				
 						if (c->bbox.width > max_bb.width)
 							max_bb.width = c->bbox.width;
+
+						if (c->bbox.lbearing < max_bb.lbearing)
+							max_bb.lbearing = c->bbox.lbearing;
+						if (c->bbox.lbearing > max_lbearing)
+							max_lbearing = c->bbox.lbearing;
 
 						total_width += c->bbox.width;
 						num_glyphs++;
@@ -565,19 +588,27 @@ static gboolean gen_ttf_font(GString *body)
 				}
 			}
 		}
+
+		max_bb.width = (max_bb.width - max_bb.lbearing + max_lbearing + bpp_mul - 1) / bpp_mul;
+		max_bb.ascent = (max_bb.ascent + bpp_mul - 1) / bpp_mul;
+		max_bb.descent = (max_bb.descent + bpp_mul - 1) / bpp_mul;
+		max_bb.height = max_bb.ascent + max_bb.descent + 1;
+		max_bb.lbearing = -((-max_bb.lbearing + bpp_mul - 1) / bpp_mul);
+		
 		if (num_glyphs == 0)
 			average_width = max_bb.width;
 		else
-			average_width = (FT_Short)(total_width / num_glyphs);
+			average_width = (((total_width + bpp_mul - 1) / bpp_mul) / num_glyphs);
 		if (debug)
 		{
-			g_string_append_printf(errorout, "max height %d max width %d average width %d\n", max_bb.height, max_bb.width, average_width);
+			g_string_append_printf(errorout, "max height %d max width %d average width %d, ascent %d, descent %d, lbearing %d\n",
+				max_bb.height, max_bb.width, average_width,
+				max_bb.ascent,
+				max_bb.descent,
+				max_bb.lbearing);
 		}
 		
 		font_bb = max_bb;
-
-		font_bb.width = (font_bb.width + bpp_mul - 1) / bpp_mul;
-		font_bb.height = (font_bb.ascent + font_bb.ascent + bpp_mul - 1) / bpp_mul;
 	}
 	
 	/*
@@ -677,10 +708,15 @@ static gboolean gen_ttf_font(GString *body)
 				char *src;
 				
 				unicode = char_id;
-				if (debug)
+				/* if (debug) */
 				{
-					debuginfo = g_strdup_printf("Width: %u Height %u&#10;Ascent: %d Descent: %d lb: %d rb: %d&#10;",
-						c->bbox.width, c->bbox.height, c->bbox.ascent, c->bbox.descent, c->bbox.lbearing, c->bbox.rbearing);
+					debuginfo = g_strdup_printf("Width: %.3f Height %.3f&#10;Ascent: %.3f Descent: %.3f&#10;lb: %.3f adv: %.3f&#10;",
+						(double)c->bbox.width / bpp_mul,
+						(double)c->bbox.height / bpp_mul,
+						(double)c->bbox.ascent / bpp_mul,
+						(double)c->bbox.descent / bpp_mul,
+						(double)c->bbox.lbearing / bpp_mul,
+						(double)c->bbox.advance / (1 << 6) / bpp_mul);
 				}
 				if (output_mode == MODE_OUTLINE)
 					src = g_strdup_printf("<svg width=\"%d\" height=\"%d\"><use xlink:href=\"%s#chr%04lx\" style=\"text-align: left; vertical-align: top;\"></use></svg>",
@@ -1112,3 +1148,14 @@ int main(void)
 
 	return retval;
 }
+
+/*
+export SERVER_NAME=127.0.0.2
+export HTTP_REFERER=http://127.0.0.2/spdview/
+export SCRIPT_FILENAME=/srv/www/htdocs/spdview/ttfview.cgi
+export SCRIPT_NAME=/spdview/ttfview.cgi
+export REQUEST_METHOD=GET
+export DOCUMENT_ROOT=/srv/www/htdocs
+export QUERY_STRING='url=/spdview/ttffonts/Cantarell-Bold.otf&quality=1&points=120&resolution=95&debug=1'
+*/
+
