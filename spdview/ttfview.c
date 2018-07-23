@@ -21,6 +21,7 @@
 
 char const gl_program_name[] = "ttfview.cgi";
 const char *cgi_scriptname = "ttfview.cgi";
+char const html_nav_load_href[] = "ttfview.php";
 
 typedef struct bbox_tag {
 	int32_t   xmin;
@@ -839,6 +840,9 @@ int main(void)
 	
 	body = g_string_new(NULL);
 	cgiInit(body);
+
+	if (cgiScriptFilename == NULL || cgiRemoteAddr == NULL)
+		return 1;
 
 	{
 		char *dir = spd_path_get_dirname(cgiScriptFilename);

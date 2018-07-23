@@ -25,7 +25,6 @@ char const html_nav_img_style[] = "spdview_nav_img";
 
 char const html_nav_info_png[] = "images/iinfo.png";
 char const html_nav_load_png[] = "images/iload.png";
-char const html_nav_load_href[] = "index.php";
 char const html_nav_dimensions[] = " width=\"32\" height=\"21\"";
 
 gboolean hidemenu;

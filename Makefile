@@ -9,6 +9,9 @@ all clean::
 
 dist::
 	$(MAKE) clean
+	$(MAKE) -C freetype clean
+	$(MAKE) -C freetype/ft2demos clean
+	$(MAKE) -C freetype/ft2demos/src/ftinspect clean
 	: $(MAKE) -C tos
 	$(MAKE) -C win32
 	$(MAKE) -C unix

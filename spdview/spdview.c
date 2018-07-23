@@ -15,6 +15,7 @@
 
 char const gl_program_name[] = "spdview.cgi";
 const char *cgi_scriptname = "spdview.cgi";
+char const html_nav_load_href[] = "index.php";
 
 #define _(x) x
 
@@ -1090,6 +1091,9 @@ int main(void)
 	
 	body = g_string_new(NULL);
 	cgiInit(body);
+
+	if (cgiScriptFilename == NULL || cgiRemoteAddr == NULL)
+		return 1;
 
 	{
 		char *dir = spd_path_get_dirname(cgiScriptFilename);
