@@ -66,7 +66,7 @@ static void chomp(char *dst, const char *src, size_t maxlen)
 {
 	size_t len;
 	
-	strncpy(dst, src, maxlen);
+	strncpy(dst, src, maxlen - 1);
 	dst[maxlen - 1] = '\0';
 	len = strlen(dst);
 	while (len > 0 && dst[len - 1] == ' ')
