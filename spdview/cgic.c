@@ -9,16 +9,6 @@
 #include <time.h>
 #include "cgic.h"
 
-/* cgicTempDir is the only setting you are likely to need
-	to change in this file. */
-
-/* Used only in Unix environments, in conjunction with mkstemp(). 
-	Elsewhere (Windows), temporary files go where the tmpnam() 
-	function suggests. If this behavior does not work for you, 
-	modify the getTempFileName() function to suit your needs. */
-
-#define cgicTempDir "/tmp"
-
 #define cgiStrEq(a, b) (strcmp((a), (b)) == 0)
 
 const char *cgiServerSoftware;
@@ -481,7 +471,7 @@ static void decomposeValue(char *value, char *mvalue, int mvalueSpace, const cha
 		/* Skip the ; between parameters */
 		value++;
 		/* Now skip leading whitespace */
-		while ((*value) && (g_ascii_isspace(*value)))
+		while (*value && g_ascii_isspace(*value))
 		{
 			value++;
 		}
@@ -1065,7 +1055,7 @@ const char *cgiFormFileData(const char *name, int *bodyLength)
 
 /* ------------------------------------------------------------------------- */
 
-char *cgiFormFileContentType(const char *name)
+const char *cgiFormFileContentType(const char *name)
 {
 	cgiFormEntry *e;
 
@@ -1073,8 +1063,8 @@ char *cgiFormFileContentType(const char *name)
 	if (e == NULL)
 		return NULL;
 	if (e->contentType == NULL)
-		return g_strdup("");
-	return g_strdup(e->contentType);
+		return "";
+	return e->contentType;
 }
 
 /* ------------------------------------------------------------------------- */
@@ -1083,22 +1073,49 @@ cgiFormResultType cgiFormFileSize(const char *name, int *sizeP)
 {
 	cgiFormEntry *e;
 
+	if (sizeP)
+		*sizeP = 0;
 	e = cgiFormEntryFindFirst(name);
 	if (!e)
-	{
-		if (sizeP)
-		{
-			*sizeP = 0;
-		}
 		return cgiFormNotFound;
-	} else
+	if (sizeP)
+		*sizeP = e->valueLength;
+	return cgiFormSuccess;
+}
+
+/* ------------------------------------------------------------------------- */
+
+cgiFormResultType cgiFormFileFind(int first, const char *name, char **filename, const char **contentType, const char **value, int *valueLength)
+{
+	cgiFormEntry *e;
+
+	if (filename)
+		*filename = NULL;
+	if (contentType)
+		*contentType = NULL;
+	if (value)
+		*value = NULL;
+	if (valueLength)
+		*valueLength = 0;
+	if (first)
 	{
-		if (sizeP)
-		{
-			*sizeP = e->valueLength;
-		}
-		return cgiFormSuccess;
+		cgiFindTarget = name;
+		cgiFindPos = cgiFormEntryFirst;
 	}
+	e = cgiFormEntryFindNext();
+	if (e == NULL)
+		return cgiFormNotFound;
+
+	if (filename != NULL)
+		*filename = e->fileName == NULL ? g_strdup("") : g_strdup(e->fileName);
+	if (contentType != NULL)
+		*contentType = e->contentType == NULL ? "" : e->contentType;
+	if (valueLength != NULL)
+		*valueLength = e->valueLength;
+	if (value != NULL)
+		*value = e->value;
+
+	return cgiFormSuccess;
 }
 
 /* ------------------------------------------------------------------------- */
@@ -1525,6 +1542,8 @@ void cgiHeaderCookieSetString(FILE *out, const char *name, const char *value, in
 	time_t then;
 	struct tm *gt;
 
+	if (name == NULL || *name == '\0')
+		return;
 	time(&now);
 	then = now + secondsToLive;
 	gt = gmtime(&then);
@@ -1532,7 +1551,7 @@ void cgiHeaderCookieSetString(FILE *out, const char *name, const char *value, in
 			"Set-Cookie: %s=%s; domain=%s; expires=%s, %02d-%s-%04d %02d:%02d:%02d GMT; path=%s\015\012",
 			name, value ? value : "", domain,
 			days[gt->tm_wday],
-			gt->tm_mday, months[gt->tm_mon], gt->tm_year + 1900, gt->tm_hour, gt->tm_min, gt->tm_sec, empty(path) ? "/" : path);
+			gt->tm_mday, months[gt->tm_mon], gt->tm_year + 1900, gt->tm_hour, gt->tm_min, gt->tm_sec, path == NULL || *path == '\0' ? "/" : path);
 }
 
 /* ------------------------------------------------------------------------- */
@@ -1834,7 +1853,7 @@ int cgiInit(GString *out)
 	cgiGetenv(&cgiQueryString, "QUERY_STRING");
 	cgiGetenv(&cgiRemoteHost, "REMOTE_HOST");
 	cgiGetenv(&cgiRemoteAddr, "REMOTE_ADDR");
-	if (empty(cgiRemoteHost))
+	if (cgiRemoteHost == NULL || *cgiRemoteHost == '\0')
 		cgiRemoteHost = cgiRemoteAddr;
 	cgiGetenv(&cgiAuthType, "AUTH_TYPE");
 	cgiGetenv(&cgiRemoteUser, "REMOTE_USER");
@@ -1933,6 +1952,20 @@ int cgiInit(GString *out)
 			return FALSE;
 		}
 	}
+#if 0
+	{
+		cgiFormEntry *pos;
+		
+		for (pos = cgiFormEntryFirst; pos; pos = pos->next)
+		{
+			fprintf(stderr, "attr: %s\n", pos->attr);
+			fprintf(stderr, "value: %s\n", pos->value);
+			fprintf(stderr, "valuelength: %d\n", pos->valueLength);
+			fprintf(stderr, "filename: %s\n", pos->fileName);
+			fprintf(stderr, "type: %s\n", pos->contentType);
+		}
+	}
+#endif
 	return TRUE;
 }
 

@@ -113,11 +113,13 @@ char *cgiFormFileName(const char *name, int *bodyLength);
 /* The content type of the uploaded file, as reported by the browser.
 	It should NOT be assumed that browsers will never falsify
 	such information. */
-char *cgiFormFileContentType(const char *name);
+const char *cgiFormFileContentType(const char *name);
 
 cgiFormResultType cgiFormFileSize(const char *name, int *sizeP);
 
 const char *cgiFormFileData(const char *name, int *bodyLength);
+
+cgiFormResultType cgiFormFileFind(int first, const char *name, char **filename, const char **contentType, const char **value, int *valueLength);
 
 cgiFormResultType cgiCookieString(const char *name, char *result, int max);
 
