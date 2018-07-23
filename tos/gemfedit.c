@@ -2835,7 +2835,7 @@ static void EnableObjState(OBJECT *tree, _WORD idx, _WORD state, _BOOL enable)
 
 /* -------------------------------------------------------------------------- */
 
-static _WORD do_dialog(_WORD num)
+static _WORD do_dialog(_WORD num, _WORD screenx, _WORD screeny)
 {
 	OBJECT *tree = rs_tree(num);
 	GRECT gr;
@@ -2843,6 +2843,15 @@ static _WORD do_dialog(_WORD num)
 
 	wind_update(BEG_UPDATE);
 	form_center_grect(tree, &gr);
+	if (screenx != 0 && screeny != 0)
+	{
+		_WORD dx = tree[ROOT].ob_x - gr.g_x;
+		_WORD dy = tree[ROOT].ob_y - gr.g_y;
+		tree[ROOT].ob_x = screenx;
+		tree[ROOT].ob_y = screeny;
+		gr.g_x = screenx - dx;
+		gr.g_y = screeny - dy;
+	}
 	form_dial_grect(FMD_START, &gr, &gr);
 	objc_draw_grect(tree, ROOT, MAX_DEPTH, &gr);
 	ret = form_do(tree, ROOT);
@@ -2883,7 +2892,7 @@ static void font_info(void)
 	EnableObjState(tree, FONT_MONOSPACED, OS_SELECTED, (hdr->flags & FONTF_MONOSPACED) != 0);
 	EnableObjState(tree, FONT_COMPRESSED, OS_SELECTED, (hdr->flags & FONTF_COMPRESSED) != 0);
 	
-	ret = do_dialog(FONT_PARAMS);
+	ret = do_dialog(FONT_PARAMS, 0, 0);
 	
 	if (ret == FONT_OK)
 	{
@@ -2911,14 +2920,14 @@ static void do_about(void)
 	OBJECT *tree = rs_tree(ABOUT_DIALOG);
 	tree[ABOUT_VERSION].ob_spec.free_string = PACKAGE_VERSION;
 	tree[ABOUT_DATE].ob_spec.free_string = PACKAGE_DATE;
-	do_dialog(ABOUT_DIALOG);
+	do_dialog(ABOUT_DIALOG, 200, 100);
 }
 
 /* -------------------------------------------------------------------------- */
 
 static void do_help(void)
 {
-	do_dialog(HELP_DIALOG);
+	do_dialog(HELP_DIALOG, 0, 0);
 }
 
 /******************************************************************************/
