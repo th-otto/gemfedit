@@ -1011,7 +1011,7 @@ static FT_Error tt_size_init_bytecode(FT_Size ftsize, FT_Bool pedantic)
 
 		face->interpreter = (TT_Interpreter) library->debug_hooks[FT_DEBUG_HOOK_TRUETYPE];
 		if (!face->interpreter)
-			face->interpreter = (TT_Interpreter) TT_RunIns;
+			face->interpreter = TT_RunIns;
 	}
 
 	/* Fine, now run the font program! */

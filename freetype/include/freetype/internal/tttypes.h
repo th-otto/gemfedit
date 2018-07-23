@@ -954,8 +954,11 @@ typedef struct TT_BDFRec_
 typedef struct TT_FaceRec_ *TT_Face;
 
 
+/* handle to execution context */
+typedef struct TT_ExecContextRec_ *TT_ExecContext;
+
 /* a function type used for the truetype bytecode interpreter hooks */
-typedef FT_Error(*TT_Interpreter) (void *exec_context);
+typedef FT_Error(*TT_Interpreter) (TT_ExecContext exec);
 
 /* forward declaration */
 typedef struct TT_LoaderRec_ *TT_Loader;
@@ -1584,10 +1587,6 @@ typedef struct TT_GlyphZoneRec_
 
 	FT_UShort first_point;				/* offset of first (#0) point  */
 } TT_GlyphZoneRec, *TT_GlyphZone;
-
-
-/* handle to execution context */
-typedef struct TT_ExecContextRec_ *TT_ExecContext;
 
 
 /*************************************************************************/

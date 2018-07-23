@@ -199,7 +199,7 @@ typedef enum T1_FieldLocation_
 } T1_FieldLocation;
 
 
-typedef void (*T1_Field_ParseFunc) (FT_Face face, FT_Pointer parser);
+typedef FT_Error (*T1_Field_ParseFunc) (FT_Face face, FT_Pointer parser);
 
 
 /* structure type used to model object fields */
@@ -240,7 +240,7 @@ typedef struct T1_FieldRec_
 #define T1_NEW_CALLBACK_FIELD( _ident, _reader, _dict ) \
           {                                             \
             _ident, T1CODE, T1_FIELD_TYPE_CALLBACK,     \
-            (T1_Field_ParseFunc)_reader,                \
+            _reader,                                    \
             0, 0,                                       \
             0, 0,                                       \
             _dict                                       \

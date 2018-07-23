@@ -138,8 +138,10 @@ static FT_Error cid_load_keyword(CID_Face face, CID_Loader * loader, const T1_Fi
 }
 
 
-FT_CALLBACK_DEF(FT_Error) cid_parse_font_matrix(CID_Face face, CID_Parser * parser)
+FT_CALLBACK_DEF(FT_Error) cid_parse_font_matrix(FT_Face face_, void *parser_)
 {
+	CID_Face face = (CID_Face)face_;
+	CID_Parser *parser = (CID_Parser *)parser_;
 	CID_FaceDict dict;
 	FT_Face root = (FT_Face) & face->root;
 	FT_Fixed temp[6];
@@ -197,8 +199,10 @@ FT_CALLBACK_DEF(FT_Error) cid_parse_font_matrix(CID_Face face, CID_Parser * pars
 }
 
 
-FT_CALLBACK_DEF(FT_Error) parse_fd_array(CID_Face face, CID_Parser * parser)
+FT_CALLBACK_DEF(FT_Error) parse_fd_array(FT_Face face_, void *parser_)
 {
+	CID_Parser * parser = (CID_Parser *)parser_;
+	CID_Face face = (CID_Face)face_;
 	CID_FaceInfo cid = &face->cid;
 	FT_Memory memory = face->root.memory;
 	FT_Stream stream = parser->stream;
@@ -263,8 +267,10 @@ FT_CALLBACK_DEF(FT_Error) parse_fd_array(CID_Face face, CID_Parser * parser)
 /* and CID_FaceDictRec (both are public header files and can't  */
 /* changed); we simply copy the value                           */
 
-FT_CALLBACK_DEF(FT_Error) parse_expansion_factor(CID_Face face, CID_Parser * parser)
+FT_CALLBACK_DEF(FT_Error) parse_expansion_factor(FT_Face face_, void *parser_)
 {
+	CID_Face face = (CID_Face)face_;
+	CID_Parser *parser = (CID_Parser *)parser_;
 	CID_FaceDict dict;
 
 	if (parser->num_dict >= 0 && parser->num_dict < face->cid.num_dicts)
@@ -290,7 +296,7 @@ static const T1_FieldRec cid_field_records[] = {
 };
 
 
-static FT_Error cid_parse_dict(CID_Face face, CID_Loader * loader, FT_Byte * base, FT_ULong size)
+static FT_Error cid_parse_dict(CID_Face face, CID_Loader *loader, FT_Byte * base, FT_ULong size)
 {
 	CID_Parser *parser = &loader->parser;
 

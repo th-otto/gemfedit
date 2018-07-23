@@ -548,7 +548,7 @@ FT_EXPORT(FT_Error) FT_New_Library(FT_Memory memory, FT_Library * alibrary);
 /*                                                                       */
 FT_EXPORT(FT_Error) FT_Done_Library(FT_Library library);
 
-typedef void (*FT_DebugHook_Func) (void *arg);
+typedef FT_Error (*FT_DebugHook_Func) (void *arg);
 
 
 /*************************************************************************/

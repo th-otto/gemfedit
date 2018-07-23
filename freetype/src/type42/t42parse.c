@@ -34,12 +34,12 @@
 #define FT_COMPONENT  trace_t42
 
 
-static void t42_parse_font_matrix(T42_Face face, T42_Loader loader);
-static void t42_parse_encoding(T42_Face face, T42_Loader loader);
+static FT_Error t42_parse_font_matrix(FT_Face face_, void *loader_);
+static FT_Error t42_parse_encoding(FT_Face face_, void *loader_);
 
-static void t42_parse_charstrings(T42_Face face, T42_Loader loader);
+static FT_Error t42_parse_charstrings(FT_Face face_, void *loader_);
 
-static void t42_parse_sfnts(T42_Face face, T42_Loader loader);
+static FT_Error t42_parse_sfnts(FT_Face face_, void *loader_);
 
 
 /* as Type42 fonts have no Private dict,         */
@@ -212,8 +212,10 @@ static int t42_is_space(FT_Byte c)
 }
 
 
-static void t42_parse_font_matrix(T42_Face face, T42_Loader loader)
+static FT_Error t42_parse_font_matrix(FT_Face face_, void *loader_)
 {
+	T42_Face face = (T42_Face)face_;
+	T42_Loader loader = (T42_Loader)loader_;
 	T42_Parser parser = &loader->parser;
 	FT_Matrix *matrix = &face->type1.font_matrix;
 	FT_Vector *offset = &face->type1.font_offset;
@@ -226,7 +228,7 @@ static void t42_parse_font_matrix(T42_Face face, T42_Loader loader)
 	if (result < 6)
 	{
 		parser->root.error = FT_THROW(Invalid_File_Format);
-		return;
+		return parser->root.error;
 	}
 
 	temp_scale = FT_ABS(temp[3]);
@@ -235,7 +237,7 @@ static void t42_parse_font_matrix(T42_Face face, T42_Loader loader)
 	{
 		FT_ERROR(("t42_parse_font_matrix: invalid font matrix\n"));
 		parser->root.error = FT_THROW(Invalid_File_Format);
-		return;
+		return parser->root.error;
 	}
 
 	/* atypical case */
@@ -257,11 +259,15 @@ static void t42_parse_font_matrix(T42_Face face, T42_Loader loader)
 	/* note that the offsets must be expressed in integer font units */
 	offset->x = temp[4] >> 16;
 	offset->y = temp[5] >> 16;
+	
+	return FT_Err_Ok;
 }
 
 
-static void t42_parse_encoding(T42_Face face, T42_Loader loader)
+static FT_Error t42_parse_encoding(FT_Face face_, void *loader_)
 {
+	T42_Face face = (T42_Face)face_;
+	T42_Loader loader = (T42_Loader)loader_;
 	T42_Parser parser = &loader->parser;
 	FT_Byte *cur;
 	FT_Byte *limit = parser->root.limit;
@@ -274,7 +280,7 @@ static void t42_parse_encoding(T42_Face face, T42_Loader loader)
 	{
 		FT_ERROR(("t42_parse_encoding: out of bounds\n"));
 		parser->root.error = FT_THROW(Invalid_File_Format);
-		return;
+		return parser->root.error;
 	}
 
 	/* if we have a number or `[', the encoding is an array, */
@@ -305,12 +311,12 @@ static void t42_parse_encoding(T42_Face face, T42_Loader loader)
 		{
 			FT_ERROR(("t42_parse_encoding: invalid encoding array size\n"));
 			parser->root.error = FT_THROW(Invalid_File_Format);
-			return;
+			return parser->root.error;
 		}
 
 		T1_Skip_Spaces(parser);
 		if (parser->root.cursor >= limit)
-			return;
+			return parser->root.error;
 
 		/* PostScript happily allows overwriting of encoding arrays */
 		if (encode->char_index)
@@ -327,7 +333,7 @@ static void t42_parse_encoding(T42_Face face, T42_Loader loader)
 			FT_SET_ERROR(psaux->ps_table_funcs->init(char_table, count, memory)))
 		{
 			parser->root.error = error;
-			return;
+			return parser->root.error;
 		}
 
 		/* We need to `zero' out encoding_table.elements */
@@ -398,7 +404,7 @@ static void t42_parse_encoding(T42_Face face, T42_Loader loader)
 					if (cur == parser->root.cursor)
 					{
 						parser->root.error = FT_THROW(Unknown_File_Format);
-						return;
+						return parser->root.error;
 					}
 				}
 
@@ -413,15 +419,15 @@ static void t42_parse_encoding(T42_Face face, T42_Loader loader)
 					parser->root.cursor = cur;
 					T1_Skip_PS_Token(parser);
 					if (parser->root.cursor >= limit)
-						return;
+						return parser->root.error;
 					if (parser->root.error)
-						return;
+						return parser->root.error;
 
 					len = (FT_UInt) (parser->root.cursor - cur);
 
 					parser->root.error = T1_Add_Table(char_table, charcode, cur, len + 1);
 					if (parser->root.error)
-						return;
+						return parser->root.error;
 					char_table->elements[charcode][len] = '\0';
 
 					n++;
@@ -436,13 +442,13 @@ static void t42_parse_encoding(T42_Face face, T42_Loader loader)
 					/* type42 font, however), so we conclude that this font is */
 					/* NOT a type42 font.                                      */
 					parser->root.error = FT_THROW(Unknown_File_Format);
-					return;
+					return parser->root.error;
 				}
 			} else
 			{
 				T1_Skip_PS_Token(parser);
 				if (parser->root.error)
-					return;
+					return parser->root.error;
 			}
 
 			T1_Skip_Spaces(parser);
@@ -468,6 +474,7 @@ static void t42_parse_encoding(T42_Face face, T42_Loader loader)
 		else
 			parser->root.error = FT_ERR(Ignore);
 	}
+	return FT_Err_Ok;
 }
 
 
@@ -479,8 +486,10 @@ typedef enum T42_Load_Status_
 } T42_Load_Status;
 
 
-static void t42_parse_sfnts(T42_Face face, T42_Loader loader)
+static FT_Error t42_parse_sfnts(FT_Face face_, void *loader_)
 {
+	T42_Face face = (T42_Face)face_;
+	T42_Loader loader = (T42_Loader)loader_;
 	T42_Parser parser = &loader->parser;
 	FT_Memory memory = parser->root.memory;
 	FT_Byte *cur;
@@ -579,7 +588,7 @@ static void t42_parse_sfnts(T42_Face face, T42_Loader loader)
 
 			T1_Skip_PS_Token(parser);	/* `RD' */
 			if (parser->root.error)
-				return;
+				return parser->root.error;
 
 			string_buf = parser->root.cursor + 1;	/* one space after `RD' */
 
@@ -704,11 +713,14 @@ static void t42_parse_sfnts(T42_Face face, T42_Loader loader)
 	{
 		FT_FREE(string_buf);
 	}
+	return parser->root.error;
 }
 
 
-static void t42_parse_charstrings(T42_Face face, T42_Loader loader)
+static FT_Error t42_parse_charstrings(FT_Face face_, void *loader_)
 {
+	T42_Face face = (T42_Face)face_;
+	T42_Loader loader = (T42_Loader)loader_;
 	T42_Parser parser = &loader->parser;
 	PS_Table code_table = &loader->charstrings;
 	PS_Table name_table = &loader->glyph_names;
@@ -737,7 +749,7 @@ static void t42_parse_charstrings(T42_Face face, T42_Loader loader)
 	{
 		loader->num_glyphs = (FT_Int) T1_ToInt(parser);
 		if (parser->root.error)
-			return;
+			return parser->root.error;
 		if (loader->num_glyphs < 0)
 		{
 			FT_ERROR(("t42_parse_encoding: invalid number of glyphs\n"));
@@ -761,7 +773,7 @@ static void t42_parse_charstrings(T42_Face face, T42_Loader loader)
 
 		T1_Skip_PS_Token(parser);
 		if (parser->root.error)
-			return;
+			return parser->root.error;
 		T1_Skip_Spaces(parser);
 		cur = parser->root.cursor;
 
@@ -777,7 +789,7 @@ static void t42_parse_charstrings(T42_Face face, T42_Loader loader)
 			}
 			T1_Skip_PS_Token(parser);
 			if (parser->root.error)
-				return;
+				return parser->root.error;
 			T1_Skip_Spaces(parser);
 		}
 	} else
@@ -851,7 +863,7 @@ static void t42_parse_charstrings(T42_Face face, T42_Loader loader)
 			goto Fail;
 		}
 		if (parser->root.error)
-			return;
+			return parser->root.error;
 
 		if (*cur == '/' || *cur == '(')
 		{
@@ -969,10 +981,11 @@ static void t42_parse_charstrings(T42_Face face, T42_Loader loader)
 
 	}
 
-	return;
+	return FT_Err_Ok;
 
   Fail:
 	parser->root.error = error;
+	return error;
 }
 
 

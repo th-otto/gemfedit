@@ -570,8 +570,10 @@ FT_LOCAL_DEF(void) T1_Done_Blend(T1_Face face)
 }
 
 
-static void parse_blend_axis_types(T1_Face face, T1_Loader loader)
+static FT_Error parse_blend_axis_types(FT_Face face_, void *loader_)
 {
+	T1_Face face = (T1_Face)face_;
+	T1_Loader loader = (T1_Loader)loader_;
 	T1_TokenRec axis_tokens[T1_MAX_MM_AXIS];
 	FT_Int n, num_axis;
 	FT_Error error = FT_Err_Ok;
@@ -635,11 +637,14 @@ static void parse_blend_axis_types(T1_Face face, T1_Loader loader)
 
   Exit:
 	loader->parser.root.error = error;
+	return error;
 }
 
 
-static void parse_blend_design_positions(T1_Face face, T1_Loader loader)
+static FT_Error parse_blend_design_positions(FT_Face face_, void *loader_)
 {
+	T1_Face face = (T1_Face)face_;
+	T1_Loader loader = (T1_Loader)loader_;
 	T1_TokenRec design_tokens[T1_MAX_MM_DESIGNS];
 	FT_Int num_designs;
 	FT_Int num_axis;
@@ -720,11 +725,14 @@ static void parse_blend_design_positions(T1_Face face, T1_Loader loader)
 
   Exit:
 	loader->parser.root.error = error;
+	return error;
 }
 
 
-static void parse_blend_design_map(T1_Face face, T1_Loader loader)
+static FT_Error parse_blend_design_map(FT_Face face_, void *loader_)
 {
+	T1_Face face = (T1_Face)face_;
+	T1_Loader loader = (T1_Loader)loader_;
 	FT_Error error = FT_Err_Ok;
 	T1_Parser parser = &loader->parser;
 	PS_Blend blend;
@@ -809,11 +817,14 @@ static void parse_blend_design_map(T1_Face face, T1_Loader loader)
 
   Exit:
 	parser->root.error = error;
+	return error;
 }
 
 
-static void parse_weight_vector(T1_Face face, T1_Loader loader)
+static FT_Error parse_weight_vector(FT_Face face_, void *loader_)
 {
+	T1_Face face = (T1_Face)face_;
+	T1_Loader loader = (T1_Loader)loader_;
 	T1_TokenRec design_tokens[T1_MAX_MM_DESIGNS];
 	FT_Int num_designs;
 	FT_Error error = FT_Err_Ok;
@@ -869,15 +880,18 @@ static void parse_weight_vector(T1_Face face, T1_Loader loader)
 
   Exit:
 	parser->root.error = error;
+	return error;
 }
 
 
 /* e.g., /BuildCharArray [0 0 0 0 0 0 0 0] def           */
 /* we're only interested in the number of array elements */
-static void parse_buildchar(T1_Face face, T1_Loader loader)
+static FT_Error parse_buildchar(FT_Face face_, void *loader_)
 {
+	T1_Face face = (T1_Face)face_;
+	T1_Loader loader = (T1_Loader)loader_;
 	face->len_buildchar = (FT_UInt) T1_ToFixedArray(&loader->parser, 0, NULL, 0);
-	return;
+	return FT_Err_Ok;
 }
 
 
@@ -1005,11 +1019,13 @@ static FT_Error t1_load_keyword(T1_Face face, T1_Loader loader, const T1_Field f
 }
 
 
-static void parse_private(T1_Face face, T1_Loader loader)
+static FT_Error parse_private(FT_Face face_, void *loader_)
 {
-	FT_UNUSED(face);
+	T1_Loader loader = (T1_Loader)loader_;
+	FT_UNUSED(face_);
 
 	loader->keywords_encountered |= T1_PRIVATE;
+	return FT_Err_Ok;
 }
 
 
@@ -1061,8 +1077,10 @@ static int read_binary_data(T1_Parser parser, FT_ULong * size, FT_Byte ** base, 
 /* We now define the routines to handle the `/Encoding', `/Subrs', */
 /* and `/CharStrings' dictionaries.                                */
 
-static void t1_parse_font_matrix(T1_Face face, T1_Loader loader)
+static FT_Error t1_parse_font_matrix(FT_Face face_, void *loader_)
 {
+	T1_Face face = (T1_Face)face_;
+	T1_Loader loader = (T1_Loader)loader_;
 	T1_Parser parser = &loader->parser;
 	FT_Matrix *matrix = &face->type1.font_matrix;
 	FT_Vector *offset = &face->type1.font_offset;
@@ -1077,7 +1095,7 @@ static void t1_parse_font_matrix(T1_Face face, T1_Loader loader)
 	if (result < 6)
 	{
 		parser->root.error = FT_THROW(Invalid_File_Format);
-		return;
+		return parser->root.error;
 	}
 
 	temp_scale = FT_ABS(temp[3]);
@@ -1086,7 +1104,7 @@ static void t1_parse_font_matrix(T1_Face face, T1_Loader loader)
 	{
 		FT_ERROR(("t1_parse_font_matrix: invalid font matrix\n"));
 		parser->root.error = FT_THROW(Invalid_File_Format);
-		return;
+		return parser->root.error;
 	}
 
 	/* atypical case */
@@ -1111,11 +1129,15 @@ static void t1_parse_font_matrix(T1_Face face, T1_Loader loader)
 	/* note that the offsets must be expressed in integer font units */
 	offset->x = temp[4] >> 16;
 	offset->y = temp[5] >> 16;
+	
+	return FT_Err_Ok;
 }
 
 
-static void parse_encoding(T1_Face face, T1_Loader loader)
+static FT_Error parse_encoding(FT_Face face_, void *loader_)
 {
+	T1_Face face = (T1_Face)face_;
+	T1_Loader loader = (T1_Loader)loader_;
 	T1_Parser parser = &loader->parser;
 	FT_Byte *cur;
 	FT_Byte *limit = parser->root.limit;
@@ -1128,7 +1150,7 @@ static void parse_encoding(T1_Face face, T1_Loader loader)
 	{
 		FT_ERROR(("parse_encoding: out of bounds\n"));
 		parser->root.error = FT_THROW(Invalid_File_Format);
-		return;
+		return parser->root.error;
 	}
 
 	/* if we have a number or `[', the encoding is an array, */
@@ -1157,12 +1179,12 @@ static void parse_encoding(T1_Face face, T1_Loader loader)
 		{
 			FT_ERROR(("parse_encoding: invalid encoding array size\n"));
 			parser->root.error = FT_THROW(Invalid_File_Format);
-			return;
+			return parser->root.error;
 		}
 
 		T1_Skip_Spaces(parser);
 		if (parser->root.cursor >= limit)
-			return;
+			return parser->root.error;
 
 		/* PostScript happily allows overwriting of encoding arrays */
 		if (encode->char_index)
@@ -1179,7 +1201,7 @@ static void parse_encoding(T1_Face face, T1_Loader loader)
 			FT_SET_ERROR(psaux->ps_table_funcs->init(char_table, count, memory)))
 		{
 			parser->root.error = error;
-			return;
+			return parser->root.error;
 		}
 
 		/* We need to `zero' out encoding_table.elements */
@@ -1250,7 +1272,7 @@ static void parse_encoding(T1_Face face, T1_Loader loader)
 					if (cur == parser->root.cursor)
 					{
 						parser->root.error = FT_THROW(Unknown_File_Format);
-						return;
+						return parser->root.error;
 					}
 				}
 
@@ -1265,15 +1287,15 @@ static void parse_encoding(T1_Face face, T1_Loader loader)
 					parser->root.cursor = cur;
 					T1_Skip_PS_Token(parser);
 					if (parser->root.cursor >= limit)
-						return;
+						return parser->root.error;
 					if (parser->root.error)
-						return;
+						return parser->root.error;
 
 					len = (FT_UInt) (parser->root.cursor - cur);
 
 					parser->root.error = T1_Add_Table(char_table, charcode, cur, len + 1);
 					if (parser->root.error)
-						return;
+						return parser->root.error;
 					char_table->elements[charcode][len] = '\0';
 
 					n++;
@@ -1288,13 +1310,13 @@ static void parse_encoding(T1_Face face, T1_Loader loader)
 					/* font, however), so we conclude that this font is NOT a  */
 					/* type1 font.                                             */
 					parser->root.error = FT_THROW(Unknown_File_Format);
-					return;
+					return parser->root.error;
 				}
 			} else
 			{
 				T1_Skip_PS_Token(parser);
 				if (parser->root.error)
-					return;
+					return parser->root.error;
 			}
 
 			T1_Skip_Spaces(parser);
@@ -1320,11 +1342,15 @@ static void parse_encoding(T1_Face face, T1_Loader loader)
 		else
 			parser->root.error = FT_ERR(Ignore);
 	}
+	
+	return FT_Err_Ok;
 }
 
 
-static void parse_subrs(T1_Face face, T1_Loader loader)
+static FT_Error parse_subrs(FT_Face face_, void *loader_)
 {
+	T1_Face face = (T1_Face)face_;
+	T1_Loader loader = (T1_Loader)loader_;
 	T1_Parser parser = &loader->parser;
 	PS_Table table = &loader->subrs;
 	FT_Memory memory = parser->root.memory;
@@ -1343,14 +1369,14 @@ static void parse_subrs(T1_Face face, T1_Loader loader)
 		T1_Skip_Spaces(parser);
 		if (parser->root.cursor >= parser->root.limit || *parser->root.cursor != ']')
 			parser->root.error = FT_THROW(Invalid_File_Format);
-		return;
+		return parser->root.error;
 	}
 
 	num_subrs = (FT_Int) T1_ToInt(parser);
 	if (num_subrs < 0)
 	{
 		parser->root.error = FT_THROW(Invalid_File_Format);
-		return;
+		return parser->root.error;
 	}
 
 	/* we certainly need more than 8 bytes per subroutine */
@@ -1389,7 +1415,7 @@ static void parse_subrs(T1_Face face, T1_Loader loader)
 	/* position the parser right before the `dup' of the first subr */
 	T1_Skip_PS_Token(parser);			/* `array' */
 	if (parser->root.error)
-		return;
+		return parser->root.error;
 	T1_Skip_Spaces(parser);
 
 	/* initialize subrs array -- with synthetic fonts it is possible */
@@ -1421,7 +1447,7 @@ static void parse_subrs(T1_Face face, T1_Loader loader)
 		idx = T1_ToInt(parser);
 
 		if (!read_binary_data(parser, &size, &base, IS_INCREMENTAL))
-			return;
+			return parser->root.error;
 
 		/* The binary string is followed by one token, e.g. `NP' */
 		/* (bound to `noaccess put') or by two separate tokens:  */
@@ -1429,7 +1455,7 @@ static void parse_subrs(T1_Face face, T1_Loader loader)
 		/* before the next `dup', if any.                        */
 		T1_Skip_PS_Token(parser);		/* `NP' or `|' or `noaccess' */
 		if (parser->root.error)
-			return;
+			return parser->root.error;
 		T1_Skip_Spaces(parser);
 
 		if (parser->root.cursor + 4 < parser->root.limit && ft_strncmp((char *) parser->root.cursor, "put", 3) == 0)
@@ -1485,18 +1511,21 @@ static void parse_subrs(T1_Face face, T1_Loader loader)
 	if (!loader->num_subrs)
 		loader->num_subrs = num_subrs;
 
-	return;
+	return FT_Err_Ok;
 
   Fail:
 	parser->root.error = error;
+	return parser->root.error;
 }
 
 
 #define TABLE_EXTEND  5
 
 
-static void parse_charstrings(T1_Face face, T1_Loader loader)
+static FT_Error parse_charstrings(FT_Face face_, void *loader_)
 {
+	T1_Face face = (T1_Face)face_;
+	T1_Loader loader = (T1_Loader)loader_;
 	T1_Parser parser = &loader->parser;
 	PS_Table code_table = &loader->charstrings;
 	PS_Table name_table = &loader->glyph_names;
@@ -1530,7 +1559,7 @@ static void parse_charstrings(T1_Face face, T1_Loader loader)
 	/* some fonts like Optima-Oblique not only define the /CharStrings */
 	/* array but access it also                                        */
 	if (num_glyphs == 0 || parser->root.error)
-		return;
+		return parser->root.error;
 
 	/* initialize tables, leaving space for addition of .notdef, */
 	/* if necessary, and a few other glyphs to handle buggy      */
@@ -1603,7 +1632,7 @@ static void parse_charstrings(T1_Face face, T1_Loader loader)
 			goto Fail;
 		}
 		if (parser->root.error)
-			return;
+			return parser->root.error;
 
 		if (*cur == '/')
 		{
@@ -1619,7 +1648,7 @@ static void parse_charstrings(T1_Face face, T1_Loader loader)
 			len = (FT_UInt) (parser->root.cursor - cur);
 
 			if (!read_binary_data(parser, &size, &base, IS_INCREMENTAL))
-				return;
+				return parser->root.error;
 
 			/* for some non-standard fonts like `Optima' which provides */
 			/* different outlines depending on the resolution it is     */
@@ -1760,10 +1789,11 @@ static void parse_charstrings(T1_Face face, T1_Loader loader)
 		loader->num_glyphs += 1;
 	}
 
-	return;
+	return FT_Err_Ok;
 
   Fail:
 	parser->root.error = error;
+	return parser->root.error;
 }
 
 
