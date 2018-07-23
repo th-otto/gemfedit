@@ -10,14 +10,10 @@
 #include <freetype/ftglyph.h>
 #include <freetype/ftbitmap.h>
 #include "cgic.h"
+#include "vdimaps.h"
 #include "cgiutil.h"
 #include "ucd.h"
 #include "version.h"
-
-/*
- * for 8bpp gray bitmap, use a 16x16 area
- */
-#define BPP8_MUL 16
 
 char const gl_program_name[] = "ttfview.cgi";
 const char *cgi_scriptname = "ttfview.cgi";
@@ -34,9 +30,13 @@ typedef struct _glyphinfo_t {
 	FT_Short descent;
 	FT_Short lbearing;
 	FT_Short rbearing;
+	FT_Short off_vert;
 	FT_UShort width;
 	FT_UShort height;
-	FT_Int advance;
+	FT_Pos xmin;
+	FT_Pos ymin;
+	FT_Pos xmax;
+	FT_Pos ymax;
 } glyphinfo_t;
 
 #define DEBUG 0
@@ -57,9 +57,6 @@ static int x_res = 72;
 static int y_res = 72;
 static int quality = 1;
 static gboolean optimize_output = TRUE;
-static int bitsPerPixel;
-static int bpp_mul;
-
 
 #define HAVE_MKSTEMPS
 
@@ -84,6 +81,8 @@ static FT_Render_Mode render_mode = FT_RENDER_MODE_LCD;
 /*****************************************************************************/
 /* ------------------------------------------------------------------------- */
 /*****************************************************************************/
+
+static FILE *fp;
 
 static void chomp(char *dst, const char *src, size_t maxlen)
 {
@@ -173,6 +172,55 @@ static void gen_hor_line(GString *body, int columns)
 
 /* ------------------------------------------------------------------------- */
 
+static gboolean ft_get_char_bbox(uint16_t char_index, bbox_t *bb)
+{
+	FT_Glyph glyph;
+	FT_GlyphSlot slot;
+	
+	if (FT_Load_Glyph(face, char_index, load_flags | FT_LOAD_NO_BITMAP) != FT_Err_Ok)
+		return FALSE;
+	slot = face->glyph;
+	FT_Get_Glyph(slot, &glyph);
+	bb->xmin = -slot->metrics.horiBearingX;
+	bb->ymin = -slot->metrics.horiBearingY;
+	bb->xmax = slot->metrics.width;
+	bb->ymax = slot->metrics.height;
+	return TRUE;
+}
+
+/* ------------------------------------------------------------------------- */
+
+static void update_bbox(charinfo *c, glyphinfo_t *box)
+{
+	bbox_t bb;
+	
+	if (!ft_get_char_bbox(c->char_index, &bb))
+		return;
+	c->bbox.xmin = bb.xmin;
+	c->bbox.ymin = bb.ymin;
+	c->bbox.xmax = bb.xmax;
+	c->bbox.ymax = bb.ymax;
+	box->xmin = MIN(box->xmin, c->bbox.xmin);
+	box->ymin = MIN(box->ymin, c->bbox.ymin);
+	box->xmax = MIN(box->xmax, c->bbox.xmax);
+	box->ymax = MIN(box->ymax, c->bbox.ymax);
+	c->bbox.width = ((bb.xmax - bb.xmin) + 32L) >> 6;
+	c->bbox.height = ((bb.ymax - bb.ymin) + 32L) >> 6;
+	c->bbox.lbearing = (bb.xmin + 32L) >> 6;
+	c->bbox.off_vert = (bb.ymin - (bb.ymax - bb.ymin) + (bb.ymax - bb.ymin)) >> 6;
+	box->lbearing = MIN(box->lbearing, c->bbox.lbearing);
+	c->bbox.rbearing = c->bbox.width + c->bbox.lbearing;
+	box->rbearing = MAX(box->rbearing, c->bbox.rbearing);
+	c->bbox.ascent = c->bbox.height + c->bbox.off_vert;
+	c->bbox.descent = c->bbox.height - c->bbox.ascent;
+	box->width = MAX(box->width, c->bbox.width);
+	box->height = MAX(box->height, c->bbox.height);
+	box->ascent = MAX(box->ascent, c->bbox.ascent);
+	box->descent = MAX(box->descent, c->bbox.descent);
+}
+
+/* ------------------------------------------------------------------------- */
+
 static gboolean write_png(const charinfo *c, FT_Bitmap *source)
 {
 	int i;
@@ -197,7 +245,7 @@ static gboolean write_png(const charinfo *c, FT_Bitmap *source)
 	{
 	case FT_PIXEL_MODE_MONO:
 		info->num_palette = 2;
-		info->have_bg = 0;
+		info->have_bg = vdi_maptab256[0];
 		break;
 
 	case FT_PIXEL_MODE_GRAY:
@@ -250,10 +298,14 @@ static gboolean write_png(const charinfo *c, FT_Bitmap *source)
 		info->num_palette = num_colors;
 		for (i = 0; i < num_colors; i++)
 		{
-			unsigned char pix = i;
-			unsigned char c = 255 - i;
+			int c;
+			unsigned char pix;
+			pix = vdi_maptab256[i];
+			c = palette[i][0]; c = c * 255 / 1000;
 			info->palette[pix].red = c;
+			c = palette[i][1]; c = c * 255 / 1000;
 			info->palette[pix].green = c;
+			c = palette[i][2]; c = c * 255 / 1000;
 			info->palette[pix].blue = c;
 		}
 		rc = writepng_output(info);
@@ -269,17 +321,14 @@ static gboolean write_png(const charinfo *c, FT_Bitmap *source)
 
 /* ------------------------------------------------------------------------- */
 
-static gboolean ft_make_char1(charinfo *c)
+static gboolean ft_make_char(charinfo *c)
 {
 	FT_Glyph glyf;
 	FT_GlyphSlot slot;
-	FT_BitmapGlyph bitmapglyph;
+	FT_BitmapGlyph bitmap;
 	FT_Bitmap *source;
-	FT_Bitmap char1;
-	unsigned int i, j;
-	size_t bytesPerRow;
 	
-	if (FT_Load_Glyph(face, c->char_index, load_flags | FT_LOAD_RENDER | FT_LOAD_TARGET_MONO) != FT_Err_Ok)
+	if (FT_Load_Glyph(face, c->char_index, load_flags) != FT_Err_Ok)
 		return FALSE;
 	slot = face->glyph;
 	FT_Get_Glyph(slot, &glyf);
@@ -293,137 +342,11 @@ static gboolean ft_make_char1(charinfo *c)
 		g_string_append(errorout, "invalid glyph format returned!\n");
 		return FALSE;
 	}
-	c->bbox.advance = (slot->advance.x >> 6);
 
-	bitmapglyph = (FT_BitmapGlyph) glyf;
-	source = &bitmapglyph->bitmap;
+	bitmap = (FT_BitmapGlyph) glyf;
+	source = &bitmap->bitmap;
 
-	bytesPerRow = font_bb.width;
-
-	char1.rows = font_bb.height;
-	char1.width = font_bb.width;
-	char1.pitch = bytesPerRow;
-	char1.buffer = g_new0(unsigned char, char1.rows * bytesPerRow);
-	char1.num_grays = 2;
-	char1.pixel_mode = FT_PIXEL_MODE_MONO;
-	char1.palette_mode = 0;
-	char1.palette = 0;
-	
-	for (i = 0; i < source->rows; i++)
-	{
-		for (j = 0; j < source->width; j++)
-		{
-			int xpos, ypos, ind;
-			uint8_t *bits;
-			uint8_t b;
-			
-			bits = source->buffer;
-			b =	bits[i * source->pitch + (j / 8)];
-
-			/*
-			 * Output character to correct position in bitmap
-			 */
-
-			if (b & (1 << (7 - (j % 8))))
-			{
-				xpos = j + slot->bitmap_left;
-				ypos = font_bb.ascent + i - slot->bitmap_top;
-	
-				ind = ypos * bytesPerRow;
-				ind += xpos;
-
-				char1.buffer[ind] = 255;
-			}
-		}
-	}
-
-	write_png(c, &char1);
-	
-	FT_Done_Glyph(glyf);
-	
-	return TRUE;
-}
-
-/* ------------------------------------------------------------------------- */
-
-static gboolean ft_make_char8(charinfo *c)
-{
-	FT_Glyph glyf;
-	FT_GlyphSlot slot;
-	FT_BitmapGlyph bitmapglyph;
-	FT_Bitmap *source;
-	FT_Bitmap char8;
-	unsigned int i, j;
-	int i_idx, j_idx;
-	int coverage;
-	size_t bytesPerRow;
-	
-	if (FT_Load_Glyph(face, c->char_index, load_flags | FT_LOAD_RENDER | FT_LOAD_TARGET_MONO) != FT_Err_Ok)
-		return FALSE;
-	slot = face->glyph;
-	FT_Get_Glyph(slot, &glyf);
-	if (glyf->format != FT_GLYPH_FORMAT_BITMAP)
-	{
-		if (FT_Glyph_To_Bitmap(&glyf, render_mode, NULL, 0) != FT_Err_Ok)
-			return FALSE;
-	}
-	if (glyf->format != FT_GLYPH_FORMAT_BITMAP)
-	{
-		g_string_append(errorout, "invalid glyph format returned!\n");
-		return FALSE;
-	}
-	c->bbox.advance = (slot->advance.x >> 6) / BPP8_MUL;
-
-	bitmapglyph = (FT_BitmapGlyph) glyf;
-	source = &bitmapglyph->bitmap;
-
-	bytesPerRow = font_bb.width;
-
-	char8.rows = font_bb.height;
-	char8.width = font_bb.width;
-	char8.pitch = bytesPerRow;
-	char8.buffer = g_new0(unsigned char, char8.rows * bytesPerRow);
-	char8.num_grays = 256;
-	char8.pixel_mode = FT_PIXEL_MODE_GRAY;
-	char8.palette_mode = 0;
-	char8.palette = 0;
-	
-	for (i = 0; i < source->rows / BPP8_MUL; i++)
-	{
-		for (j = 0; j < source->width / BPP8_MUL; j++)
-		{
-			int xpos, ypos, ind;
-
-			coverage = 0;
-
-			for (i_idx = 0; i_idx < BPP8_MUL; i_idx++)
-			{
-				for (j_idx = 0; j_idx < BPP8_MUL; j_idx++)
-				{
-					uint8_t *bits = source->buffer;
-					uint8_t b = bits[(i * BPP8_MUL + i_idx) * source->pitch + ((j * BPP8_MUL + j_idx) / 8)];
-
-					if (b & (1 << (7 - ((j * BPP8_MUL + j_idx) % 8))))
-					{
-						coverage++;
-					}
-				}
-			}
-
-			/*
-			 * Output character to correct position in bitmap
-			 */
-
-			xpos = j + (slot->bitmap_left / BPP8_MUL);
-			ypos = (font_bb.ascent / BPP8_MUL) + i - (slot->bitmap_top / BPP8_MUL);
-
-			ind = ypos * bytesPerRow;
-			ind += xpos;
-			char8.buffer[ind] = (255 * coverage) / 256;	/* need to be 0..255 range */
-		}
-	}
-	
-	write_png(c, &char8);
+	write_png(c, source);
 	
 	FT_Done_Glyph(glyf);
 	
@@ -508,15 +431,25 @@ static gboolean gen_ttf_font(GString *body)
 		unsigned long total_width;
 		uint16_t num_glyphs;
 		glyphinfo_t max_bb;
+		FT_Short max_lbearing;
+		FT_Short min_descent;
 		FT_Short average_width;
 		
 		total_width = 0;
 		num_glyphs = 0;
 		max_bb.width = 0;
 		max_bb.height = 0;
-		max_bb.ascent = 0;
-		max_bb.descent = 0;
-		
+		max_bb.off_vert = 0;
+		max_bb.ascent = -32000;
+		max_bb.descent = -32000;
+		max_bb.rbearing = -32000;
+		max_bb.lbearing = 32000;
+		max_bb.xmin = 32000L << 6;
+		max_bb.ymin = 32000L << 6;
+		max_bb.xmax = -(32000L << 6);
+		max_bb.ymax = -(32000L << 6);
+		max_lbearing = -32000;
+		min_descent = 32000;
 		for (char_id = 0; char_id < num_ids; char_id++)
 		{
 			c = &infos[char_id];
@@ -532,36 +465,11 @@ static gboolean gen_ttf_font(GString *body)
 				{
 					c->char_index = gindex;
 					c->char_id = char_id;
-					c->bbox.descent = 0;
-					c->bbox.ascent = 0;
-					c->bbox.width = 0;
-					c->bbox.height = 0;
-					if (FT_Load_Glyph(face, c->char_index, load_flags | FT_LOAD_RENDER | FT_LOAD_TARGET_MONO) == FT_Err_Ok)
-					{
-						FT_GlyphSlot slot;
-						FT_Int r;
-						
-						slot = face->glyph;
-						r = slot->bitmap.rows - slot->bitmap_top;
-						if (r > 0)
-							c->bbox.descent = r;
-						r = slot->bitmap.rows;
-						c->bbox.ascent = MAX(0, MAX(slot->bitmap_top, r) - c->bbox.descent);
-						c->bbox.width = slot->bitmap.width;
-						c->bbox.height = slot->bitmap.rows;
-						
-						if (c->bbox.descent > max_bb.ascent)
-							max_bb.ascent = c->bbox.descent;
-				
-						if (c->bbox.ascent > max_bb.ascent)
-							max_bb.ascent = c->bbox.ascent;
-				
-						if (c->bbox.width > max_bb.width)
-							max_bb.width = c->bbox.width;
-
-						total_width += c->bbox.width;
-						num_glyphs++;
-					}
+					update_bbox(c, &max_bb);
+					max_lbearing = MAX(max_lbearing, c->bbox.lbearing);
+					min_descent = MIN(min_descent, c->bbox.descent);
+					total_width += c->bbox.width;
+					num_glyphs++;
 				}
 			}
 		}
@@ -574,15 +482,39 @@ static gboolean gen_ttf_font(GString *body)
 			g_string_append_printf(errorout, "max height %d max width %d average width %d\n", max_bb.height, max_bb.width, average_width);
 		}
 		
-		font_bb = max_bb;
+		max_bb.height = max_bb.ascent + max_bb.descent;
+		max_bb.width = max_bb.rbearing - max_bb.lbearing;
 
-		font_bb.width = (font_bb.width + bpp_mul - 1) / bpp_mul;
-		font_bb.height = (font_bb.ascent + font_bb.ascent + bpp_mul - 1) / bpp_mul;
+		if (debug)
+		{
+			FT_Pos xmin, ymin, xmax, ymax;
+			long fwidth, fheight;
+			long pixel_size = (point_size * x_res + 360) / 720;
+			
+			xmin = face->bbox.xMin;
+			ymin = face->bbox.yMin;
+			xmax = face->bbox.xMax;
+			ymax = face->bbox.yMax;
+			fwidth = xmax - xmin;
+			fwidth = fwidth * pixel_size / face->units_per_EM;
+			fheight = ymax - ymin;
+			fheight = fheight * pixel_size / face->units_per_EM;
+			g_string_append_printf(errorout, "bbox: %d %d ascent %d descent %d lb %d rb %d\n",
+				max_bb.width, max_bb.height,
+				max_bb.ascent, max_bb.descent,
+				max_bb.lbearing, max_bb.rbearing);
+			g_string_append_printf(errorout, "bbox (header): %ld %ld %ld %ld; %ld %ld %ld %ld\n",
+				xmin, ymin,
+				xmax, ymax,
+				xmin * pixel_size / face->units_per_EM,
+				ymin * pixel_size / face->units_per_EM,
+				xmax * pixel_size / face->units_per_EM,
+				ymax * pixel_size / face->units_per_EM);
+		}
+		
+		font_bb = max_bb;
 	}
 	
-	/*
-	 * Render each character.
-	 */
 	for (char_id = 0; char_id < num_ids; char_id++)
 	{
 		c = &infos[char_id];
@@ -591,7 +523,7 @@ static gboolean gen_ttf_font(GString *body)
 			const char *ext = output_mode == MODE_OUTLINE ? ".svg" : ".png";
 			c->local_filename = g_strdup_printf("%s/%schr%04x%s", output_dir, basename, char_id, ext);
 			c->url = g_strdup_printf("%s/%schr%04x%s", output_url, basename, char_id, ext);
-			if (!(bitsPerPixel == 1 ? ft_make_char1(c) : ft_make_char8(c)))
+			if (!ft_make_char(c))
 			{
 				g_string_append_printf(errorout, "can't make char 0x%x (0x%lx)\n", c->char_index, (unsigned long)char_id);
 			}
@@ -688,15 +620,17 @@ static gboolean gen_ttf_font(GString *body)
 						img[j], (unsigned long)char_id);
 				else
 					src = g_strdup_printf("<img alt=\"\" style=\"text-align: left; vertical-align: top; position: relative; left: %dpx; top: %dpx\" src=\"%s\">",
-						0,
-						0,
+						-(font_bb.lbearing - c->bbox.lbearing),
+						font_bb.ascent - c->bbox.ascent,
 						img[j]);
 				g_string_append_printf(body,
 					"<td class=\"spd_glyph_image\" style=\"width: %dpx; height: %dpx; min-width: %dpx; min-height: %dpx;\" title=\""
 					"Index: 0x%x (%u)&#10;"
 					"ID: 0x%04lx&#10;"
 					"Unicode: 0x%04lx &#%lu;&#10;"
-					"%s&#10;%s"
+					"%s&#10;"
+					"Xmin: %7.2f Ymin: %7.2f&#10;"
+					"Xmax: %7.2f Ymax: %7.2f&#10;%s"
 					"\">%s</td>",
 					font_bb.width, font_bb.height,
 					font_bb.width, font_bb.height,
@@ -704,6 +638,10 @@ static gboolean gen_ttf_font(GString *body)
 					(unsigned long)c->char_id,
 					(unsigned long)unicode, (unsigned long)unicode,
 					ucd_get_name(unicode),
+					(double)c->bbox.xmin / 65536.0,
+					(double)c->bbox.ymin / 65536.0,
+					(double)c->bbox.xmax / 65536.0,
+					(double)c->bbox.ymax / 65536.0,
 					debuginfo ? debuginfo : "",
 					src);
 				g_free(debuginfo);
@@ -749,20 +687,9 @@ static gboolean load_ttf_font(const char *filename, GString *body)
 	FT_Error ft_error;
 	gboolean got_header = FALSE;
 	
-	/*
-	 * load the font and set output character size.
-	 */
 	ft_error = FT_New_Face(ft_library, filename, face_index, &face);
 	if (ft_error == FT_Err_Ok)
-	{
-		/*
-		 * If DPI is not given, use pixes to specify the size.
-		 */
-		if (x_res > 0)
-			ft_error = FT_Set_Char_Size(face, ((point_size / 10) << 6) * bpp_mul, 0, x_res, y_res);
-		else
-			ft_error = FT_Set_Pixel_Sizes(face, 0, (point_size / 10) * bpp_mul);
-	}
+		ft_error = FT_Set_Char_Size(face, (point_size << 6) / 10, 0, x_res, y_res);
 	if (ft_error == FT_Err_Ok)
 		ft_error = FT_Select_Charmap(face, FT_ENCODING_UNICODE);
 	if (ft_error != FT_Err_Ok)
@@ -865,8 +792,6 @@ int main(void)
 		quality = (int)strtol(val, NULL, 10);
 		g_free(val);
 	}
-	bitsPerPixel = quality >= 1 ? 8 : 1;
-	bpp_mul = bitsPerPixel > 1 ? BPP8_MUL : 1;
 	
 	cgi_cached = FALSE;
 	if ((val = cgiFormString("cached")) != NULL)
@@ -919,10 +844,6 @@ int main(void)
 		g_free(val);
 	}
 	
-	/*
-	 * Initialize freetype library, load the font
-	 * and set output character size.
-	 */
 	ft_error = FT_Init_FreeType(&ft_library);
 	if (ft_error)
 	{
@@ -1110,5 +1031,7 @@ int main(void)
 	if (errorfile != stderr)
 		fclose(errorfile);
 
+	(void) fp;
+	
 	return retval;
 }
