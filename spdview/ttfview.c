@@ -46,7 +46,7 @@ typedef struct _glyphinfo_t {
 #define CHAR_COLUMNS 16
 #define PAGE_SIZE    128
 
-#define PNG_GLYPHS_PER_ROW 128
+#define PNG_GLYPHS_PER_ROW 64
 
 static FT_Library ft_library = NULL;
 static FT_Face face = NULL;
@@ -75,6 +75,7 @@ typedef struct {
 	uint16_t char_index;
 	uint32_t char_id;
 	const char *basename;
+	uint32_t glyph_row;
 	glyphinfo_t bbox;
 	char name[32];
 } charinfo;
@@ -409,7 +410,7 @@ static gboolean ft_make_char1(charinfo *c)
 				if (xpos >= font_bb.width || ypos >= font_bb.height)
 				{
 					if (debug)
-						g_string_append_printf(errorout, "char %x: position %dx%d outside bitmap %ux%u\n", c->char_id, xpos, ypos, font_bb.width, font_bb.height);
+						g_string_append_printf(errorout, "char %04x: position %dx%d outside bitmap %ux%u\n", c->char_id, xpos, ypos, font_bb.width, font_bb.height);
 				} else
 				{
 #if 0
@@ -417,7 +418,7 @@ static gboolean ft_make_char1(charinfo *c)
 					ind += xpos;
 					char1.buffer[ind] = 255;
 #endif
-					ind = (c->char_id / PNG_GLYPHS_PER_ROW) * big_bytes_per_glyph_row + ypos * big_bytes_per_row * PNG_GLYPHS_PER_ROW;
+					ind = c->glyph_row * big_bytes_per_glyph_row + ypos * big_bytes_per_row * PNG_GLYPHS_PER_ROW;
 					ind += (c->char_id % PNG_GLYPHS_PER_ROW) * big_bytes_per_row + xpos;
 					big_buffer[ind] = 255;
 				}
@@ -488,13 +489,17 @@ static gboolean ft_make_char8(charinfo *c)
 			 * Output character to correct position in bitmap
 			 */
 
+#if 1
 			xpos = (j / BPP8_MUL) - font_bb.lbearing + (slot->bitmap_left / BPP8_MUL);
+#else
+			xpos = ((int)(j + slot->bitmap_left) / BPP8_MUL) - font_bb.lbearing;
+#endif
 			ypos = font_bb.ascent + (i / BPP8_MUL) - (slot->bitmap_top / BPP8_MUL);
 
 			if (xpos >= font_bb.width || ypos >= font_bb.height)
 			{
 				if (debug)
-					g_string_append_printf(errorout, "char %x: position %dx%d outside bitmap %ux%u\n", c->char_id, xpos, ypos, font_bb.width, font_bb.height);
+					g_string_append_printf(errorout, "char %04x: position %dx%d outside bitmap %ux%u\n", c->char_id, xpos, ypos, font_bb.width, font_bb.height);
 			} else
 			{
 #if 0
@@ -502,7 +507,7 @@ static gboolean ft_make_char8(charinfo *c)
 				ind += xpos;
 				char8.buffer[ind] = coverage;
 #endif
-				ind = (c->char_id / PNG_GLYPHS_PER_ROW) * big_bytes_per_glyph_row + ypos * big_bytes_per_row * PNG_GLYPHS_PER_ROW;
+				ind = c->glyph_row * big_bytes_per_glyph_row + ypos * big_bytes_per_row * PNG_GLYPHS_PER_ROW;
 				ind += (c->char_id % PNG_GLYPHS_PER_ROW) * big_bytes_per_row + xpos;
 				big_buffer[ind] = coverage;
 			}
@@ -523,6 +528,7 @@ static gboolean gen_ttf_font(GString *body)
 	struct tm tm;
 	char *basename;
 	int columns;
+	uint32_t num_glyphs;
 	FT_UInt gindex;
 	uint32_t char_id, id;
 	uint16_t j;
@@ -588,10 +594,14 @@ static gboolean gen_ttf_font(GString *body)
 	 */
 	{
 		unsigned long total_width;
-		uint16_t num_glyphs;
 		glyphinfo_t max_bb;
 		FT_Short average_width;
 		FT_Int max_lbearing;
+		uint32_t largest_ascent_char = 0;
+		uint32_t largest_descent_char = 0;
+		uint32_t widest_char = 0;
+		uint32_t tallest_char = 0;
+		uint32_t max_height = 0;
 		
 		total_width = 0;
 		num_glyphs = 0;
@@ -637,14 +647,25 @@ static gboolean gen_ttf_font(GString *body)
 						c->bbox.advance = slot->advance.x;
 						
 						if (c->bbox.ascent > max_bb.ascent)
+						{
 							max_bb.ascent = c->bbox.ascent;
-				
+							largest_ascent_char = char_id;
+						}
 						if (c->bbox.descent > max_bb.descent)
+						{
 							max_bb.descent = c->bbox.descent;
-				
+							largest_descent_char = char_id;
+						}
+						if (slot->bitmap.rows > max_height)
+						{
+							max_height = slot->bitmap.rows;
+							tallest_char = char_id;
+						}
 						if (c->bbox.width > max_bb.width)
+						{
 							max_bb.width = c->bbox.width;
-
+							widest_char = char_id;
+						}
 						if (c->bbox.lbearing < max_bb.lbearing)
 							max_bb.lbearing = c->bbox.lbearing;
 						if (c->bbox.lbearing > max_lbearing)
@@ -657,11 +678,12 @@ static gboolean gen_ttf_font(GString *body)
 			}
 		}
 
-		max_bb.width = (max_bb.width - max_bb.lbearing + max_lbearing + bpp_mul - 1) / bpp_mul;
+		max_bb.width = (max_bb.width - max_bb.lbearing /* + max_lbearing */ + bpp_mul - 1) / bpp_mul;
 		max_bb.ascent = (max_bb.ascent + bpp_mul - 1) / bpp_mul;
 		max_bb.descent = (max_bb.descent + bpp_mul - 1) / bpp_mul;
 		max_bb.height = max_bb.ascent + max_bb.descent + 1;
 		max_bb.lbearing = -((-max_bb.lbearing + bpp_mul - 1) / bpp_mul);
+		max_lbearing = (max_lbearing + bpp_mul - 1) / bpp_mul;
 		
 		if (num_glyphs == 0)
 			average_width = max_bb.width;
@@ -669,16 +691,57 @@ static gboolean gen_ttf_font(GString *body)
 			average_width = (((total_width + bpp_mul - 1) / bpp_mul) / num_glyphs);
 		if (debug)
 		{
-			g_string_append_printf(errorout, "max height %d max width %d average width %d, ascent %d, descent %d, lbearing %d\n",
+			g_string_append_printf(errorout, "max height %d max width %d average width %d, ascent %d, descent %d, lbearing %d,%d\n",
 				max_bb.height, max_bb.width, average_width,
 				max_bb.ascent,
 				max_bb.descent,
-				max_bb.lbearing);
+				max_bb.lbearing,
+				max_lbearing);
+			g_string_append_printf(errorout, "largest: "
+				"width=<a href=\"#chr%04x\">%04x</a>, "
+				"height=<a href=\"#chr%04x\">%04x</a>, "
+				"ascent=<a href=\"#chr%04x\">%04x</a>, "
+				"descent=<a href=\"#chr%04x\">%04x</a>\n",
+				widest_char, widest_char,
+				tallest_char, tallest_char,
+				largest_ascent_char, largest_ascent_char,
+				largest_descent_char, largest_descent_char);
 		}
 		
 		font_bb = max_bb;
 	}
 
+	/*
+	 * calculate positions of characters in image,
+	 * skipping rows that would be empty
+	 */
+	png_glyph_rows = 0;
+	for (id = 0; id < num_ids; id += PNG_GLYPHS_PER_ROW)
+	{
+		columns = PNG_GLYPHS_PER_ROW;
+		if ((id + columns) > num_ids)
+			columns = num_ids - id;
+		any_defined_line = FALSE;
+		for (j = 0; j < columns; j++)
+		{
+			char_id = id + j;
+			c = &infos[char_id];
+			
+			if (c->char_id != UNDEFINED)
+				any_defined_line |= TRUE;
+		}
+		if (any_defined_line)
+		{
+			for (j = 0; j < columns; j++)
+			{
+				char_id = id + j;
+				c = &infos[char_id];
+				c->glyph_row = png_glyph_rows;
+			}
+			png_glyph_rows++;
+		}
+	}
+	
 	/*
 	 * generate the CSS stylesheet for the background image
 	 */
@@ -693,22 +756,20 @@ static gboolean gen_ttf_font(GString *body)
 			"  .chr%04x { background-position: -%dpx -%dpx; width: %dpx; height: %dpx; }\n",
 			char_id,
 			(char_id % PNG_GLYPHS_PER_ROW) * font_bb.width,
-			(char_id / PNG_GLYPHS_PER_ROW) * font_bb.height,
+			c->glyph_row * font_bb.height,
 			font_bb.width, font_bb.height);
 	}
 	
 	html_out_header(body, background_css, font_info, fontname, FALSE);
 	g_string_free(font_info, TRUE);
 
-	png_glyph_rows = (num_ids + PNG_GLYPHS_PER_ROW - 1) / PNG_GLYPHS_PER_ROW;
-	
 	big_bytes_per_row = font_bb.width;
 	big_bytes_per_glyph_row = big_bytes_per_row * PNG_GLYPHS_PER_ROW * font_bb.height;
 	big_buffer = g_new0(uint8_t, big_bytes_per_glyph_row * png_glyph_rows);
 	
 	if (debug)
 	{
-		g_string_append_printf(errorout, "ids: %u $%04x\n", num_ids, num_ids);
+		g_string_append_printf(errorout, "ids: %u $%04x, defined %u\n", num_ids, num_ids, num_glyphs);
 	}
 	
 	/*
@@ -818,30 +879,6 @@ static gboolean gen_ttf_font(GString *body)
 						(double)c->bbox.lbearing / bpp_mul,
 						(double)c->bbox.advance / (1 << 6) / bpp_mul);
 				}
-#if 0
-				if (output_mode == MODE_OUTLINE)
-					src = g_strdup_printf("<svg width=\"%d\" height=\"%d\"><use xlink:href=\"%s#chr%04lx\" style=\"text-align: left; vertical-align: top;\"></use></svg>",
-						font_bb.width, font_bb.height,
-						img[j], (unsigned long)char_id);
-				else
-					src = g_strdup_printf("<img alt=\"\" style=\"text-align: left; vertical-align: top; position: relative; left: %dpx; top: %dpx\" src=\"%s\">",
-						0,
-						0,
-						img[j]);
-				g_string_append_printf(body,
-					"<td class=\"spd_glyph_image\" style=\"width: %dpx; height: %dpx; min-width: %dpx; min-height: %dpx;\" title=\""
-					"Index: 0x%x (%u)&#10;"
-					"Unicode: 0x%04lx &#%lu;&#10;"
-					"%s&#10;%s"
-					"\">%s</td>",
-					font_bb.width, font_bb.height,
-					font_bb.width, font_bb.height,
-					c->char_index, c->char_index,
-					(unsigned long)unicode, (unsigned long)unicode,
-					ucd_get_name(unicode),
-					debuginfo ? debuginfo : "",
-					src);
-#else
 				src = g_strdup_printf("<div class=\"%s chr%04x\" style=\"text-align: left; vertical-align: top; position: relative; left: %dpx; top: %dpx; width: %dpx; height: %dpx;\"></div>",
 					glyph_bg_class,
 					char_id,
@@ -849,18 +886,18 @@ static gboolean gen_ttf_font(GString *body)
 					0,
 					font_bb.width, font_bb.height);
 				g_string_append_printf(body,
-					"<td class=\"spd_glyph_image\" style=\"width: %dpx; height: %dpx; min-width: %dpx; min-height: %dpx;\" title=\""
+					"<td id=\"chr%04x\" class=\"spd_glyph_image\" style=\"width: %dpx; height: %dpx; min-width: %dpx; min-height: %dpx;\" title=\""
 					"Index: 0x%x (%u)&#10;"
 					"Unicode: 0x%04lx &#%lu;&#10;"
 					"%s&#10;%s"
 					"\">%s</td>",
+					char_id,
 					font_bb.width, font_bb.height,
 					font_bb.width, font_bb.height,
 					c->char_index, c->char_index,
 					(unsigned long)unicode, (unsigned long)unicode,
 					ucd_get_name(unicode),
 					debuginfo ? debuginfo : "", src);
-#endif
 				g_free(debuginfo);
 				g_free(src);
 			} else
@@ -869,7 +906,7 @@ static gboolean gen_ttf_font(GString *body)
 					"<td class=\"spd_glyph_image\" style=\"width: %dpx; height: %dpx;\"></td>", 0, 0);
 			}
 		}				
-			
+		
 		g_string_append(body, vert_line);
 		g_string_append(body, "</tr>\n");
 		gen_hor_line(body, columns);
