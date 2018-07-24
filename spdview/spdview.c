@@ -684,7 +684,7 @@ static gboolean gen_speedo_font(GString *body)
 	chomp(fontname, (char *) (font_buffer + FH_FNTNM), sizeof(fontname));
 	make_font_filename(fontfilename, fontname);
 	font_info = get_font_info(font_buffer);
-	html_out_header(body, font_info, fontname, FALSE);
+	html_out_header(body, NULL, font_info, fontname, FALSE);
 	g_string_free(font_info, TRUE);
 	
 	if (!sp_set_specs(&specs, &font))
@@ -1066,7 +1066,7 @@ static gboolean load_speedo_font(const char *filename, GString *body)
 	}
 	
 	if (!got_header)
-		html_out_header(body, NULL, xbasename(filename), FALSE);
+		html_out_header(body, NULL, NULL, xbasename(filename), FALSE);
 	html_out_trailer(body, FALSE);
 
 	return ret;
@@ -1216,7 +1216,7 @@ int main(void)
 			/*
 			 * disallow file URIs, they would resolve to local files on the WEB server
 			 */
-			html_out_header(body, NULL, _("403 Forbidden"), TRUE);
+			html_out_header(body, NULL, NULL, _("403 Forbidden"), TRUE);
 			g_string_append_printf(body,
 				_("Sorry, this type of\n"
 				  "<a href=\"http://www.w3.org/Addressing/\">URL</a>\n"
@@ -1233,7 +1233,7 @@ int main(void)
 				(curl_global_init(CURL_GLOBAL_DEFAULT) != CURLE_OK ||
 				(curl = curl_easy_init()) == NULL))
 			{
-				html_out_header(body, NULL, _("500 Internal Server Error"), TRUE);
+				html_out_header(body, NULL, NULL, _("500 Internal Server Error"), TRUE);
 				g_string_append(body, _("could not initialize curl\n"));
 				html_out_trailer(body, TRUE);
 				retval = EXIT_FAILURE;
@@ -1282,7 +1282,7 @@ int main(void)
 		if (filename == NULL || len == 0)
 		{
 			const char *scheme = "undefined";
-			html_out_header(body, NULL, _("403 Forbidden"), TRUE);
+			html_out_header(body, NULL, NULL, _("403 Forbidden"), TRUE);
 			g_string_append_printf(body,
 				_("Sorry, this type of\n"
 				  "<a href=\"http://www.w3.org/Addressing/\">URL</a>\n"
@@ -1336,7 +1336,7 @@ int main(void)
 			{
 				const char *err = strerror(errno);
 				fprintf(errorfile, "%s: %s\n", local_filename, err);
-				html_out_header(body, NULL, _("404 Not Found"), TRUE);
+				html_out_header(body, NULL, NULL, _("404 Not Found"), TRUE);
 				g_string_append_printf(body, "%s: %s\n", xbasename(filename), err);
 				html_out_trailer(body, TRUE);
 				retval = EXIT_FAILURE;

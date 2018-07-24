@@ -58,7 +58,7 @@ void write_strout(GString *s, FILE *outfp);
 char *html_quote_name(const char *name, unsigned int flags, size_t len);
 gboolean html_out_stylesheet(GString *out);
 gboolean html_out_javascript(GString *out);
-void html_out_header(GString *out, GString *font_info, const char *title, gboolean for_error);
+void html_out_header(GString *out, GString *background_css, GString *font_info, const char *title, gboolean for_error);
 void html_out_trailer(GString *out, gboolean for_error);
 gboolean uri_has_scheme(const char *uri);
 void html_out_response_header(FILE *out, unsigned long len);

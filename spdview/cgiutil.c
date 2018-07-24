@@ -551,7 +551,7 @@ static void html_out_nav_toolbar(GString *out)
 
 /* ------------------------------------------------------------------------- */
 
-void html_out_header(GString *out, GString *font_info, const char *title, gboolean for_error)
+void html_out_header(GString *out, GString *background_css, GString *font_info, const char *title, gboolean for_error)
 {
 	const char *html_lang = "en-US";
 	
@@ -570,6 +570,12 @@ void html_out_header(GString *out, GString *font_info, const char *title, gboole
 	}
 	
 	html_out_stylesheet(out);
+	if (background_css)
+	{
+		g_string_append(out, "<style type=\"text/css\">\n");
+		g_string_append(out, background_css->str);
+		g_string_append(out, "</style>\n");
+	}
 	html_out_javascript(out);
 	
 	{
@@ -821,7 +827,7 @@ char *curl_download(CURL *curl, GString *body, const char *filename)
 	
 	if (curlcode != CURLE_OK || stat(local_filename, &st) != 0)
 	{
-		html_out_header(body, NULL, err, TRUE);
+		html_out_header(body, NULL, NULL, err, TRUE);
 		g_string_append_printf(body, "%s:\n%s", _("Download error"), err);
 		html_out_trailer(body, TRUE);
 		unlink(local_filename);
@@ -856,4 +862,3 @@ char *curl_download(CURL *curl, GString *body, const char *filename)
 	
 	return local_filename;
 }
-
