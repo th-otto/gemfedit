@@ -107,6 +107,19 @@ static void writepng_error_handler(png_structp png_ptr, png_const_charp msg)
 }
 
 
+static void writepng_warning_handler(png_structp png_ptr, png_const_charp msg)
+{
+	/*
+	 * Silently ignore any warning messages from libpng.
+	 * They stupidly tend to introduce new warnings with every release,
+	 * with the default warning handler writing to stdout and/or stderr,
+	 * messing up the output of the CGI scripts.
+	 */
+	(void) png_ptr;
+	(void) msg;
+}
+
+
 
 void writepng_version_info(void)
 {
@@ -222,7 +235,7 @@ int writepng_init(writepng_info *wpnginfo)
 
 	/* could also replace libpng warning-handler (final NULL), but no need: */
 
-	png_ptr = png_create_write_struct(PNG_LIBPNG_VER_STRING, wpnginfo, writepng_error_handler, NULL);
+	png_ptr = png_create_write_struct(PNG_LIBPNG_VER_STRING, wpnginfo, writepng_error_handler, writepng_warning_handler);
 	if (!png_ptr)
 		return ENOMEM;						/* out of memory */
 
@@ -298,6 +311,10 @@ int writepng_init(writepng_info *wpnginfo)
 	}
 
 	interlace_type = wpnginfo->interlaced ? PNG_INTERLACE_ADAM7 : PNG_INTERLACE_NONE;
+
+#ifdef PNG_SET_USER_LIMITS_SUPPORTED
+	png_set_user_limits(png_ptr, wpnginfo->width, wpnginfo->height);
+#endif
 
 	png_set_IHDR(png_ptr, info_ptr, wpnginfo->width, wpnginfo->height,
 				 wpnginfo->sample_depth, color_type, interlace_type,
@@ -400,7 +417,6 @@ int writepng_init(writepng_info *wpnginfo)
 	/* write all chunks up to (but not including) first IDAT */
 
 	png_write_info(png_ptr, info_ptr);
-
 
 	/* if we wanted to write any more text info *after* the image data, we
 	 * would set up text struct(s) here and call png_set_text() again, with
