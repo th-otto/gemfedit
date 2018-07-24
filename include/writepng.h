@@ -56,7 +56,15 @@
 #ifndef __WRITEPNG_H__
 #define __WRITEPNG_H__ 1
 
+#if defined(USE_PNG12)
 #include <libpng12/png.h>
+#elif defined(USE_PNG14)
+#include <libpng14/png.h>
+#elif defined(USE_PNG16)
+#include <libpng16/png.h>
+#else
+#include <png.h>
+#endif
 #include <setjmp.h>
 
 #ifndef TRUE
@@ -76,8 +84,13 @@ typedef struct _writepng_info {
 	unsigned long rowbytes;
 	time_t modtime;
 	FILE *outfile;
+#ifdef PNG_H
 	png_structp png_ptr;
 	png_infop info_ptr;
+#else
+	void *png_ptr;
+	void *info_ptr;
+#endif
 	unsigned char *image_data;
 	unsigned char **row_pointers;
 	char *title;
@@ -93,8 +106,16 @@ typedef struct _writepng_info {
 	int x_res, y_res;
 	jmp_buf jmpbuf;
 	int num_palette;
-	png_color palette[PNG_MAX_PALETTE_LENGTH];
-	png_color bg;
+	struct {
+		unsigned char red;
+		unsigned char green;
+		unsigned char blue;
+	} palette[256];
+	struct {
+		unsigned char red;
+		unsigned char green;
+		unsigned char blue;
+	} bg;
 	int swapped;
 } writepng_info;
 

@@ -1,8 +1,29 @@
 CC = gcc
+
+USE_PNG12=1
+#USE_PNG14=1
+#USE_PNG16=1
+
+ifdef USE_PNG12
+LIBPNG = -lpng12
+PNGDEF = -DUSE_PNG12
+endif
+ifdef USE_PNG14
+LIBPNG = -lpng14
+PNGDEF = -DUSE_PNG14
+endif
+ifdef USE_PNG16
+LIBPNG = -lpng16
+PNGDEF = -DUSE_PNG16
+endif
+ifndef LIBPNG
+LIBPNG = -lpng
+endif
+
 WARN = -fno-common -Wall -W -Wunused -Wundef -Wstrict-prototypes -Wmissing-prototypes -Werror
-CFLAGS = -O2 -g -fomit-frame-pointer $(WARN) -I../include -I../speedo -I../freetype/include
+CFLAGS = -O2 -g -fomit-frame-pointer $(WARN) $(PNGDEF) -I../include -I../speedo -I../freetype/include
 LDFLAGS = -s
-LIBS= -lcurl -lpng12 -lz
+LIBS= -lcurl $(LIBPNG) -lz
 
 SPDLIB = reset.o do_char.o do_trns.o set_spcs.o set_trns.o \
 	out_bl2d.o out_blk.o out_scrn.o out_util.o out_outl.o \

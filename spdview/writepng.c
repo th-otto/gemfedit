@@ -261,6 +261,8 @@ int writepng_init(writepng_info *wpnginfo)
 	if (setjmp(wpnginfo->jmpbuf))
 	{
 		png_destroy_write_struct(&wpnginfo->png_ptr, &wpnginfo->info_ptr);
+		wpnginfo->png_ptr = NULL;
+		wpnginfo->info_ptr = NULL;
 		return EFAULT;
 	}
 
@@ -307,6 +309,8 @@ int writepng_init(writepng_info *wpnginfo)
 	} else
 	{
 		png_destroy_write_struct(&png_ptr, &info_ptr);
+		wpnginfo->png_ptr = NULL;
+		wpnginfo->info_ptr = NULL;
 		return EINVAL;
 	}
 
@@ -325,7 +329,7 @@ int writepng_init(writepng_info *wpnginfo)
 
 	if (wpnginfo->num_palette)
 	{
-		png_set_PLTE(png_ptr, info_ptr, wpnginfo->palette, wpnginfo->num_palette);
+		png_set_PLTE(png_ptr, info_ptr, (png_color *)wpnginfo->palette, wpnginfo->num_palette);
 	}
 	
 	if (wpnginfo->bpp > 8 && wpnginfo->have_bg >= 0)
@@ -549,6 +553,10 @@ void writepng_cleanup(writepng_info *wpnginfo)
 			wpnginfo->row_pointers = NULL;
 		}
 		if (wpnginfo->png_ptr && wpnginfo->info_ptr)
+		{
 			png_destroy_write_struct(&wpnginfo->png_ptr, &wpnginfo->info_ptr);
+			wpnginfo->png_ptr = NULL;
+			wpnginfo->info_ptr = NULL;
+		}
 	}
 }
