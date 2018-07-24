@@ -45,6 +45,8 @@ typedef struct _glyphinfo_t {
 #define CHAR_COLUMNS 16
 #define PAGE_SIZE    128
 
+#define PNG_GLYPHS_PER_ROW 128
+
 static FT_Library ft_library = NULL;
 static FT_Face face = NULL;
 static FT_Long face_index = 0;
@@ -60,6 +62,10 @@ static int quality = 1;
 static gboolean optimize_output = TRUE;
 static int bitsPerPixel;
 static int bpp_mul;
+static size_t big_bytes_per_row;
+static size_t big_bytes_per_glyph_row;
+static uint8_t *big_buffer;
+static size_t png_glyph_rows;
 
 
 #define HAVE_MKSTEMPS
@@ -67,6 +73,7 @@ static int bpp_mul;
 typedef struct {
 	uint16_t char_index;
 	uint32_t char_id;
+	const char *basename;
 	char *local_filename;
 	char *url;
 	glyphinfo_t bbox;
@@ -174,6 +181,78 @@ static void gen_hor_line(GString *body, int columns)
 
 /* ------------------------------------------------------------------------- */
 
+static gboolean write_big_png(const char *basename)
+{
+	int i;
+	writepng_info *info;
+	int rc;
+	char *local_filename;
+	
+	info = writepng_new();
+	/*
+	 * we cannot write a 0x0 image :(
+	 */
+	if (info->width == 0)
+		info->width = 1;
+	if (info->height == 0)
+		info->height = 1;
+
+	info->bpp = 8;
+	info->width = font_bb.width * PNG_GLYPHS_PER_ROW;
+	info->height = font_bb.height * png_glyph_rows;
+
+	if (bitsPerPixel == 1)
+	{
+		info->num_palette = 2;
+		info->have_bg = 0;
+	} else
+	{
+		info->num_palette = 256;
+	}
+	g_string_append_printf(errorout, "writing %s.png %ldx%ld\n", basename, info->width, info->height);
+	info->rowbytes = big_bytes_per_row * PNG_GLYPHS_PER_ROW;
+
+	info->image_data = big_buffer;
+	info->x_res = (x_res * 10000L) / 254;
+	info->y_res = (y_res * 10000L) / 254;
+
+	local_filename = g_strdup_printf("%s/%s.png", output_dir, basename);
+	
+	info->outfile = fopen(local_filename, "wb");
+	if (info->outfile == NULL)
+	{
+		rc = errno;
+	} else
+	{
+		int num_colors = 256;
+		
+		info->num_palette = num_colors;
+		for (i = 0; i < num_colors; i++)
+		{
+			unsigned char pix = i;
+			unsigned char c = 255 - i;
+			info->palette[pix].red = c;
+			info->palette[pix].green = c;
+			info->palette[pix].blue = c;
+		}
+		rc = writepng_output(info);
+		fclose(info->outfile);
+	}
+	writepng_exit(info);
+	
+	if (rc != 0)
+	{
+		g_string_append_printf(errorout, "error writing %s.png: %s\n", basename, strerror(rc));
+		unlink(local_filename);
+	}
+		
+	g_free(local_filename);
+
+	return rc == 0;
+}
+
+/* ------------------------------------------------------------------------- */
+
 static gboolean write_png(const charinfo *c, FT_Bitmap *source)
 {
 	int i;
@@ -265,6 +344,12 @@ static gboolean write_png(const charinfo *c, FT_Bitmap *source)
 	if (target.pixel_mode != FT_PIXEL_MODE_NONE)
 		FT_Bitmap_Done(ft_library, &target);
 	
+	if (rc != 0)
+	{
+		g_string_append_printf(errorout, "error writing %s.png: %s\n", c->basename, strerror(rc));
+		unlink(c->local_filename);
+	}
+		
 	return rc == 0;
 }
 
@@ -340,6 +425,9 @@ static gboolean ft_make_char1(charinfo *c)
 				} else
 				{
 					char1.buffer[ind] = 255;
+					ind = (c->char_id / PNG_GLYPHS_PER_ROW) * big_bytes_per_glyph_row + ypos * big_bytes_per_row * PNG_GLYPHS_PER_ROW;
+					ind += (c->char_id % PNG_GLYPHS_PER_ROW) * big_bytes_per_row + xpos;
+					big_buffer[ind] = 255;
 				}
 			}
 		}
@@ -348,6 +436,8 @@ static gboolean ft_make_char1(charinfo *c)
 	write_png(c, &char1);
 	
 	FT_Done_Glyph(glyf);
+	
+	g_free(char1.buffer);
 	
 	return TRUE;
 }
@@ -417,6 +507,7 @@ static gboolean ft_make_char8(charinfo *c)
 					}
 				}
 			}
+			coverage = (255 * coverage) / 256;	/* need to be 0..255 range */
 
 			/*
 			 * Output character to correct position in bitmap
@@ -433,7 +524,10 @@ static gboolean ft_make_char8(charinfo *c)
 					g_string_append_printf(errorout, "char %x: position %dx%d outside bitmap %ux%u\n", c->char_id, xpos, ypos, font_bb.width, font_bb.height);
 			} else
 			{
-				char8.buffer[ind] = (255 * coverage) / 256;	/* need to be 0..255 range */
+				char8.buffer[ind] = coverage;
+				ind = (c->char_id / PNG_GLYPHS_PER_ROW) * big_bytes_per_glyph_row + ypos * big_bytes_per_row * PNG_GLYPHS_PER_ROW;
+				ind += (c->char_id % PNG_GLYPHS_PER_ROW) * big_bytes_per_row + xpos;
+				big_buffer[ind] = coverage;
 			}
 		}
 	}
@@ -441,6 +535,8 @@ static gboolean ft_make_char8(charinfo *c)
 	write_png(c, &char8);
 	
 	FT_Done_Glyph(glyf);
+	
+	g_free(char8.buffer);
 	
 	return TRUE;
 }
@@ -470,7 +566,7 @@ static gboolean gen_ttf_font(GString *body)
 	
 	t = time(NULL);
 	tm = *gmtime(&t);
-	basename = g_strdup_printf("%s_%04d%02d%02d%02d%02d%02d_",
+	basename = g_strdup_printf("%s_%04d%02d%02d%02d%02d%02d",
 		fontfilename,
 		tm.tm_year + 1900,
 		tm.tm_mon + 1,
@@ -487,10 +583,10 @@ static gboolean gen_ttf_font(GString *body)
 			num_ids = char_id + 1;
 		char_id = FT_Get_Next_Char(face, char_id, &gindex);
 		/*
-				if (FT_HAS_GLYPH_NAMES(face))
-					FT_Get_Glyph_Name(face, gindex, buf, 32);
-				else
-					buf[0] = '\0';
+			if (FT_HAS_GLYPH_NAMES(face))
+				FT_Get_Glyph_Name(face, gindex, buf, 32);
+			else
+				buf[0] = '\0';
 		*/
 	}
 		
@@ -511,6 +607,7 @@ static gboolean gen_ttf_font(GString *body)
 	{
 		infos[char_id].char_index = 0;
 		infos[char_id].char_id = UNDEFINED;
+		infos[char_id].basename = NULL;
 		infos[char_id].local_filename = NULL;
 		infos[char_id].url = NULL;
 		infos[char_id].name[0] = '\0';
@@ -611,6 +708,19 @@ static gboolean gen_ttf_font(GString *body)
 		
 		font_bb = max_bb;
 	}
+
+	png_glyph_rows = (num_ids + PNG_GLYPHS_PER_ROW - 1) / PNG_GLYPHS_PER_ROW;
+	
+	big_bytes_per_row = font_bb.width;
+	big_bytes_per_glyph_row = big_bytes_per_row * PNG_GLYPHS_PER_ROW * font_bb.height;
+	big_buffer = g_new0(uint8_t, big_bytes_per_glyph_row * png_glyph_rows);
+	
+	if (debug)
+	{
+		g_string_append_printf(errorout, "ids: %u\n", num_ids);
+		g_string_append_printf(errorout, "cell: %ux%u\n", font_bb.width, font_bb.height);
+		g_string_append_printf(errorout, "<a href=\"%s/%s.png\">%s</a>\n", output_url, basename, basename);
+	}
 	
 	/*
 	 * Render each character.
@@ -621,14 +731,18 @@ static gboolean gen_ttf_font(GString *body)
 		if (c->char_id != UNDEFINED)
 		{
 			const char *ext = output_mode == MODE_OUTLINE ? ".svg" : ".png";
-			c->local_filename = g_strdup_printf("%s/%schr%04x%s", output_dir, basename, char_id, ext);
-			c->url = g_strdup_printf("%s/%schr%04x%s", output_url, basename, char_id, ext);
+			c->basename = basename;
+			c->local_filename = g_strdup_printf("%s/%s_chr%04x%s", output_dir, basename, char_id, ext);
+			c->url = g_strdup_printf("%s/%s_chr%04x%s", output_url, basename, char_id, ext);
 			if (!(bitsPerPixel == 1 ? ft_make_char1(c) : ft_make_char8(c)))
 			{
 				g_string_append_printf(errorout, "can't make char 0x%x (0x%lx)\n", c->char_index, (unsigned long)char_id);
 			}
 		}
 	}
+	
+	write_big_png(basename);
+	g_free(big_buffer);
 	
 #if 0
 	qsort(infos, num_chars, sizeof(infos[0]), cmp_info);
@@ -731,14 +845,12 @@ static gboolean gen_ttf_font(GString *body)
 				g_string_append_printf(body,
 					"<td class=\"spd_glyph_image\" style=\"width: %dpx; height: %dpx; min-width: %dpx; min-height: %dpx;\" title=\""
 					"Index: 0x%x (%u)&#10;"
-					"ID: 0x%04lx&#10;"
 					"Unicode: 0x%04lx &#%lu;&#10;"
 					"%s&#10;%s"
 					"\">%s</td>",
 					font_bb.width, font_bb.height,
 					font_bb.width, font_bb.height,
 					c->char_index, c->char_index,
-					(unsigned long)c->char_id,
 					(unsigned long)unicode, (unsigned long)unicode,
 					ucd_get_name(unicode),
 					debuginfo ? debuginfo : "",
@@ -1155,6 +1267,7 @@ int main(void)
 
 /*
 export SERVER_NAME=127.0.0.2
+export REMOTE_ADDR=127.0.0.1
 export HTTP_REFERER=http://127.0.0.2/spdview/
 export SCRIPT_FILENAME=/srv/www/htdocs/spdview/ttfview.cgi
 export SCRIPT_NAME=/spdview/ttfview.cgi
