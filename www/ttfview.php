@@ -117,8 +117,8 @@ document.getElementById('uploadbox').style.display="block";
 <select id="quality" name="quality">
 <option value="0">Normal</option>
 <option value="1" selected="selected">Screen</option>
-<option value="2">Outline</option>
-<option value="3">2D</option>
+<!-- <option value="2">Outline</option> -->
+<!-- <option value="3">2D</option> -->
 </select>
 </td>
 </tr>
