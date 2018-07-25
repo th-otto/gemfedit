@@ -70,7 +70,6 @@ static unsigned short numoffs;
 
 #define FONT_BIG ((fonthdr.flags & FONTF_BIGENDIAN) != 0)
 
-static char const program_name[] = "fontdisp";
 
 
 static OBJECT *rs_tree(_WORD num)
@@ -89,7 +88,7 @@ static void chomp(char *dst, const char *src, size_t maxlen)
 {
 	size_t len;
 	
-	strncpy(dst, src, maxlen);
+	strncpy(dst, src, maxlen - 1);
 	dst[maxlen - 1] = '\0';
 	len = strlen(dst);
 	while (len > 0 && dst[len - 1] == ' ')
@@ -646,7 +645,7 @@ static _BOOL font_gen_gemfont(unsigned char **m, const char *filename, unsigned 
 	if (!(hdr->flags & FONTF_COMPRESSED))
 	{
 		if (dat_offset > off_offset && (off_offset + (numoffs + 1) * 2) < dat_offset)
-			nf_debugprintf("%s: warning: %s: gap of %lu bytes before data\n", program_name, filename, (unsigned long)dat_offset - (off_offset + (numoffs + 1) * 2));
+			nf_debugprintf("warning: %s: gap of %lu bytes before data\n", filename, (unsigned long)dat_offset - (off_offset + (numoffs + 1) * 2));
 	}
 
 	if (hdr->flags & FONTF_COMPRESSED)
@@ -704,7 +703,7 @@ static _BOOL font_gen_gemfont(unsigned char **m, const char *filename, unsigned 
 	
 	last_offset = off_table[numoffs];
 	if ((((last_offset + 15) >> 4) << 1) != hdr->form_width)
-		nf_debugprintf("%s: warning: %s: offset of last character %u does not match form_width %u\n", program_name, filename, last_offset, hdr->form_width);
+		nf_debugprintf("warning: %s: offset of last character %u does not match form_width %u\n", filename, last_offset, hdr->form_width);
 
 	hor_table_valid = hor_offset != 0 && hor_offset < off_offset && (off_offset - hor_offset) >= (numoffs * 2);
 	if ((hdr->flags & FONTF_HORTABLE) && hor_table_valid)
