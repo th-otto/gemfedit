@@ -6,26 +6,32 @@ CPPFLAGS = -I../include -I../speedo -I../freetype/include
 LDFLAGS = -s
 LIBS = -lcurl
 
-USE_PNG12=1
+#USE_PNG12=1
 #USE_PNG14=1
 #USE_PNG16=1
+USE_PNG_INCLUDED=1
 
 ifdef USE_PNG12
-LIBS += -lpng12
+LIBPNG = -lpng12
 CPPFLAGS += -DUSE_PNG12
 endif
 ifdef USE_PNG14
-LIBS += -lpng14
+LIBPNG = -lpng14
 CPPFLAGS += -DUSE_PNG14
 endif
 ifdef USE_PNG16
-LIBS += -lpng16
+LIBPNG = -lpng16
 CPPFLAGS += -DUSE_PNG16
 endif
+ifdef USE_PNG_INCLUDED
+LIBPNG = -L../libpng -lpng -lm
+CPPFLAGS += -I../libpng
+endif
 ifndef LIBPNG
-LIBS += -lpng
+LIBPNG = -lpng
 endif
 
+LIBS += $(LIBPNG)
 LIBS += -lz
 
 SPDLIB = reset.o do_char.o do_trns.o set_spcs.o set_trns.o \
