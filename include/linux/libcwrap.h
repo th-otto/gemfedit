@@ -217,7 +217,8 @@ SYMVER(__logf128_finite, GLIBC_DONT_USE_THIS_VERSION_2.26)
 SYMVER(__logf_finite, GLIBC_DONT_USE_THIS_VERSION_2.15)
 SYMVER(__logl_finite, GLIBC_DONT_USE_THIS_VERSION_2.15)
 SYMVER(__poll_chk, GLIBC_DONT_USE_THIS_VERSION_2.16)
-SYMVER(__pow_finite, GLIBC_DONT_USE_THIS_VERSION_2.15)
+/* using --ffast-math can generate references to this symbol :( */
+/* SYMVER(__pow_finite, GLIBC_DONT_USE_THIS_VERSION_2.15) */
 SYMVER(__powf128_finite, GLIBC_DONT_USE_THIS_VERSION_2.26)
 SYMVER(__powf_finite, GLIBC_DONT_USE_THIS_VERSION_2.15)
 SYMVER(__powl_finite, GLIBC_DONT_USE_THIS_VERSION_2.15)
