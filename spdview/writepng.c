@@ -327,7 +327,7 @@ int writepng_init(writepng_info *wpnginfo)
 	if (wpnginfo->gamma > 0.0)
 		png_set_gAMA(png_ptr, info_ptr, wpnginfo->gamma);
 
-	if (wpnginfo->num_palette)
+	if (wpnginfo->num_palette && color_type == PNG_COLOR_TYPE_PALETTE)
 	{
 		png_set_PLTE(png_ptr, info_ptr, (png_color *)wpnginfo->palette, wpnginfo->num_palette);
 	}

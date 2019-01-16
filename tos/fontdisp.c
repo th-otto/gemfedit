@@ -55,7 +55,8 @@ static _BOOL quit_app;
 static OBJECT *menu;
 static _WORD scalex = 3;
 static _WORD scaley = 3;
-static const int scaled_margin = 2;
+static int scaled_margin = 2;
+static int hide_grid = 0;
 
 static _WORD font_cw;
 static _WORD font_ch;
@@ -248,24 +249,33 @@ static void mainwin_draw(const GRECT *area)
 			vsf_interior(vdihandle, FIS_SOLID);
 			vr_recfl(vdihandle, pxy);
 	
+			/*
+			 * draw the grid
+			 */
 			vsf_color(vdihandle, G_RED);
-			for (y = 0; y < 17; y++)
+			if (scaled_margin > 0)
 			{
-				pxy[0] = work.g_x + MAIN_X_MARGIN;
-				pxy[1] = work.g_y + MAIN_Y_MARGIN + y * (font_ch * scaley + scaled_margin);
-				pxy[2] = pxy[0] + scaled_w - 1;
-				pxy[3] = pxy[1] + scaled_margin - 1;
-				vr_recfl(vdihandle, pxy);
-			}
-			for (x = 0; x < 17; x++)
-			{
-				pxy[0] = work.g_x + MAIN_X_MARGIN + x * (font_cw * scalex + scaled_margin);
-				pxy[1] = work.g_y + MAIN_Y_MARGIN;
-				pxy[2] = pxy[0] + scaled_margin - 1;
-				pxy[3] = pxy[1] + scaled_h - 1;
-				vr_recfl(vdihandle, pxy);
+				for (y = 0; y < 17; y++)
+				{
+					pxy[0] = work.g_x + MAIN_X_MARGIN;
+					pxy[1] = work.g_y + MAIN_Y_MARGIN + y * (font_ch * scaley + scaled_margin);
+					pxy[2] = pxy[0] + scaled_w - 1;
+					pxy[3] = pxy[1] + scaled_margin - 1;
+					vr_recfl(vdihandle, pxy);
+				}
+				for (x = 0; x < 17; x++)
+				{
+					pxy[0] = work.g_x + MAIN_X_MARGIN + x * (font_cw * scalex + scaled_margin);
+					pxy[1] = work.g_y + MAIN_Y_MARGIN;
+					pxy[2] = pxy[0] + scaled_margin - 1;
+					pxy[3] = pxy[1] + scaled_h - 1;
+					vr_recfl(vdihandle, pxy);
+				}
 			}
 			
+			/*
+			 * draw the characters
+			 */
 			for (y = 0; y < 16; y++)
 			{
 				for (x = 0; x < 16; x++)
@@ -357,6 +367,8 @@ static _BOOL create_window(void)
 	_WORD wkind;
 	_WORD width, height;
 	
+	scaled_margin = hide_grid ? 0 : scalex == 1 ? 1 : 2;
+	
 	width = MAIN_X_MARGIN * 2 + scalex * font_cw * 16 + 17 * scaled_margin;
 	height = MAIN_Y_MARGIN * 2 + scaley * font_ch * 16 + 17 * scaled_margin;
 	
@@ -393,6 +405,8 @@ static _BOOL resize_window(void)
 	GRECT gr, desk;
 	_WORD wkind;
 	_WORD width, height;
+	
+	scaled_margin = hide_grid ? 0 : scalex == 1 ? 1 : 2;
 	
 	width = MAIN_X_MARGIN * 2 + scalex * font_cw * 16 + 17 * scaled_margin;
 	height = MAIN_Y_MARGIN * 2 + scaley * font_ch * 16 + 17 * scaled_margin;
@@ -995,6 +1009,12 @@ static void mainloop(void)
 				break;
 			case 0x09:
 				font_info();
+				break;
+			case 'g':
+			case 'G':
+				hide_grid = !hide_grid;
+				resize_window();
+				redraw_win(mainwin);
 				break;
 			case 0x11:
 				quit_app = TRUE;

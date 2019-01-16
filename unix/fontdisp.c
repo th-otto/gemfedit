@@ -105,6 +105,7 @@ static const char *const sysfontname[SYSFONTS] = {
 static char const program_name[] = "fontdisp";
 static int cw, ch;
 static int scaled_margin = 2;
+static int hide_grid = 0;
 static int scale = 3;
 static int scaled_w, scaled_h;
 
@@ -748,25 +749,33 @@ static void draw_window(HDC hdc, RECT *rc)
 
 	FillRect(hdc, rc, GetStockObject(WHITE_BRUSH));
 
+	/*
+	 * draw the grid
+	 */
 	redbrush = CreateSolidBrush(RGB(255, 0, 0));
+	if (scaled_margin > 0)
+	{
+		for (y = 0; y < 17; y++)
+		{
+			line.left = 0;
+			line.top = y * (ch * scale + scaled_margin);
+			line.right = line.left + scaled_w;
+			line.bottom = line.top + scaled_margin;
+			FillRect(hdc, &line, redbrush);
+		}
+		for (x = 0; x < 17; x++)
+		{
+			line.left = x * (cw * scale + scaled_margin);
+			line.top = 0;
+			line.right = line.left + scaled_margin;
+			line.bottom = line.top + scaled_h;
+			FillRect(hdc, &line, redbrush);
+		}
+	}
 	
-	for (y = 0; y < 17; y++)
-	{
-		line.left = 0;
-		line.top = y * (ch * scale + scaled_margin);
-		line.right = line.left + scaled_w;
-		line.bottom = line.top + scaled_margin;
-		FillRect(hdc, &line, redbrush);
-	}
-	for (x = 0; x < 17; x++)
-	{
-		line.left = x * (cw * scale + scaled_margin);
-		line.top = 0;
-		line.right = line.left + scaled_margin;
-		line.bottom = line.top + scaled_h;
-		FillRect(hdc, &line, redbrush);
-	}
-
+	/*
+	 * draw the characters
+	 */
 	for (y = 0; y < 16; y++)
 	{
 		for (x = 0; x < 16; x++)
@@ -799,7 +808,7 @@ static void draw_window(HDC hdc, RECT *rc)
 
 static void create_win(void)
 {
-	scaled_margin = scale == 1 ? 1 : 2;
+	scaled_margin = hide_grid ? 0 : scale == 1 ? 1 : 2;
 	scaled_w = cw * 16 * scale + 17 * scaled_margin;
 	scaled_h = ch * 16 * scale + 17 * scaled_margin;
 	if (GlMainHwnd == 0)
@@ -882,6 +891,11 @@ static LRESULT CALLBACK mainWndProc(HWND hwnd, UINT message, WPARAM wparam, LPAR
 		case 'q':
 		case 0x1b:
 			DestroyWindow(hwnd);
+			break;
+		case 'g':
+		case 'G':
+			hide_grid = !hide_grid;
+			create_win();
 			break;
 		}
 		break;
@@ -1029,16 +1043,25 @@ static void draw_window(void)
 	XSetForeground(x_display, gc, WhitePixel(x_display, screen));
 	XFillRectangle(x_display, win, gc, 0, 0, scaled_w, scaled_h);
 			
+	/*
+	 * draw the grid
+	 */
 	XSetForeground(x_display, gc, 0xff0000);
-	for (y = 0; y < 17; y++)
+	if (scaled_margin > 0)
 	{
-		XFillRectangle(x_display, win, gc, 0, y * (ch * scale + scaled_margin), scaled_w, scaled_margin);
+		for (y = 0; y < 17; y++)
+		{
+			XFillRectangle(x_display, win, gc, 0, y * (ch * scale + scaled_margin), scaled_w, scaled_margin);
+		}
+		for (x = 0; x < 17; x++)
+		{
+			XFillRectangle(x_display, win, gc, x * (cw * scale + scaled_margin), 0, scaled_margin, scaled_h);
+		}
 	}
-	for (x = 0; x < 17; x++)
-	{
-		XFillRectangle(x_display, win, gc, x * (cw * scale + scaled_margin), 0, scaled_margin, scaled_h);
-	}
-
+	
+	/*
+	 * draw the characters
+	 */
 	XSetForeground(x_display, gc, BlackPixel(x_display, screen));
 	XSetBackground(x_display, gc, WhitePixel(x_display, screen));
 	for (y = 0; y < 16; y++)
@@ -1080,7 +1103,7 @@ static void create_win(void)
 	x = y = 0;
 	if (win)
 		XDestroyWindow(x_display, win);
-	scaled_margin = scale == 1 ? 1 : 2;
+	scaled_margin = hide_grid ? 0 : scale == 1 ? 1 : 2;
 	scaled_w = cw * 16 * scale + 17 * scaled_margin;
 	scaled_h = ch * 16 * scale + 17 * scaled_margin;
 	hints->x = x + 20;
@@ -1188,6 +1211,11 @@ int main(int argc, const char **argv)
 					create_scaled_images(sf);
 					create_win();
 				}
+				break;
+			case 'g':
+			case 'G':
+				hide_grid = !hide_grid;
+				create_win();
 				break;
 			case 'q':
 			case XK_Escape:
