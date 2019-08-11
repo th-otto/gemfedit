@@ -144,6 +144,9 @@ do
 			   cr2nl -n "$thisdir/$i"
 	                   ;;
 			c) cp -a -v "$thisdir/$i" "$otherdir/$i"
+			   # yes, set back timestamp from other dir;
+			   # it might been migrated with respect to nanoseconds
+			   touch -r "$otherdir/$i" "$thisdir/$i"
 			   (cd $otherdir; cr2nl -d "$i")
 			   ;;
 			x) exit 1 ;;

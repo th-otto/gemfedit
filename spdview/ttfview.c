@@ -954,7 +954,8 @@ static gboolean load_ttf_font(const char *filename, GString *body)
 		ft_error = FT_Select_Charmap(face, FT_ENCODING_UNICODE);
 	if (ft_error != FT_Err_Ok)
 	{
-		g_string_append_printf(errorout, "%s: %s\n", filename, FT_Strerror(ft_error));
+		const char *str = FT_Error_String(ft_error);
+		g_string_append_printf(errorout, "%s: %s\n", filename, str ? str : "unknown error");
 		ret = FALSE;
 	} else
 	{

@@ -950,3 +950,10 @@ SYMVER(recvmmsg, GLIBC_DONT_USE_THIS_VERSION_2.12)
 }
 #endif
 #endif
+
+/*
+fcntl64@GLIBC_2.28
+og@GLIBC_2.29
+fcntl@GLIBC_2.28
+pow@GLIBC_2.29
+*/

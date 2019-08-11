@@ -16,12 +16,12 @@ static struct
 #include <freetype/fterrors.h>
 };
 
-FT_EXPORT(const char *) FT_Strerror(FT_Error code)
+FT_EXPORT(const char *) FT_Error_String(FT_Error code)
 {
 	size_t i;
 
 	for (i = 0; i < (sizeof(ft_errors) / sizeof(ft_errors[0])); i++)
 		if (ft_errors[i].err_code == code)
 			return ft_errors[i].err_msg;
-	return "unknown error";
+	return NULL;
 }
