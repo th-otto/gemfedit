@@ -206,8 +206,8 @@ class spd {
 			{
 				fseek($info, 24);
 				$fontname = fread($info, 70);
-				if (strpos($fontname, 0) >= 0)
-					$fontname = substr($fontname, 0, strpos($fontname, 0));
+				if (strpos($fontname, chr(0)) >= 0)
+					$fontname = substr($fontname, 0, strpos($fontname, chr(0)));
 				$spd->files[$entry]['fontname'] = $fontname;
 				fclose($info);
 			} else
