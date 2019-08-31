@@ -150,7 +150,7 @@ static void gblender_reset_key(GBlender blender, GBlenderKey key)
 	const unsigned char *gamma_ramp_inv = blender->gamma_ramp_inv;
 	const unsigned short *gamma_ramp = blender->gamma_ramp;
 
-	unsigned int r1, g1, b1, r2,g2, b2;
+	unsigned int r1, g1, b1, r2, g2, b2;
 
 	r1 = (back >> 16) & 255;
 	g1 = (back >> 8) & 255;

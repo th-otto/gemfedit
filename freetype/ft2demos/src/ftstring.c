@@ -97,7 +97,8 @@ static struct status_
 
 } status =
 {
-	DIM_X, DIM_Y, RENDER_MODE_STRING, FT_ENCODING_UNICODE, 72, 48, 0, NULL,
+	DIM_X, DIM_Y, RENDER_MODE_STRING, FT_ENCODING_UNICODE,
+	72, 48, 0, NULL,
 	{ 0, 0, 0, 0, NULL },
 	{ 0 },
 	{ 0, 0, 0, 0 },
@@ -377,41 +378,32 @@ static int Process_Event(grEvent *event)
 
 	case grKEY('b'):
 		handle->use_sbits = !handle->use_sbits;
-		status.header = handle->use_sbits
-			? "embedded bitmaps are now used when available" : "embedded bitmaps are now ignored";
-
+		status.header = handle->use_sbits ? "embedded bitmaps are now used when available" : "embedded bitmaps are now ignored";
 		FTDemo_Update_Current_Flags(handle);
 		break;
 
 	case grKEY('f'):
 		handle->autohint = !handle->autohint;
-		status.header = handle->autohint
-			? "forced auto-hinting is now on" : "forced auto-hinting is now off";
-
+		status.header = handle->autohint ? "forced auto-hinting is now on" : "forced auto-hinting is now off";
 		FTDemo_Update_Current_Flags(handle);
 		break;
 
 	case grKEY('h'):
 		handle->hinted = !handle->hinted;
-		status.header = handle->hinted
-			? "glyph hinting is now active" : "glyph hinting is now ignored";
-
+		status.header = handle->hinted ? "glyph hinting is now active" : "glyph hinting is now ignored";
 		FTDemo_Update_Current_Flags(handle);
 		break;
 
 	case grKEY('l'):
 		event_lcdmode_change();
-
 		FTDemo_Update_Current_Flags(handle);
 		break;
 
 	case grKEY('k'):
 		sc->kerning_mode = (sc->kerning_mode + 1) % N_KERNING_MODES;
 		status.header =
-			sc->kerning_mode == KERNING_MODE_SMART
-			? "pair kerning and side bearing correction is now active"
-			: sc->kerning_mode == KERNING_MODE_NORMAL
-			? "pair kerning is now active" : "pair kerning is now ignored";
+			sc->kerning_mode == KERNING_MODE_SMART ? "pair kerning and side bearing correction is now active" :
+			sc->kerning_mode == KERNING_MODE_NORMAL ? "pair kerning is now active" : "pair kerning is now ignored";
 		break;
 
 	case grKEY('t'):
@@ -555,7 +547,7 @@ static void parse_cmdline(int *argc, char ***argv)
 
 	execname = ft_basename((*argv)[0]);
 
-	while (1)
+	for (;;)
 	{
 		option = getopt(*argc, *argv, "e:h:m:r:vw:");
 

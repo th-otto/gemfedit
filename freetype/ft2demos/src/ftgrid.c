@@ -513,11 +513,11 @@ static void bitmap_scale(grBitmap *bit, FT_F26Dot6 scale)
 	int i, k;
 	size_t j;
 	size_t scaled_pitch;
-	
+
 	pitch = bit->pitch > 0 ? bit->pitch : -bit->pitch;
 	width = bit->width;
 	scaled_pitch = pitch * scale;
-	
+
 	t = (unsigned char *) malloc(pitch * bit->rows * scale * scale);
 	if (!t)
 		return;
@@ -536,7 +536,7 @@ static void bitmap_scale(grBitmap *bit, FT_F26Dot6 scale)
 				else
 					line[j / 8] &= ~(0x80 >> (j & 7));
 			}
-			
+
 			for (k = 1; k < scale; k++, line += scaled_pitch)
 				memcpy(line + scaled_pitch, line, scaled_pitch);
 			line += scaled_pitch;
@@ -568,6 +568,7 @@ static void bitmap_scale(grBitmap *bit, FT_F26Dot6 scale)
 					line[j * scale + 3 * k + 2] = s[i * pitch + j + 2];
 				}
 			}
+
 			for (k = 1; k < scale; k++, line += scaled_pitch)
 				memcpy(line + scaled_pitch, line, scaled_pitch);
 			line += scaled_pitch;

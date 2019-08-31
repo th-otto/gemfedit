@@ -139,7 +139,7 @@ int getopt(int ac, char *const *av, const char *pat)
 		 */
 		optind++;
 	}
-	
+
 	/*
 	 *  Return the option character.
 	 */

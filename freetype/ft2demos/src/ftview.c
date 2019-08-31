@@ -129,7 +129,8 @@ static struct status_
 
 } status =
 {
-	1, DIM_X, DIM_Y, RENDER_MODE_ALL, 72, 48, 1, 0.04, 0.04, 0.02, 0.22, 0,
+	1, DIM_X, DIM_Y, RENDER_MODE_ALL,
+	72, 48, 1, 0.04, 0.04, 0.02, 0.22, 0,
 	{ 0 }, 0, 0, 0, 0, 0, 0, 0, 0, FT_LCD_FILTER_DEFAULT,
 	{ 0x08, 0x4D, 0x56, 0x4D, 0x08 },
 	2
@@ -163,6 +164,7 @@ static const char *Text =
 	" ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 	" $\302\243^\302\250*\302\265\303\271%!\302\247:/;.,?<> ";
 
+
 static void Fatal(const char *message)
 {
 	FTDemo_Display_Done(display);
@@ -182,7 +184,6 @@ static FT_Error Render_Stroke(int num_indices, int offset)
 	FT_Fixed radius;
 
 	error = FTDemo_Get_Size(handle, &size);
-
 	if (error)
 	{
 		/* probably a non-existent bitmap font size */
@@ -272,7 +273,6 @@ static FT_Error Render_Fancy(int num_indices, int offset)
 	FT_Pos xstr, ystr;
 
 	error = FTDemo_Get_Size(handle, &size);
-
 	if (error)
 	{
 		/* probably a non-existent bitmap font size */
@@ -347,7 +347,7 @@ static FT_Error Render_Fancy(int num_indices, int offset)
 		{
 			goto Next;
 		}
-		
+
 		if (slot->advance.x)
 			slot->advance.x += xstr;
 
@@ -401,7 +401,6 @@ static FT_Error Render_All(int num_indices, int offset)
 	FT_GlyphSlot slot;
 
 	error = FTDemo_Get_Size(handle, &size);
-
 	if (error)
 	{
 		/* probably a non-existent bitmap font size */
@@ -1480,19 +1479,24 @@ static void usage(char *execname)
 	fprintf(stderr,
 			"  font      The font file(s) to display.\n"
 			"            For Type 1 font files, ftview also tries to attach\n"
-			"            the corresponding metrics file (with extension\n" "            `.afm' or `.pfm').\n" "\n");
+			"            the corresponding metrics file (with extension\n"
+			"            `.afm' or `.pfm').\n" "\n");
 	fprintf(stderr,
 			"  -w W      Set the window width to W pixels (default: %dpx).\n"
-			"  -h H      Set the window height to H pixels (default: %dpx).\n" "\n", DIM_X, DIM_Y);
+			"  -h H      Set the window height to H pixels (default: %dpx).\n"
+			"\n", DIM_X, DIM_Y);
 	fprintf(stderr,
 			"  -r R      Use resolution R dpi (default: 72dpi).\n"
 			"  -f index  Specify first index to display (default: 0).\n"
 			"  -e enc    Specify encoding tag (default: no encoding).\n"
 			"            Common values: `unic' (Unicode), `symb' (symbol),\n"
-			"            `ADOB' (Adobe standard), `ADBC' (Adobe custom).\n" "  -m text   Use `text' for rendering.\n");
+			"            `ADOB' (Adobe standard), `ADBC' (Adobe custom).\n"
+			"  -m text   Use `text' for rendering.\n");
 	fprintf(stderr, "  -l mode   Set start-up rendering mode (0 <= mode <= %d).\n", N_LCD_IDXS);
 	fprintf(stderr,
-			"  -p        Preload file in memory to simulate memory-mapping.\n" "\n" "  -v        Show version.\n" "\n");
+			"  -p        Preload file in memory to simulate memory-mapping.\n"
+			"\n"
+			"  -v        Show version.\n" "\n");
 
 	exit(1);
 }

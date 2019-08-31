@@ -153,7 +153,7 @@ grSurface *grNewSurface(const char *device_name, grBitmap * bitmap)
 
 
 
-void grDoneSurface(grSurface * surface)
+void grDoneSurface(grSurface *surface)
 {
 	if (surface)
 	{
@@ -189,7 +189,7 @@ void grDoneSurface(grSurface * surface)
  *    height  :: rectangle height in pixels
  *
  **********************************************************************/
-void grRefreshRectangle(grSurface * surface, grPos x, grPos y, grPos width, grPos height)
+void grRefreshRectangle(grSurface *surface, grPos x, grPos y, grPos width, grPos height)
 {
 	if (surface->refresh_rect)
 		surface->refresh_rect(surface, x, y, width, height);
@@ -220,7 +220,7 @@ void grRefreshRectangle(grSurface * surface, grPos x, grPos y, grPos width, grPo
  *    color    :: color to be used to draw the character
  *
  **********************************************************************/
-void grWriteSurfaceChar(grSurface * target, int x, int y, int charcode, grColor color)
+void grWriteSurfaceChar(grSurface *target, int x, int y, int charcode, grColor color)
 {
 	grWriteCellChar(&target->bitmap, x, y, charcode, color);
 	if (target->refresh_rect)
@@ -251,7 +251,7 @@ void grWriteSurfaceChar(grSurface * target, int x, int y, int charcode, grColor 
  *    color        :: color to be used to draw the character
  *
  **********************************************************************/
-void grWriteSurfaceString(grSurface * target, int x, int y, const char *string, grColor color)
+void grWriteSurfaceString(grSurface *target, int x, int y, const char *string, grColor color)
 {
 	int len;
 
@@ -275,7 +275,7 @@ void grWriteSurfaceString(grSurface * target, int x, int y, const char *string, 
  *    surface :: handle to target surface
  *
  **********************************************************************/
-void grRefreshSurface(grSurface * surface)
+void grRefreshSurface(grSurface *surface)
 {
 	if (surface->refresh_rect)
 		surface->refresh_rect(surface, 0, 0, surface->bitmap.width, surface->bitmap.rows);
@@ -296,7 +296,7 @@ void grRefreshSurface(grSurface * surface)
  *    title_string :: the new title
  *
  **********************************************************************/
-void grSetTitle(grSurface * surface, const char *title_string)
+void grSetTitle(grSurface *surface, const char *title_string)
 {
 	if (surface->set_title)
 		surface->set_title(surface, title_string);
@@ -324,7 +324,7 @@ void grSetTitle(grSurface * surface, const char *title_string)
  *    XXX : For now, only keypresses are supported.
  *
  **********************************************************************/
-int grListenSurface(grSurface * surface, int event_mask, grEvent * event)
+int grListenSurface(grSurface *surface, int event_mask, grEvent *event)
 {
 	return surface->listen_event(surface, event_mask, event);
 }

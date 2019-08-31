@@ -591,7 +591,7 @@ void FTDemo_Set_Current_Charsize(FTDemo_Handle *handle, int char_size, int resol
 
 void FTDemo_Set_Preload(FTDemo_Handle *handle, int preload)
 {
-	handle->preload = ! !preload;
+	handle->preload = !!preload;
 }
 
 

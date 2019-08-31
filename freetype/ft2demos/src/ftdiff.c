@@ -52,7 +52,9 @@ static void usage(char *execname)
 			"  -r R         Use resolution R dpi (default: 72dpi).\n"
 			"  -s S         Set character size to S points (default: 16pt).\n"
 			"  -f TEXTFILE  Change displayed text, using text in TEXTFILE\n"
-			"               (in UTF-8 encoding).\n" "\n" "  -v           Show version." "\n");
+			"               (in UTF-8 encoding).\n"
+			"\n"
+			"  -v           Show version." "\n");
 
 	exit(1);
 }
@@ -489,9 +491,7 @@ static void render_state_draw(RenderState state, const char *text, int idx, int 
 
 	/* no need to check for errors: the values used here are always valid */
 	FT_Property_Set(state->library, "cff", "hinting-engine", &column->cff_hinting_engine);
-	FT_Property_Set(state->library,
-					"truetype",
-					"interpreter-version", &column->tt_interpreter_versions[column->tt_interpreter_version_idx]);
+	FT_Property_Set(state->library, "truetype", "interpreter-version", &column->tt_interpreter_versions[column->tt_interpreter_version_idx]);
 	FT_Property_Set(state->library, "autofitter", "warping", &column->warping);
 
 	/* changing a property is in most cases a global operation; */

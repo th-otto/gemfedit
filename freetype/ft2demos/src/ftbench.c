@@ -432,7 +432,8 @@ static int test_get_char_index(btimer_t *timer, FT_Face face, void *user_data)
 static int test_cmap_cache(btimer_t *timer, FT_Face face, void *user_data)
 {
 	bcharset_t *charset = (bcharset_t *) user_data;
-	int i, done = 0;
+	int i;
+	int done = 0;
 
 	FT_UNUSED(face);
 
@@ -636,7 +637,7 @@ static FT_Error get_face(FT_Face *face)
 	{
 		error = FT_New_Face(lib, filename, face_index, face);
 	}
-	
+
 	if (error)
 		fprintf(stderr, "couldn't load font resource\n");
 

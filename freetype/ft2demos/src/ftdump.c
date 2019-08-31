@@ -88,7 +88,10 @@ static void usage(FT_Library library, char *execname)
 			"  -n        Print SFNT name tables.\n"
 			"  -p        Print TrueType programs.\n"
 			"  -t        Print SFNT table list.\n"
-			"  -u        Emit UTF8.\n" "  -V        Be verbose.\n" "\n" "  -v        Show version.\n" "\n");
+			"  -u        Emit UTF8.\n"
+			"  -V        Be verbose.\n"
+			"\n"
+			"  -v        Show version.\n\n");
 
 	exit(1);
 }
@@ -524,7 +527,7 @@ static void Print_MM_Axes(FT_Face face)
 		{
 			printf("   %s", mm->axis[i].name);
 		}
-		
+
 		printf(": [%g;%g], default %g\n",
 			   mm->axis[i].minimum / 65536.0, mm->axis[i].maximum / 65536.0, mm->axis[i].def / 65536.0);
 	}
@@ -686,7 +689,7 @@ static void Print_Programs(FT_Face face)
 		{
 			loc += 2 * len;
 		}
-		
+
 		len = (FT_UInt16) (buffer[loc] << 8 | buffer[loc + 1]);
 
 		if (len == 0)

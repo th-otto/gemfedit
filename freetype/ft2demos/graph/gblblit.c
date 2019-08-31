@@ -1,3 +1,16 @@
+/****************************************************************************/
+/*                                                                          */
+/*  The FreeType project -- a free and portable quality TrueType renderer.  */
+/*                                                                          */
+/*  Copyright (C) 1996-2019 by                                              */
+/*  D. Turner, R.Wilhelm, and W. Lemberg                                    */
+/*                                                                          */
+/*  grblit.c: Support for alpha blending with gamma correction and caching. */
+/*                                                                          */
+/****************************************************************************/
+
+
+#include "grobjs.h"
 #include "gblblit.h"
 
 /* blitting gray glyphs

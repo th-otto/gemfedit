@@ -93,7 +93,7 @@ static void do_fill(grBitmap *bitmap, int x, int y, int w, int h, int back, int 
 		for (b = back / 255., i = 0; i < w; i++)
 			line[i + (i & 1) * pitch] = (unsigned char) (0.5 + 255. * pow(b, 1. / (1. + 2. * i / w)));
 	}
-	
+
 	if (fore == 0 || fore == 255)
 	{
 		for (i = 0; i < w; i++)
@@ -103,7 +103,7 @@ static void do_fill(grBitmap *bitmap, int x, int y, int w, int h, int back, int 
 		for (f = fore / 255., i = 0; i < w; i++)
 			line[i + (~i & 1) * pitch] = (unsigned char) (0.5 + 255. * pow(f, 1. / (1. + 2. * i / w)));
 	}
-	
+
 	for (i = 2; i < h; i += 2)
 	{
 		memcpy(line + i * pitch, line, (size_t) w);

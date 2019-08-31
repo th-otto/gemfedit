@@ -1,7 +1,7 @@
 /* minimal Mac wrapper for the ftview.c program */
 
 
-int original_main( int  argc, char**  argv );
+int original_main(int argc, char **argv);
 
 /* We rename the original main() program to original_main,
    so we can provide a wrapper around it */
@@ -24,15 +24,14 @@ int original_main( int  argc, char**  argv );
 #include <Carbon.h>
 #endif
 
-static void
-init_toolbox()
+static void init_toolbox(void)
 {
 #ifndef USING_CARBON
 	InitGraf(&qd.thePort);
 	InitFonts();
 	InitWindows();
 	TEInit();
-	InitDialogs((long)0);
+	InitDialogs((long) 0);
 	InitMenus();
 	InitCursor();
 #endif
@@ -40,13 +39,13 @@ init_toolbox()
 	SIOUXSettings.asktosaveonclose = 0;
 }
 
-int main()
+int main(void)
 {
-	int  argc, i;
-	char** argv;
-	
+	int argc, i;
+	char **argv;
+
 	init_toolbox();
-	
+
 	/* put paths of all files dropped onto the app into argv */
 	argc = FTMac_GetArgv(&argv);
 	if (argc < 2)
@@ -57,7 +56,7 @@ int main()
 	/* move argv[1:] to argv[2:] and fill in the ppem arg */
 	for (i = argc; i > 1; i--)
 	{
-		argv[i] = argv[i-1];
+		argv[i] = argv[i - 1];
 	}
 	argc++;
 	argv[1] = PPEM;

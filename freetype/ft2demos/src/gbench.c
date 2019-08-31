@@ -57,9 +57,9 @@ typedef struct CKeyRec_
 static CKeyRec ckeys[ALGO_KEY_COUNT];
 static unsigned char cgrades[ALGO_KEY_COUNT * ALGO_GRADE_COUNT * 3];
 
-static chits = 0;
-static cmiss1 = 0;
-static cmiss2 = 0;
+static long chits = 0;
+static long cmiss1 = 0;
+static long cmiss2 = 0;
 
 
 /* clear the cache

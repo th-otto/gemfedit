@@ -299,7 +299,7 @@ static void gr_win32_surface_listen_event(grWin32Surface * surface, int event_ma
 
 static int gr_win32_init_surface(grSurface *surface_, grBitmap * bitmap)
 {
-	grWin32Surface * surface = (grWin32Surface *)surface_;
+	grWin32Surface *surface = (grWin32Surface *)surface_;
 	static RGBQUAD black = { 0, 0, 0, 0 };
 	static RGBQUAD white = { 0xFF, 0xFF, 0xFF, 0 };
 	LPBITMAPINFO pbmi;

@@ -1662,7 +1662,7 @@ static void blit_lcdv2_to_24(grBlitter * blit, grColor color, int max)
  *   Error code. 0 means success
  *
  **********************************************************************/
-typedef void (*grColorGlyphBlitter) (grBlitter * blit, grColor color, int max_gray);
+typedef void (*grColorGlyphBlitter) (grBlitter *blit, grColor color, int max_gray);
 
 static const grColorGlyphBlitter gr_color_blitters[gr_pixel_mode_max] = {
 	0,
@@ -1677,7 +1677,7 @@ static const grColorGlyphBlitter gr_color_blitters[gr_pixel_mode_max] = {
 };
 
 #ifdef GRAY8
-typedef void (*grGray8GlyphBlitter) (grBlitter * blit, grColor color);
+typedef void (*grGray8GlyphBlitter) (grBlitter *blit, grColor color);
 
 static const grGray8GlyphBlitter gr_gray8_blitters[gr_pixel_mode_max] = {
 	0,
@@ -1722,8 +1722,7 @@ int grBlitGlyphToBitmap(grBitmap * target, grBitmap * glyph, grPos x, grPos y, g
 		return 0;
 	}
 
-	/* short cut to alpha blender for certain glyph types
-	 */
+	/* short cut to alpha blender for certain glyph types */
 	{
 		GBlenderSourceFormat src_format;
 		GBlenderTargetFormat dst_format;

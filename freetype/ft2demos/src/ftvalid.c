@@ -95,7 +95,7 @@ typedef struct ValidatorRec_
 	const char *symbol;
 
 	const char *unimplemented_message;
-	int (*is_implemented) (FT_Library library);
+	int (*is_implemented)(FT_Library library);
 
 	FT_Error (*run) (FT_Face face, const char *tables, int validation_level);
 	int (*list_tables) (FT_Face face);

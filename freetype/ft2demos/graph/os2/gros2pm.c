@@ -305,7 +305,7 @@ static void listen_event(grPMSurface * surface, int event_mask, grEvent * greven
 
 static int init_surface(grSurface *surface, grBitmap *bitmap)
 {
-	grPMSurface * surface = (grPMSurface *)surface_;
+	grPMSurface *surface = (grPMSurface *)surface_;
 	PBITMAPINFO2 bit;
 	SIZEL sizl = { 0, 0 };
 	LONG palette[256];
