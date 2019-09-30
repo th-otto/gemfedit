@@ -1870,7 +1870,7 @@ Usage: \n\
     (not all combinations are allowed.)\n\
 Options:\n\
   -o, --output <file>   write output to <file>\n\
-  -a, --aranym          output C sourcecode for AraNYM\n\
+  -a, --aranym          output C sourcecode for ARAnyM\n\
   -A, --all-chars       output data also for non-existent chars\n\
   -v, --varname <name>  set the name of the font header variable\n\
   -O, --no-offtable     do not write the offsets table\n\
