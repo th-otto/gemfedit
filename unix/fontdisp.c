@@ -108,6 +108,7 @@ static int scaled_margin = 2;
 static int hide_grid = 0;
 static int scale = 3;
 static int scaled_w, scaled_h;
+static int first_display_char;
 
 
 static void swap_gemfnt_header(UB *h, unsigned int l)
@@ -704,6 +705,8 @@ static gboolean font_load_gemfont(const char *filename)
 		FONT_DESC *sf = sysfont;
 		
 		printf("%s: %s:\n", filename, sf->name);
+		printf(" first ade   : %u\n", sf->first_char);
+		printf(" last ade    : %u\n", sf->last_char);
 		printf(" height      : %d\n", sf->height);
 		printf(" cellheight  : %d\n", sf->cellheight);
 		printf("\n");
@@ -722,7 +725,6 @@ static gboolean font_load_gemfont(const char *filename)
 
 		cw = sysfont->cellwidth;
 		ch = sysfont->cellheight;
-	
 	}
 
 	return sysfont != NULL;
@@ -780,7 +782,7 @@ static void draw_window(HDC hdc, RECT *rc)
 	{
 		for (x = 0; x < 16; x++)
 		{
-			int c = y * 16 + x;
+			int c = y * 16 + x + first_display_char;
 			int x0 = x * (cw * scale + scaled_margin) + scaled_margin;
 			int y0 = y * (ch * scale + scaled_margin) + scaled_margin;
 			if (c < sf->first_char || c > sf->last_char)
@@ -991,6 +993,7 @@ int main(int argc, const char **argv)
 	}
 
 	sf = sysfont;
+	first_display_char = 0;
 	create_scaled_images(sf);
 	create_win();
 	
@@ -1068,7 +1071,7 @@ static void draw_window(void)
 	{
 		for (x = 0; x < 16; x++)
 		{
-			int c = y * 16 + x;
+			int c = y * 16 + x + first_display_char;
 			int x0 = x * (cw * scale + scaled_margin) + scaled_margin;
 			int y0 = y * (ch * scale + scaled_margin) + scaled_margin;
 			if (c < sf->first_char || c > sf->last_char)
@@ -1210,6 +1213,22 @@ int main(int argc, const char **argv)
 					scale--;
 					create_scaled_images(sf);
 					create_win();
+				}
+				break;
+			case XK_Prior:
+				if (first_display_char > 0)
+				{
+					first_display_char -= 256;
+					printf("first char: %04x\n", first_display_char);
+					draw_window();
+				}
+				break;
+			case XK_Next:
+				if ((first_display_char + 256) <= sf->last_char)
+				{
+					first_display_char += 256;
+					printf("first char: %04x\n", first_display_char);
+					draw_window();
 				}
 				break;
 			case 'g':
