@@ -540,7 +540,16 @@ static FONT_DESC *font_gen_gemfont(UB **m, const char *filename, unsigned int l)
 
 	last_offset = LM_UW(off_table + 2 * numoffs);
 	if ((((last_offset + 15) >> 4) << 1) != form_width)
+	{
 		fprintf(stderr, "%s: warning: %s: offset of last character %u does not match form_width %u\n", program_name, filename, last_offset, form_width);
+		if (last_offset < LM_UW(off_table + 2 * numoffs - 2))
+			SM_UW(off_table + 2 * numoffs, form_width << 3);
+	}
+	for (i = 0; i < numoffs; i++)
+	{
+		if (LM_UW(off_table + i * 2 + 2) < LM_UW(off_table + i * 2))
+			fprintf(stderr, "warning: %s: corrupted offset table at %u: %u < %u\n", filename, i + 1, LM_UW(off_table + i * 2 + 2), LM_UW(off_table + i * 2));
+	}
 
 	hor_table_valid = hor_offset != 0 && hor_offset < off_offset && (off_offset - hor_offset) >= (numoffs * 2);
 	if ((flags & FONTF_HORTABLE) && hor_table_valid)

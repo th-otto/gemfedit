@@ -1136,7 +1136,25 @@ static struct font *read_fnt(const char *fname)
 				p->off_table[i] = get_l_word(buf);
 			}
 			if (p->off_table[i] == F_NO_CHAR)
+			{
 				p->off_table[i] = F_NO_CHARL;
+			} else
+			{
+				if (i == bmnum)
+				{
+					if ((((p->off_table[i] + 15) >> 4) << 1) != p->form_width)
+					{
+						fprintf(stderr, "warning: %s: offset of last character %lu does not match form_width %lu\n", fname, p->off_table[i], p->form_width);
+	 					if (p->off_table[i] < p->off_table[i - 1])
+							p->off_table[i] = p->form_width << 3;
+					}
+				}
+				if (i != 0)
+				{
+					if (p->off_table[i] < p->off_table[i - 1])
+						fprintf(stderr, "warning: %s: corrupted offset table at %u: %lu < %lu\n", fname, i, p->off_table[i], p->off_table[i - 1]);
+				}
+			}
 		}
 	}
 	if (fseek(f, off_dat_table, SEEK_SET))

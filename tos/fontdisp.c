@@ -26,11 +26,6 @@ static _WORD gl_wchar, gl_hchar;
 #include "fonthdr.h"
 #include "version.h"
 
-#if defined(__GEMLIB_MAJOR__) && (((__GEMLIB_MAJOR__) * 1000 + __GEMLIB_MINOR__) <= (0 * 1000 + 44))
-# define wind_set_int(h, a, b) wind_set(h, a, b, 0, 0, 0)
-# define form_dial_grect(a, in, out) form_dial(a, (in)->g_x, (in)->g_y, (in)->g_w, (in)->g_h, (out)->g_x, (out)->g_y, (out)->g_w, (out)->g_h)
-#endif
-
 #undef SWAP_W
 #undef SWAP_L
 #define SWAP_W(s) s = cpu_swab16(s)
@@ -584,7 +579,8 @@ static _BOOL font_gen_gemfont(unsigned char **m, const char *filename, unsigned 
 	uint16_t last_offset;
 	unsigned char *h = *m;
 	char buf[256];
-	
+	unsigned short i;
+
 	font_gethdr(hdr, h);
 	
 	if (!check_gemfnt_header(hdr, l))
@@ -717,7 +713,16 @@ static _BOOL font_gen_gemfont(unsigned char **m, const char *filename, unsigned 
 	
 	last_offset = off_table[numoffs];
 	if ((((last_offset + 15) >> 4) << 1) != hdr->form_width)
+	{
 		nf_debugprintf("warning: %s: offset of last character %u does not match form_width %u\n", filename, last_offset, hdr->form_width);
+		if (last_offset < off_table[numoffs - 1])
+			off_table[numoffs] = hdr->form_width << 3;
+	}
+	for (i = 0; i < numoffs; i++)
+	{
+		if (off_table[i + 1] < off_table[i])
+			nf_debugprintf("warning: %s: corrupted offset table at %u: %u < %u\n", filename, i + 1, off_table[i + 1], off_table[i]);
+	}
 
 	hor_table_valid = hor_offset != 0 && hor_offset < off_offset && (off_offset - hor_offset) >= (numoffs * 2);
 	if ((hdr->flags & FONTF_HORTABLE) && hor_table_valid)

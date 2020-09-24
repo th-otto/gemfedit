@@ -31,11 +31,6 @@ static _WORD gl_wchar, gl_hchar;
 #include "speedo.h"
 #include "version.h"
 
-#if defined(__GEMLIB_MAJOR__) && (((__GEMLIB_MAJOR__) * 1000 + __GEMLIB_MINOR__) <= (0 * 1000 + 44))
-# define wind_set_int(h, a, b) wind_set(h, a, b, 0, 0, 0)
-# define form_dial_grect(a, in, out) form_dial(a, (in)->g_x, (in)->g_y, (in)->g_w, (in)->g_h, (out)->g_x, (out)->g_y, (out)->g_w, (out)->g_h)
-#endif
-
 #ifndef K_SHIFT
 #define K_SHIFT			(K_LSHIFT|K_RSHIFT)
 #endif
