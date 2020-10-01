@@ -29,6 +29,7 @@ typedef long LONG;
 #define FILE_TXT 2
 #define FILE_FNT 3
 #define FILE_BMP 4
+#define FILE_C16 5
 static int convert_from;
 static int convert_to;
 static int scale = 1;
@@ -1043,9 +1044,7 @@ static struct font *read_fnt(const char *fname)
 	int bigendian = 0;
 	int bmnum;
 
-	p = malloc(sizeof(struct font));
-	if (p == NULL)
-		fatal("memory");
+	p = xmalloc(sizeof(struct font));
 	f = open_input(&fname, "rb");
 
 	count = fread(&h, 1, sizeof(h), f);
@@ -1160,9 +1159,7 @@ static struct font *read_fnt(const char *fname)
 	if (fseek(f, off_dat_table, SEEK_SET))
 		fatal("seek");
 	count = p->form_height * p->form_width;
-	p->dat_table = malloc(count);
-	if (p->dat_table == NULL)
-		fatal("memory");
+	p->dat_table = xmalloc(count);
 	if ((long)fread(p->dat_table, 1, count, f) != count)
 		fatal("short read");
 
@@ -1836,6 +1833,100 @@ static void write_c_aranym(struct font *p, const char *filename)
 }
 
 
+static void write_eps_c16(struct font *p, const char *filename)
+{
+	FILE *f;
+	char outbuf[256 * 16];
+	int c, l;
+	long count;
+	int bmnum;
+	
+	if (p->first_ade > 255 || p->last_ade > 255)
+	{
+		fprintf(stderr, "%s: too many characters for C16\n", filename);
+		exit(EXIT_FAILURE);
+	}
+	bmnum = p->last_ade - p->first_ade + 1;
+	if (!(p->flags & F_MONOSPACE) || p->form_width != ((bmnum + 1) & ~1) || p->form_height != 16)
+	{
+		fprintf(stderr, "%s: need monospaced 8x16 font for C16\n", filename);
+		exit(EXIT_FAILURE);
+	}
+	f = open_output(&filename, "wb");
+	memset(outbuf, 0, sizeof(outbuf));
+    for (c = p->first_ade; c <= p->last_ade; c++)
+    {
+        for (l = 0; l < 16; l++)
+        {
+            outbuf[c * 16 + l] = p->dat_table[l * p->form_width + c - p->first_ade];
+        }
+    }
+	count = sizeof(outbuf);
+	if (count != (long)fwrite(outbuf, 1, count, f))
+		fatal("write");
+	if (fclose(f))
+		fatal("fclose");
+}
+
+
+static struct font *read_eps_c16(const char *fname)
+{
+	struct font *p;
+	FILE *f;
+	char inbuf[256 * 16];
+	int c, l;
+	const char *basen;
+
+	f = open_input(&fname, "rb");
+	if (fread(inbuf, 1, sizeof(inbuf), f) != sizeof(inbuf))
+		fatal("read");
+	fclose(f);
+
+	p = xmalloc(sizeof(struct font));
+	memset(p, 0, sizeof(*p));
+	p->dat_table = xmalloc(sizeof(inbuf));
+	p->off_table = xmalloc((256 + 1) * sizeof(*p->off_table));
+
+	p->font_id = 999;
+	p->point = 10;
+	basen = strrchr(fname, '/');
+	if (basen == NULL)
+		basen = fname;
+	else
+		++basen;
+	strncpy(p->name, basen, sizeof(p->name) - 1);
+	p->first_ade = 0;
+	p->last_ade = 255;
+	p->top = 13;
+	p->ascent = 11;
+	p->half = 8;
+	p->descent = 2;
+	p->bottom = 2;
+	p->max_char_width = 7;
+	p->max_cell_width = 8;
+	p->left_offset = 1;
+	p->right_offset = 1;
+	p->thicken = 1;
+	p->ul_size = 1;
+	p->lighten = 0x5555;
+	p->skew = 0x5555;
+	p->flags = F_MONOSPACE;
+	for (c = 0; c <= 256; c++)
+		p->off_table[c] = c * 8;
+	p->form_width = 256;
+	p->form_height = 16;
+
+	for (c = 0; c < 256; c++)
+	{
+		for (l = 0; l < 16; l++)
+		{
+			p->dat_table[l * 256 + c] = inbuf[c * 16 + l];
+		}
+	}
+	return p;
+}
+
+
 static int file_type(const char *c)
 {
 	int n;
@@ -1853,6 +1944,8 @@ static int file_type(const char *c)
 		return FILE_FNT;
 	if (strcmp(c + n - 3, "bmp") == 0 || strcmp(c + n - 3, "BMP") == 0)
 		return FILE_BMP;
+	if (strcmp(c + n - 3, "c16") == 0 || strcmp(c + n - 3, "C16") == 0)
+		return FILE_C16;
 	return 0;
 }
 
@@ -2001,6 +2094,9 @@ int main(int argc, char **argv)
 	case FILE_BMP:
 		fatal("cannot read BMP files");
 		return EXIT_FAILURE;
+	case FILE_C16:
+		p = read_eps_c16(from);
+		break;
 	default:
 		fatal("wrong file type");
 		return EXIT_FAILURE;
@@ -2023,6 +2119,9 @@ int main(int argc, char **argv)
 		break;
 	case FILE_BMP:
 		write_bmp(p, to);
+		break;
+	case FILE_C16:
+		write_eps_c16(p, to);
 		break;
 	default:
 		fatal("wrong file type");
