@@ -93,10 +93,10 @@ boolean sp_begin_char_outline(
 	sp_globals.poshift = 16 - sp_globals.pixshift;
 	set_width_x = (fix31) x << sp_globals.poshift;
 	set_width_y = (fix31) y << sp_globals.poshift;
-	xmin = (fix31) minx << sp_globals.poshift;
-	xmax = (fix31) maxx << sp_globals.poshift;
-	ymin = (fix31) miny << sp_globals.poshift;
-	ymax = (fix31) maxy << sp_globals.poshift;
+	xmin = minx << sp_globals.poshift;
+	xmax = maxx << sp_globals.poshift;
+	ymin = miny << sp_globals.poshift;
+	ymax = maxy << sp_globals.poshift;
 	sp_globals.xmin = minx;
 	sp_globals.xmax = maxx;
 	sp_globals.ymin = miny;
@@ -207,7 +207,7 @@ void sp_line_outline(fix31 x1, fix31 y1)	/* End point of vector */
 	x1 = RANGECHECK(x1, sp_globals.xmin, sp_globals.xmax);
 	y1 = RANGECHECK(y1, sp_globals.ymin, sp_globals.ymax);
 
-	line_to((fix31) x1 << sp_globals.poshift, (fix31) y1 << sp_globals.poshift);
+	line_to(x1 << sp_globals.poshift, y1 << sp_globals.poshift);
 }
 
 

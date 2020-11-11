@@ -241,7 +241,7 @@ static fix15 sp_setup_mult(fix31 input_mult)	/* Multiplier in input format */
 /* 
  * Convert transformation coeffs to internal form 
  */
-static void sp_setup_tcb(tcb_t * ptcb)	/* Pointer to transformation control bloxk */
+static void sp_setup_tcb(tcb_t *ptcb)	/* Pointer to transformation control bloxk */
 {
 
 	ptcb->xxmult = sp_setup_mult(sp_globals.specs.xxmult);
@@ -269,7 +269,7 @@ boolean sp_set_specs(const specs_t *specsarg, const buff_t *font)	/* Bundle of c
 {
 	fix31 offcd;						/* Offset to start of character directory */
 	fix31 ofcns;						/* Offset to start of constraint data */
-	fix31 cd_size;						/* Size of character directory */
+	ufix32 cd_size;						/* Size of character directory */
 	fix31 no_bytes_min;					/* Min number of bytes in font buffer */
 	ufix16 font_id;						/* Font ID */
 	ufix16 private_off;					/* offset to private header */
@@ -327,7 +327,7 @@ boolean sp_set_specs(const specs_t *specsarg, const buff_t *font)	/* Bundle of c
 	offcd = sp_read_long(sp_globals.hdr2_org + FH_OFFCD);	/* Read offset to character directory */
 	ofcns = sp_read_long(sp_globals.hdr2_org + FH_OFCNS);	/* Read offset to constraint data */
 	cd_size = ofcns - offcd;
-	if ((((sp_globals.no_chars_avail << 1) + 3) != cd_size) && (((sp_globals.no_chars_avail * 3) + 4) != cd_size))
+	if (((((ufix32)sp_globals.no_chars_avail << 1) + 3) != cd_size) && ((((ufix32)sp_globals.no_chars_avail * 3) + 4) != cd_size))
 	{
 		sp_report_error(4);				/* Font format error */
 		return FALSE;
@@ -504,7 +504,7 @@ boolean sp_set_specs(const specs_t *specsarg, const buff_t *font)	/* Bundle of c
 
 #if INCL_MULTIDEV
 #if INCL_BLACK || INCL_SCREEN || INCL_2D
-boolean sp_set_bitmap_device(bitmap_t * bfuncs, ufix16 size)
+boolean sp_set_bitmap_device(bitmap_t *bfuncs, ufix16 size)
 {
 
 	if (size != sizeof(sp_globals.bitmap_device))
@@ -517,7 +517,7 @@ boolean sp_set_bitmap_device(bitmap_t * bfuncs, ufix16 size)
 #endif
 
 #if INCL_OUTLINE
-boolean sp_set_outline_device(outline_t * ofuncs, ufix16 size)
+boolean sp_set_outline_device(outline_t *ofuncs, ufix16 size)
 {
 
 	if (size != sizeof(sp_globals.outline_device))
@@ -531,7 +531,7 @@ boolean sp_set_outline_device(outline_t * ofuncs, ufix16 size)
 #endif
 
 
-void sp_type_tcb(tcb_t * ptcb)	/* Pointer to transformation control bloxk */
+void sp_type_tcb(tcb_t *ptcb)	/* Pointer to transformation control bloxk */
 {
 	fix15 x_trans_type;
 	fix15 y_trans_type;
@@ -552,7 +552,9 @@ void sp_type_tcb(tcb_t * ptcb)	/* Pointer to transformation control bloxk */
 	yx_mult = ptcb->yxmult;
 	yy_mult = ptcb->yymult;
 
+#if INCL_SCREEN
 	ptcb->mirror = ((((fix31) xx_mult * (fix31) yy_mult) - ((fix31) xy_mult * (fix31) yx_mult)) < 0) ? -1 : 1;
+#endif
 
 	if (sp_globals.specs.flags & BOGUS_MODE)	/* Linear transformation requested? */
 	{
@@ -660,7 +662,7 @@ void sp_type_tcb(tcb_t * ptcb)	/* Pointer to transformation control bloxk */
  * the specified point.
  * Returns the decrypted value read as a signed integer.
  */
-fix31 sp_read_long(ufix8 * pointer)	/* Pointer to first byte of encrypted 3-byte integer */
+fix31 sp_read_long(ufix8 *pointer)	/* Pointer to first byte of encrypted 3-byte integer */
 {
 	fix31 tmpfix31;
 
@@ -676,7 +678,7 @@ fix31 sp_read_long(ufix8 * pointer)	/* Pointer to first byte of encrypted 3-byte
  * the specified point.
  * Returns the decrypted value read as a signed integer.
  */
-fix15 sp_read_word_u(ufix8 * pointer)	/* Pointer to first byte of unencrypted 2-byte integer */
+fix15 sp_read_word_u(ufix8 *pointer)	/* Pointer to first byte of unencrypted 2-byte integer */
 {
 	fix15 tmpfix15;
 

@@ -49,7 +49,7 @@ WITH THE SPEEDO SOFTWARE OR THE BITSTREAM CHARTER OUTLINE FONT.
  * Returns TRUE if output module can accept requested specifications.
  * Returns FALSE otherwise.
  */
-boolean sp_init_2d(specs_t * specsarg)
+boolean sp_init_2d(specs_t *specsarg)
 {
 
 	if (specsarg->flags & CURVES_OUT)
@@ -481,10 +481,10 @@ boolean sp_end_char_2d(void)
 	fix31 yorg;
 
 #if INCL_CLIPPING
-	fix31 em_max,
-	 em_min,
-	 bmap_max,
-	 bmap_min;
+	fix31 em_max;
+	fix31 em_min;
+	fix31 bmap_max;
+	fix31 bmap_min;
 #endif
 
 #if DEBUG

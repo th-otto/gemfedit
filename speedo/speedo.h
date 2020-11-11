@@ -38,11 +38,11 @@ WITH THE SPEEDO SOFTWARE OR THE BITSTREAM CHARTER OUTLINE FONT.
 /*****  CONFIGURATION DEFINITIONS *****/
 
 #ifndef INCL_CLIPPING
-#define INCL_CLIPPING 0		/* 0 indicates CLIPPING code is not compiled in*/
+#define INCL_CLIPPING 0		    /* 0 indicates CLIPPING code is not compiled in */
 #endif
 
 #ifndef INCL_SQUEEZING
-#define INCL_SQUEEZING 0		/* 0 indicates SQUEEZE code is not compiled in*/
+#define INCL_SQUEEZING 0		/* 0 indicates SQUEEZE code is not compiled in */
 #endif
 
 /* 1 to include extended font support */
@@ -52,11 +52,11 @@ WITH THE SPEEDO SOFTWARE OR THE BITSTREAM CHARTER OUTLINE FONT.
 
 /* 1 to include intelligent scaling support */
 #ifndef INCL_RULES
-#define  INCL_RULES     1          
+#define  INCL_RULES     1
 #endif
 
 /* 1 to include blackwriter output support */
-#ifndef INCL_BLACK                                                    
+#ifndef INCL_BLACK
 #define  INCL_BLACK     1
 #endif
 
@@ -80,7 +80,7 @@ WITH THE SPEEDO SOFTWARE OR THE BITSTREAM CHARTER OUTLINE FONT.
 #define INCL_USEROUT      0
 #endif
 
-/* 1 to include load char data support*/
+/* 1 to include load char data support */
 #ifndef INCL_LCD
 #define  INCL_LCD       1
 #endif
@@ -114,6 +114,30 @@ WITH THE SPEEDO SOFTWARE OR THE BITSTREAM CHARTER OUTLINE FONT.
 #define MODE_SCREEN  1
 #define MODE_OUTLINE 2
 #define MODE_2D      3
+
+#ifdef DYNAMIC_ALLOC
+#if DYNAMIC_ALLOC
+#define STATIC_ALLOC 0
+#endif
+#endif
+
+#ifdef REENTRANT_ALLOC
+#if REENTRANT_ALLOC
+#define STATIC_ALLOC 0
+#endif
+#endif
+
+#ifndef STATIC_ALLOC
+#define STATIC_ALLOC 1
+#endif
+
+#ifndef DYNAMIC_ALLOC
+#define DYNAMIC_ALLOC 0
+#endif
+
+#ifndef REENTRANT_ALLOC
+#define REENTRANT_ALLOC 0
+#endif
 
 /*****  TYPE  DEFINITIONS *****/
 
@@ -167,26 +191,28 @@ typedef   uint32_t   ufix32;
 
 #if INCL_EXT
 
-#define  MAX_CONSTR     750       /* Max constraints (incl 4 dummies) */
-#define  MAX_CTRL_ZONES  256       /* Max number of controlled orus */
-#define  MAX_INT_ZONES   256       /* Max number of interpolation zones */
+#define  MAX_CONSTR      750            /* Max constraints (incl 4 dummies) */
+#define  MAX_CTRL_ZONES  256            /* Max number of controlled orus */
+#define  MAX_INT_ZONES   256            /* Max number of interpolation zones */
 
 #else
+/* Compact fonts only supported */
 
-#define  MAX_CONSTR      512       /* Max constraints (incl 4 dummies) */
-#define  MAX_CTRL_ZONES   64       /* Max number of controlled orus */
-#define  MAX_INT_ZONES    64       /* Max number of interpolation zones */
+#define  MAX_CONSTR      512            /* Max constraints (incl 4 dummies) */
+#define  MAX_CTRL_ZONES   64            /* Max number of controlled orus */
+#define  MAX_INT_ZONES    64            /* Max number of interpolation zones */
 
 #endif
 
-#define  SCALE_SHIFT   12   /* Binary point positiion for scale values */
-#define  SCALE_RND   2048   /* Rounding bit for scaling transformation */
-#define  ONE_SCALE   4096   /* Unity scale value */
+#define  SCALE_SHIFT   12               /* Binary point positiion for scale values */
+#define  SCALE_RND   2048               /* Rounding bit for scaling transformation */
+#define  ONE_SCALE   4096               /* Unity scale value */
 
-#ifdef INCL_SCREEN   /* constants used by Screenwriter module */
-#define LEFT_INT 1   /* left intercept */
-#define END_INT 2    /* last intercept */
-#define FRACTION 0xFC  /* fractional portion of intercept type list */
+#ifdef INCL_SCREEN
+/* constants used by Screenwriter module */
+#define LEFT_INT 1                      /* left intercept */
+#define END_INT 2                       /* last intercept */
+#define FRACTION 0xFC                   /* fractional portion of intercept type list */
 #endif
 
 /* constants used by SQUEEZEing code */
@@ -195,18 +221,29 @@ typedef   uint32_t   ufix32;
 
 /*****  STRUCTURE DEFINITIONS *****/
 
+#if REENTRANT_ALLOC
+#define PROTO_DECL1 SPEEDO_GLOBALS *sp_global_ptr
+#define PROTO_DECL2 PROTO_DECL1,
+#else
+#define PROTO_DECL1 void
+#define PROTO_DECL2
+#endif
+
+typedef struct speedo_global_data SPEEDO_GLOBALS;
+
+/* Buffer descriptor */
 typedef struct buff_tag
 {
 	ufix8 *org;                 /* Pointer to start of buffer */
-	ufix32  no_bytes;           /* Size of buffer in bytes */
-} buff_t;                       /* Buffer descriptor */
+	ufix32 no_bytes;            /* Size of buffer in bytes */
+} buff_t;
 
 /* Constraint data state */
 typedef struct constr_tag {
 	ufix8 *org;                 /* Pointer to first byte in constr data  */
-	ufix16  font_id;            /* Font id for calculated data           */
-	fix15   xppo;               /* X pixels per oru for calculated data  */
-	fix15   yppo;               /* Y pixels per oru for calculated data  */
+	ufix16 font_id;             /* Font id for calculated data           */
+	fix15 xppo;                 /* X pixels per oru for calculated data  */
+	fix15 yppo;                 /* Y pixels per oru for calculated data  */
 	boolean font_id_valid;      /* TRUE if font id valid                 */
 	boolean data_valid;         /* TRUE if calculated data valid         */
 	boolean active;             /* TRUE if constraints enabled           */
@@ -216,20 +253,20 @@ typedef struct constr_tag {
 typedef struct kern_tag {
 	ufix8 *tkorg;               /* First byte of track kerning data      */
 	ufix8 *pkorg;               /* First byte of pair kerning data       */
-	fix15   no_tracks;          /* Number of kerning tracks              */
-	fix15   no_pairs;           /* Number of kerning pairs               */
+	fix15 no_tracks;            /* Number of kerning tracks              */
+	fix15 no_pairs;             /* Number of kerning pairs               */
 } kern_t;
 
 /* Specs structure for sp_set_specs/fw_set_specs */
 typedef struct specs_tag {
-	fix31   xxmult;             /* Coeff of X orus to compute X pix      */
-	fix31   xymult;             /* Coeff of Y orus to compute X pix      */
-	fix31   xoffset;            /* Constant to compute X pix             */
-	fix31   yxmult;             /* Coeff of X orus to compute Y pix      */
-	fix31   yymult;             /* Coeff of Y orus to compute Y pix      */
-	fix31   yoffset;            /* Constant to compute Y pix             */
-	fix15   output_mode;        /* Output module selector */
-	ufix32  flags;              /* Mode flags:                           */
+	fix31 xxmult;               /* Coeff of X orus to compute X pix      */
+	fix31 xymult;               /* Coeff of Y orus to compute X pix      */
+	fix31 xoffset;              /* Constant to compute X pix             */
+	fix31 yxmult;               /* Coeff of X orus to compute Y pix      */
+	fix31 yymult;               /* Coeff of Y orus to compute Y pix      */
+	fix31 yoffset;              /* Constant to compute Y pix             */
+	fix15 output_mode;          /* Output module selector */
+	ufix32 flags;               /* Mode flags:                           */
                                 /*   Bit  0 - 2: not used                */
                                 /*   Bit  3: Send curves to output module*/
                                 /*   Bit  4: Use linear scaling if set   */
@@ -250,42 +287,44 @@ typedef struct specs_tag {
 
 /* Transformation control block */
 typedef struct tcb_tag {
-	fix15   xxmult;             /* Linear coeff of Xorus to compute Xpix */
-	fix15   xymult;             /* Linear coeff of Yorus to compute Xpix */
-	fix31   xoffset;            /* Linear constant to compute Xpix       */
-	fix15   yxmult;             /* Linear coeff of Xorus to compute Ypix */
-	fix15   yymult;             /* Linear coeff of Yorus to compute Ypix */
-	fix31   yoffset;            /* Linear constant to compute Ypix       */
-	fix15   xppo;               /* Pixels per oru in X dimension of char */
-	fix15   yppo;               /* Pixels per oru in Y dimension of char */
-	fix15   xpos;               /* Origin in X dimension of character    */
-	fix15   ypos;               /* Origin in Y dimension of character    */
-	ufix16  xtype;              /* Transformation type for X oru coords  */
-	ufix16  ytype;              /* Transformation type for Y oru coords  */
-	ufix16  xmode;              /* Transformation mode for X oru coords  */
-	ufix16  ymode;              /* Transformation mode for Y oru coords  */
-	fix15  mirror;              /* Transformation creates mirror image   */
+	fix15 xxmult;               /* Linear coeff of Xorus to compute Xpix */
+	fix15 xymult;               /* Linear coeff of Yorus to compute Xpix */
+	fix31 xoffset;              /* Linear constant to compute Xpix       */
+	fix15 yxmult;               /* Linear coeff of Xorus to compute Ypix */
+	fix15 yymult;               /* Linear coeff of Yorus to compute Ypix */
+	fix31 yoffset;              /* Linear constant to compute Ypix       */
+	fix15 xppo;                 /* Pixels per oru in X dimension of char */
+	fix15 yppo;                 /* Pixels per oru in Y dimension of char */
+	fix15 xpos;                 /* Origin in X dimension of character    */
+	fix15 ypos;                 /* Origin in Y dimension of character    */
+	ufix16 xtype;               /* Transformation type for X oru coords  */
+	ufix16 ytype;               /* Transformation type for Y oru coords  */
+	ufix16 xmode;               /* Transformation mode for X oru coords  */
+	ufix16 ymode;               /* Transformation mode for Y oru coords  */
+#if INCL_SCREEN
+	fix15 mirror;               /* Transformation creates mirror image   */
+#endif
 } tcb_t;
 
 /* Point in device space */
 typedef struct point_tag {
-	fix15   x;                  /* X coord of point (shifted pixels)     */
-	fix15   y;                  /* Y coord of point (shifted pixels)     */
+	fix15 x;                    /* X coord of point (shifted pixels)     */
+	fix15 y;                    /* Y coord of point (shifted pixels)     */
 } point_t;
 
 typedef struct band_tag {
-	fix15   band_max;
-	fix15   band_min;
-	fix15   band_array_offset;
-	fix15   band_floor;
-	fix15   band_ceiling;
+	fix15 band_max;
+	fix15 band_min;
+	fix15 band_array_offset;
+	fix15 band_floor;
+	fix15 band_ceiling;
 } band_t;
 
 typedef struct bbox_tag {
-	fix31   xmin;
-	fix31   xmax;
-	fix31   ymin;
-	fix31   ymax;
+	fix31 xmin;
+	fix31 xmax;
+	fix31 ymin;
+	fix31 ymax;
 } bbox_t;
 
 typedef struct _glyphinfo_t {
@@ -302,193 +341,226 @@ typedef struct _glyphinfo_t {
 	fix31 ymax;
 } glyphinfo_t;
 
-#if SHORT_LISTS 
+#if SHORT_LISTS
 #define  MAX_INTERCEPTS  256      /* Max storage for intercepts */
-typedef  ufix8   cdr_t;           /* 8 bit links in intercept chains */
+typedef ufix8 cdr_t;              /* 8 bit links in intercept chains */
 #else
 #define  MAX_INTERCEPTS 1000      /* Max storage for intercepts */
-typedef  ufix16   cdr_t;          /* 16 bit links in intercept chains */
+typedef ufix16 cdr_t;             /* 16 bit links in intercept chains */
+#endif
+
+#if REENTRANT_ALLOC
+
+typedef struct intercepts_tag
+{
+	fix15 car[MAX_INTERCEPTS];
+	cdr_t cdr[MAX_INTERCEPTS];
+#if INCL_SCREEN
+	ufix8 inttype[MAX_INTERCEPTS];
+	ufix8 leftedge;
+	ufix16 fracpix;
+#endif
+} intercepts_t;
+
+typedef struct plaid_tag
+{
+	fix15 orus[MAX_CTRL_ZONES];         /* Controlled coordinate table (orus) */
+#if INCL_RULES
+	fix15 pix[MAX_CTRL_ZONES];          /* Controlled coordinate table (sub-pixels) */
+	fix15 mult[MAX_INT_ZONES];          /* Interpolation multiplier table */
+	fix31 offset[MAX_INT_ZONES];        /* Interpolation offset table */
+#endif
+} plaid_t;
 #endif
 
 #if INCL_MULTIDEV
 typedef struct bitmap_tag {
-	void (*p_open_bitmap)(fix31 xorg, fix31 yorg, fix15 xsize, fix15 ysize);
-	void (*p_set_bits)(fix15 y, fix15 xbit1, fix15 xbit2);
-	void (*p_close_bitmap)(void);
+	void (*p_open_bitmap)(PROTO_DECL2 fix31 xorg, fix31 yorg, fix15 xsize, fix15 ysize);
+	void (*p_set_bits)(PROTO_DECL2 fix15 y, fix15 xbit1, fix15 xbit2);
+	void (*p_close_bitmap)(PROTO_DECL1);
 } bitmap_t;
 
 typedef struct outline_tag {
-	void (*p_open_outline)(fix31 x_set_width, fix31 y_set_width, fix31 xmin, fix31 xmax, fix31 ymin, fix31 ymax);
-	void (*p_start_sub_char)(void);
-	void (*p_end_sub_char)(void);
-	void (*p_start_contour)(fix31 x, fix31 y, boolean outside);
-	void (*p_curve)(fix31 x1, fix31 y1, fix31 x2, fix31 y2, fix31 x3, fix31 y3);
-	void (*p_line)(fix31 x, fix31 y);
-	void (*p_close_contour)(void);
-	void (*p_close_outline)(void);
+	void (*p_open_outline)(PROTO_DECL2 fix31 x_set_width, fix31 y_set_width, fix31 xmin, fix31 xmax, fix31 ymin, fix31 ymax);
+	void (*p_start_sub_char)(PROTO_DECL1);
+	void (*p_end_sub_char)(PROTO_DECL1);
+	void (*p_start_contour)(PROTO_DECL2 fix31 x, fix31 y, boolean outside);
+	void (*p_curve)(PROTO_DECL2 fix31 x1, fix31 y1, fix31 x2, fix31 y2, fix31 x3, fix31 y3);
+	void (*p_line)(PROTO_DECL2 fix31 x, fix31 y);
+	void (*p_close_contour)(PROTO_DECL1);
+	void (*p_close_outline)(PROTO_DECL1);
 } outline_t;
 #endif
 
 /* ---------------------------------------------------*/
 /****  MAIN GLOBAL DATA STRUCTURE, SPEEDO_GLOBALS *****/
 
-typedef struct speedo_global_data {
+struct speedo_global_data {
 	/*  do_char.c data definitions */
 #if INCL_METRICS
-	kern_t  kern;	            /* Kerning control block */
+	kern_t kern;                /* Kerning control block */
 #endif
-	point_t   Psw;	            /* End of escapement vector (1/65536 pixel units) */
+	point_t Psw;                /* End of escapement vector (1/65536 pixel units) */
 
 #if INCL_LCD
-	fix15  cb_offset;	        /* Offset to sub-char data in char buffer */
+	fix15 cb_offset;            /* Offset to sub-char data in char buffer */
 #endif
 
 	/* do_trns.c data definitions */
-	point_t  P0;                /* Current point (sub-pixels) */
-	fix15    x_orus;            /* Current X argument (orus) */
-	fix15    y_orus;            /* Current Y argument (orus) */
-	fix15    x_pix;             /* Current X argument (sub-pixels) */
-	fix15    y_pix;             /* Current Y argument (sub-pixels) */
-	ufix8    x_int;             /* Current X interpolation zone */
-	ufix8    y_int;             /* Current Y interpolation zone */
+	point_t P0;                 /* Current point (sub-pixels) */
+	fix15 x_orus;               /* Current X argument (orus) */
+	fix15 y_orus;               /* Current Y argument (orus) */
+	fix15 x_pix;                /* Current X argument (sub-pixels) */
+	fix15 y_pix;                /* Current Y argument (sub-pixels) */
+	ufix8 x_int;                /* Current X interpolation zone */
+	ufix8 y_int;                /* Current Y interpolation zone */
 
 #if INCL_MULTIDEV && INCL_OUTLINE
 	outline_t outline_device;
-	boolean   outline_device_set;
+	boolean outline_device_set;
 #endif
 
 #if INCL_BLACK || INCL_SCREEN || INCL_2D
 #if INCL_MULTIDEV
 	bitmap_t bitmap_device;
-	boolean  bitmap_device_set;
+	boolean bitmap_device_set;
 #endif
-	band_t   y_band;            /* Y current band(whole pixels) */
+	band_t y_band;              /* Y current band(whole pixels) */
 
 	struct set_width_tag
 	{
 		fix31 x;
 		fix31 y;
-	} set_width; /* Character escapement vector */
+	} set_width;                /* Character escapement vector */
 
-	boolean  first_pass;        /* TRUE during first pass thru outline data */
-	boolean  extents_running;   /* T if extent accumulation for each vector */
-	fix15    x0_spxl;           /* X coord of current point (sub pixels) */
-	fix15    y0_spxl;	        /* Y coord of current point (sub pixels) */
-	fix15    y_pxl;	            /* Y coord of current point (whole pixels) */
-	fix15    car[MAX_INTERCEPTS]; /* Data field of intercept storage */
-	cdr_t    cdr[MAX_INTERCEPTS]; /* Link field of intercept storage */
+	boolean first_pass;         /* TRUE during first pass thru outline data */
+	boolean extents_running;    /* T if extent accumulation for each vector */
+	fix15 x0_spxl;              /* X coord of current point (sub pixels) */
+	fix15 y0_spxl;              /* Y coord of current point (sub pixels) */
+	fix15 y_pxl;                /* Y coord of current point (whole pixels) */
+#if REENTRANT_ALLOC
+	intercepts_t *intercepts;
+#else
+	fix15 car[MAX_INTERCEPTS];  /* Data field of intercept storage */
+	cdr_t cdr[MAX_INTERCEPTS];  /* Link field of intercept storage */
 #if INCL_SCREEN
-	ufix8    inttype[MAX_INTERCEPTS];
-	ufix8    leftedge;
-	ufix16   fracpix;
+	ufix8 inttype[MAX_INTERCEPTS];
+	ufix8 leftedge;
+	ufix16 fracpix;
 #endif
-	fix15    bmap_xmin;         /* Min X value (sub-pixel units) */
-	fix15    bmap_xmax;         /* Max X value (sub-pixel units) */
-	fix15    bmap_ymin;         /* Min Y value (sub-pixel units) */
-	fix15    bmap_ymax;         /* Max Y value (sub-pixel units) */
-	fix15    no_y_lists;        /* Number of active intercept lists */
-	fix15    first_offset;      /* Index of first active list cell */
-	fix15    next_offset;       /* Index of next free list cell */
-	boolean  intercept_oflo;    /* TRUE if intercepts data lost */
+#endif
+	fix15 bmap_xmin;            /* Min X value (sub-pixel units) */
+	fix15 bmap_xmax;            /* Max X value (sub-pixel units) */
+	fix15 bmap_ymin;            /* Min Y value (sub-pixel units) */
+	fix15 bmap_ymax;            /* Max Y value (sub-pixel units) */
+	fix15 no_y_lists;           /* Number of active intercept lists */
+	fix15 first_offset;         /* Index of first active list cell */
+	fix15 next_offset;          /* Index of next free list cell */
+	boolean intercept_oflo;     /* TRUE if intercepts data lost */
 #endif
 
 	/* bounding box now used by all output modules, including outline */
-	fix15    xmin;              /* Min X value in whole character */
-	fix15    xmax;              /* Max X value in whole character */
-	fix15    ymin;              /* Min Y value in whole character */
-	fix15    ymax;              /* Max Y value in whole character */
+	fix15 xmin;                 /* Min X value in whole character */
+	fix15 xmax;                 /* Max X value in whole character */
+	fix15 ymin;                 /* Min Y value in whole character */
+	fix15 ymax;                 /* Max Y value in whole character */
 
 #if INCL_2D
-	fix15    no_x_lists;        /* Number of active x intercept lists */
-	band_t   x_band;            /* X current band(whole pixels) */
-	boolean  x_scan_active;     /* X scan flag during scan conversion */
+	fix15 no_x_lists;           /* Number of active x intercept lists */
+	band_t x_band;              /* X current band(whole pixels) */
+	boolean x_scan_active;      /* X scan flag during scan conversion */
 #endif
 
 	/* reset.c data definitions */
-	ufix16   key32;             /* Decryption keys 3,2 combined */
-	ufix8    key4;              /* Decryption key 4 */
-	ufix8    key6;              /* Decryption key 6 */
-	ufix8    key7;              /* Decryption key 7 */
-	ufix8    key8;              /* Decryption key 8 */
+	ufix16 key32;               /* Decryption keys 3,2 combined */
+	ufix8 key4;                 /* Decryption key 4 */
+	ufix8 key6;                 /* Decryption key 6 */
+	ufix8 key7;                 /* Decryption key 7 */
+	ufix8 key8;                 /* Decryption key 8 */
 
 	/* set_spcs.c data definitions */
-	buff_t   font;				/* font buffer structure */
-	long     font_buff_size;    /* Number of bytes loaded in font buffer */
-	ufix8 *pchar_dir; /* Pointer to character directory */
-	fix15    first_char_idx;    /* Index to first character in font */
-	fix15    no_chars_avail;    /* Total characters in font layout */
-	fix15    orus_per_em;       /* Outline resolution */
-	fix15    metric_resolution; /* metric resolution for setwidths, kerning pairs
-							(defaults to orus_per_em) */
-	tcb_t    tcb0;              /* Top level transformation control block */
+	buff_t font;                /* font buffer structure */
+	long font_buff_size;        /* Number of bytes loaded in font buffer */
+	ufix8 *pchar_dir;           /* Pointer to character directory */
+	fix15 first_char_idx;       /* Index to first character in font */
+	fix15 no_chars_avail;       /* Total characters in font layout */
+	fix15 orus_per_em;          /* Outline resolution */
+	fix15 metric_resolution;    /* metric resolution for setwidths, kerning pairs
+	                               (defaults to orus_per_em) */
+	tcb_t tcb0;                 /* Top level transformation control block */
 	
-	boolean  specs_valid;       /* TRUE if fw_set_specs() successful */
+	boolean specs_valid;        /* TRUE if fw_set_specs() successful */
 	
-	fix15    depth_adj;         /* Curve splitting depth adjustment */
-	fix15    thresh;            /* Scan conversion threshold (sub-pixels) */
-	boolean  normal;            /* TRUE if 0 obl and mult of 90 deg rot  */
+	fix15 depth_adj;            /* Curve splitting depth adjustment */
+	fix15 thresh;               /* Scan conversion threshold (sub-pixels) */
+	boolean normal;             /* TRUE if 0 obl and mult of 90 deg rot  */
 	
-	fix15    multshift;         /* Fixed point shift for multipliers */
-	fix15    pixshift;          /* Fixed point shift for sub-pixels */
-	fix15    poshift;           /* Left shift from pixel to output format */
-	fix15    mpshift;           /* Fixed point shift for mult to sub-pixels */
-	fix31    multrnd;           /* 0.5 in multiplier units */
-	fix15    pixrnd;            /* 0.5 in sub-pixel units */
-	fix31    mprnd;             /* 0.5 sub-pixels in multiplier units */
-	fix15    pixfix;            /* Mask to remove fractional pixels */
-	fix15    onepix;            /* 1.0 pixels in sub-pixel units */
+	fix15 multshift;            /* Fixed point shift for multipliers */
+	fix15 pixshift;             /* Fixed point shift for sub-pixels */
+	fix15 poshift;              /* Left shift from pixel to output format */
+	fix15 mpshift;              /* Fixed point shift for mult to sub-pixels */
+	fix31 multrnd;              /* 0.5 in multiplier units */
+	fix15 pixrnd;               /* 0.5 in sub-pixel units */
+	fix31 mprnd;                /* 0.5 sub-pixels in multiplier units */
+	fix15 pixfix;               /* Mask to remove fractional pixels */
+	fix15 onepix;               /* 1.0 pixels in sub-pixel units */
 
-	boolean (*init_out)(specs_t *specsarg);
-	boolean (*begin_char)(fix31 x, fix31 y, fix31 minx, fix31 miny, fix31 maxx, fix31 maxy);
-	void    (*begin_sub_char)(fix31 x, fix31 y, fix31 minx, fix31 miny, fix31 maxx, fix31 max);
-	void    (*begin_contour)(fix31 x1, fix31 y1, boolean outside); 
-	void    (*curve)(fix31 x1, fix31 y1, fix31 x2, fix31 y2, fix31 x3, fix31 y3, fix15 depth);  
-	void    (*line)(fix31 x1, fix31 y1);               
-	void    (*end_contour)(void); 
-	void    (*end_sub_char)(void);
-	boolean (*end_char)(void);    
+	boolean (*init_out)(PROTO_DECL2 specs_t *specsarg);
+	boolean (*begin_char)(PROTO_DECL2 fix31 x, fix31 y, fix31 minx, fix31 miny, fix31 maxx, fix31 maxy);
+	void (*begin_sub_char)(PROTO_DECL2 fix31 x, fix31 y, fix31 minx, fix31 miny, fix31 maxx, fix31 max);
+	void (*begin_contour)(PROTO_DECL2 fix31 x1, fix31 y1, boolean outside); 
+	void (*curve)(PROTO_DECL2 fix31 x1, fix31 y1, fix31 x2, fix31 y2, fix31 x3, fix31 y3, fix15 depth);  
+	void (*line)(PROTO_DECL2 fix31 x1, fix31 y1);               
+	void (*end_contour)(PROTO_DECL1);
+	void (*end_sub_char)(PROTO_DECL1);
+	boolean (*end_char)(PROTO_DECL1);
+
 	specs_t specs;              /* copy specs onto stack */
 	ufix8 *font_org;            /* Pointer to start of font data */
 	ufix8 *hdr2_org;            /* Pointer to start of private header data */
 
 	/* set_trns.c data definitions */
-	tcb_t    tcb;               /* Current transformation control block */
-	ufix8    Y_edge_org;        /* Index to first Y controlled coordinate */
-	ufix8    Y_int_org;         /* Index to first Y interpolation zone */
-	fix31    rnd_xmin;          /* rounded out value of xmin for int-char spac. fix */
+	tcb_t tcb;                  /* Current transformation control block */
+	ufix8 Y_edge_org;           /* Index to first Y controlled coordinate */
+	ufix8 Y_int_org;            /* Index to first Y interpolation zone */
+	fix31 rnd_xmin;             /* rounded out value of xmin for int-char spac. fix */
 
-	fix15    orus[MAX_CTRL_ZONES];   /* Controlled coordinate table (orus) */
+#if REENTRANT_ALLOC
+	plaid_t *plaid;
+#else
+	fix15 orus[MAX_CTRL_ZONES]; /* Controlled coordinate table (orus) */
 #if INCL_RULES
-	fix15    pix[MAX_CTRL_ZONES];    /* Controlled coordinate table (sub-pixels) */
-	fix15    mult[MAX_INT_ZONES];    /* Interpolation multiplier table */
-	fix31    offset[MAX_INT_ZONES];  /* Interpolation offset table */
-#endif                                                               /* endif incl_rules */
+	fix15 pix[MAX_CTRL_ZONES];  /* Controlled coordinate table (sub-pixels) */
+	fix15 mult[MAX_INT_ZONES];  /* Interpolation multiplier table */
+	fix31 offset[MAX_INT_ZONES]; /* Interpolation offset table */
+#endif
+#endif
 
-	fix15    no_X_orus;         /* Number of X controlled coordinates */
-	fix15    no_Y_orus;         /* Number of Y controlled coordinates */
-	ufix16   Y_constr_org;      /* Origin of constraint table in font data */
+	fix15 no_X_orus;            /* Number of X controlled coordinates */
+	fix15 no_Y_orus;            /* Number of Y controlled coordinates */
+	ufix16 Y_constr_org;        /* Origin of constraint table in font data */
 
 #if INCL_RULES
 	constr_t constr;            /* Constraint data state */
-	boolean  c_act[MAX_CONSTR]; /* TRUE if constraint currently active */
-	fix15    c_pix[MAX_CONSTR]; /* Size of constrained zone if active */
-#endif                                                            
-#if INCL_ISW       
-	boolean import_setwidth_act;     /* boolean to indicate imported setwidth */
+	boolean c_act[MAX_CONSTR];  /* TRUE if constraint currently active */
+	fix15 c_pix[MAX_CONSTR];    /* Size of constrained zone if active */
+#endif
+#if INCL_ISW
+	boolean import_setwidth_act; /* boolean to indicate imported setwidth */
 	boolean isw_modified_constants;
-	ufix32 imported_width;		/* value of imported setwidth */	
-	fix15 isw_xmax;		        /* maximum oru value for constants*/
+	ufix32 imported_width;      /* value of imported setwidth */
+	fix15 isw_xmax;             /* maximum oru value for constants */
 #endif
 #if INCL_SQUEEZING || INCL_ISW
 	fix15 setwidth_orus;        /* setwidth value in orus */
 	/* bounding box in orus for squeezing */
-	fix15 bbox_xmin_orus;	    /* X minimum in orus */
+	fix15 bbox_xmin_orus;       /* X minimum in orus */
 	fix15 bbox_xmax_orus;       /* X maximum in orus */
 	fix15 bbox_ymin_orus;       /* Y minimum in orus */
 	fix15 bbox_ymax_orus;       /* Y maximum in orus */
 #endif
 #ifdef INCL_SQUEEZING
-	boolean squeezing_compound; /* flag to indicate a compound character*/
+	boolean squeezing_compound; /* flag to indicate a compound character */
 #endif
 #ifdef INCL_CLIPPING
 	fix31 clip_xmax;
@@ -496,7 +568,7 @@ typedef struct speedo_global_data {
 	fix31 clip_xmin;
 	fix31 clip_ymin;
 #endif
-} SPEEDO_GLOBALS;
+};
 
 /***********************************************************************************
  *
@@ -504,9 +576,24 @@ typedef struct speedo_global_data {
  *
  ***********************************************************************************/
 
+#if STATIC_ALLOC
 extern SPEEDO_GLOBALS sp_globals;
 #define sp_intercepts sp_globals
 #define sp_plaid sp_globals
+#if DYNAMIC_ALLOC
+extern SPEEDO_GLOBALS *sp_global_ptr;
+
+#define sp_globals (*sp_global_ptr)
+#define sp_intercepts (*sp_global_ptr)
+#define sp_plaid (*sp_global_ptr)
+#else
+#if REENTRANT_ALLOC
+#define sp_globals (*sp_global_ptr)
+#define sp_intercepts (*(*sp_global_ptr).intercepts)
+#define sp_plaid (*(*sp_global_ptr).plaid)
+#endif
+#endif
+#endif
 
 
 /***** PUBLIC FONT HEADER OFFSET CONSTANTS  *****/
@@ -614,7 +701,7 @@ extern SPEEDO_GLOBALS sp_globals;
                             /*       X scale 2 bytes (1/4096ths)            */
                             /*       Y scale 2 bytes (1/4096ths)            */
 #define  SIZE_FW (FH_LDNTR + 6)  /* size of nominal font header */
-#define  EXP_FH_METRES SIZE_FW /* offset to expansion field metric resolution (optional) */
+#define  EXP_FH_METRES SIZE_FW   /* offset to expansion field metric resolution (optional) */
 
 
 
@@ -641,88 +728,89 @@ extern SPEEDO_GLOBALS sp_globals;
 /*  do_char.c functions */
 #define SP_UNDEFINED 0
 #define UNDEFINED 0xffff
-ufix16 sp_get_char_id(ufix16 char_index);
-boolean sp_make_char(ufix16 char_index);
-#if INCL_ISW       
-fix31 sp_compute_isw_scale(void);
-boolean sp_make_char_isw(ufix16 char_index, ufix32 imported_width);
+ufix16 sp_get_char_id(PROTO_DECL2 ufix16 char_index);
+boolean sp_make_char(PROTO_DECL2 ufix16 char_index);
+
+#if INCL_ISW
+fix31 sp_compute_isw_scale(PROTO_DECL1);
+boolean sp_make_char_isw(PROTO_DECL2 ufix16 char_index, ufix32 imported_width);
 #endif
 
 #if INCL_METRICS
-fix31 sp_get_char_width(ufix16 char_index);
-fix15 sp_get_track_kern(fix15 track, fix15 point_size);
-fix31 sp_get_pair_kern(ufix16 char_index1, ufix16 char_index2);
-boolean sp_get_char_bbox(ufix16 char_index, bbox_t *bbox, boolean no_adj);
+fix31 sp_get_char_width(PROTO_DECL2 ufix16 char_index);
+fix15 sp_get_track_kern(PROTO_DECL2 fix15 track, fix15 point_size);
+fix31 sp_get_pair_kern(PROTO_DECL2 ufix16 char_index1, ufix16 char_index2);
+boolean sp_get_char_bbox(PROTO_DECL2 ufix16 char_index, bbox_t *bbox, boolean no_adj);
 #endif
 
 /* do_trns.c functions */
-ufix8 *sp_read_bbox(ufix8 *pointer, point_t *pPmin, point_t *pPmax, boolean set_flag);
-void sp_proc_outl_data(ufix8 *pointer);
+ufix8 *sp_read_bbox(PROTO_DECL2 ufix8 *pointer, point_t *pPmin, point_t *pPmax, boolean set_flag);
+void sp_proc_outl_data(PROTO_DECL2 ufix8 *pointer);
 
 /* out_blk.c functions */
 #if INCL_BLACK
-boolean sp_init_black(specs_t *specsarg);
-boolean sp_begin_char_black(fix31 x, fix31 y, fix31 minx, fix31 miny, fix31 maxx, fix31 maxy);
-void sp_begin_contour_black(fix31 x1, fix31 y1, boolean outside);
-void sp_line_black(fix31 x, fix31 y);
-boolean sp_end_char_black(void);
+boolean sp_init_black(PROTO_DECL2 specs_t *specsarg);
+boolean sp_begin_char_black(PROTO_DECL2 fix31 x, fix31 y, fix31 minx, fix31 miny, fix31 maxx, fix31 maxy);
+void sp_begin_contour_black(PROTO_DECL2 fix31 x1, fix31 y1, boolean outside);
+void sp_line_black(PROTO_DECL2 fix31 x, fix31 y);
+boolean sp_end_char_black(PROTO_DECL1);
 #endif
 
 /* out_scrn.c functions */
 #if INCL_SCREEN
-boolean sp_init_screen(specs_t *specsarg);
-boolean sp_begin_char_screen(fix31 x, fix31 y, fix31 minx, fix31 miny, fix31 maxx, fix31 maxy);
-void sp_begin_contour_screen(fix31 x1, fix31 y1, boolean outside);
-void sp_curve_screen(fix31 x1, fix31 y1, fix31 x2, fix31 y2, fix31 x3, fix31 y3, fix15 depth);
-void sp_line_screen(fix31 x, fix31 y);
-void sp_end_contour_screen(void);
-boolean sp_end_char_screen(void);
+boolean sp_init_screen(PROTO_DECL2 specs_t *specsarg);
+boolean sp_begin_char_screen(PROTO_DECL2 fix31 x, fix31 y, fix31 minx, fix31 miny, fix31 maxx, fix31 maxy);
+void sp_begin_contour_screen(PROTO_DECL2 fix31 x1, fix31 y1, boolean outside);
+void sp_curve_screen(PROTO_DECL2 fix31 x1, fix31 y1, fix31 x2, fix31 y2, fix31 x3, fix31 y3, fix15 depth);
+void sp_line_screen(PROTO_DECL2 fix31 x, fix31 y);
+void sp_end_contour_screen(PROTO_DECL1);
+boolean sp_end_char_screen(PROTO_DECL1);
 #endif
 
 /* out_outl.c functions */
 #if INCL_OUTLINE
 #if INCL_MULTIDEV
-boolean sp_set_outline_device(outline_t *ofuncs, ufix16 size);
+boolean sp_set_outline_device(PROTO_DECL2 outline_t *ofuncs, ufix16 size);
 #endif
 
 
-boolean sp_init_outline(specs_t *specsarg);
-boolean sp_begin_char_outline(fix31 x, fix31 y, fix31 minx, fix31 miny, fix31 maxx, fix31 maxy);
-void sp_begin_sub_char_outline(fix31 x, fix31 y, fix31 minx, fix31 miny, fix31 maxx, fix31 max);
-void sp_begin_contour_outline(fix31 x1, fix31 y1, boolean outside);
-void sp_curve_outline(fix31 x1, fix31 y1, fix31 x2, fix31 y2, fix31 x3, fix31 y3, fix15 depth);
-void sp_line_outline(fix31 x, fix31 y);
-void sp_end_contour_outline(void);
-void sp_end_sub_char_outline(void);
-boolean sp_end_char_outline(void);
+boolean sp_init_outline(PROTO_DECL2 specs_t *specsarg);
+boolean sp_begin_char_outline(PROTO_DECL2 fix31 x, fix31 y, fix31 minx, fix31 miny, fix31 maxx, fix31 maxy);
+void sp_begin_sub_char_outline(PROTO_DECL2 fix31 x, fix31 y, fix31 minx, fix31 miny, fix31 maxx, fix31 max);
+void sp_begin_contour_outline(PROTO_DECL2 fix31 x1, fix31 y1, boolean outside);
+void sp_curve_outline(PROTO_DECL2 fix31 x1, fix31 y1, fix31 x2, fix31 y2, fix31 x3, fix31 y3, fix15 depth);
+void sp_line_outline(PROTO_DECL2 fix31 x, fix31 y);
+void sp_end_contour_outline(PROTO_DECL1);
+void sp_end_sub_char_outline(PROTO_DECL1);
+boolean sp_end_char_outline(PROTO_DECL1);
 #endif
 
 /* out_bl2d.c functions */
 #if INCL_2D
-boolean sp_init_2d(specs_t *specsarg);
-boolean sp_begin_char_2d(fix31 x, fix31 y, fix31 minx, fix31 miny, fix31 maxx, fix31 maxy);
-void sp_begin_contour_2d(fix31 x1, fix31 y1, boolean outside);
-void sp_line_2d(fix31 x, fix31 y);
-boolean sp_end_char_2d(void);
+boolean sp_init_2d(PROTO_DECL2 specs_t *specsarg);
+boolean sp_begin_char_2d(PROTO_DECL2 fix31 x, fix31 y, fix31 minx, fix31 miny, fix31 maxx, fix31 maxy);
+void sp_begin_contour_2d(PROTO_DECL2 fix31 x1, fix31 y1, boolean outside);
+void sp_line_2d(PROTO_DECL2 fix31 x, fix31 y);
+boolean sp_end_char_2d(PROTO_DECL1);
 #endif
 
 /* out_util.c functions */
 #if INCL_BLACK || INCL_SCREEN || INCL_2D
 
 #if INCL_MULTIDEV
-boolean sp_set_bitmap_device(bitmap_t *bfuncs, ufix16 size);
+boolean sp_set_bitmap_device(PROTO_DECL2 bitmap_t *bfuncs, ufix16 size);
 #endif
 
-void sp_init_char_out(fix31 x, fix31 y, fix31 minx, fix31 miny, fix31 maxx, fix31 maxy);
-void sp_begin_sub_char_out(fix31 x, fix31 y, fix31 minx, fix31 miny, fix31 maxx, fix31 maxy);
-void sp_curve_out(fix31 x1, fix31 y1, fix31 x2, fix31 y2, fix31 x3, fix31 y3, fix15 depth);
-void sp_end_contour_out(void);
-void sp_end_sub_char_out(void);
-void sp_init_intercepts_out(void);
-void sp_restart_intercepts_out(void);
-void sp_set_first_band_out(fix31 minx, fix31 miny, fix31 maxx, fix31 maxy);
-void sp_reduce_band_size_out(void);
-boolean sp_next_band_out(void);
+void sp_init_char_out(PROTO_DECL2 fix31 x, fix31 y, fix31 minx, fix31 miny, fix31 maxx, fix31 maxy);
+void sp_begin_sub_char_out(PROTO_DECL2 fix31 x, fix31 y, fix31 minx, fix31 miny, fix31 maxx, fix31 maxy);
+void sp_curve_out(PROTO_DECL2 fix31 x1, fix31 y1, fix31 x2, fix31 y2, fix31 x3, fix31 y3, fix15 depth);
+void sp_end_contour_out(PROTO_DECL1);
+void sp_end_sub_char_out(PROTO_DECL1);
+void sp_init_intercepts_out(PROTO_DECL1);
+void sp_restart_intercepts_out(PROTO_DECL1);
+void sp_set_first_band_out(PROTO_DECL2 fix31 minx, fix31 miny, fix31 maxx, fix31 maxy);
+void sp_reduce_band_size_out(PROTO_DECL1);
+boolean sp_next_band_out(PROTO_DECL1);
 #endif
 
 #if INCL_USEROUT
@@ -731,69 +819,69 @@ boolean sp_init_userout(specs_t *specsarg);
 
 
 /* reset.c functions */
-void sp_reset(void);
-void sp_set_key(const ufix8 *key);
-void sp_reset_key(void);
-const ufix8 *sp_get_key(const buff_t *font_buff);
-ufix16 sp_get_cust_no(const buff_t *font_buff);
+void sp_reset(PROTO_DECL1);
+void sp_set_key(PROTO_DECL2 const ufix8 *key);
+void sp_reset_key(PROTO_DECL1);
+const ufix8 *sp_get_key(PROTO_DECL2 const buff_t *font_buff);
+ufix16 sp_get_cust_no(PROTO_DECL2 const buff_t *font_buff);
 
 /* set_spcs.c functions */
-boolean sp_set_specs(const specs_t *specsarg, const buff_t *font);
-void sp_type_tcb(tcb_t *ptcb);
+boolean sp_set_specs(PROTO_DECL2 const specs_t *specsarg, const buff_t *font);
+void sp_type_tcb(PROTO_DECL2 tcb_t *ptcb);
 
-fix31 sp_read_long(ufix8 *pointer);
-fix15 sp_read_word_u(ufix8 *pointer);
+fix31 sp_read_long(PROTO_DECL2 ufix8 *pointer);
+fix15 sp_read_word_u(PROTO_DECL2 ufix8 *pointer);
 
 /* set_trns.c functions */
-void sp_init_tcb(void);
-void sp_scale_tcb(tcb_t *ptcb, fix15 x_pos, fix15 y_pos, fix15 x_scale, fix15 y_scale);
-ufix8 *sp_plaid_tcb(ufix8 *pointer, ufix8 format);
-ufix8 *sp_skip_interpolation_table(ufix8 *pointer, ufix8 format);
-ufix8 *sp_skip_control_zone(ufix8 *pointer, ufix8 format);
+void sp_init_tcb(PROTO_DECL1);
+void sp_scale_tcb(PROTO_DECL2 tcb_t *ptcb, fix15 x_pos, fix15 y_pos, fix15 x_scale, fix15 y_scale);
+ufix8 *sp_plaid_tcb(PROTO_DECL2 ufix8 *pointer, ufix8 format);
+ufix8 *sp_skip_interpolation_table(PROTO_DECL2 ufix8 *pointer, ufix8 format);
+ufix8 *sp_skip_control_zone(PROTO_DECL2 ufix8 *pointer, ufix8 format);
 
-ufix8 *sp_read_oru_table(ufix8 *pointer);
+ufix8 *sp_read_oru_table(PROTO_DECL2 ufix8 *pointer);
 #if INCL_SQUEEZING
-boolean sp_calculate_x_scale(fix31 *x_factor, fix31 *x_offset, fix15 no_x_ctrl_zones);
-boolean sp_calculate_y_scale(fix31 *top_scale, fix31 *bottom_scale, fix15 first_y_zone,  fix15 no_Y_ctrl_zones);
+boolean sp_calculate_x_scale(PROTO_DECL2 fix31 *x_factor, fix31 *x_offset, fix15 no_x_ctrl_zones);
+boolean sp_calculate_y_scale(PROTO_DECL2 fix31 *top_scale, fix31 *bottom_scale, fix15 first_y_zone, fix15 no_Y_ctrl_zones);
 #endif
 
 
 /* user defined functions */
 
-void sp_report_error(fix15 n);
-void sp_write_error(const char *fmt, ...);
+void sp_report_error(PROTO_DECL2 fix15 n);
+void sp_write_error(PROTO_DECL2 const char *fmt, ...);
 
 #if INCL_BLACK || INCL_SCREEN || INCL_2D
-void sp_open_bitmap(fix31 xorg, fix31 yorg, fix15 xsize, fix15 ysize);
-void sp_set_bitmap_bits(fix15 y, fix15 xbit1, fix15 xbit2);
-void sp_close_bitmap(void);
+void sp_open_bitmap(PROTO_DECL2 fix31 xorg, fix31 yorg, fix15 xsize, fix15 ysize);
+void sp_set_bitmap_bits(PROTO_DECL2 fix15 y, fix15 xbit1, fix15 xbit2);
+void sp_close_bitmap(PROTO_DECL1);
 #endif
 
 #if INCL_OUTLINE
-void sp_open_outline(fix31 x_set_width, fix31 y_set_width, fix31 xmin, fix31 xmax, fix31 ymin, fix31 ymax);
-void sp_start_sub_char(void);
-void sp_end_sub_char(void);
-void sp_start_contour(fix31 x, fix31 y, boolean outside);
-void sp_curve_to(fix31 x1, fix31 y1, fix31 x2, fix31 y2, fix31 x3, fix31 y3);
-void sp_line_to(fix31 x, fix31 y);
-void sp_close_contour(void);
-void sp_close_outline(void);
+void sp_open_outline(PROTO_DECL2 fix31 x_set_width, fix31 y_set_width, fix31 xmin, fix31 xmax, fix31 ymin, fix31 ymax);
+void sp_start_sub_char(PROTO_DECL1);
+void sp_end_sub_char(PROTO_DECL1);
+void sp_start_contour(PROTO_DECL2 fix31 x, fix31 y, boolean outside);
+void sp_curve_to(PROTO_DECL2 fix31 x1, fix31 y1, fix31 x2, fix31 y2, fix31 x3, fix31 y3);
+void sp_line_to(PROTO_DECL2 fix31 x, fix31 y);
+void sp_close_contour(PROTO_DECL1);
+void sp_close_outline(PROTO_DECL1);
 #endif
 
 #if INCL_LCD
 /* Load character data from font file */
-boolean sp_load_char_data(long file_offset, fix15 no_bytes, fix15 cb_offset, buff_t *char_data);
+boolean sp_load_char_data(PROTO_DECL2 long file_offset, fix15 no_bytes, fix15 cb_offset, buff_t *char_data);
 #endif
 
-#if INCL_PLAID_OUT               /* Plaid data monitoring included? */
-void sp_record_xint(fix15 int_num);            /* Record xint data */
-void sp_record_yint(fix15 int_num);            /* Record yint data */
-void sp_begin_plaid_data(void);         /* Signal start of plaid data */
-void sp_begin_ctrl_zones(fix15, no_X_zones, fix15 no_Y_zones);         /* Signal start of control zones */
-void sp_record_ctrl_zone(fix31 start, fix31 end, fix15 constr);         /* Record control zone data */
-void sp_begin_int_zones(fix15 no_X_int_zones, fix15 no_Y_int_zones);          /* Signal start of interpolation zones */
-void sp_record_int_zone(fix31 start, fix31 end);          /* Record interpolation zone data */
-void sp_end_plaid_data(void);           /* Signal end of plaid data */
+#if INCL_PLAID_OUT
+void sp_record_xint(PROTO_DECL2 fix15 int_num);            /* Record xint data */
+void sp_record_yint(PROTO_DECL2 fix15 int_num);            /* Record yint data */
+void sp_begin_plaid_data(PROTO_DECL1);         /* Signal start of plaid data */
+void sp_begin_ctrl_zones(PROTO_DECL2 fix15, no_X_zones, fix15 no_Y_zones);         /* Signal start of control zones */
+void sp_record_ctrl_zone(PROTO_DECL2 fix31 start, fix31 end, fix15 constr);         /* Record control zone data */
+void sp_begin_int_zones(PROTO_DECL2 fix15 no_X_int_zones, fix15 no_Y_int_zones);          /* Signal start of interpolation zones */
+void sp_record_int_zone(PROTO_DECL2 fix31 start, fix31 end);          /* Record interpolation zone data */
+void sp_end_plaid_data(PROTO_DECL1);           /* Signal end of plaid data */
 #endif
 
 #endif /* _SPEEDO_H_ */
