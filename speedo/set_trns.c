@@ -322,8 +322,14 @@ static ufix8 *sp_setup_int_table(ufix8 * pointer,	/* Pointer to first byte in in
 							(fix31) end_pix << (16 - sp_globals.pixshift));
 #endif
 			zone_orus = (fix31) end_orus - (fix31) start_orus;
-			sp_plaid.mult[i] = ((((fix31) end_pix - (fix31) start_pix) << sp_globals.mpshift) +
+			if (zone_orus == 0)
+			{
+				sp_plaid.mult[i] = 0;
+			} else
+			{
+				sp_plaid.mult[i] = ((((fix31) end_pix - (fix31) start_pix) << sp_globals.mpshift) +
 								(zone_orus / 2)) / zone_orus;
+			}
 			sp_plaid.offset[i] =
 				(((((fix31) start_pix + (fix31) end_pix) << sp_globals.mpshift) -
 				  ((fix31) sp_plaid.mult[i] * ((fix31) start_orus + (fix31) end_orus))) / 2) + sp_globals.mprnd;
