@@ -34,12 +34,26 @@ WITH THE SPEEDO SOFTWARE OR THE BITSTREAM CHARTER OUTLINE FONT.
 
 #define FONT_BUFFER_SIZE  1000
 
+/***** PRIVATE FONT HEADER OFFSET CONSTANTS  *****/
+#define  FH_ORUMX    0u     /* U   Max ORU value  2 bytes                   */
+#define  FH_PIXMX    2u     /* U   Max Pixel value  2 bytes                 */
+#define  FH_CUSNR    4u     /* U   Customer Number  2 bytes                 */
+#define  FH_OFFCD    6u     /* E   Offset to Char Directory  3 bytes        */
+#define  FH_OFCNS    9u     /* E   Offset to Constraint Data  3 bytes       */
+#define  FH_OFFTK   12u     /* E   Offset to Track Kerning  3 bytes         */
+#define  FH_OFFPK   15u     /* E   Offset to Pair Kerning  3 bytes          */
+#define  FH_OCHRD   18u     /* E   Offset to Character Data  3 bytes        */
+#define  FH_NBYTE   21u     /* E   Number of Bytes in File  3 bytes         */
+
 static const char *pathname;				/* Name of font file to be output */
 
 static ufix8 font_buffer[FONT_BUFFER_SIZE];	/* Font buffer */
 
 static FILE *fdescr;					/* Speedo outline file descriptor */
 
+#if STATIC_ALLOC
+SPEEDO_GLOBALS sp_globals;
+#endif
 
 
 /*
@@ -63,6 +77,24 @@ static fix15 read_2b(ufix8 *pointer)
 	return temp;
 }
 
+
+ufix16 sp_get_cust_no(PROTO_DECL2 const buff_t *font_buff)
+{
+	ufix8 *hdr2_org;
+	ufix16 private_off;
+
+	private_off = read_2b(font_buff->org + FH_HEDSZ);
+	if ((private_off + FH_CUSNR) > font_buff->no_bytes)
+	{
+		return 0;
+	}
+
+	hdr2_org = font_buff->org + private_off;
+
+	return read_2b(hdr2_org + FH_CUSNR);
+}
+
+
 /*
  * Reads 4-byte field from font buffer 
  */
@@ -78,11 +110,31 @@ static fix31 read_4b(ufix8 *pointer)
 }
 
 
+/*
+ * Reads a 3-byte encrypted integer from the byte string starting at
+ * the specified point.
+ * Returns the decrypted value read as a signed integer.
+ */
+fix31 sp_read_long(PROTO_DECL2 ufix8 *pointer)	/* Pointer to first byte of encrypted 3-byte integer */
+{
+	fix31 tmpfix31;
+
+	tmpfix31 = (fix31) ((*pointer++) ^ sp_globals.key4) << 8;	/* Read middle byte */
+	tmpfix31 += (fix31) (*pointer++) << 16;	/* Read most significant byte */
+	tmpfix31 += (fix31) ((*pointer) ^ sp_globals.key6);	/* Read least significant byte */
+	return tmpfix31;
+}
+
+
 int main(int argc, char **argv)
 {
-	int bytes_read;						/* Number of bytes read from font file */
+	long bytes_read;					/* Number of bytes read from font file */
 	ufix8 tmpufix8;						/* Temporary workspace */
 	ufix32 tmpufix32;					/* Temporary workspace */
+	ufix16 private_off;
+	buff_t font;
+	const ufix8 *key;
+	ufix16 orus_per_em;
 
 	if (argc != 2)
 	{
@@ -102,16 +154,23 @@ int main(int argc, char **argv)
 	}
 
 	bytes_read = fread(font_buffer, sizeof(ufix8), sizeof(font_buffer), fdescr);
-	if (bytes_read == 0)
+	if (bytes_read <= 0)
 	{
-		fprintf(stderr, "Error on reading %s: %x\n", pathname, bytes_read);
+		fprintf(stderr, "Error on reading %s: %ld\n", pathname, bytes_read);
 		fclose(fdescr);
 		return 1;
 	}
 
+	font.org = font_buffer;
+	font.no_bytes = bytes_read;
+
+	sp_reset_key();
+	if ((key = sp_get_key(&font)) != NULL)
+		sp_set_key(key);
+
 	printf("Format Identifier: %.4s\n", font_buffer + FH_FMVER);
 
-	tmpufix32 = (ufix32) read_4b(font_buffer + FH_FMVER + 4);
+	tmpufix32 = read_4b(font_buffer + FH_FMVER + 4);
 	printf("CR-LF-NULL-NULL data: %8.8lx\n", (unsigned long)tmpufix32);
 
 	printf("Font Size: %ld\n", (long)(ufix32) read_4b(font_buffer + FH_FNTSZ));
@@ -120,7 +179,8 @@ int main(int argc, char **argv)
 
 	printf("Minimum Character Buffer Size: %d\n", (ufix16) read_2b(font_buffer + FH_CBFSZ));
 
-	printf("Header Size: %d\n", (ufix16) read_2b(font_buffer + FH_HEDSZ));
+	private_off = (ufix16) read_2b(font_buffer + FH_HEDSZ);
+	printf("Header Size: %d\n", private_off);
 
 	printf("Font ID: %4.4d\n", (ufix16) read_2b(font_buffer + FH_FNTID));
 
@@ -162,9 +222,10 @@ int main(int argc, char **argv)
 
 	printf("Font Form: %.14s\n", font_buffer + FH_FNTFM);
 
-	printf("Italic Angle: %.2f\n", ((double) read_2b(font_buffer + FH_ITANG) / 256.0));
+	printf("Italic Angle: %.2f\n", ((double) (fix15) read_2b(font_buffer + FH_ITANG) / 256.0));
 
-	printf("ORUs per Em: %d\n", (ufix16) read_2b(font_buffer + FH_ORUPM));
+	orus_per_em = read_2b(font_buffer + FH_ORUPM);
+	printf("ORUs per Em: %d\n", orus_per_em);
 
 	printf("Width of Word Space: %d\n", (ufix16) read_2b(font_buffer + FH_WDWTH));
 
@@ -232,7 +293,36 @@ int main(int argc, char **argv)
 	printf("Large Denominators X scale: %.2f\n", ((double) read_2b(font_buffer + FH_LDNTR + 2) / 4096.0));
 	printf("Large Denominators Y scale: %.2f\n", ((double) read_2b(font_buffer + FH_LDNTR + 4) / 4096.0));
 
-	fclose(fdescr);
+	if (private_off >= EXP_FH_METRES)
+	{
+		printf("Metric resolution: %d\n", read_2b(font_buffer + EXP_FH_METRES));
+	} else
+	{
+		printf("Metric resolution: %d (default)\n", orus_per_em);
+	}
+
+	printf("\n** private header **\n\n");
 	
+	if (private_off + FH_CUSNR > (unsigned long)bytes_read)
+	{
+		printf("no private header\n");
+	} else
+	{
+		ufix8 *hdr2_org;
+
+		hdr2_org = font_buffer + private_off;
+		printf("Max ORU value: %u\n", read_2b(hdr2_org + FH_ORUMX));
+		printf("Max Pixel value: %u\n", read_2b(hdr2_org + FH_PIXMX));
+		printf("Customer Number: %u\n", read_2b(hdr2_org + FH_CUSNR));
+		printf("Offset to Char Directory: %lu\n", (unsigned long)sp_read_long(hdr2_org + FH_OFFCD));
+		printf("Offset to Constraint Data: %lu\n", (unsigned long)sp_read_long(hdr2_org + FH_OFCNS));
+		printf("Offset to Track Kerning: %lu\n", (unsigned long)sp_read_long(hdr2_org + FH_OFFTK));
+		printf("Offset to Pair Kerning: %lu\n", (unsigned long)sp_read_long(hdr2_org + FH_OFFPK));
+		printf("Offset to Character Data: %lu\n", (unsigned long)sp_read_long(hdr2_org + FH_OCHRD));
+		printf("Number of Bytes in File: %lu\n", (unsigned long)sp_read_long(hdr2_org + FH_NBYTE));
+	}
+
+	fclose(fdescr);
+
 	return 0;
 }

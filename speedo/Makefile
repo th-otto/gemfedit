@@ -15,7 +15,7 @@ all: $(PROGRAMS)
 htest:	htest.o
 	$(CC) $(CFLAGS) $(LDFLAGS) $^ -o $@
 
-spdinfo:	spdinfo.o
+spdinfo:	spdinfo.o keys.o
 	$(CC) $(CFLAGS) $(LDFLAGS) $^ -o $@
 
 SPDLIB = reset.o do_char.o do_trns.o set_spcs.o set_trns.o \

@@ -658,7 +658,7 @@ void sp_type_tcb(tcb_t *ptcb)	/* Pointer to transformation control bloxk */
 
 
 /*
- * Reads a 3-byte encrypted integer from the byte string starting at 
+ * Reads a 3-byte encrypted integer from the byte string starting at
  * the specified point.
  * Returns the decrypted value read as a signed integer.
  */
