@@ -559,10 +559,10 @@ struct speedo_global_data {
 	fix15 bbox_ymin_orus;       /* Y minimum in orus */
 	fix15 bbox_ymax_orus;       /* Y maximum in orus */
 #endif
-#ifdef INCL_SQUEEZING
+#if INCL_SQUEEZING
 	boolean squeezing_compound; /* flag to indicate a compound character */
 #endif
-#ifdef INCL_CLIPPING
+#if INCL_CLIPPING
 	fix31 clip_xmax;
 	fix31 clip_ymax;
 	fix31 clip_xmin;
