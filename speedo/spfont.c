@@ -220,7 +220,7 @@ static int sp_get_metrics(FontPtr pFont, unsigned long count, unsigned char *cha
 }
 
 int
-sp_open_font(char *fontname,
+sp_open_font(SPD_PROTO_DECL2 char *fontname,
 			 char *filename,
 			 FontEntryPtr entry,
 			 FontScalablePtr vals, fsBitmapFormat format, fsBitmapFormatMask fmask, Mask flags, SpeedoFontPtr * spfont)
@@ -235,7 +235,7 @@ sp_open_font(char *fontname,
 	spmf = (SpeedoMasterFontPtr) entry->u.scalable.extra->private;
 	if (!spmf)
 	{
-		ret = sp_open_master(fontname, filename, &spmf);
+		ret = sp_open_master(SPD_GARG2 fontname, filename, &spmf);
 		if (ret != Successful)
 			return ret;
 		entry->u.scalable.extra->private = (pointer) spmf;
@@ -294,7 +294,7 @@ sp_open_font(char *fontname,
 	/* clobber global state to avoid wrecking future transformed fonts */
 	bzero((char *) &sp_globals, sizeof(sp_globals));
 
-	if (!sp_set_specs(&specs, &spmf->font))
+	if (!sp_set_specs(SPD_GARG2 &specs, &spmf->font))
 	{
 		sp_close_font(spf);
 		return BadFontName;
@@ -308,7 +308,7 @@ sp_open_font(char *fontname,
 }
 
 static int
-sp_load_font(char *fontname,
+sp_load_font(SPD_PROTO_DECL2 char *fontname,
 			 char *filename,
 			 FontEntryPtr entry,
 			 FontScalablePtr vals, fsBitmapFormat format, fsBitmapFormatMask fmask, FontPtr pfont, Mask flags)
@@ -375,7 +375,7 @@ sp_load_font(char *fontname,
 }
 
 int
-SpeedoFontLoad(FontPtr * ppfont,
+SpeedoFontLoad(SPD_PROTO_DECL2 FontPtr * ppfont,
 			   char *fontname,
 			   char *filename,
 			   FontEntryPtr entry, FontScalablePtr vals, fsBitmapFormat format, fsBitmapFormatMask fmask, Mask flags)
@@ -391,7 +391,7 @@ SpeedoFontLoad(FontPtr * ppfont,
 	if (!(pfont = CreateFontRec()))
 		return AllocError;
 
-	ret = sp_load_font(fontname, filename, entry, vals, format, fmask, pfont, flags);
+	ret = sp_load_font(SPD_GARG2 fontname, filename, entry, vals, format, fmask, pfont, flags);
 
 	if (ret == Successful)
 		*ppfont = pfont;
@@ -423,5 +423,4 @@ static void SpeedoCloseFont(FontPtr pfont)
 	xfree(pfont->info.isStringProp);
 	xfree(pfont->info.props);
 	DestroyFontRec(pfont);
-
 }

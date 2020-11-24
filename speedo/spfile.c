@@ -74,6 +74,7 @@ static fix15 read_2b(ufix8 *ptr)
 	return tmp;
 }
 
+
 static fix31 read_4b(ufix8 *ptr)
 {
 	fix31 tmp;
@@ -225,7 +226,7 @@ static int find_encoding(const char *fontname, const char *filename, int **enc, 
 #undef SPEEDO_RECODE
 }
 
-int sp_open_master(const char *fontname, const char *filename, SpeedoMasterFontPtr *master)
+int sp_open_master(SPD_PROTO_DECL2 const char *fontname, const char *filename, SpeedoMasterFontPtr *master)
 {
 	SpeedoMasterFontPtr spmf;
 	ufix8 tmp[FH_FBFSZ + 4];
@@ -297,7 +298,7 @@ int sp_open_master(const char *fontname, const char *filename, SpeedoMasterFontP
 
 	/* XXX add custom encryption stuff here */
 
-	key = sp_get_key(&spmf->font);
+	key = sp_get_key(SPD_GARG2 &spmf->font);
 	if (key == NULL)
 	{
 		sp_write_error("Non - standard encryption for \"%s\"", filename);
@@ -305,7 +306,7 @@ int sp_open_master(const char *fontname, const char *filename, SpeedoMasterFontP
 		goto cleanup;
 	}
 	spmf->key = key;
-	sp_set_key(key);
+	sp_set_key(SPD_GARG2 key);
 
 	spmf->first_char_id = read_2b(f_buffer + FH_FCHRF);
 	spmf->num_chars = read_2b(f_buffer + FH_NCHRL);
@@ -374,9 +375,9 @@ void sp_close_master_file(SpeedoMasterFontPtr spmf)
 /*
  * reset the encryption key, and make sure the file is opened
  */
-void sp_reset_master(SpeedoMasterFontPtr spmf)
+void sp_reset_master(SPD_PROTO_DECL2 SpeedoMasterFontPtr spmf)
 {
-	sp_set_key(spmf->key);
+	sp_set_key(SPD_GARG2 spmf->key);
 	if (!(spmf->state & MasterFileOpen))
 	{
 		spmf->fp = fopen(spmf->fname, "rb");

@@ -57,12 +57,13 @@ from The Open Group.
 
 #include <stdarg.h>
 
-void sp_write_error(const char *str, ...)
+void sp_write_error(SPD_PROTO_DECL2 const char *str, ...)
 {
 	va_list v;
 	void *a1;
 	void *a2;
 
+	GUNUSED
 	va_start(v, str);
 	ErrorF("Speedo: ");
 	a1 = va_arg(v, void *);

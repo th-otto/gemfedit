@@ -60,7 +60,7 @@ WITH THE SPEEDO SOFTWARE OR THE BITSTREAM CHARTER OUTLINE FONT.
  * Updates *ppointer to point to the byte following the
  * argument pair.
  */
-static ufix8 *sp_get_args(ufix8 * pointer,	/* Pointer to next byte in char data */
+static ufix8 *sp_get_args(SPD_PROTO_DECL2 ufix8 *pointer,	/* Pointer to next byte in char data */
 										   ufix8 format,	/* Format specifiaction of argument pair */
 										   point_t * pP)	/* Resulting transformed point */
 {
@@ -191,10 +191,11 @@ static ufix8 *sp_get_args(ufix8 * pointer,	/* Pointer to next byte in char data 
  * Updates *ppointer to point to the byte following the
  * bounding box data.
  */
-ufix8 *sp_read_bbox(ufix8 * pointer,	/* Pointer to next byte in char data */
-								  point_t * pPmin,	/* Lower left corner of bounding box */
-								  point_t * pPmax,	/* Upper right corner of bounding box */
-								  boolean set_flag)	/* flag to indicate whether global oru bbox should be saved */
+ufix8 *sp_read_bbox(SPD_PROTO_DECL2
+	ufix8 *pointer,	/* Pointer to next byte in char data */
+	point_t *pPmin,	/* Lower left corner of bounding box */
+	point_t *pPmax,	/* Upper right corner of bounding box */
+	boolean set_flag)	/* flag to indicate whether global oru bbox should be saved */
 {
 	ufix8 format1;
 	ufix8 format = 0;
@@ -206,7 +207,7 @@ ufix8 *sp_read_bbox(ufix8 * pointer,	/* Pointer to next byte in char data */
 	sp_globals.y_int = sp_globals.Y_int_org;
 	sp_globals.x_orus = sp_globals.y_orus = 0;
 	format1 = NEXT_BYTE(pointer);
-	pointer = sp_get_args(pointer, format1, pPmin);
+	pointer = sp_get_args(SPD_GARG2 pointer, format1, pPmin);
 #if INCL_SQUEEZING || INCL_ISW
 	if (set_flag)
 	{
@@ -240,7 +241,7 @@ ufix8 *sp_read_bbox(ufix8 * pointer,	/* Pointer to next byte in char data */
 			break;
 		}
 
-		pointer = sp_get_args(pointer, format, &P);
+		pointer = sp_get_args(SPD_GARG2 pointer, format, &P);
 #if INCL_SQUEEZING || INCL_ISW
 		if (set_flag && (i == 2))
 		{
@@ -281,16 +282,16 @@ ufix8 *sp_read_bbox(ufix8 * pointer,	/* Pointer to next byte in char data */
  * at which point it calls line() to deliver each vector resulting
  * from the spliting process.
  */
-static void sp_split_curve(fix31 x1, fix31 y1, fix31 x2, fix31 y2, fix31 x3, fix31 y3, fix15 depth)
+static void sp_split_curve(SPD_PROTO_DECL2 fix31 x1, fix31 y1, fix31 x2, fix31 y2, fix31 x3, fix31 y3, fix15 depth)
 {
-	fix31 X0 = (fix31) sp_globals.P0.x;
-	fix31 Y0 = (fix31) sp_globals.P0.y;
-	fix31 X1 = (fix31) x1;
-	fix31 Y1 = (fix31) y1;
-	fix31 X2 = (fix31) x2;
-	fix31 Y2 = (fix31) y2;
-	fix31 X3 = (fix31) x3;
-	fix31 Y3 = (fix31) y3;
+	fix31 X0 = sp_globals.P0.x;
+	fix31 Y0 = sp_globals.P0.y;
+	fix31 X1 = x1;
+	fix31 Y1 = y1;
+	fix31 X2 = x2;
+	fix31 Y2 = y2;
+	fix31 X3 = x3;
+	fix31 Y3 = y3;
 	point_t Pmid, P3;
 	point_t Pctrl1;
 	point_t Pctrl2;
@@ -302,12 +303,11 @@ static void sp_split_curve(fix31 x1, fix31 y1, fix31 x2, fix31 y2, fix31 x3, fix
 		   (double) x3 / (double) sp_globals.onepix, (double) y3 / (double) sp_globals.onepix);
 #endif
 
-
 	P3.x = x3;
 	P3.y = y3;
 	Pmid.x = (X0 + (X1 + X2) * 3 + X3 + 4) >> 3;
 	Pmid.y = (Y0 + (Y1 + Y2) * 3 + Y3 + 4) >> 3;
-	if ((--depth) <= 0)
+	if (--depth <= 0)
 	{
 		fn_line(Pmid);
 		sp_globals.P0 = Pmid;
@@ -319,12 +319,12 @@ static void sp_split_curve(fix31 x1, fix31 y1, fix31 x2, fix31 y2, fix31 x3, fix
 		Pctrl1.y = (Y0 + Y1 + 1) >> 1;
 		Pctrl2.x = (X0 + (X1 << 1) + X2 + 2) >> 2;
 		Pctrl2.y = (Y0 + (Y1 << 1) + Y2 + 2) >> 2;
-		sp_split_curve(Pctrl1.x, Pctrl1.y, Pctrl2.x, Pctrl2.y, Pmid.x, Pmid.y, depth);
+		sp_split_curve(SPD_GARG2 Pctrl1.x, Pctrl1.y, Pctrl2.x, Pctrl2.y, Pmid.x, Pmid.y, depth);
 		Pctrl1.x = (X1 + (X2 << 1) + X3 + 2) >> 2;
 		Pctrl1.y = (Y1 + (Y2 << 1) + Y3 + 2) >> 2;
 		Pctrl2.x = (X2 + X3 + 1) >> 1;
 		Pctrl2.y = (Y2 + Y3 + 1) >> 1;
-		sp_split_curve(Pctrl1.x, Pctrl1.y, Pctrl2.x, Pctrl2.y, P3.x, P3.y, depth);
+		sp_split_curve(SPD_GARG2 Pctrl1.x, Pctrl1.y, Pctrl2.x, Pctrl2.y, P3.x, P3.y, depth);
 	}
 }
 
@@ -337,7 +337,7 @@ static void sp_split_curve(fix31 x1, fix31 y1, fix31 x2, fix31 y2, fix31 x3, fix
  * Note that pointer is not updated to facilitate repeated
  * processing of the outline data when banding mode is in effect.
  */
-void sp_proc_outl_data(ufix8 * pointer)	/* Pointer to next byte in char data */
+void sp_proc_outl_data(SPD_PROTO_DECL2 ufix8 *pointer)	/* Pointer to next byte in char data */
 {
 	ufix8 format1, format2;
 	point_t P0, P1, P2, P3;
@@ -353,13 +353,13 @@ void sp_proc_outl_data(ufix8 * pointer)	/* Pointer to next byte in char data */
 
 	sp_globals.x_orus = sp_globals.y_orus = 0;
 	curve_count = 0;
-	while (TRUE)
+	for (;;)
 	{
 		format1 = NEXT_BYTE(pointer);
 		switch (format1 >> 4)
 		{
 		case 0:						/* LINE */
-			pointer = sp_get_args(pointer, format1, &P1);
+			pointer = sp_get_args(SPD_GARG2 pointer, format1, &P1);
 #if DEBUG
 			printf("LINE %6.1f, %6.1f\n",
 				   (double) P1.x / (double) sp_globals.onepix, (double) P1.y / (double) sp_globals.onepix);
@@ -429,7 +429,7 @@ void sp_proc_outl_data(ufix8 * pointer)	/* Pointer to next byte in char data */
 				fn_end_contour();
 			}
 
-			pointer = sp_get_args(pointer, format1, &P0);
+			pointer = sp_get_args(SPD_GARG2 pointer, format1, &P0);
 			sp_globals.P0 = P0;
 #if DEBUG
 			printf("MOVE %6.1f, %6.1f\n",
@@ -453,9 +453,9 @@ void sp_proc_outl_data(ufix8 * pointer)	/* Pointer to next byte in char data */
 
 		default:						/* CRVE */
 			format2 = NEXT_BYTE(pointer);
-			pointer = sp_get_args(pointer, format1, &P1);
-			pointer = sp_get_args(pointer, format2, &P2);
-			pointer = sp_get_args(pointer, (ufix8) (format2 >> 4), &P3);
+			pointer = sp_get_args(SPD_GARG2 pointer, format1, &P1);
+			pointer = sp_get_args(SPD_GARG2 pointer, format2, &P2);
+			pointer = sp_get_args(SPD_GARG2 pointer, (ufix8) (format2 >> 4), &P3);
 			depth = (format1 >> 4) & 0x07;
 #if DEBUG
 			printf("CRVE %6.1f, %6.1f, %6.1f, %6.1f, %6.1f, %6.1f, %d\n",
@@ -476,10 +476,8 @@ void sp_proc_outl_data(ufix8 * pointer)	/* Pointer to next byte in char data */
 				sp_globals.P0 = P3;
 				continue;
 			}
-			sp_split_curve(P1.x, P1.y, P2.x, P2.y, P3.x, P3.y, depth);
+			sp_split_curve(SPD_GARG2 P1.x, P1.y, P2.x, P2.y, P3.x, P3.y, depth);
 			continue;
 		}
 	}
 }
-
-

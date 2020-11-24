@@ -135,6 +135,14 @@ int main(int argc, char **argv)
 	const ufix8 *key;
 	int first_char_index, num_chars;
 
+#if !DYNAMIC_ALLOC && !STATIC_ALLOC
+	SPEEDO_GLOBALS *sp_global_ptr;
+#endif
+
+#if !STATIC_ALLOC
+	sp_global_ptr = calloc(1, sizeof(*sp_global_ptr));
+#endif
+
 	progname = argv[0];
 	process_args(argc, argv);
 	fp = fopen(fontfile, "rb");
@@ -171,12 +179,12 @@ int main(int argc, char **argv)
 		return 1;
 	}
 	/* init */
-	sp_reset();
+	sp_reset(SPD_GARG1);
 
 	font.org = f_buffer;
 	font.no_bytes = minbufsize;
 
-	key = sp_get_key(&font);
+	key = sp_get_key(SPD_GARG2 &font);
 	if (key == NULL)
 	{
 #if 0
@@ -185,7 +193,7 @@ int main(int argc, char **argv)
 #endif
 	} else
 	{
-		sp_set_key(key);
+		sp_set_key(SPD_GARG2 key);
 	}
 	
 	first_char_index = read_2b(f_buffer + FH_FCHRF);
@@ -203,7 +211,7 @@ int main(int argc, char **argv)
 	specs.output_mode = MODE_BLACK;
 	specs.out_info = NULL;
 
-	if (!sp_set_specs(&specs, &font))
+	if (!sp_set_specs(SPD_GARG2 &specs, &font))
 	{
 		fprintf(stderr, "can't set specs\n");
 	} else
@@ -211,11 +219,11 @@ int main(int argc, char **argv)
 		for (i = 0; i < num_chars; i++)
 		{
 			char_index = i + first_char_index;
-			char_id = sp_get_char_id(char_index);
+			char_id = sp_get_char_id(SPD_GARG2 char_index);
 			if (char_id != SP_UNDEFINED && char_id != UNDEFINED)
 			{
 				printf("/* %3d ID %04x */\n", char_index, char_id);
-				if (!sp_make_char(char_index))
+				if (!sp_make_char(SPD_GARG2 char_index))
 				{
 					fprintf(stderr, "can't make char %d (%x)\n", char_index, char_id);
 				}
@@ -230,8 +238,9 @@ int main(int argc, char **argv)
 
 
 #if INCL_LCD
-boolean sp_load_char_data(long file_offset, fix15 num, fix15 cb_offset, buff_t *char_data)
+boolean sp_load_char_data(SPD_PROTO_DECL2 long file_offset, fix15 num, fix15 cb_offset, buff_t *char_data)
 {
+	SPD_GUNUSED
 	if (fseek(fp, file_offset, SEEK_SET))
 	{
 		fprintf(stderr, "can't seek to char\n");
@@ -255,10 +264,11 @@ boolean sp_load_char_data(long file_offset, fix15 num, fix15 cb_offset, buff_t *
 #endif
 
 
-void sp_write_error(const char *str, ...)
+void sp_write_error(SPD_PROTO_DECL2 const char *str, ...)
 {
 	va_list v;
 
+	SPD_GUNUSED
 	va_start(v, str);
 	vfprintf(stderr, str, v);
 	va_end(v);
@@ -266,8 +276,9 @@ void sp_write_error(const char *str, ...)
 }
 
 
-void sp_open_bitmap(fix31 xorg, fix31 yorg, fix15 xsize, fix15 ysize)
+void sp_open_bitmap(SPD_PROTO_DECL2 fix31 xorg, fix31 yorg, fix15 xsize, fix15 ysize)
 {
+	SPD_GUNUSED
 	UNUSED(xorg);
 	UNUSED(yorg);
 	UNUSED(xsize);
@@ -275,22 +286,25 @@ void sp_open_bitmap(fix31 xorg, fix31 yorg, fix15 xsize, fix15 ysize)
 }
 
 
-void sp_set_bitmap_bits(fix15 y, fix15 xbit1, fix15 xbit2)
+void sp_set_bitmap_bits(SPD_PROTO_DECL2 fix15 y, fix15 xbit1, fix15 xbit2)
 {
+	SPD_GUNUSED
 	UNUSED(y);
 	UNUSED(xbit1);
 	UNUSED(xbit2);
 }
 
 
-void sp_close_bitmap(void)
+void sp_close_bitmap(SPD_PROTO_DECL1)
 {
+	SPD_GUNUSED
 }
 
 /* outline stubs */
 #if INCL_OUTLINE
-void sp_open_outline(fix31 x_set_width, fix31 y_set_width, fix31 xmin, fix31 xmax, fix31 ymin, fix31 ymax)
+void sp_open_outline(SPD_PROTO_DECL2 fix31 x_set_width, fix31 y_set_width, fix31 xmin, fix31 xmax, fix31 ymin, fix31 ymax)
 {
+	SPD_GUNUSED
 	UNUSED(x_set_width);
 	UNUSED(y_set_width);
 	UNUSED(xmin);
@@ -299,23 +313,27 @@ void sp_open_outline(fix31 x_set_width, fix31 y_set_width, fix31 xmin, fix31 xma
 	UNUSED(ymax);
 }
 
-void sp_start_sub_char(void)
+void sp_start_sub_char(SPD_PROTO_DECL1)
 {
+	SPD_GUNUSED
 }
 
-void sp_end_sub_char(void)
+void sp_end_sub_char(SPD_PROTO_DECL1)
 {
+	SPD_GUNUSED
 }
 
-void sp_start_contour(fix31 x, fix31 y, boolean outside)
+void sp_start_contour(SPD_PROTO_DECL2 fix31 x, fix31 y, boolean outside)
 {
+	SPD_GUNUSED
 	UNUSED(x);
 	UNUSED(y);
 	UNUSED(outside);
 }
 
-void sp_curve_to(fix31 x1, fix31 y1, fix31 x2, fix31 y2, fix31 x3, fix31 y3)
+void sp_curve_to(SPD_PROTO_DECL2 fix31 x1, fix31 y1, fix31 x2, fix31 y2, fix31 x3, fix31 y3)
 {
+	SPD_GUNUSED
 	UNUSED(x1);
 	UNUSED(y1);
 	UNUSED(x2);
@@ -324,17 +342,20 @@ void sp_curve_to(fix31 x1, fix31 y1, fix31 x2, fix31 y2, fix31 x3, fix31 y3)
 	UNUSED(y3);
 }
 
-void sp_line_to(fix31 x, fix31 y)
+void sp_line_to(SPD_PROTO_DECL2 fix31 x, fix31 y)
 {
+	SPD_GUNUSED
 	UNUSED(x);
 	UNUSED(y);
 }
 
-void sp_close_contour(void)
+void sp_close_contour(SPD_PROTO_DECL1)
 {
+	SPD_GUNUSED
 }
 
-void sp_close_outline(void)
+void sp_close_outline(SPD_PROTO_DECL1)
 {
+	SPD_GUNUSED
 }
 #endif

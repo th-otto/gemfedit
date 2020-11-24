@@ -28,11 +28,16 @@ from The Open Group.
 
 #define	INCL_LCD	1
 
-#define	INCL_BLACK	1
-#define	INCL_SCREEN	1
-#define	INCL_2D		1
+#define INCL_BLACK	 1
+#define INCL_SCREEN	 1
+#define INCL_OUTLINE 1
+#define INCL_2D		 1
+
 #define	SHORT_LISTS	0
 
 #define	INCL_RULES	1
 #define	INCL_METRICS	1
-#define INCL_OUTLINE 1
+
+#define REENTRANT_ALLOC 0
+#define STATIC_ALLOC 1
+#define DYNAMIC_ALLOC 0

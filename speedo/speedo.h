@@ -47,32 +47,32 @@ WITH THE SPEEDO SOFTWARE OR THE BITSTREAM CHARTER OUTLINE FONT.
 
 /* 1 to include extended font support */
 #ifndef INCL_EXT
-#define  INCL_EXT       1
+#define INCL_EXT       1
 #endif
 
 /* 1 to include intelligent scaling support */
 #ifndef INCL_RULES
-#define  INCL_RULES     1
+#define INCL_RULES     1
 #endif
 
 /* 1 to include blackwriter output support */
 #ifndef INCL_BLACK
-#define  INCL_BLACK     1
+#define INCL_BLACK     1
 #endif
 
 /* 1 to include screen writeroutput support */
 #ifndef INCL_SCREEN
-#define  INCL_SCREEN     0
+#define INCL_SCREEN     0
 #endif
 
 /* 1 to include outline output support */
 #ifndef INCL_OUTLINE
-#define  INCL_OUTLINE     0
+#define INCL_OUTLINE     0
 #endif
 
 /* 1 to include 2d blackwriter output support */
 #ifndef INCL_2D
-#define  INCL_2D          0
+#define INCL_2D          0
 #endif
 
 /* 1 to include user defined output module support */
@@ -82,22 +82,22 @@ WITH THE SPEEDO SOFTWARE OR THE BITSTREAM CHARTER OUTLINE FONT.
 
 /* 1 to include load char data support */
 #ifndef INCL_LCD
-#define  INCL_LCD       1
+#define INCL_LCD       1
 #endif
 
 /* 1 to include imported width support */
 #ifndef INCL_ISW
-#define  INCL_ISW       0
+#define INCL_ISW       0
 #endif
 
 /* 1 to include metrics support */
 #ifndef INCL_METRICS
-#define  INCL_METRICS   1
+#define INCL_METRICS   1
 #endif
 
 /* 1 to include multiple output device support */
 #ifndef INCL_MULTIDEV
-#define  INCL_MULTIDEV  0
+#define INCL_MULTIDEV  0
 #endif
 
 /* 1 to allocate small intercept lists */
@@ -107,7 +107,7 @@ WITH THE SPEEDO SOFTWARE OR THE BITSTREAM CHARTER OUTLINE FONT.
 
 /* 1 to include plaid data monitoring */
 #ifndef INCL_PLAID_OUT
-#define  INCL_PLAID_OUT 0
+#define INCL_PLAID_OUT 0
 #endif
 
 #define MODE_BLACK   0
@@ -221,15 +221,47 @@ typedef   uint32_t   ufix32;
 
 /*****  STRUCTURE DEFINITIONS *****/
 
-#if REENTRANT_ALLOC
-#define PROTO_DECL1 SPEEDO_GLOBALS *sp_global_ptr
-#define PROTO_DECL2 PROTO_DECL1,
-#else
-#define PROTO_DECL1 void
-#define PROTO_DECL2
-#endif
-
 typedef struct speedo_global_data SPEEDO_GLOBALS;
+
+#if STATIC_ALLOC
+extern SPEEDO_GLOBALS sp_globals;
+#define sp_intercepts sp_globals
+#define sp_plaid sp_globals
+#define SPD_PROTO_DECL1 void
+#define SPD_PROTO_DECL2
+#define SPD_GARG1
+#define SPD_GARG2
+#define SPD_GUNUSED
+#elif DYNAMIC_ALLOC
+extern SPEEDO_GLOBALS *sp_global_ptr;
+
+#define sp_globals (*sp_global_ptr)
+#define sp_intercepts (*sp_global_ptr)
+#define sp_plaid (*sp_global_ptr)
+#define SPD_PROTO_DECL1 void
+#define SPD_PROTO_DECL2
+#define SPD_GARG1
+#define SPD_GARG2
+#define SPD_GUNUSED
+#elif REENTRANT_ALLOC
+#define sp_globals (*sp_global_ptr)
+#define sp_intercepts (*(*sp_global_ptr).intercepts)
+#define sp_plaid (*(*sp_global_ptr).plaid)
+#define SPD_PROTO_DECL1 SPEEDO_GLOBALS *sp_global_ptr
+#define SPD_PROTO_DECL2 SPD_PROTO_DECL1,
+#define SPD_GARG1 sp_global_ptr
+#define SPD_GARG2 SPD_GARG1,
+#define SPD_GUNUSED (void)(sp_global_ptr);
+#else
+#define sp_globals (*sp_global_ptr)
+#define sp_intercepts (*sp_global_ptr)
+#define sp_plaid (*sp_global_ptr)
+#define SPD_PROTO_DECL1 SPEEDO_GLOBALS *sp_global_ptr
+#define SPD_PROTO_DECL2 SPD_PROTO_DECL1,
+#define SPD_GARG1 sp_global_ptr
+#define SPD_GARG2 SPD_GARG1,
+#define SPD_GUNUSED (void)(sp_global_ptr);
+#endif
 
 /* Buffer descriptor */
 typedef struct buff_tag
@@ -375,20 +407,20 @@ typedef struct plaid_tag
 
 #if INCL_MULTIDEV
 typedef struct bitmap_tag {
-	void (*p_open_bitmap)(PROTO_DECL2 fix31 xorg, fix31 yorg, fix15 xsize, fix15 ysize);
-	void (*p_set_bits)(PROTO_DECL2 fix15 y, fix15 xbit1, fix15 xbit2);
-	void (*p_close_bitmap)(PROTO_DECL1);
+	void (*p_open_bitmap)(SPD_PROTO_DECL2 fix31 xorg, fix31 yorg, fix15 xsize, fix15 ysize);
+	void (*p_set_bits)(SPD_PROTO_DECL2 fix15 y, fix15 xbit1, fix15 xbit2);
+	void (*p_close_bitmap)(SPD_PROTO_DECL1);
 } bitmap_t;
 
 typedef struct outline_tag {
-	void (*p_open_outline)(PROTO_DECL2 fix31 x_set_width, fix31 y_set_width, fix31 xmin, fix31 xmax, fix31 ymin, fix31 ymax);
-	void (*p_start_sub_char)(PROTO_DECL1);
-	void (*p_end_sub_char)(PROTO_DECL1);
-	void (*p_start_contour)(PROTO_DECL2 fix31 x, fix31 y, boolean outside);
-	void (*p_curve)(PROTO_DECL2 fix31 x1, fix31 y1, fix31 x2, fix31 y2, fix31 x3, fix31 y3);
-	void (*p_line)(PROTO_DECL2 fix31 x, fix31 y);
-	void (*p_close_contour)(PROTO_DECL1);
-	void (*p_close_outline)(PROTO_DECL1);
+	void (*p_open_outline)(SPD_PROTO_DECL2 fix31 x_set_width, fix31 y_set_width, fix31 xmin, fix31 xmax, fix31 ymin, fix31 ymax);
+	void (*p_start_sub_char)(SPD_PROTO_DECL1);
+	void (*p_end_sub_char)(SPD_PROTO_DECL1);
+	void (*p_start_contour)(SPD_PROTO_DECL2 fix31 x, fix31 y, boolean outside);
+	void (*p_curve)(SPD_PROTO_DECL2 fix31 x1, fix31 y1, fix31 x2, fix31 y2, fix31 x3, fix31 y3);
+	void (*p_line)(SPD_PROTO_DECL2 fix31 x, fix31 y);
+	void (*p_close_contour)(SPD_PROTO_DECL1);
+	void (*p_close_outline)(SPD_PROTO_DECL1);
 } outline_t;
 #endif
 
@@ -505,15 +537,15 @@ struct speedo_global_data {
 	fix15 pixfix;               /* Mask to remove fractional pixels */
 	fix15 onepix;               /* 1.0 pixels in sub-pixel units */
 
-	boolean (*init_out)(PROTO_DECL2 specs_t *specsarg);
-	boolean (*begin_char)(PROTO_DECL2 fix31 x, fix31 y, fix31 minx, fix31 miny, fix31 maxx, fix31 maxy);
-	void (*begin_sub_char)(PROTO_DECL2 fix31 x, fix31 y, fix31 minx, fix31 miny, fix31 maxx, fix31 max);
-	void (*begin_contour)(PROTO_DECL2 fix31 x1, fix31 y1, boolean outside); 
-	void (*curve)(PROTO_DECL2 fix31 x1, fix31 y1, fix31 x2, fix31 y2, fix31 x3, fix31 y3, fix15 depth);  
-	void (*line)(PROTO_DECL2 fix31 x1, fix31 y1);               
-	void (*end_contour)(PROTO_DECL1);
-	void (*end_sub_char)(PROTO_DECL1);
-	boolean (*end_char)(PROTO_DECL1);
+	boolean (*init_out)(SPD_PROTO_DECL2 specs_t *specsarg);
+	boolean (*begin_char)(SPD_PROTO_DECL2 fix31 x, fix31 y, fix31 minx, fix31 miny, fix31 maxx, fix31 maxy);
+	void (*begin_sub_char)(SPD_PROTO_DECL2 fix31 x, fix31 y, fix31 minx, fix31 miny, fix31 maxx, fix31 max);
+	void (*begin_contour)(SPD_PROTO_DECL2 fix31 x1, fix31 y1, boolean outside); 
+	void (*curve)(SPD_PROTO_DECL2 fix31 x1, fix31 y1, fix31 x2, fix31 y2, fix31 x3, fix31 y3, fix15 depth);  
+	void (*line)(SPD_PROTO_DECL2 fix31 x1, fix31 y1);               
+	void (*end_contour)(SPD_PROTO_DECL1);
+	void (*end_sub_char)(SPD_PROTO_DECL1);
+	boolean (*end_char)(SPD_PROTO_DECL1);
 
 	specs_t specs;              /* copy specs onto stack */
 	ufix8 *font_org;            /* Pointer to start of font data */
@@ -575,26 +607,6 @@ struct speedo_global_data {
  *  Speedo global data structure allocation 
  *
  ***********************************************************************************/
-
-#if STATIC_ALLOC
-extern SPEEDO_GLOBALS sp_globals;
-#define sp_intercepts sp_globals
-#define sp_plaid sp_globals
-#if DYNAMIC_ALLOC
-extern SPEEDO_GLOBALS *sp_global_ptr;
-
-#define sp_globals (*sp_global_ptr)
-#define sp_intercepts (*sp_global_ptr)
-#define sp_plaid (*sp_global_ptr)
-#else
-#if REENTRANT_ALLOC
-#define sp_globals (*sp_global_ptr)
-#define sp_intercepts (*(*sp_global_ptr).intercepts)
-#define sp_plaid (*(*sp_global_ptr).plaid)
-#endif
-#endif
-#endif
-
 
 /***** PUBLIC FONT HEADER OFFSET CONSTANTS  *****/
 #define  FH_FMVER    0      /* U   D4.0 CR LF NULL NULL  8 bytes            */
@@ -728,160 +740,160 @@ extern SPEEDO_GLOBALS *sp_global_ptr;
 /*  do_char.c functions */
 #define SP_UNDEFINED 0
 #define UNDEFINED 0xffff
-ufix16 sp_get_char_id(PROTO_DECL2 ufix16 char_index);
-boolean sp_make_char(PROTO_DECL2 ufix16 char_index);
+ufix16 sp_get_char_id(SPD_PROTO_DECL2 ufix16 char_index);
+boolean sp_make_char(SPD_PROTO_DECL2 ufix16 char_index);
 
 #if INCL_ISW
-fix31 sp_compute_isw_scale(PROTO_DECL1);
-boolean sp_make_char_isw(PROTO_DECL2 ufix16 char_index, ufix32 imported_width);
+fix31 sp_compute_isw_scale(SPD_PROTO_DECL1);
+boolean sp_make_char_isw(SPD_PROTO_DECL2 ufix16 char_index, ufix32 imported_width);
 #endif
 
 #if INCL_METRICS
-fix31 sp_get_char_width(PROTO_DECL2 ufix16 char_index);
-fix15 sp_get_track_kern(PROTO_DECL2 fix15 track, fix15 point_size);
-fix31 sp_get_pair_kern(PROTO_DECL2 ufix16 char_index1, ufix16 char_index2);
-boolean sp_get_char_bbox(PROTO_DECL2 ufix16 char_index, bbox_t *bbox, boolean no_adj);
+fix31 sp_get_char_width(SPD_PROTO_DECL2 ufix16 char_index);
+fix15 sp_get_track_kern(SPD_PROTO_DECL2 fix15 track, fix15 point_size);
+fix31 sp_get_pair_kern(SPD_PROTO_DECL2 ufix16 char_index1, ufix16 char_index2);
+boolean sp_get_char_bbox(SPD_PROTO_DECL2 ufix16 char_index, bbox_t *bbox, boolean no_adj);
 #endif
 
 /* do_trns.c functions */
-ufix8 *sp_read_bbox(PROTO_DECL2 ufix8 *pointer, point_t *pPmin, point_t *pPmax, boolean set_flag);
-void sp_proc_outl_data(PROTO_DECL2 ufix8 *pointer);
+ufix8 *sp_read_bbox(SPD_PROTO_DECL2 ufix8 *pointer, point_t *pPmin, point_t *pPmax, boolean set_flag);
+void sp_proc_outl_data(SPD_PROTO_DECL2 ufix8 *pointer);
 
 /* out_blk.c functions */
 #if INCL_BLACK
-boolean sp_init_black(PROTO_DECL2 specs_t *specsarg);
-boolean sp_begin_char_black(PROTO_DECL2 fix31 x, fix31 y, fix31 minx, fix31 miny, fix31 maxx, fix31 maxy);
-void sp_begin_contour_black(PROTO_DECL2 fix31 x1, fix31 y1, boolean outside);
-void sp_line_black(PROTO_DECL2 fix31 x, fix31 y);
-boolean sp_end_char_black(PROTO_DECL1);
+boolean sp_init_black(SPD_PROTO_DECL2 specs_t *specsarg);
+boolean sp_begin_char_black(SPD_PROTO_DECL2 fix31 x, fix31 y, fix31 minx, fix31 miny, fix31 maxx, fix31 maxy);
+void sp_begin_contour_black(SPD_PROTO_DECL2 fix31 x1, fix31 y1, boolean outside);
+void sp_line_black(SPD_PROTO_DECL2 fix31 x, fix31 y);
+boolean sp_end_char_black(SPD_PROTO_DECL1);
 #endif
 
 /* out_scrn.c functions */
 #if INCL_SCREEN
-boolean sp_init_screen(PROTO_DECL2 specs_t *specsarg);
-boolean sp_begin_char_screen(PROTO_DECL2 fix31 x, fix31 y, fix31 minx, fix31 miny, fix31 maxx, fix31 maxy);
-void sp_begin_contour_screen(PROTO_DECL2 fix31 x1, fix31 y1, boolean outside);
-void sp_curve_screen(PROTO_DECL2 fix31 x1, fix31 y1, fix31 x2, fix31 y2, fix31 x3, fix31 y3, fix15 depth);
-void sp_line_screen(PROTO_DECL2 fix31 x, fix31 y);
-void sp_end_contour_screen(PROTO_DECL1);
-boolean sp_end_char_screen(PROTO_DECL1);
+boolean sp_init_screen(SPD_PROTO_DECL2 specs_t *specsarg);
+boolean sp_begin_char_screen(SPD_PROTO_DECL2 fix31 x, fix31 y, fix31 minx, fix31 miny, fix31 maxx, fix31 maxy);
+void sp_begin_contour_screen(SPD_PROTO_DECL2 fix31 x1, fix31 y1, boolean outside);
+void sp_curve_screen(SPD_PROTO_DECL2 fix31 x1, fix31 y1, fix31 x2, fix31 y2, fix31 x3, fix31 y3, fix15 depth);
+void sp_line_screen(SPD_PROTO_DECL2 fix31 x, fix31 y);
+void sp_end_contour_screen(SPD_PROTO_DECL1);
+boolean sp_end_char_screen(SPD_PROTO_DECL1);
 #endif
 
 /* out_outl.c functions */
 #if INCL_OUTLINE
 #if INCL_MULTIDEV
-boolean sp_set_outline_device(PROTO_DECL2 outline_t *ofuncs, ufix16 size);
+boolean sp_set_outline_device(SPD_PROTO_DECL2 outline_t *ofuncs, ufix16 size);
 #endif
 
 
-boolean sp_init_outline(PROTO_DECL2 specs_t *specsarg);
-boolean sp_begin_char_outline(PROTO_DECL2 fix31 x, fix31 y, fix31 minx, fix31 miny, fix31 maxx, fix31 maxy);
-void sp_begin_sub_char_outline(PROTO_DECL2 fix31 x, fix31 y, fix31 minx, fix31 miny, fix31 maxx, fix31 max);
-void sp_begin_contour_outline(PROTO_DECL2 fix31 x1, fix31 y1, boolean outside);
-void sp_curve_outline(PROTO_DECL2 fix31 x1, fix31 y1, fix31 x2, fix31 y2, fix31 x3, fix31 y3, fix15 depth);
-void sp_line_outline(PROTO_DECL2 fix31 x, fix31 y);
-void sp_end_contour_outline(PROTO_DECL1);
-void sp_end_sub_char_outline(PROTO_DECL1);
-boolean sp_end_char_outline(PROTO_DECL1);
+boolean sp_init_outline(SPD_PROTO_DECL2 specs_t *specsarg);
+boolean sp_begin_char_outline(SPD_PROTO_DECL2 fix31 x, fix31 y, fix31 minx, fix31 miny, fix31 maxx, fix31 maxy);
+void sp_begin_sub_char_outline(SPD_PROTO_DECL2 fix31 x, fix31 y, fix31 minx, fix31 miny, fix31 maxx, fix31 max);
+void sp_begin_contour_outline(SPD_PROTO_DECL2 fix31 x1, fix31 y1, boolean outside);
+void sp_curve_outline(SPD_PROTO_DECL2 fix31 x1, fix31 y1, fix31 x2, fix31 y2, fix31 x3, fix31 y3, fix15 depth);
+void sp_line_outline(SPD_PROTO_DECL2 fix31 x, fix31 y);
+void sp_end_contour_outline(SPD_PROTO_DECL1);
+void sp_end_sub_char_outline(SPD_PROTO_DECL1);
+boolean sp_end_char_outline(SPD_PROTO_DECL1);
 #endif
 
 /* out_bl2d.c functions */
 #if INCL_2D
-boolean sp_init_2d(PROTO_DECL2 specs_t *specsarg);
-boolean sp_begin_char_2d(PROTO_DECL2 fix31 x, fix31 y, fix31 minx, fix31 miny, fix31 maxx, fix31 maxy);
-void sp_begin_contour_2d(PROTO_DECL2 fix31 x1, fix31 y1, boolean outside);
-void sp_line_2d(PROTO_DECL2 fix31 x, fix31 y);
-boolean sp_end_char_2d(PROTO_DECL1);
+boolean sp_init_2d(SPD_PROTO_DECL2 specs_t *specsarg);
+boolean sp_begin_char_2d(SPD_PROTO_DECL2 fix31 x, fix31 y, fix31 minx, fix31 miny, fix31 maxx, fix31 maxy);
+void sp_begin_contour_2d(SPD_PROTO_DECL2 fix31 x1, fix31 y1, boolean outside);
+void sp_line_2d(SPD_PROTO_DECL2 fix31 x, fix31 y);
+boolean sp_end_char_2d(SPD_PROTO_DECL1);
 #endif
 
 /* out_util.c functions */
 #if INCL_BLACK || INCL_SCREEN || INCL_2D
 
 #if INCL_MULTIDEV
-boolean sp_set_bitmap_device(PROTO_DECL2 bitmap_t *bfuncs, ufix16 size);
+boolean sp_set_bitmap_device(SPD_PROTO_DECL2 bitmap_t *bfuncs, ufix16 size);
 #endif
 
-void sp_init_char_out(PROTO_DECL2 fix31 x, fix31 y, fix31 minx, fix31 miny, fix31 maxx, fix31 maxy);
-void sp_begin_sub_char_out(PROTO_DECL2 fix31 x, fix31 y, fix31 minx, fix31 miny, fix31 maxx, fix31 maxy);
-void sp_curve_out(PROTO_DECL2 fix31 x1, fix31 y1, fix31 x2, fix31 y2, fix31 x3, fix31 y3, fix15 depth);
-void sp_end_contour_out(PROTO_DECL1);
-void sp_end_sub_char_out(PROTO_DECL1);
-void sp_init_intercepts_out(PROTO_DECL1);
-void sp_restart_intercepts_out(PROTO_DECL1);
-void sp_set_first_band_out(PROTO_DECL2 fix31 minx, fix31 miny, fix31 maxx, fix31 maxy);
-void sp_reduce_band_size_out(PROTO_DECL1);
-boolean sp_next_band_out(PROTO_DECL1);
+void sp_init_char_out(SPD_PROTO_DECL2 fix31 x, fix31 y, fix31 minx, fix31 miny, fix31 maxx, fix31 maxy);
+void sp_begin_sub_char_out(SPD_PROTO_DECL2 fix31 x, fix31 y, fix31 minx, fix31 miny, fix31 maxx, fix31 maxy);
+void sp_curve_out(SPD_PROTO_DECL2 fix31 x1, fix31 y1, fix31 x2, fix31 y2, fix31 x3, fix31 y3, fix15 depth);
+void sp_end_contour_out(SPD_PROTO_DECL1);
+void sp_end_sub_char_out(SPD_PROTO_DECL1);
+void sp_init_intercepts_out(SPD_PROTO_DECL1);
+void sp_restart_intercepts_out(SPD_PROTO_DECL1);
+void sp_set_first_band_out(SPD_PROTO_DECL2 fix31 minx, fix31 miny, fix31 maxx, fix31 maxy);
+void sp_reduce_band_size_out(SPD_PROTO_DECL1);
+boolean sp_next_band_out(SPD_PROTO_DECL1);
 #endif
 
 #if INCL_USEROUT
-boolean sp_init_userout(specs_t *specsarg);
+boolean sp_init_userout(SPD_PROTO_DECL2 specs_t *specsarg);
 #endif
 
 
 /* reset.c functions */
-void sp_reset(PROTO_DECL1);
-void sp_set_key(PROTO_DECL2 const ufix8 *key);
-void sp_reset_key(PROTO_DECL1);
-const ufix8 *sp_get_key(PROTO_DECL2 const buff_t *font_buff);
-ufix16 sp_get_cust_no(PROTO_DECL2 const buff_t *font_buff);
+void sp_reset(SPD_PROTO_DECL1);
+void sp_set_key(SPD_PROTO_DECL2 const ufix8 *key);
+void sp_reset_key(SPD_PROTO_DECL1);
+const ufix8 *sp_get_key(SPD_PROTO_DECL2 const buff_t *font_buff);
+ufix16 sp_get_cust_no(SPD_PROTO_DECL2 const buff_t *font_buff);
 
 /* set_spcs.c functions */
-boolean sp_set_specs(PROTO_DECL2 const specs_t *specsarg, const buff_t *font);
-void sp_type_tcb(PROTO_DECL2 tcb_t *ptcb);
+boolean sp_set_specs(SPD_PROTO_DECL2 const specs_t *specsarg, const buff_t *font);
+void sp_type_tcb(SPD_PROTO_DECL2 tcb_t *ptcb);
 
-fix31 sp_read_long(PROTO_DECL2 ufix8 *pointer);
-fix15 sp_read_word_u(PROTO_DECL2 ufix8 *pointer);
+fix31 sp_read_long(SPD_PROTO_DECL2 ufix8 *pointer);
+fix15 sp_read_word_u(SPD_PROTO_DECL2 ufix8 *pointer);
 
 /* set_trns.c functions */
-void sp_init_tcb(PROTO_DECL1);
-void sp_scale_tcb(PROTO_DECL2 tcb_t *ptcb, fix15 x_pos, fix15 y_pos, fix15 x_scale, fix15 y_scale);
-ufix8 *sp_plaid_tcb(PROTO_DECL2 ufix8 *pointer, ufix8 format);
-ufix8 *sp_skip_interpolation_table(PROTO_DECL2 ufix8 *pointer, ufix8 format);
-ufix8 *sp_skip_control_zone(PROTO_DECL2 ufix8 *pointer, ufix8 format);
+void sp_init_tcb(SPD_PROTO_DECL1);
+void sp_scale_tcb(SPD_PROTO_DECL2 tcb_t *ptcb, fix15 x_pos, fix15 y_pos, fix15 x_scale, fix15 y_scale);
+ufix8 *sp_plaid_tcb(SPD_PROTO_DECL2 ufix8 *pointer, ufix8 format);
+ufix8 *sp_skip_interpolation_table(SPD_PROTO_DECL2 ufix8 *pointer, ufix8 format);
+ufix8 *sp_skip_control_zone(SPD_PROTO_DECL2 ufix8 *pointer, ufix8 format);
 
-ufix8 *sp_read_oru_table(PROTO_DECL2 ufix8 *pointer);
+ufix8 *sp_read_oru_table(SPD_PROTO_DECL2 ufix8 *pointer);
 #if INCL_SQUEEZING
-boolean sp_calculate_x_scale(PROTO_DECL2 fix31 *x_factor, fix31 *x_offset, fix15 no_x_ctrl_zones);
-boolean sp_calculate_y_scale(PROTO_DECL2 fix31 *top_scale, fix31 *bottom_scale, fix15 first_y_zone, fix15 no_Y_ctrl_zones);
+boolean sp_calculate_x_scale(SPD_PROTO_DECL2 fix31 *x_factor, fix31 *x_offset, fix15 no_x_ctrl_zones);
+boolean sp_calculate_y_scale(SPD_PROTO_DECL2 fix31 *top_scale, fix31 *bottom_scale, fix15 first_y_zone, fix15 no_Y_ctrl_zones);
 #endif
 
 
 /* user defined functions */
 
-void sp_report_error(PROTO_DECL2 fix15 n);
-void sp_write_error(PROTO_DECL2 const char *fmt, ...);
+void sp_report_error(SPD_PROTO_DECL2 fix15 n);
+void sp_write_error(SPD_PROTO_DECL2 const char *fmt, ...);
 
 #if INCL_BLACK || INCL_SCREEN || INCL_2D
-void sp_open_bitmap(PROTO_DECL2 fix31 xorg, fix31 yorg, fix15 xsize, fix15 ysize);
-void sp_set_bitmap_bits(PROTO_DECL2 fix15 y, fix15 xbit1, fix15 xbit2);
-void sp_close_bitmap(PROTO_DECL1);
+void sp_open_bitmap(SPD_PROTO_DECL2 fix31 xorg, fix31 yorg, fix15 xsize, fix15 ysize);
+void sp_set_bitmap_bits(SPD_PROTO_DECL2 fix15 y, fix15 xbit1, fix15 xbit2);
+void sp_close_bitmap(SPD_PROTO_DECL1);
 #endif
 
 #if INCL_OUTLINE
-void sp_open_outline(PROTO_DECL2 fix31 x_set_width, fix31 y_set_width, fix31 xmin, fix31 xmax, fix31 ymin, fix31 ymax);
-void sp_start_sub_char(PROTO_DECL1);
-void sp_end_sub_char(PROTO_DECL1);
-void sp_start_contour(PROTO_DECL2 fix31 x, fix31 y, boolean outside);
-void sp_curve_to(PROTO_DECL2 fix31 x1, fix31 y1, fix31 x2, fix31 y2, fix31 x3, fix31 y3);
-void sp_line_to(PROTO_DECL2 fix31 x, fix31 y);
-void sp_close_contour(PROTO_DECL1);
-void sp_close_outline(PROTO_DECL1);
+void sp_open_outline(SPD_PROTO_DECL2 fix31 x_set_width, fix31 y_set_width, fix31 xmin, fix31 xmax, fix31 ymin, fix31 ymax);
+void sp_start_sub_char(SPD_PROTO_DECL1);
+void sp_end_sub_char(SPD_PROTO_DECL1);
+void sp_start_contour(SPD_PROTO_DECL2 fix31 x, fix31 y, boolean outside);
+void sp_curve_to(SPD_PROTO_DECL2 fix31 x1, fix31 y1, fix31 x2, fix31 y2, fix31 x3, fix31 y3);
+void sp_line_to(SPD_PROTO_DECL2 fix31 x, fix31 y);
+void sp_close_contour(SPD_PROTO_DECL1);
+void sp_close_outline(SPD_PROTO_DECL1);
 #endif
 
 #if INCL_LCD
 /* Load character data from font file */
-boolean sp_load_char_data(PROTO_DECL2 long file_offset, fix15 no_bytes, fix15 cb_offset, buff_t *char_data);
+boolean sp_load_char_data(SPD_PROTO_DECL2 long file_offset, fix15 no_bytes, fix15 cb_offset, buff_t *char_data);
 #endif
 
 #if INCL_PLAID_OUT
-void sp_record_xint(PROTO_DECL2 fix15 int_num);            /* Record xint data */
-void sp_record_yint(PROTO_DECL2 fix15 int_num);            /* Record yint data */
-void sp_begin_plaid_data(PROTO_DECL1);         /* Signal start of plaid data */
-void sp_begin_ctrl_zones(PROTO_DECL2 fix15, no_X_zones, fix15 no_Y_zones);         /* Signal start of control zones */
-void sp_record_ctrl_zone(PROTO_DECL2 fix31 start, fix31 end, fix15 constr);         /* Record control zone data */
-void sp_begin_int_zones(PROTO_DECL2 fix15 no_X_int_zones, fix15 no_Y_int_zones);          /* Signal start of interpolation zones */
-void sp_record_int_zone(PROTO_DECL2 fix31 start, fix31 end);          /* Record interpolation zone data */
-void sp_end_plaid_data(PROTO_DECL1);           /* Signal end of plaid data */
+void sp_record_xint(SPD_PROTO_DECL2 fix15 int_num);            /* Record xint data */
+void sp_record_yint(SPD_PROTO_DECL2 fix15 int_num);            /* Record yint data */
+void sp_begin_plaid_data(SPD_PROTO_DECL1);         /* Signal start of plaid data */
+void sp_begin_ctrl_zones(SPD_PROTO_DECL2 fix15, no_X_zones, fix15 no_Y_zones);         /* Signal start of control zones */
+void sp_record_ctrl_zone(SPD_PROTO_DECL2 fix31 start, fix31 end, fix15 constr);         /* Record control zone data */
+void sp_begin_int_zones(SPD_PROTO_DECL2 fix15 no_X_int_zones, fix15 no_Y_int_zones);          /* Signal start of interpolation zones */
+void sp_record_int_zone(SPD_PROTO_DECL2 fix31 start, fix31 end);          /* Record interpolation zone data */
+void sp_end_plaid_data(SPD_PROTO_DECL1);           /* Signal end of plaid data */
 #endif
 
 #endif /* _SPEEDO_H_ */

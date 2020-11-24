@@ -49,8 +49,9 @@ WITH THE SPEEDO SOFTWARE OR THE BITSTREAM CHARTER OUTLINE FONT.
  * Returns TRUE if output module can accept requested specifications.
  * Returns FALSE otherwise.
  */
-boolean sp_init_black(specs_t * specsarg)
+boolean sp_init_black(SPD_PROTO_DECL2 specs_t *specsarg)
 {
+	SPD_GUNUSED
 #if DEBUG
 	printf("INIT_BLK()\n");
 #endif
@@ -62,7 +63,7 @@ boolean sp_init_black(specs_t * specsarg)
 
 /* Called once at the start of the character generation process
  */
-boolean sp_begin_char_black(fix31 x, fix31 y, fix31 minx, fix31 miny, fix31 maxx, fix31 maxy)
+boolean sp_begin_char_black(SPD_PROTO_DECL2 fix31 x, fix31 y, fix31 minx, fix31 miny, fix31 maxx, fix31 maxy)
 {
 #if DEBUG
 	printf("BEGIN_CHAR_BLACK(%3.1f, %3.1f, %3.1f, %3.1f, %3.1f, %3.1f\n",
@@ -70,14 +71,14 @@ boolean sp_begin_char_black(fix31 x, fix31 y, fix31 minx, fix31 miny, fix31 maxx
 		   (double) minx / (double) sp_globals.onepix, (double) miny / (double) sp_globals.onepix,
 		   (double) maxx / (double) sp_globals.onepix, (double) maxy / (double) sp_globals.onepix);
 #endif
-	sp_init_char_out(x, y, minx, miny, maxx, maxy);
+	sp_init_char_out(SPD_GARG2 x, y, minx, miny, maxx, maxy);
 	return TRUE;
 }
 
 
 /* Called at the start of each contour
  */
-void sp_begin_contour_black(fix31 x1, fix31 y1, boolean outside)
+void sp_begin_contour_black(SPD_PROTO_DECL2 fix31 x1, fix31 y1, boolean outside)
 {
 #if DEBUG
 	printf("BEGIN_CONTOUR_BLACK(%3.1f, %3.1f, %s)\n",
@@ -93,7 +94,7 @@ void sp_begin_contour_black(fix31 x1, fix31 y1, boolean outside)
 
 /*  Called by line() to add an intercept to the intercept list structure
  */
-static void sp_add_intercept_black(fix15 y,	/* Y coordinate in relative pixel units */
+static void sp_add_intercept_black(SPD_PROTO_DECL2 fix15 y,	/* Y coordinate in relative pixel units */
 										   /* (0 is lowest sample in band) */
 										   fix15 x)	/* X coordinate of intercept in subpixel units */
 {
@@ -151,7 +152,7 @@ static void sp_add_intercept_black(fix15 y,	/* Y coordinate in relative pixel un
 
 /* Called for each vector in the transformed character
  */
-void sp_line_black(fix31 x1, fix31 y1)
+void sp_line_black(SPD_PROTO_DECL2 fix31 x1, fix31 y1)
 {
 	fix15 how_many_y;					/* # of intercepts at y = n + 1/2  */
 	fix15 yc, i;						/* Current scan-line */
@@ -223,14 +224,14 @@ void sp_line_black(fix31 x1, fix31 y1)
 			if ((how_many_y += yc + 1) < 0)
 				how_many_y = 0;			/* can't go below 0 */
 			for (i = yc; i >= how_many_y; i--)
-				sp_add_intercept_black(i, temp1);
+				sp_add_intercept_black(SPD_GARG2 i, temp1);
 		} else
 		{								/* Vector up */
 			/* check to see that line doesn't extend beyond top of band */
 			if ((how_many_y += yc) > sp_globals.no_y_lists)
 				how_many_y = sp_globals.no_y_lists;
 			for (i = yc; i != how_many_y; i++)
-				sp_add_intercept_black(i, temp1);
+				sp_add_intercept_black(SPD_GARG2 i, temp1);
 		}
 		return;
 	}
@@ -273,7 +274,7 @@ void sp_line_black(fix31 x1, fix31 y1)
 	{									/* Vector down */
 		if (how_many_y == -1)
 		{
-			sp_add_intercept_black(yc, (fix15) (xc >> 16));
+			sp_add_intercept_black(SPD_GARG2 yc, (fix15) (xc >> 16));
 		} else
 		{
 			if ((how_many_y += yc + 1) < 0)
@@ -281,7 +282,7 @@ void sp_line_black(fix31 x1, fix31 y1)
 			for (i = yc; i >= how_many_y; i--)
 			{
 				temp1 = (fix15) (xc >> 16);
-				sp_add_intercept_black(i, temp1);
+				sp_add_intercept_black(SPD_GARG2 i, temp1);
 				xc -= dx_dy;
 			}
 		}
@@ -290,7 +291,7 @@ void sp_line_black(fix31 x1, fix31 y1)
 		/* check to see that line doesn't extend beyond top of band */
 		if (how_many_y == 1)
 		{
-			sp_add_intercept_black(yc, (fix15) (xc >> 16));
+			sp_add_intercept_black(SPD_GARG2 yc, (fix15) (xc >> 16));
 		} else
 		{
 			if ((how_many_y += yc) > sp_globals.no_y_lists)
@@ -298,7 +299,7 @@ void sp_line_black(fix31 x1, fix31 y1)
 			for (i = yc; i != how_many_y; i++)
 			{
 				temp1 = (fix15) (xc >> 16);
-				sp_add_intercept_black(i, temp1);
+				sp_add_intercept_black(SPD_GARG2 i, temp1);
 				xc += dx_dy;
 			}
 		}
@@ -309,7 +310,7 @@ void sp_line_black(fix31 x1, fix31 y1)
 /*  Called by sp_make_char to output accumulated intercept lists
  *  Clips output to sp_globals.xmin, sp_globals.xmax, sp_globals.ymin, sp_globals.ymax boundaries
  */
-static void sp_proc_intercepts_black(void)
+static void sp_proc_intercepts_black(SPD_PROTO_DECL1)
 {
 	fix15 i;
 	fix15 from, to;						/* Start and end of run in pixel units   
@@ -424,7 +425,7 @@ static void sp_proc_intercepts_black(void)
  * Return FALSE to repeat output of the transformed data beginning
  * with the first contour
  */
-boolean sp_end_char_black(void)
+boolean sp_end_char_black(SPD_PROTO_DECL1)
 {
 	fix31 xorg;
 	fix31 yorg;
@@ -617,13 +618,13 @@ boolean sp_end_char_black(void)
 		{
 			sp_globals.y_band.band_min = sp_globals.ymin;
 			sp_globals.y_band.band_max = sp_globals.ymax;
-			sp_init_intercepts_out();
+			sp_init_intercepts_out(SPD_GARG1);
 			sp_globals.first_pass = FALSE;
 			sp_globals.extents_running = FALSE;
 			return FALSE;
 		} else
 		{
-			sp_proc_intercepts_black();
+			sp_proc_intercepts_black(SPD_GARG1);
 			close_bitmap();
 			return TRUE;
 		}
@@ -631,15 +632,15 @@ boolean sp_end_char_black(void)
 	{
 		if (sp_globals.intercept_oflo)
 		{
-			sp_reduce_band_size_out();
-			sp_init_intercepts_out();
+			sp_reduce_band_size_out(SPD_GARG1);
+			sp_init_intercepts_out(SPD_GARG1);
 			return FALSE;
 		} else
 		{
-			sp_proc_intercepts_black();
-			if (sp_next_band_out())
+			sp_proc_intercepts_black(SPD_GARG1);
+			if (sp_next_band_out(SPD_GARG1))
 			{
-				sp_init_intercepts_out();
+				sp_init_intercepts_out(SPD_GARG1);
 				return FALSE;
 			}
 			close_bitmap();
@@ -653,4 +654,3 @@ boolean sp_end_char_black(void)
 extern int _I_dont_care_that_ISO_C_forbids_an_empty_source_file_;
 
 #endif
-

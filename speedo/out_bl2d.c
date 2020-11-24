@@ -49,9 +49,9 @@ WITH THE SPEEDO SOFTWARE OR THE BITSTREAM CHARTER OUTLINE FONT.
  * Returns TRUE if output module can accept requested specifications.
  * Returns FALSE otherwise.
  */
-boolean sp_init_2d(specs_t *specsarg)
+boolean sp_init_2d(SPD_PROTO_DECL2 specs_t *specsarg)
 {
-
+	SPD_GUNUSED
 	if (specsarg->flags & CURVES_OUT)
 		return FALSE;					/* Curves out, clipping not supported */
 
@@ -66,7 +66,7 @@ boolean sp_init_2d(specs_t *specsarg)
  * Initializes intercept table, either calculates pixel maxima or
  * decides that they need to be collected
  */
-boolean sp_begin_char_2d(fix31 x, fix31 y, fix31 minx, fix31 miny, fix31 maxx, fix31 maxy)
+boolean sp_begin_char_2d(SPD_PROTO_DECL2 fix31 x, fix31 y, fix31 minx, fix31 miny, fix31 maxx, fix31 maxy)
 {
 #if DEBUG
 	printf("BEGIN_CHAR__2d(%3.1f, %3.1f, %3.1f, %3.1f, %3.1f, %3.1f\n",
@@ -74,17 +74,17 @@ boolean sp_begin_char_2d(fix31 x, fix31 y, fix31 minx, fix31 miny, fix31 maxx, f
 		   (double) minx / (double) sp_globals.onepix, (double) miny / (double) sp_globals.onepix,
 		   (double) maxx / (double) sp_globals.onepix, (double) maxy / (double) sp_globals.onepix);
 #endif
-/* Convert PIX.FRAC to 16.16 form */
+	/* Convert PIX.FRAC to 16.16 form */
 	sp_globals.x_scan_active = TRUE;	/* Assume x-scanning from the start */
 
-	sp_init_char_out(x, y, minx, miny, maxx, maxy);
+	sp_init_char_out(SPD_GARG2 x, y, minx, miny, maxx, maxy);
 	return TRUE;
 }
 
 
 /* Called at the start of each contour
  */
-void sp_begin_contour_2d(fix31 x1, fix31 y1, boolean outside)
+void sp_begin_contour_2d(SPD_PROTO_DECL2 fix31 x1, fix31 y1, boolean outside)
 {
 #if DEBUG
 	printf("BEGIN_CONTOUR__2d(%3.4f, %3.4f, %s)\n",
@@ -97,9 +97,10 @@ void sp_begin_contour_2d(fix31 x1, fix31 y1, boolean outside)
 }
 
 
-/*  Called by line() to add an intercept to the intercept list structure
+/*
+ * Called by line() to add an intercept to the intercept list structure
  */
-static void sp_add_intercept_2d(fix15 y,	/* Y coordinate in relative pixel units */
+static void sp_add_intercept_2d(SPD_PROTO_DECL2 fix15 y,	/* Y coordinate in relative pixel units */
 										 /* (0 is lowest sample in band) */
 										 fix15 x)	/* X coordinate of intercept in subpixel units */
 {
@@ -167,7 +168,7 @@ static void sp_add_intercept_2d(fix15 y,	/* Y coordinate in relative pixel units
 
 
 
-static void sp_draw_vector_to_2d(fix15 x0,	/* X coordinate */
+static void sp_draw_vector_to_2d(SPD_PROTO_DECL2 fix15 x0,	/* X coordinate */
 										  fix15 y0,	/* Y coordinate */
 										  fix15 x1, fix15 y1, band_t * band)
 {
@@ -220,11 +221,11 @@ static void sp_draw_vector_to_2d(fix15 x0,	/* X coordinate */
 	/* the program could just check the OVerflow flag or whatever*/
 	/* works on the particular processor.  This C code is meant  */
 	/* to be processor independent.                              */
-	
+
 	temp1 = (yc << sp_globals.pixshift) - y0 + sp_globals.pixrnd;
 	/* This sees if the sign bits start at bit 15 */
 	/* if they do, no overflow has occurred       */
-	
+
 	temp2 = (fix15) (MULT16(temp1, (fix15) (dx_dy >> 16)) >> 15);
 
 	if ((temp2 != (fix15) 0xFFFF) && (temp2 != 0x0000))
@@ -255,7 +256,7 @@ static void sp_draw_vector_to_2d(fix15 x0,	/* X coordinate */
 		while (yc >= how_many_y)
 		{
 			temp1 = (fix15) (xc >> 16);
-			sp_add_intercept_2d(yc--, temp1);
+			sp_add_intercept_2d(SPD_GARG2 yc--, temp1);
 			xc -= dx_dy;
 		}
 	} else
@@ -266,7 +267,7 @@ static void sp_draw_vector_to_2d(fix15 x0,	/* X coordinate */
 		while (yc < how_many_y)
 		{
 			temp1 = (fix15) (xc >> 16);
-			sp_add_intercept_2d(yc++, temp1);
+			sp_add_intercept_2d(SPD_GARG2 yc++, temp1);
 			xc += dx_dy;
 		}
 	}
@@ -277,7 +278,7 @@ static void sp_draw_vector_to_2d(fix15 x0,	/* X coordinate */
  * Called for each vector in the transformed character
  *     "draws" vector into intercept table
  */
-void sp_line_2d(fix31 x1, fix31 y1)
+void sp_line_2d(SPD_PROTO_DECL2 fix31 x1, fix31 y1)
 {
 #if DEBUG
 	printf("LINE_0(%3.4f, %3.4f)\n", (double) x1 / (double) sp_globals.onepix, (double) y1 / (double) sp_globals.onepix);
@@ -297,10 +298,10 @@ void sp_line_2d(fix31 x1, fix31 y1)
 
 	if (!sp_globals.intercept_oflo)
 	{
-		sp_draw_vector_to_2d(sp_globals.x0_spxl, sp_globals.y0_spxl, x1, y1, &sp_globals.y_band);	/* y-scan */
+		sp_draw_vector_to_2d(SPD_GARG2 sp_globals.x0_spxl, sp_globals.y0_spxl, x1, y1, &sp_globals.y_band);	/* y-scan */
 
 		if (sp_globals.x_scan_active)
-			sp_draw_vector_to_2d(sp_globals.y0_spxl, sp_globals.x0_spxl, y1, x1, &sp_globals.x_band);	/* x-scan if selected */
+			sp_draw_vector_to_2d(SPD_GARG2 sp_globals.y0_spxl, sp_globals.x0_spxl, y1, x1, &sp_globals.x_band);	/* x-scan if selected */
 	}
 
 	sp_globals.x0_spxl = x1;
@@ -312,7 +313,7 @@ void sp_line_2d(fix31 x1, fix31 y1)
 /*  Called by sp_make_char to output accumulated intercept lists
  *  Clips output to xmin, xmax, sp_globals.ymin, ymax boundaries
  */
-static void sp_proc_intercepts_2d(void)
+static void sp_proc_intercepts_2d(SPD_PROTO_DECL1)
 {
 	fix15 i;
 	fix15 from, to;						/* Start and end of run in pixel units   
@@ -325,6 +326,9 @@ static void sp_proc_intercepts_2d(void)
 	fix15 j, k;
 
 #if INCL_CLIPPING
+	boolean clipleft, clipright;
+	fix15 xmin, xmax;
+
 	if ((sp_globals.specs.flags & CLIP_LEFT) != 0)
 		clipleft = TRUE;
 	else
@@ -475,7 +479,7 @@ static void sp_proc_intercepts_2d(void)
  * Return FALSE to repeat output of the transformed data beginning
  * with the first contour
  */
-boolean sp_end_char_2d(void)
+boolean sp_end_char_2d(SPD_PROTO_DECL1)
 {
 	fix31 xorg;
 	fix31 yorg;
@@ -673,13 +677,13 @@ boolean sp_end_char_2d(void)
 			sp_globals.y_band.band_max = sp_globals.ymax;
 			sp_globals.x_scan_active = FALSE;
 			sp_globals.no_x_lists = 0;
-			sp_init_intercepts_out();
+			sp_init_intercepts_out(SPD_GARG1);
 			sp_globals.first_pass = FALSE;
 			sp_globals.extents_running = FALSE;
 			return FALSE;
 		} else
 		{
-			sp_proc_intercepts_2d();
+			sp_proc_intercepts_2d(SPD_GARG1);
 			close_bitmap();
 			return TRUE;
 		}
@@ -687,15 +691,15 @@ boolean sp_end_char_2d(void)
 	{
 		if (sp_globals.intercept_oflo)
 		{
-			sp_reduce_band_size_out();
-			sp_init_intercepts_out();
+			sp_reduce_band_size_out(SPD_GARG1);
+			sp_init_intercepts_out(SPD_GARG1);
 			return FALSE;
 		} else
 		{
-			sp_proc_intercepts_2d();
-			if (sp_next_band_out())
+			sp_proc_intercepts_2d(SPD_GARG1);
+			if (sp_next_band_out(SPD_GARG1))
 			{
-				sp_init_intercepts_out();
+				sp_init_intercepts_out(SPD_GARG1);
 				return FALSE;
 			}
 			close_bitmap();

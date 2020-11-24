@@ -61,7 +61,7 @@ WITH THE SPEEDO SOFTWARE OR THE BITSTREAM CHARTER OUTLINE FONT.
  * Called by sp_make_char() and sp_make_comp_char() to initialize the current
  * transformation control block to the top level transformation.
  */
-void sp_init_tcb(void)
+void sp_init_tcb(SPD_PROTO_DECL1)
 {
 	sp_globals.tcb = sp_globals.tcb0;
 }
@@ -71,11 +71,12 @@ void sp_init_tcb(void)
  * Called by sp_make_comp_char() to apply position and scale for each of the
  * components of a compound character.
  */
-void sp_scale_tcb(tcb_t * ptcb,	/* Transformation control block */
-						fix15 x_pos,	/* X position (outline res units) */
-						fix15 y_pos,	/* Y position (outline res units) */
-						fix15 x_scale,	/* X scale factor * ONE_SCALE */
-						fix15 y_scale)	/* Y scale factor * ONE_SCALE */
+void sp_scale_tcb(SPD_PROTO_DECL2
+	tcb_t *ptcb,	/* Transformation control block */
+	fix15 x_pos,	/* X position (outline res units) */
+	fix15 y_pos,	/* Y position (outline res units) */
+	fix15 x_scale,	/* X scale factor * ONE_SCALE */
+	fix15 y_scale)	/* Y scale factor * ONE_SCALE */
 {
 	fix15 xx_mult = ptcb->xxmult;
 	fix15 xy_mult = ptcb->xymult;
@@ -91,15 +92,16 @@ void sp_scale_tcb(tcb_t * ptcb,	/* Transformation control block */
 	ptcb->yymult = TRANS(yy_mult, y_scale, (fix31) SCALE_RND, SCALE_SHIFT);
 	ptcb->yoffset = MULT16(yx_mult, x_pos) + MULT16(yy_mult, y_pos) + y_offset;
 
-	sp_type_tcb(ptcb);						/* Reclassify transformation types */
+	sp_type_tcb(SPD_GARG2 ptcb);				/* Reclassify transformation types */
 }
 
-ufix8 *sp_skip_interpolation_table(ufix8 * pointer,	/* Pointer to next byte in char data */
-												 ufix8 format)	/* Character format byte */
+
+ufix8 *sp_skip_interpolation_table(SPD_PROTO_DECL2 ufix8 *pointer, ufix8 format)	/* Character format byte */
 {
 	fix15 i, n;
 	ufix8 intsize[9];
 
+	SPD_GUNUSED
 	intsize[0] = 1;
 	intsize[1] = 2;
 	intsize[2] = 3;
@@ -127,7 +129,8 @@ ufix8 *sp_skip_interpolation_table(ufix8 * pointer,	/* Pointer to next byte in c
 	return pointer;
 }
 
-ufix8 *sp_skip_control_zone(ufix8 * pointer,	/* Pointer to next byte in char data */
+
+ufix8 *sp_skip_control_zone(SPD_PROTO_DECL2 ufix8 *pointer,	/* Pointer to next byte in char data */
 										  ufix8 format)	/* Character format byte */
 {
 	fix15 i, n;
@@ -153,7 +156,7 @@ ufix8 *sp_skip_control_zone(ufix8 * pointer,	/* Pointer to next byte in char dat
  * Called by sp_setup_pix_table() when X squeezing is necessary
  * to insert the correct edge in the global pix array
  */
-static void sp_calculate_x_pix(ufix8 start_edge, ufix8 end_edge,
+static void sp_calculate_x_pix(SPD_PROTO_DECL2 ufix8 start_edge, ufix8 end_edge,
 									 ufix16 constr_nr, fix31 x_scale, fix31 x_offset, fix31 ppo, fix15 setwidth_pix)
 {
 	fix15 zone_pix;
@@ -216,11 +219,15 @@ static void sp_calculate_x_pix(ufix8 start_edge, ufix8 end_edge,
  * Updates the pointer to the byte following the interpolation zone
  * data.
  */
-static ufix8 *sp_setup_int_table(ufix8 * pointer,	/* Pointer to first byte in interpolation zone table */
+static ufix8 *sp_setup_int_table(SPD_PROTO_DECL2 ufix8 *pointer,	/* Pointer to first byte in interpolation zone table */
 												  fix15 no_X_int_zones,	/* Number of X interpolation zones */
 												  fix15 no_Y_int_zones)	/* Number of X interpolation zones */
 {
-	fix15 i, j, k, l, n;
+	fix15 i;
+	fix15 j;
+	fix15 k;
+	fix15 l;
+	fix15 n;
 	ufix8 format;
 	ufix8 format_copy;
 	ufix8 tmpufix8;
@@ -235,7 +242,7 @@ static ufix8 *sp_setup_int_table(ufix8 * pointer,	/* Pointer to first byte in in
 	fix15 end_pix = 0;
 
 #if INCL_PLAID_OUT						/* Plaid data monitoring included? */
-	begin_int_zones(no_X_int_zones, no_Y_int_zones);
+	sp_begin_int_zones(SPD_GARG2 no_X_int_zones, no_Y_int_zones);
 #endif
 
 	i = 0;
@@ -272,10 +279,10 @@ static ufix8 *sp_setup_int_table(ufix8 * pointer,	/* Pointer to first byte in in
 						adj_factor = 0xffff & (NEXT_BYTE(pointer) << 8);
 						goto L1;
 
-
 					case 2:			/* 2 byte fractional distance to next edge */
 						adj_factor = 0xffff & NEXT_WORD(pointer);
-					  L1:edge = edge_org + NEXT_BYTE(pointer);
+					L1:
+						edge = edge_org + NEXT_BYTE(pointer);
 						end_orus = sp_plaid.orus[edge] +
 							((((fix31) sp_plaid.orus[edge + 1] - (fix31) sp_plaid.orus[edge]) *
 							  (ufix32) adj_factor + (fix31) 32768L) >> 16);
@@ -290,7 +297,8 @@ static ufix8 *sp_setup_int_table(ufix8 * pointer,	/* Pointer to first byte in in
 
 					case 4:			/* 2 byte delta orus before first edge */
 						adj_orus = -NEXT_WORD(pointer);
-					  L2:edge = edge_org;
+					L2:
+						edge = edge_org;
 						goto L4;
 
 					case 5:			/* 1 byte delta orus after last edge */
@@ -299,15 +307,14 @@ static ufix8 *sp_setup_int_table(ufix8 * pointer,	/* Pointer to first byte in in
 
 					case 6:			/* 2 byte delta orus after last edge */
 						adj_orus = NEXT_WORD(pointer);
-					  L3:edge =
-							j ? sp_globals.Y_edge_org + sp_globals.no_Y_orus - 1 : sp_globals.no_X_orus -
-							1;
-					  L4:end_orus = sp_plaid.orus[edge] + adj_orus;
+					L3:
+						edge = j ? sp_globals.Y_edge_org + sp_globals.no_Y_orus - 1 : sp_globals.no_X_orus - 1;
+					L4:
+						end_orus = sp_plaid.orus[edge] + adj_orus;
 						end_pix = sp_plaid.pix[edge] +
 							(((fix31) adj_orus * (fix31) (j ? sp_globals.tcb.yppo : sp_globals.tcb.xppo) +
 							  sp_globals.mprnd) / (1 << sp_globals.mpshift));
 						break;
-
 					}
 
 					if (l)				/* Second time round loop? */
@@ -318,7 +325,7 @@ static ufix8 *sp_setup_int_table(ufix8 * pointer,	/* Pointer to first byte in in
 				}
 			}
 #if INCL_PLAID_OUT						/* Plaid data monitoring included? */
-			record_int_zone((fix31) start_pix << (16 - sp_globals.pixshift),
+			sp_record_int_zone(SPD_GARG2 (fix31) start_pix << (16 - sp_globals.pixshift),
 							(fix31) end_pix << (16 - sp_globals.pixshift));
 #endif
 			zone_orus = (fix31) end_orus - (fix31) start_orus;
@@ -370,7 +377,7 @@ static ufix8 *sp_setup_int_table(ufix8 * pointer,	/* Pointer to first byte in in
  * Called by sp_setup_pix_table() when Y squeezing is necessary
  * to insert the correct edge in the global pix array
  */
-static void sp_calculate_y_pix(ufix8 start_edge, ufix8 end_edge,
+static void sp_calculate_y_pix(SPD_PROTO_DECL2 ufix8 start_edge, ufix8 end_edge,
 									 ufix16 constr_nr,
 									 fix31 top_scale, fix31 bottom_scale, fix31 ppo, fix15 em_top_pix, fix15 em_bot_pix)
 {
@@ -461,7 +468,7 @@ static void sp_calculate_y_pix(ufix8 start_edge, ufix8 end_edge,
  * a boolean value TRUE = X squeezind is necessary, FALSE = no
  * X squeezing is necessary.
  */
-boolean sp_calculate_x_scale(fix31 *x_factor, fix31 *x_offset, fix15 no_X_ctrl_zones)
+boolean sp_calculate_x_scale(SPD_PROTO_DECL2 fix31 *x_factor, fix31 *x_offset, fix15 no_X_ctrl_zones)
 {
 	boolean squeeze_left, squeeze_right;
 	boolean out_on_right, out_on_left;
@@ -474,7 +481,6 @@ boolean sp_calculate_x_scale(fix31 *x_factor, fix31 *x_offset, fix15 no_X_ctrl_z
 	fix31 isw_scale;
 	fix15 shift;
 #endif
-
 
 	/* set up some flags and common calculations */
 	squeeze_left = (sp_globals.specs.flags & SQUEEZE_LEFT) ? TRUE : FALSE;
@@ -510,7 +516,7 @@ boolean sp_calculate_x_scale(fix31 *x_factor, fix31 *x_offset, fix15 no_X_ctrl_z
 	{
 		/* if both isw and squeezing is going on - let the imported */
 		/* setwidth factor be factored in with the squeeze          */
-		isw_scale = sp_compute_isw_scale();
+		isw_scale = sp_compute_isw_scale(SPD_GARG1);
 		/*sp_globals.setwidth_orus = sp_globals.imported_width; */
 	} else
 	{
@@ -578,7 +584,7 @@ boolean sp_calculate_x_scale(fix31 *x_factor, fix31 *x_offset, fix15 no_X_ctrl_z
 	/* look for the first non-negative oru value, scale and add the offset    */
 	/* to the corresponding pixel value - note that the pixel value           */
 	/* is set in sp_read_oru_table.                                              */
-	
+
 	/* look at all the X edges */
 	for (i = 0; i < (no_X_ctrl_zones + 1); i++)
 		if (sp_plaid.orus[i] >= 0)
@@ -600,7 +606,7 @@ boolean sp_calculate_x_scale(fix31 *x_factor, fix31 *x_offset, fix15 no_X_ctrl_z
  * This function returns a boolean value TRUE = Y squeezind is necessary, 
  * FALSE = no Y squeezing is necessary.
  */
-boolean sp_calculate_y_scale(fix31 * top_scale, fix31 * bottom_scale, fix15 first_Y_zone, fix15 no_Y_ctrl_zones)
+boolean sp_calculate_y_scale(SPD_PROTO_DECL2 fix31 *top_scale, fix31 *bottom_scale, fix15 first_Y_zone, fix15 no_Y_ctrl_zones)
 {
 	boolean squeeze_top, squeeze_bottom;
 	boolean out_on_top, out_on_bottom;
@@ -670,12 +676,14 @@ boolean sp_calculate_y_scale(fix31 * top_scale, fix31 * bottom_scale, fix15 firs
  * Updates the pointer to the byte following the control zone
  * data.
  */
-static ufix8 *sp_setup_pix_table(ufix8 * pointer,	/* Pointer to first byte in control zone table */
+static ufix8 *sp_setup_pix_table(SPD_PROTO_DECL2 ufix8 *pointer,	/* Pointer to first byte in control zone table */
 												  boolean short_form,	/* TRUE if 1 byte from/to specification */
 												  fix15 no_X_ctrl_zones,	/* Number of X control zones */
 												  fix15 no_Y_ctrl_zones)	/* Number of Y control zones */
 {
-	fix15 i, j, n;
+	fix15 i;
+	fix15 j;
+	fix15 n;
 	fix31 ppo;
 
 #if INCL_SQUEEZING || INCL_ISW
@@ -711,9 +719,8 @@ static ufix8 *sp_setup_pix_table(ufix8 * pointer,	/* Pointer to first byte in co
 #endif
 
 #if INCL_PLAID_OUT						/* Plaid data monitoring included? */
-	begin_ctrl_zones(no_X_ctrl_zones, no_Y_ctrl_zones);
+	sp_begin_ctrl_zones(SPD_GARG2 no_X_ctrl_zones, no_Y_ctrl_zones);
 #endif
-
 
 	edge_org = 0;
 	constr_org = 0;
@@ -727,8 +734,8 @@ static ufix8 *sp_setup_pix_table(ufix8 * pointer,	/* Pointer to first byte in co
 #endif
 
 #if INCL_SQUEEZING
-	squeezed_x = sp_calculate_x_scale(&x_scale, &x_offset, no_X_ctrl_zones);
-	squeezed_y = sp_calculate_y_scale(&y_top_scale, &y_bottom_scale, (n + 1), no_Y_ctrl_zones);
+	squeezed_x = sp_calculate_x_scale(SPD_GARG2 &x_scale, &x_offset, no_X_ctrl_zones);
+	squeezed_y = sp_calculate_y_scale(SPD_GARG2 &y_top_scale, &y_bottom_scale, (n + 1), no_Y_ctrl_zones);
 #if INCL_ISW
 	if (sp_globals.import_setwidth_act == TRUE)
 		setwidth_pix = ((fix15) (((fix31) sp_globals.imported_width * xppo0) >>
@@ -736,8 +743,7 @@ static ufix8 *sp_setup_pix_table(ufix8 * pointer,	/* Pointer to first byte in co
 
 	else
 #endif
-		setwidth_pix = ((fix15) (((fix31) sp_globals.setwidth_orus * xppo0) >>
-								 sp_globals.mpshift) + sp_globals.pixrnd) & sp_globals.pixfix;
+		setwidth_pix = ((fix15) (((fix31) sp_globals.setwidth_orus * xppo0) >> sp_globals.mpshift) + sp_globals.pixrnd) & sp_globals.pixfix;
 	/* check for overflow */
 	if (setwidth_pix < 0)
 		setwidth_pix = 0x7fff;			/* set to maximum */
@@ -754,7 +760,7 @@ static ufix8 *sp_setup_pix_table(ufix8 * pointer,	/* Pointer to first byte in co
 		isw_setwidth_pix = 0x7fff;		/* set to maximum */
 	if (!squeezed_x && ((imported_width = sp_globals.import_setwidth_act) == TRUE))
 	{
-		isw_scale = sp_compute_isw_scale();
+		isw_scale = sp_compute_isw_scale(SPD_GARG1);
 
 		/* look for the first non-negative oru value, scale and add the offset    */
 		/* to the corresponding pixel value - note that the pixel value           */
@@ -789,10 +795,10 @@ static ufix8 *sp_setup_pix_table(ufix8 * pointer,	/* Pointer to first byte in co
 #if INCL_SQUEEZING
 			if (i == 0 && squeezed_x)
 			{
-				sp_calculate_x_pix(start_edge, end_edge, constr_nr, x_scale, x_offset, ppo, setwidth_pix);
+				sp_calculate_x_pix(SPD_GARG2 start_edge, end_edge, constr_nr, x_scale, x_offset, ppo, setwidth_pix);
 			} else if (i == 1 && squeezed_y)
 			{
-				sp_calculate_y_pix(start_edge, end_edge, constr_nr,
+				sp_calculate_y_pix(SPD_GARG2 start_edge, end_edge, constr_nr,
 								y_top_scale, y_bottom_scale, ppo, em_top_pix, em_bot_pix);
 			} else
 #endif
@@ -800,7 +806,7 @@ static ufix8 *sp_setup_pix_table(ufix8 * pointer,	/* Pointer to first byte in co
 #if INCL_ISW
 				if (i == 0 && imported_width)
 				{
-					sp_calculate_x_pix(start_edge, end_edge, constr_nr, isw_scale, 0, ppo, isw_setwidth_pix);
+					sp_calculate_x_pix(SPD_GARG2 start_edge, end_edge, constr_nr, isw_scale, 0, ppo, isw_setwidth_pix);
 				} else
 #endif
 				{
@@ -845,7 +851,7 @@ static ufix8 *sp_setup_pix_table(ufix8 * pointer,	/* Pointer to first byte in co
 				}
 			}
 #if INCL_PLAID_OUT						/* Plaid data monitoring included? */
-			record_ctrl_zone((fix31) sp_plaid.pix[start_edge] << (16 - sp_globals.pixshift),
+			sp_record_ctrl_zone(SPD_GARG2 (fix31) sp_plaid.pix[start_edge] << (16 - sp_globals.pixshift),
 							 (fix31) sp_plaid.pix[end_edge] << (16 - sp_globals.pixshift),
 							 (fix15) (constr_nr - constr_org));
 #endif
@@ -882,7 +888,7 @@ static ufix8 *sp_setup_pix_table(ufix8 * pointer,	/* Pointer to first byte in co
  * This is always carried out whenever a character is generated following
  * a change of font or scale factor or after initialization.     
  */
-static void sp_constr_update(void)
+static void sp_constr_update(SPD_PROTO_DECL1)
 {
 	fix31 ppo;
 	fix15 xppo;
@@ -987,7 +993,7 @@ static void sp_constr_update(void)
 				min = 0;
 			}
 
-			sp_globals.c_pix[i] = (pix < min) ? min : pix;
+			sp_globals.c_pix[i] = pix < min ? min : pix;
 			i++;
 		}
 		if (j)
@@ -1032,7 +1038,7 @@ static void sp_constr_update(void)
 }
 
 
-/* 
+/*
  * Called by sp_make_simp_char() and sp_make_comp_char() to set up the controlled
  * coordinate table and process all intelligent scaling rules embedded
  * in the character data.
@@ -1040,7 +1046,7 @@ static void sp_constr_update(void)
  * This is used only if intelligent scaling is enabled in the
  * configuration definitions.
  */
-ufix8 *sp_plaid_tcb(ufix8 * pointer,	/* Pointer to next byte in char data */
+ufix8 *sp_plaid_tcb(SPD_PROTO_DECL2 ufix8 *pointer,	/* Pointer to next byte in char data */
 								  ufix8 format)	/* Character format byte */
 {
 	fix15 no_X_ctrl_zones;
@@ -1049,14 +1055,14 @@ ufix8 *sp_plaid_tcb(ufix8 * pointer,	/* Pointer to next byte in char data */
 	fix15 no_Y_int_zones;
 
 #if INCL_PLAID_OUT						/* Plaid data monitoring included? */
-	begin_plaid_data();
+	sp_begin_plaid_data(SPD_GARG1);
 #endif
 
-	sp_constr_update();					/* Update constraint table if required */
+	sp_constr_update(SPD_GARG1);					/* Update constraint table if required */
 
 	sp_globals.no_X_orus = (format & BIT2) ? (fix15) NEXT_BYTE(pointer) : 0;
 	sp_globals.no_Y_orus = (format & BIT3) ? (fix15) NEXT_BYTE(pointer) : 0;
-	pointer = sp_read_oru_table(pointer);	/* Updates no_X/Y/orus to include zero values */
+	pointer = sp_read_oru_table(SPD_GARG2 pointer);	/* Updates no_X/Y/orus to include zero values */
 	sp_globals.Y_edge_org = sp_globals.no_X_orus;
 	if (sp_globals.no_X_orus > 1)		/* 2 or more controlled X coordinates? */
 		sp_globals.tcb.xmode = sp_globals.tcb.xtype;	/* Enable intelligent scaling in X */
@@ -1066,21 +1072,21 @@ ufix8 *sp_plaid_tcb(ufix8 * pointer,	/* Pointer to next byte in char data */
 
 	no_X_ctrl_zones = sp_globals.no_X_orus - 1;
 	no_Y_ctrl_zones = sp_globals.no_Y_orus - 1;
-	pointer = sp_setup_pix_table(pointer, (boolean) (format & BIT4), no_X_ctrl_zones, no_Y_ctrl_zones);
+	pointer = sp_setup_pix_table(SPD_GARG2 pointer, (boolean) (format & BIT4), no_X_ctrl_zones, no_Y_ctrl_zones);
 
 	no_X_int_zones = (format & BIT6) ? (fix15) NEXT_BYTE(pointer) : 0;
 	no_Y_int_zones = (format & BIT7) ? (fix15) NEXT_BYTE(pointer) : 0;
 	sp_globals.Y_int_org = no_X_int_zones;
-	pointer = sp_setup_int_table(pointer, no_X_int_zones, no_Y_int_zones);
+	pointer = sp_setup_int_table(SPD_GARG2 pointer, no_X_int_zones, no_Y_int_zones);
 
 #if INCL_PLAID_OUT						/* Plaid data monitoring included? */
-	end_plaid_data();
+	sp_end_plaid_data(SPD_GARG1);
 #endif
 
 	return pointer;
 }
 #else /* !INCL_RULES */
-/* 
+/*
  * Called by sp_make_simp_char() and sp_make_comp_char() to set up the controlled
  * coordinate table and skip all other intelligent scaling rules embedded
  * in the character data.
@@ -1088,21 +1094,21 @@ ufix8 *sp_plaid_tcb(ufix8 * pointer,	/* Pointer to next byte in char data */
  * This is used only if intelligent scaling is not supported in the
  * configuration definitions.
  */
-ufix8 *sp_plaid_tcb(ufix8 * pointer,	/* Pointer to next byte in char data */
+ufix8 *sp_plaid_tcb(SPD_PROTO_DECL2 ufix8 *pointer,	/* Pointer to next byte in char data */
 								  ufix8 format)	/* Character format byte */
 {
 	fix15 i, n;
 
 	sp_globals.no_X_orus = (format & BIT2) ? (fix15) NEXT_BYTE(pointer) : 0;
 	sp_globals.no_Y_orus = (format & BIT3) ? (fix15) NEXT_BYTE(pointer) : 0;
-	pointer = sp_read_oru_table(pointer);	/* Updates no_X/Y/orus */
+	pointer = sp_read_oru_table(SPD_GARG2 pointer);	/* Updates no_X/Y/orus */
 	sp_globals.Y_edge_org = sp_globals.no_X_orus;
 
 	/* Skip over control zone table */
-	pointer = sp_skip_control_zone(pointer, format);
+	pointer = sp_skip_control_zone(SPD_GARG2 pointer, format);
 
 	/* Skip over interpolation table */
-	pointer = sp_skip_interpolation_table(pointer, format);
+	pointer = sp_skip_interpolation_table(SPD_GARG2 pointer, format);
 	return pointer;
 }
 #endif /* INCL_RULES */
@@ -1114,9 +1120,12 @@ ufix8 *sp_plaid_tcb(ufix8 * pointer,	/* Pointer to next byte in char data */
  * Updates the pointer to the byte following the controlled coordinate
  * data.
  */
-ufix8 *sp_read_oru_table(ufix8 * pointer)	/* Pointer to first byte in controlled coord table */
+ufix8 *sp_read_oru_table(SPD_PROTO_DECL2 ufix8 *pointer)	/* Pointer to first byte in controlled coord table */
 {
-	fix15 i, j, k, n;
+	fix15 i;
+	fix15 j;
+	fix15 k;
+	fix15 n;
 	boolean zero_not_in;
 	boolean zero_added;
 	fix15 oru;
@@ -1137,7 +1146,7 @@ ufix8 *sp_read_oru_table(ufix8 * pointer)	/* Pointer to first byte in controlled
 		for (k = 0; k < n; k++)
 		{
 			oru = NEXT_WORD(pointer);
-			if (zero_not_in && (oru >= 0))	/* First positive oru value? */
+			if (zero_not_in && oru >= 0)	/* First positive oru value? */
 			{
 #if INCL_RULES
 				sp_plaid.pix[i] = pos;	/* Insert position in pix array */
@@ -1191,7 +1200,7 @@ ufix8 *sp_read_oru_table(ufix8 * pointer)	/* Pointer to first byte in controlled
 
 
 #if INCL_ISW
-fix31 sp_compute_isw_scale(void)
+fix31 sp_compute_isw_scale(SPD_PROTO_DECL1)
 {
 	fix31 isw_scale;
 

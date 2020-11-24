@@ -210,7 +210,7 @@ static void process_args(int ac, char **av)
 }
 
 
-static void dump_header(uint16_t num_chars, const glyphinfo_t *box, boolean is_mono)
+static void dump_header(SPD_PROTO_DECL2 uint16_t num_chars, const glyphinfo_t *box, boolean is_mono)
 {
 	long pixel_size;
 	const char *weight;
@@ -293,23 +293,23 @@ static void dump_header(uint16_t num_chars, const glyphinfo_t *box, boolean is_m
 		ufix8 *hdr2_org;
 		ufix16 private_off;
 
-		private_off = sp_read_word_u(font.org + FH_HEDSZ);
+		private_off = sp_read_word_u(SPD_GARG2 font.org + FH_HEDSZ);
 		if (private_off + FH_CUSNR > font.no_bytes)
 		{
-			sp_report_error(1);				/* Insufficient font data loaded */
+			sp_report_error(SPD_GARG2 1);		/* Insufficient font data loaded */
 		} else
 		{
 			hdr2_org = font.org + private_off;
 
-			printf("COMMENT Max ORU value: %u\n", sp_read_word_u(hdr2_org + FH_ORUMX));
-			printf("COMMENT Max Pixel value: %u\n", sp_read_word_u(hdr2_org + FH_PIXMX));
-			printf("COMMENT Customer Number: %u\n", sp_read_word_u(hdr2_org + FH_CUSNR));
-			printf("COMMENT Offset to Char Directory: %lu\n", (unsigned long)sp_read_long(hdr2_org + FH_OFFCD));
-			printf("COMMENT Offset to Constraint Data: %lu\n", (unsigned long)sp_read_long(hdr2_org + FH_OFCNS));
-			printf("COMMENT Offset to Track Kerning: %lu\n", (unsigned long)sp_read_long(hdr2_org + FH_OFFTK));
-			printf("COMMENT Offset to Pair Kerning: %lu\n", (unsigned long)sp_read_long(hdr2_org + FH_OFFPK));
-			printf("COMMENT Offset to Character Data: %lu\n", (unsigned long)sp_read_long(hdr2_org + FH_OCHRD));
-			printf("COMMENT Number of Bytes in File: %lu\n", (unsigned long)sp_read_long(hdr2_org + FH_NBYTE));
+			printf("COMMENT Max ORU value: %u\n", sp_read_word_u(SPD_GARG2 hdr2_org + FH_ORUMX));
+			printf("COMMENT Max Pixel value: %u\n", sp_read_word_u(SPD_GARG2 hdr2_org + FH_PIXMX));
+			printf("COMMENT Customer Number: %u\n", sp_read_word_u(SPD_GARG2 hdr2_org + FH_CUSNR));
+			printf("COMMENT Offset to Char Directory: %lu\n", (unsigned long)sp_read_long(SPD_GARG2 hdr2_org + FH_OFFCD));
+			printf("COMMENT Offset to Constraint Data: %lu\n", (unsigned long)sp_read_long(SPD_GARG2 hdr2_org + FH_OFCNS));
+			printf("COMMENT Offset to Track Kerning: %lu\n", (unsigned long)sp_read_long(SPD_GARG2 hdr2_org + FH_OFFTK));
+			printf("COMMENT Offset to Pair Kerning: %lu\n", (unsigned long)sp_read_long(SPD_GARG2 hdr2_org + FH_OFFPK));
+			printf("COMMENT Offset to Character Data: %lu\n", (unsigned long)sp_read_long(SPD_GARG2 hdr2_org + FH_OCHRD));
+			printf("COMMENT Number of Bytes in File: %lu\n", (unsigned long)sp_read_long(SPD_GARG2 hdr2_org + FH_NBYTE));
 		}
 		printf("COMMENT\n");
 	}
@@ -399,11 +399,11 @@ static void dump_header(uint16_t num_chars, const glyphinfo_t *box, boolean is_m
 
 static FILE *fp;
 
-static void update_bbox(charinfo *c, glyphinfo_t *box)
+static void update_bbox(SPD_PROTO_DECL2 charinfo *c, glyphinfo_t *box)
 {
 	bbox_t bb;
 	
-	sp_get_char_bbox(c->char_index, &bb, TRUE);
+	sp_get_char_bbox(SPD_GARG2 c->char_index, &bb, TRUE);
 	c->bbox.xmin = bb.xmin;
 	c->bbox.ymin = bb.ymin;
 	c->bbox.xmax = bb.xmax;
@@ -436,6 +436,14 @@ int main(int argc, char **argv)
 	uint16_t first_char_index, num_chars, real_num_chars;
 	const ufix8 *key;
 	
+#if !DYNAMIC_ALLOC && !STATIC_ALLOC
+	SPEEDO_GLOBALS *sp_global_ptr;
+#endif
+
+#if !STATIC_ALLOC
+	sp_global_ptr = calloc(1, sizeof(*sp_global_ptr));
+#endif
+
 	process_args(argc, argv);
 	fp = fopen(fontfile, "rb");
 	if (!fp)
@@ -471,12 +479,12 @@ int main(int argc, char **argv)
 		return 1;
 	}
 	/* init */
-	sp_reset();
+	sp_reset(SPD_GARG1);
 
 	font.org = font_buffer;
 	font.no_bytes = minbufsize;
 
-	key = sp_get_key(&font);
+	key = sp_get_key(SPD_GARG2 &font);
 	if (key == NULL)
 	{
 		fprintf(stderr, "Non-standard encryption for \"%s\"\n", fontfile);
@@ -485,7 +493,7 @@ int main(int argc, char **argv)
 #endif
 	} else
 	{
-		sp_set_key(key);
+		sp_set_key(SPD_GARG2 key);
 	}
 	
 	first_char_index = read_2b(font_buffer + FH_FCHRF);
@@ -528,7 +536,7 @@ int main(int argc, char **argv)
 	{
 		fontname = (char *) (font_buffer + FH_FNTNM);
 	}
-	if (!sp_set_specs(&specs, &font))
+	if (!sp_set_specs(SPD_GARG2 &specs, &font))
 	{
 		fprintf(stderr, "can't set specs\n");
 	} else
@@ -563,7 +571,7 @@ int main(int argc, char **argv)
 				if (char_id != SP_UNDEFINED && char_id != UNDEFINED)
 				{
 					real_num_chars++;
-					update_bbox(&c, &font_bbox);
+					update_bbox(SPD_GARG2 &c, &font_bbox);
 					if (c.bbox.width != 0 && c.bbox.width != monowidth)
 					{
 						if (monowidth != 0)
@@ -578,11 +586,11 @@ int main(int argc, char **argv)
 			for (i = 0; i < num_chars; i++)
 			{
 				c.char_index = char_index = i + first_char_index;
-				c.char_id = char_id = sp_get_char_id(char_index);
+				c.char_id = char_id = sp_get_char_id(SPD_GARG2 char_index);
 				if (char_id != SP_UNDEFINED && char_id != UNDEFINED)
 				{
 					real_num_chars++;
-					update_bbox(&c, &font_bbox);
+					update_bbox(SPD_GARG2 &c, &font_bbox);
 					if (c.bbox.width != 0 && c.bbox.width != monowidth)
 					{
 						if (monowidth != 0)
@@ -593,7 +601,7 @@ int main(int argc, char **argv)
 			}
 		}
 		font_bbox.ascent = font_bbox.height - font_bbox.descent;
-		dump_header(real_num_chars, &font_bbox, is_mono);
+		dump_header(SPD_GARG2 real_num_chars, &font_bbox, is_mono);
 
 		if (iso_encoding)
 		{
@@ -601,7 +609,7 @@ int main(int argc, char **argv)
 			{
 				char_index = iso_map[i + 1];
 				char_id = iso_map[i];
-				if (!sp_make_char(char_index))
+				if (!sp_make_char(SPD_GARG2 char_index))
 				{
 					fprintf(stderr, "can't make char %d (%x)\n", char_index, char_id);
 				}
@@ -611,10 +619,10 @@ int main(int argc, char **argv)
 			for (i = 0; i < num_chars; i++)
 			{
 				char_index = i + first_char_index;
-				char_id = sp_get_char_id(char_index);
+				char_id = sp_get_char_id(SPD_GARG2 char_index);
 				if (char_id != SP_UNDEFINED && char_id != UNDEFINED)
 				{
-					if (!sp_make_char(char_index))
+					if (!sp_make_char(SPD_GARG2 char_index))
 					{
 						fprintf(stderr, "can't make char %d (%x)\n", char_index, char_id);
 					}
@@ -632,8 +640,9 @@ int main(int argc, char **argv)
 
 
 #if INCL_LCD
-boolean sp_load_char_data(long file_offset, fix15 num, fix15 cb_offset, buff_t *char_data)
+boolean sp_load_char_data(SPD_PROTO_DECL2 long file_offset, fix15 num, fix15 cb_offset, buff_t *char_data)
 {
+	SPD_GUNUSED
 	if (fseek(fp, file_offset, SEEK_SET))
 	{
 		fprintf(stderr, "%x (%x): can't seek to char at %ld\n", char_index, char_id, file_offset);
@@ -660,10 +669,11 @@ boolean sp_load_char_data(long file_offset, fix15 num, fix15 cb_offset, buff_t *
 /*
  * Called by Speedo character generator to report an error.
  */
-void sp_write_error(const char *str, ...)
+void sp_write_error(SPD_PROTO_DECL2 const char *str, ...)
 {
 	va_list v;
 
+	SPD_GUNUSED
 	va_start(v, str);
 	vfprintf(stderr, str, v);
 	va_end(v);
@@ -671,7 +681,7 @@ void sp_write_error(const char *str, ...)
 }
 
 
-void sp_open_bitmap(fix31 xorg, fix31 yorg, fix15 xsize, fix15 ysize)
+void sp_open_bitmap(SPD_PROTO_DECL2 fix31 xorg, fix31 yorg, fix15 xsize, fix15 ysize)
 {
 	fix15 i, y;
 	fix15 off_horz;
@@ -690,13 +700,13 @@ void sp_open_bitmap(fix31 xorg, fix31 yorg, fix15 xsize, fix15 ysize)
 		fprintf(stderr, "char 0x%x (0x%x) wider than max bits (%d vs %d)\n", char_index, char_id, bit_width, MAX_BITS);
 		bit_width = MAX_BITS;
 	}
-	width = sp_get_char_width(char_index);
+	width = sp_get_char_width(SPD_GARG2 char_index);
 	pix_width = width * (specs.xxmult / 65536L) + ((ufix32) width * ((ufix32) specs.xxmult & 0xffff)) / 65536L;
 	pix_width /= 65536L;
 
 	width = (pix_width * 720000L) / (point_size * x_res);
 
-	sp_get_char_bbox(char_index, &bb, TRUE);
+	sp_get_char_bbox(SPD_GARG2 char_index, &bb, TRUE);
 
 #if DEBUG
 	if (((bb.xmax - bb.xmin) >> 16) != bit_width)
@@ -777,10 +787,11 @@ static void dump_line(const char *line)
 static int trunc = 0;
 
 
-void sp_set_bitmap_bits(fix15 y, fix15 xbit1, fix15 xbit2)
+void sp_set_bitmap_bits(SPD_PROTO_DECL2 fix15 y, fix15 xbit1, fix15 xbit2)
 {
 	fix15 i;
 
+	SPD_GUNUSED
 	if (xbit1 < 0 || xbit1 >= MAX_BITS)
 	{
 		fprintf(stderr, "char 0x%x (0x%x): bit1 %d wider than max bits %u -- truncated\n", char_index, char_id, xbit1, bit_width);
@@ -808,10 +819,11 @@ void sp_set_bitmap_bits(fix15 y, fix15 xbit1, fix15 xbit2)
 }
 
 
-void sp_close_bitmap(void)
+void sp_close_bitmap(SPD_PROTO_DECL1)
 {
 	int y, i;
 
+	SPD_GUNUSED
 	trunc = 0;
 
 	for (y = 0; y < bit_height; y++)
@@ -836,8 +848,9 @@ void sp_close_bitmap(void)
 
 /* outline stubs */
 #if INCL_OUTLINE
-void sp_open_outline(fix31 x_set_width, fix31 y_set_width, fix31 xmin, fix31 xmax, fix31 ymin, fix31 ymax)
+void sp_open_outline(SPD_PROTO_DECL2 fix31 x_set_width, fix31 y_set_width, fix31 xmin, fix31 xmax, fix31 ymin, fix31 ymax)
 {
+	SPD_GUNUSED
 	printf("\n");
 	printf("/* char_index: %d id: %04x */\n", char_index, char_id);
 	printf("open_outline(%3.1f, %3.1f, %3.1f, %3.1f, %3.1f, %3.1f)\n",
@@ -846,41 +859,48 @@ void sp_open_outline(fix31 x_set_width, fix31 y_set_width, fix31 xmin, fix31 xma
 		   (double) ymin / 65536.0, (double) ymax / 65536.0);
 }
 
-void sp_start_sub_char(void)
+void sp_start_sub_char(SPD_PROTO_DECL1)
 {
+	SPD_GUNUSED
 	printf("start_sub_char()\n");
 }
 
-void sp_end_sub_char(void)
+void sp_end_sub_char(SPD_PROTO_DECL1)
 {
+	SPD_GUNUSED
 	printf("end_sub_char()\n");
 }
 
-void sp_start_contour(fix31 x, fix31 y, boolean outside)
+void sp_start_contour(SPD_PROTO_DECL2 fix31 x, fix31 y, boolean outside)
 {
+	SPD_GUNUSED
 	printf("start_contour(%3.1f, %3.1f, %s)\n", (double) x / 65536.0, (double) y / 65536.0, outside ? "outside" : "inside");
 }
 
-void sp_curve_to(fix31 x1, fix31 y1, fix31 x2, fix31 y2, fix31 x3, fix31 y3)
+void sp_curve_to(SPD_PROTO_DECL2 fix31 x1, fix31 y1, fix31 x2, fix31 y2, fix31 x3, fix31 y3)
 {
+	SPD_GUNUSED
 	printf("curve_to(%3.1f, %3.1f, %3.1f, %3.1f, %3.1f, %3.1f)\n",
 		   (double) x1 / 65536.0, (double) y1 / 65536.0,
 		   (double) x2 / 65536.0, (double) y2 / 65536.0,
 		   (double) x3 / 65536.0, (double) y3 / 65536.0);
 }
 
-void sp_line_to(fix31 x1, fix31 y1)
+void sp_line_to(SPD_PROTO_DECL2 fix31 x1, fix31 y1)
 {
+	SPD_GUNUSED
 	printf("line_to(%3.1f, %3.1f)\n", (double) x1 / 65536.0, (double) y1 / 65536.0);
 }
 
-void sp_close_contour(void)
+void sp_close_contour(SPD_PROTO_DECL1)
 {
+	SPD_GUNUSED
 	printf("close_contour()\n");
 }
 
-void sp_close_outline(void)
+void sp_close_outline(SPD_PROTO_DECL1)
 {
+	SPD_GUNUSED
 	printf("close_outline()\n");
 }
 #endif

@@ -146,6 +146,14 @@ int main(int argc, char **argv)
 	const ufix8 *key;
 	ufix8 temp[FH_FBFSZ + 4];							/* temp buffer for first 16 bytes of font */
 	
+#if !DYNAMIC_ALLOC && !STATIC_ALLOC
+	SPEEDO_GLOBALS *sp_global_ptr;
+#endif
+
+#if !STATIC_ALLOC
+	sp_global_ptr = calloc(1, sizeof(*sp_global_ptr));
+#endif
+
 	if (argc != 2)
 	{
 		fprintf(stderr, "Usage: nsample {fontfile}\n\n");
@@ -221,28 +229,28 @@ int main(int argc, char **argv)
 #endif
 
 	/* Initialization */
-	sp_reset();							/* Reset Speedo character generator */
+	sp_reset(SPD_GARG1);					/* Reset Speedo character generator */
 
 	font.org = font_buffer;
 	font.no_bytes = bytes_read;
 
-	key = sp_get_key(&font);
+	key = sp_get_key(SPD_GARG2 &font);
 	if (key == NULL)
 	{
-		printf("Unable to use fonts for customer number %d\n", sp_get_cust_no(&font));
+		printf("Unable to use fonts for customer number %d\n", sp_get_cust_no(SPD_GARG2 &font));
 		fclose(fdescr);
 		return 1;
 	} else
 	{
-		sp_set_key(key);					/* Set decryption key */
+		sp_set_key(SPD_GARG2 key);					/* Set decryption key */
 	}
 
 #if INCL_MULTIDEV
 #if INCL_BLACK || INCL_SCREEN || INCL_2D
-	sp_set_bitmap_device(&bfuncs, sizeof(bfuncs));
+	sp_set_bitmap_device(SPD_GARG2 &bfuncs, sizeof(bfuncs));
 #endif
 #if INCL_OUTLINE
-	sp_set_outline_device(&ofuncs, sizeof(ofuncs));
+	sp_set_outline_device(SPD_GARG2 &ofuncs, sizeof(ofuncs));
 #endif
 #endif
 
@@ -262,7 +270,7 @@ int main(int argc, char **argv)
 
 
 	/* Set character generation specifications */
-	if (!sp_set_specs(&specs, &font))
+	if (!sp_set_specs(SPD_GARG2 &specs, &font))
 	{
 		printf("****** Cannot set requested specs\n");
 	} else
@@ -270,10 +278,10 @@ int main(int argc, char **argv)
 		for (i = 0; i < no_layout_chars; i++)	/* For each character in font */
 		{
 			char_index = i + first_char_index;
-			char_id = sp_get_char_id(char_index);
+			char_id = sp_get_char_id(SPD_GARG2 char_index);
 			if (char_id != SP_UNDEFINED && char_id != UNDEFINED)
 			{
-				if (!sp_make_char(char_index))
+				if (!sp_make_char(SPD_GARG2 char_index))
 				{
 					printf("****** Cannot generate character %d\n", char_index);
 				}
@@ -297,7 +305,7 @@ int main(int argc, char **argv)
  * Returns a pointer to a buffer descriptor.
  */
 #if INCL_LCD
-boolean sp_load_char_data(
+boolean sp_load_char_data(SPD_PROTO_DECL2 
 	long file_offset,						/* Offset in bytes from the start of the font file */
 	fix15 no_bytes,							/* Number of bytes to be loaded */
 	fix15 cb_offset,						/* Offset in bytes from start of char buffer */
@@ -305,6 +313,7 @@ boolean sp_load_char_data(
 {
 	int bytes_read;
 
+	SPD_GUNUSED
 #if DEBUG
 	printf("\nCharacter data(%ld, %d, %d) requested\n", file_offset, no_bytes, cb_offset);
 #endif
@@ -340,10 +349,11 @@ boolean sp_load_char_data(
 /*
  * Called by Speedo character generator to report an error.
  */
-void sp_write_error(const char *str, ...)
+void sp_write_error(SPD_PROTO_DECL2 const char *str, ...)
 {
 	va_list v;
 
+	SPD_GUNUSED
 	va_start(v, str);
 	vfprintf(stderr, str, v);
 	va_end(v);
@@ -354,7 +364,7 @@ void sp_write_error(const char *str, ...)
  * Called by Speedo character generator to initialize a buffer prior
  * to receiving bitmap data.
  */
-void sp_open_bitmap(
+void sp_open_bitmap(SPD_PROTO_DECL2
 	fix31 xorg,								/* Pixel boundary at left extent of bitmap character */
 	fix31 yorg,								/* Pixel boundary at right extent of bitmap character */
 	fix15 xsize,							/* Pixel boundary of bottom extent of bitmap character */
@@ -362,6 +372,7 @@ void sp_open_bitmap(
 {
 	fix15 i;
 
+	SPD_GUNUSED
 #if DEBUG
 	printf("open_bitmap(%3.1f, %3.1f, %d, %d)\n",
 		   (double) xorg / 65536.0, (double) yorg / 65536.0, (int) xsize, (int) ysize);
@@ -391,13 +402,14 @@ void sp_open_bitmap(
  * Called by Speedo character generator to write one row of pixels 
  * into the generated bitmap character.                               
  */
-void sp_set_bitmap_bits(
+void sp_set_bitmap_bits(SPD_PROTO_DECL2
 	fix15 y,								/* Scan line (0 = first row above baseline) */
 	fix15 xbit1,							/* Pixel boundary where run starts */
 	fix15 xbit2)							/* Pixel boundary where run ends */
 {
 	fix15 i;
 
+	SPD_GUNUSED
 #if DEBUG
 	printf("set_bitmap_bits(%d, %d, %d)\n", (int) y, (int) xbit1, (int) xbit2);
 #endif
@@ -430,8 +442,9 @@ void sp_set_bitmap_bits(
  * Called by Speedo character generator to indicate all bitmap data
  * has been generated.
  */
-void sp_close_bitmap(void)
+void sp_close_bitmap(SPD_PROTO_DECL1)
 {
+	SPD_GUNUSED
 #if DEBUG
 	printf("close_bitmap()\n");
 #endif
@@ -444,7 +457,7 @@ void sp_close_bitmap(void)
  * outputting scaled outline data.
  */
 #if INCL_OUTLINE
-void sp_open_outline(
+void sp_open_outline(SPD_PROTO_DECL2
 	fix31 x_set_width,						/* Transformed escapement vector */
 	fix31 y_set_width,
 	fix31 xmin,								/* Minimum X value in outline */
@@ -452,6 +465,7 @@ void sp_open_outline(
 	fix31 ymin,								/* Minimum Y value in outline */
 	fix31 ymax)								/* Maximum Y value in outline */
 {
+	SPD_GUNUSED
 	printf("\nopen_outline(%3.1f, %3.1f, %3.1f, %3.1f, %3.1f, %3.1f)\n",
 		   (double) x_set_width / 65536.0, (double) y_set_width / 65536.0,
 		   (double) xmin / 65536.0, (double) xmax / 65536.0,
@@ -464,13 +478,16 @@ void sp_open_outline(
  * outputting scaled outline data for a sub-character in a compound
  * character.
  */
-void sp_start_sub_char(void)
+void sp_start_sub_char(SPD_PROTO_DECL1)
 {
+	SPD_GUNUSED
 	printf("start_sub_char()\n");
 }
 
-void sp_end_sub_char(void)
+
+void sp_end_sub_char(SPD_PROTO_DECL1)
 {
+	SPD_GUNUSED
 	printf("end_sub_char()\n");
 }
 
@@ -479,11 +496,12 @@ void sp_end_sub_char(void)
  * Called by Speedo character generator at the start of each contour
  * in the outline data of the character.
  */
-void sp_start_contour(
+void sp_start_contour(SPD_PROTO_DECL2
 	fix31 x,								/* X coordinate of start point in 1/65536 pixels */
 	fix31 y,								/* Y coordinate of start point in 1/65536 pixels */
 	boolean outside)						/* TRUE if curve encloses ink (Counter-clockwise) */
 {
+	SPD_GUNUSED
 	printf("start_contour(%3.1f, %3.1f, %s)\n", (double) x / 65536.0, (double) y / 65536.0, outside ? "outside" : "inside");
 }
 
@@ -492,7 +510,7 @@ void sp_start_contour(
  * scaled outline data of the character. This function is only called if curve
  * output is enabled in the sp_set_specs() call.
  */
-void sp_curve_to(
+void sp_curve_to(SPD_PROTO_DECL2
 	fix31 x1,								/* X coordinate of first control point in 1/65536 pixels */
 	fix31 y1,								/* Y coordinate of first control  point in 1/65536 pixels */
 	fix31 x2,								/* X coordinate of second control point in 1/65536 pixels */
@@ -500,6 +518,7 @@ void sp_curve_to(
 	fix31 x3,								/* X coordinate of curve end point in 1/65536 pixels */
 	fix31 y3)								/* Y coordinate of curve end point in 1/65536 pixels */
 {
+	SPD_GUNUSED
 	printf("curve_to(%3.1f, %3.1f, %3.1f, %3.1f, %3.1f, %3.1f)\n",
 		   (double) x1 / 65536.0, (double) y1 / 65536.0,
 		   (double) x2 / 65536.0, (double) y2 / 65536.0,
@@ -513,8 +532,9 @@ void sp_curve_to(
  * been sub-divided into vectors if curve output has not been enabled
  * in the sp_set_specs() call.
  */
-void sp_line_to(fix31 x1, fix31 y1)
+void sp_line_to(SPD_PROTO_DECL2 fix31 x1, fix31 y1)
 {
+	SPD_GUNUSED
 	printf("line_to(%3.1f, %3.1f)\n", (double) x1 / 65536.0, (double) y1 / 65536.0);
 }
 
@@ -523,8 +543,9 @@ void sp_line_to(fix31 x1, fix31 y1)
  * Called by Speedo character generator at the end of each contour
  * in the outline data of the character.
  */
-void sp_close_contour(void)
+void sp_close_contour(SPD_PROTO_DECL1)
 {
+	SPD_GUNUSED
 	printf("close_contour()\n");
 }
 
@@ -532,8 +553,9 @@ void sp_close_contour(void)
  * Called by Speedo character generator at the end of output of the
  * scaled outline of the character.
  */
-void sp_close_outline(void)
+void sp_close_outline(SPD_PROTO_DECL1)
 {
+	SPD_GUNUSED
 	printf("close_outline()\n");
 }
 

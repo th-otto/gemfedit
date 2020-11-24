@@ -38,7 +38,11 @@ WITH THE SPEEDO SOFTWARE OR THE BITSTREAM CHARTER OUTLINE FONT.
 #define SHOW(X)
 #endif
 
+#if STATIC_ALLOC
 SPEEDO_GLOBALS sp_globals;
+#elif DYNAMIC_ALLOC
+SPEEDO_GLOBALS *sp_global_ptr;
+#endif
 
 
 /*
@@ -54,10 +58,11 @@ SPEEDO_GLOBALS sp_globals;
  *      sp_globals.depth_adj    curve splitting depth adjustment
  * Returns FALSE if specs are out of range
  */
-static boolean sp_setup_consts(fix15 xmin,	/* Minimum X ORU value in font */
-										fix15 xmax,	/* Maximum X ORU value in font */
-										fix15 ymin,	/* Minimum Y ORU value in font */
-										fix15 ymax)	/* Maximum Y ORU value in font */
+static boolean sp_setup_consts(SPD_PROTO_DECL2
+	fix15 xmin,	/* Minimum X ORU value in font */
+	fix15 xmax,	/* Maximum X ORU value in font */
+	fix15 ymin,	/* Minimum Y ORU value in font */
+	fix15 ymax)	/* Maximum Y ORU value in font */
 {
 	fix31 mult;							/* Successive multiplier values */
 	ufix32 num;							/* Numerator of largest multiplier value */
@@ -109,7 +114,7 @@ static boolean sp_setup_consts(fix15 xmin,	/* Minimum X ORU value in font */
     option, the function appears to be called incorrectly, causing depth_adj to always
 	be set to -7, causing very angular characters. */
 
-	while ((num > denomcopy) && (sp_globals.depth_adj < 5))	/* > 1, 4, 16, ...  pixels per oru? */
+	while (num > denomcopy && (sp_globals.depth_adj < 5))	/* > 1, 4, 16, ...  pixels per oru? */
 	{
 		denomcopy <<= 1;
 		denomcopy <<= 1;
@@ -137,7 +142,7 @@ static boolean sp_setup_consts(fix15 xmin,	/* Minimum X ORU value in font */
 	SHOW(sp_globals.multshift);
 
 
-	pix_max = (ufix32) (0xffff & sp_read_word_u(sp_globals.hdr2_org + FH_PIXMX));
+	pix_max = (ufix32) (0xffff & sp_read_word_u(SPD_GARG2 sp_globals.hdr2_org + FH_PIXMX));
 
 	num = 0;
 	xmult = ((sp_globals.specs.xxmult >> 16) + 1) >> 1;
@@ -204,7 +209,7 @@ static boolean sp_setup_consts(fix15 xmin,	/* Minimum X ORU value in font */
  * Called by sp_setup_tcb() to convert offset in transformation
  * matrix from external to internal form.
  */
-static fix31 sp_setup_offset(fix31 input_offset)	/* Multiplier in input format */
+static fix31 sp_setup_offset(SPD_PROTO_DECL2 fix31 input_offset)	/* Multiplier in input format */
 {
 	fix15 imshift;						/* Right shift to internal format */
 	fix31 imrnd;						/* Rounding for right shift operation */
@@ -220,7 +225,7 @@ static fix31 sp_setup_offset(fix31 input_offset)	/* Multiplier in input format *
  * Called by sp_setup_tcb() to convert multiplier in transformation
  * matrix from external to internal form.
  */
-static fix15 sp_setup_mult(fix31 input_mult)	/* Multiplier in input format */
+static fix15 sp_setup_mult(SPD_PROTO_DECL2 fix31 input_mult)	/* Multiplier in input format */
 {
 	fix15 imshift;						/* Right shift to internal format */
 	fix31 imdenom;						/* Divisor to internal format */
@@ -241,15 +246,14 @@ static fix15 sp_setup_mult(fix31 input_mult)	/* Multiplier in input format */
 /* 
  * Convert transformation coeffs to internal form 
  */
-static void sp_setup_tcb(tcb_t *ptcb)	/* Pointer to transformation control bloxk */
+static void sp_setup_tcb(SPD_PROTO_DECL2 tcb_t *ptcb)	/* Pointer to transformation control block */
 {
-
-	ptcb->xxmult = sp_setup_mult(sp_globals.specs.xxmult);
-	ptcb->xymult = sp_setup_mult(sp_globals.specs.xymult);
-	ptcb->xoffset = sp_setup_offset(sp_globals.specs.xoffset);
-	ptcb->yxmult = sp_setup_mult(sp_globals.specs.yxmult);
-	ptcb->yymult = sp_setup_mult(sp_globals.specs.yymult);
-	ptcb->yoffset = sp_setup_offset(sp_globals.specs.yoffset);
+	ptcb->xxmult = sp_setup_mult(SPD_GARG2 sp_globals.specs.xxmult);
+	ptcb->xymult = sp_setup_mult(SPD_GARG2 sp_globals.specs.xymult);
+	ptcb->xoffset = sp_setup_offset(SPD_GARG2 sp_globals.specs.xoffset);
+	ptcb->yxmult = sp_setup_mult(SPD_GARG2 sp_globals.specs.yxmult);
+	ptcb->yymult = sp_setup_mult(SPD_GARG2 sp_globals.specs.yymult);
+	ptcb->yoffset = sp_setup_offset(SPD_GARG2 sp_globals.specs.yoffset);
 
 	SHOW(ptcb->xxmult);
 	SHOW(ptcb->xymult);
@@ -258,14 +262,14 @@ static void sp_setup_tcb(tcb_t *ptcb)	/* Pointer to transformation control bloxk
 	SHOW(ptcb->yymult);
 	SHOW(ptcb->yoffset);
 
-	sp_type_tcb(ptcb);						/* Classify transformation type */
+	sp_type_tcb(SPD_GARG2 ptcb);		/* Classify transformation type */
 }
 
 
 /*
  * Called by host software to set character generation specifications
  */
-boolean sp_set_specs(const specs_t *specsarg, const buff_t *font)	/* Bundle of conversion specifications */
+boolean sp_set_specs(SPD_PROTO_DECL2 const specs_t *specsarg, const buff_t *font)	/* Bundle of conversion specifications */
 {
 	fix31 offcd;						/* Offset to start of character directory */
 	fix31 ofcns;						/* Offset to start of constraint data */
@@ -278,6 +282,7 @@ boolean sp_set_specs(const specs_t *specsarg, const buff_t *font)	/* Bundle of c
 	fix15 ymin;							/* Minimum Y ORU value in font */
 	fix15 ymax;							/* Maximum Y ORU value in font */
 	const ufix8 *key;
+	ufix16 w;
 	
 	sp_globals.specs_valid = FALSE;		/* Flag specs not valid */
 
@@ -285,77 +290,79 @@ boolean sp_set_specs(const specs_t *specsarg, const buff_t *font)	/* Bundle of c
 	sp_globals.font = *font;
 	sp_globals.font_org = sp_globals.font.org;
 
-	if (sp_read_word_u(sp_globals.font_org + FH_FMVER + 4) != 0x0d0a)
+	if (sp_read_word_u(SPD_GARG2 sp_globals.font_org + FH_FMVER + 4) != 0x0d0a)
 	{
-		sp_report_error(4);				/* Font format error */
+		sp_report_error(SPD_GARG2 4);	/* Font format error */
 		return FALSE;
 	}
-	if (sp_read_word_u(sp_globals.font_org + FH_FMVER + 6) != 0x0000)
+	w = sp_read_word_u(SPD_GARG2 sp_globals.font_org + FH_FMVER + 6);
+	if (w != 0 && w != 0x100)
 	{
-		sp_report_error(4);				/* Font format error */
+		sp_report_error(SPD_GARG2 4);	/* Font format error */
 		return FALSE;
 	}
 
-	if ((key = sp_get_key(font)) != NULL)
-		sp_set_key(key);
+	if ((key = sp_get_key(SPD_GARG2 font)) != NULL)
+		sp_set_key(SPD_GARG2 key);
 
-	sp_globals.no_chars_avail = sp_read_word_u(sp_globals.font_org + FH_NCHRF);
+	sp_globals.no_chars_avail = sp_read_word_u(SPD_GARG2 sp_globals.font_org + FH_NCHRF);
 
 	/* Read sp_globals.orus per em from font header */
-	sp_globals.orus_per_em = sp_read_word_u(sp_globals.font_org + FH_ORUPM);
+	sp_globals.orus_per_em = sp_read_word_u(SPD_GARG2 sp_globals.font_org + FH_ORUPM);
 
 	/* compute address of private header */
-	private_off = sp_read_word_u(sp_globals.font_org + FH_HEDSZ);
+	private_off = sp_read_word_u(SPD_GARG2 sp_globals.font_org + FH_HEDSZ);
 	sp_globals.hdr2_org = sp_globals.font_org + private_off;
 
 	/* set metric resolution if specified, default to outline res otherwise */
 	if (private_off >= EXP_FH_METRES)
 	{
-		sp_globals.metric_resolution = sp_read_word_u(sp_globals.font_org + EXP_FH_METRES);
+		sp_globals.metric_resolution = sp_read_word_u(SPD_GARG2 sp_globals.font_org + EXP_FH_METRES);
 	} else
 	{
 		sp_globals.metric_resolution = sp_globals.orus_per_em;
 	}
 
 #if INCL_METRICS
-	sp_globals.kern.tkorg = sp_globals.font_org + sp_read_long(sp_globals.hdr2_org + FH_OFFTK);
-	sp_globals.kern.pkorg = sp_globals.font_org + sp_read_long(sp_globals.hdr2_org + FH_OFFPK);
-	sp_globals.kern.no_tracks = sp_read_word_u(sp_globals.font_org + FH_NKTKS);
-	sp_globals.kern.no_pairs = sp_read_word_u(sp_globals.font_org + FH_NKPRS);
+	sp_globals.kern.tkorg = sp_globals.font_org + sp_read_long(SPD_GARG2 sp_globals.hdr2_org + FH_OFFTK);
+	sp_globals.kern.pkorg = sp_globals.font_org + sp_read_long(SPD_GARG2 sp_globals.hdr2_org + FH_OFFPK);
+	sp_globals.kern.no_tracks = sp_read_word_u(SPD_GARG2 sp_globals.font_org + FH_NKTKS);
+	sp_globals.kern.no_pairs = sp_read_word_u(SPD_GARG2 sp_globals.font_org + FH_NKPRS);
 #endif
 
-	offcd = sp_read_long(sp_globals.hdr2_org + FH_OFFCD);	/* Read offset to character directory */
-	ofcns = sp_read_long(sp_globals.hdr2_org + FH_OFCNS);	/* Read offset to constraint data */
+	offcd = sp_read_long(SPD_GARG2 sp_globals.hdr2_org + FH_OFFCD);	/* Read offset to character directory */
+	ofcns = sp_read_long(SPD_GARG2 sp_globals.hdr2_org + FH_OFCNS);	/* Read offset to constraint data */
 	cd_size = ofcns - offcd;
 	if (((((ufix32)sp_globals.no_chars_avail << 1) + 3) != cd_size) && ((((ufix32)sp_globals.no_chars_avail * 3) + 4) != cd_size))
 	{
-		sp_report_error(4);				/* Font format error */
+		sp_report_error(SPD_GARG2 4);	/* Font format error */
 		return FALSE;
 	}
+
 #if INCL_LCD
 #if INCL_METRICS
-	no_bytes_min = sp_read_long(sp_globals.hdr2_org + FH_OCHRD);	/* Offset to character data */
+	no_bytes_min = sp_read_long(SPD_GARG2 sp_globals.hdr2_org + FH_OCHRD);	/* Offset to character data */
 #else
-	no_bytes_min = sp_read_long(sp_globals.hdr2_org + FH_OFFTK);	/* Offset to track kerning data */
+	no_bytes_min = sp_read_long(SPD_GARG2 sp_globals.hdr2_org + FH_OFFTK);	/* Offset to track kerning data */
 #endif
 #else
-	no_bytes_min = sp_read_long(sp_globals.hdr2_org + FH_NBYTE);	/* Offset to EOF + 1 */
+	no_bytes_min = sp_read_long(SPD_GARG2 sp_globals.hdr2_org + FH_NBYTE);	/* Offset to EOF + 1 */
 #endif
 
 	sp_globals.font_buff_size = sp_globals.font.no_bytes;
 	if (sp_globals.font_buff_size < no_bytes_min)	/* Minimum data not loaded? */
 	{
-		sp_report_error(1);				/* Insufficient font data loaded */
+		sp_report_error(SPD_GARG2 1);	/* Insufficient font data loaded */
 		return FALSE;
 	}
 
 	sp_globals.pchar_dir = sp_globals.font_org + offcd;
-	sp_globals.first_char_idx = sp_read_word_u(sp_globals.font_org + FH_FCHRF);
+	sp_globals.first_char_idx = sp_read_word_u(SPD_GARG2 sp_globals.font_org + FH_FCHRF);
 
 	/* Register font name with sp_globals.constraint mechanism */
 #if INCL_RULES
-	font_id = sp_read_word_u(sp_globals.font_org + FH_FNTID);
-	if (!(sp_globals.constr.font_id_valid) || (sp_globals.constr.font_id != font_id))
+	font_id = sp_read_word_u(SPD_GARG2 sp_globals.font_org + FH_FNTID);
+	if (!sp_globals.constr.font_id_valid || sp_globals.constr.font_id != font_id)
 	{
 		sp_globals.constr.font_id = font_id;
 		sp_globals.constr.font_id_valid = TRUE;
@@ -367,14 +374,14 @@ boolean sp_set_specs(const specs_t *specsarg, const buff_t *font)	/* Bundle of c
 
 	/* Set up sliding point constants */
 	/* Set pixel shift to accomodate largest transformed pixel value */
-	xmin = sp_read_word_u(sp_globals.font_org + FH_FXMIN);
-	xmax = sp_read_word_u(sp_globals.font_org + FH_FXMAX);
-	ymin = sp_read_word_u(sp_globals.font_org + FH_FYMIN);
-	ymax = sp_read_word_u(sp_globals.font_org + FH_FYMAX);
+	xmin = sp_read_word_u(SPD_GARG2 sp_globals.font_org + FH_FXMIN);
+	xmax = sp_read_word_u(SPD_GARG2 sp_globals.font_org + FH_FXMAX);
+	ymin = sp_read_word_u(SPD_GARG2 sp_globals.font_org + FH_FYMIN);
+	ymax = sp_read_word_u(SPD_GARG2 sp_globals.font_org + FH_FYMAX);
 
-	if (!sp_setup_consts(xmin, xmax, ymin, ymax))
+	if (!sp_setup_consts(SPD_GARG2 xmin, xmax, ymin, ymax))
 	{
-		sp_report_error(3);				/* Requested specs out of range */
+		sp_report_error(SPD_GARG2 3);	/* Requested specs out of range */
 		return FALSE;
 	}
 #if INCL_ISW
@@ -383,13 +390,12 @@ boolean sp_set_specs(const specs_t *specsarg, const buff_t *font)	/* Bundle of c
 #endif
 
 	/* Setup transformation control block */
-	sp_setup_tcb(&sp_globals.tcb0);
+	sp_setup_tcb(SPD_GARG2 &sp_globals.tcb0);
 
 
 #if INCL_USEROUT
-	if (!sp_init_userout(&sp_globals.specs))
+	if (!sp_init_userout(SPD_GARG2 &sp_globals.specs))
 #endif
-
 		switch (sp_globals.specs.output_mode)
 		{
 #if INCL_BLACK
@@ -449,13 +455,13 @@ boolean sp_set_specs(const specs_t *specsarg, const buff_t *font)	/* Bundle of c
 #endif
 
 		default:
-			sp_report_error(8);			/* Unsupported mode requested */
+			sp_report_error(SPD_GARG2 8);	/* Unsupported mode requested */
 			return FALSE;
 		}
 
 	if (!fn_init_out(&sp_globals.specs))
 	{
-		sp_report_error(5);				/* Requested specs not compatible with output module */
+		sp_report_error(SPD_GARG2 5);		/* Requested specs not compatible with output module */
 		return FALSE;
 	}
 
@@ -467,7 +473,7 @@ boolean sp_set_specs(const specs_t *specsarg, const buff_t *font)	/* Bundle of c
 	{
 #if INCL_RULES
 #else
-		sp_report_error(7);				/* Rules requested; not supported */
+		sp_report_error(SPD_GARG2 7);		/* Rules requested; not supported */
 		return FALSE;
 #endif
 	}
@@ -477,9 +483,9 @@ boolean sp_set_specs(const specs_t *specsarg, const buff_t *font)	/* Bundle of c
 		(sp_globals.specs.flags & SQUEEZE_TOP) ||
 		(sp_globals.specs.flags & SQUEEZE_BOTTOM))
 	{
-#if (INCL_SQUEEZING)
+#if INCL_SQUEEZING
 #else
-		sp_report_error(11);			/* Squeezing/Clipping requested but not supported */
+		sp_report_error(SPD_GARG2 11);		/* Squeezing/Clipping requested but not supported */
 		return FALSE;
 #endif
 	}
@@ -491,7 +497,7 @@ boolean sp_set_specs(const specs_t *specsarg, const buff_t *font)	/* Bundle of c
 	{
 #if (INCL_CLIPPING)
 #else
-		sp_report_error(11);
+		sp_report_error(SPD_GARG2 11);
 		return FALSE;
 #endif
 	}
@@ -504,9 +510,8 @@ boolean sp_set_specs(const specs_t *specsarg, const buff_t *font)	/* Bundle of c
 
 #if INCL_MULTIDEV
 #if INCL_BLACK || INCL_SCREEN || INCL_2D
-boolean sp_set_bitmap_device(bitmap_t *bfuncs, ufix16 size)
+boolean sp_set_bitmap_device(SPD_PROTO_DECL2 bitmap_t *bfuncs, ufix16 size)
 {
-
 	if (size != sizeof(sp_globals.bitmap_device))
 		return FALSE;
 
@@ -517,9 +522,8 @@ boolean sp_set_bitmap_device(bitmap_t *bfuncs, ufix16 size)
 #endif
 
 #if INCL_OUTLINE
-boolean sp_set_outline_device(outline_t *ofuncs, ufix16 size)
+boolean sp_set_outline_device(SPD_PROTO_DECL2 outline_t *ofuncs, ufix16 size)
 {
-
 	if (size != sizeof(sp_globals.outline_device))
 		return FALSE;
 
@@ -531,7 +535,7 @@ boolean sp_set_outline_device(outline_t *ofuncs, ufix16 size)
 #endif
 
 
-void sp_type_tcb(tcb_t *ptcb)	/* Pointer to transformation control bloxk */
+void sp_type_tcb(SPD_PROTO_DECL2 tcb_t *ptcb)	/* Pointer to transformation control block */
 {
 	fix15 x_trans_type;
 	fix15 y_trans_type;
@@ -662,7 +666,7 @@ void sp_type_tcb(tcb_t *ptcb)	/* Pointer to transformation control bloxk */
  * the specified point.
  * Returns the decrypted value read as a signed integer.
  */
-fix31 sp_read_long(ufix8 *pointer)	/* Pointer to first byte of encrypted 3-byte integer */
+fix31 sp_read_long(SPD_PROTO_DECL2 ufix8 *pointer)	/* Pointer to first byte of encrypted 3-byte integer */
 {
 	fix31 tmpfix31;
 
@@ -678,10 +682,11 @@ fix31 sp_read_long(ufix8 *pointer)	/* Pointer to first byte of encrypted 3-byte 
  * the specified point.
  * Returns the decrypted value read as a signed integer.
  */
-fix15 sp_read_word_u(ufix8 *pointer)	/* Pointer to first byte of unencrypted 2-byte integer */
+fix15 sp_read_word_u(SPD_PROTO_DECL2 ufix8 *pointer)	/* Pointer to first byte of unencrypted 2-byte integer */
 {
 	fix15 tmpfix15;
 
+	SPD_GUNUSED
 	tmpfix15 = (fix15) (*pointer++) << 8;	/* Read most significant byte */
 	tmpfix15 += (fix15) (*pointer);		/* Add least significant byte */
 	return tmpfix15;

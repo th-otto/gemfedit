@@ -38,12 +38,12 @@ WITH THE SPEEDO SOFTWARE OR THE BITSTREAM CHARTER OUTLINE FONT.
 
 #if INCL_BLACK || INCL_2D || INCL_SCREEN
 
-void sp_init_char_out(fix31 x, fix31 y, fix31 minx, fix31 miny, fix31 maxx, fix31 maxy)
+void sp_init_char_out(SPD_PROTO_DECL2 fix31 x, fix31 y, fix31 minx, fix31 miny, fix31 maxx, fix31 maxy)
 {
 	sp_globals.set_width.x = (fix31) x << sp_globals.poshift;
 	sp_globals.set_width.y = (fix31) y << sp_globals.poshift;
-	sp_set_first_band_out(minx, miny, maxx, maxy);
-	sp_init_intercepts_out();
+	sp_set_first_band_out(SPD_GARG2 minx, miny, maxx, maxy);
+	sp_init_intercepts_out(SPD_GARG1);
 	if (sp_globals.normal)
 	{
 		sp_globals.bmap_xmin = minx;
@@ -65,7 +65,7 @@ void sp_init_char_out(fix31 x, fix31 y, fix31 minx, fix31 miny, fix31 maxx, fix3
 
 /* Called at the start of each sub-character in a composite character
  */
-void sp_begin_sub_char_out(fix31 x, fix31 y, fix31 minx, fix31 miny, fix31 maxx, fix31 maxy)
+void sp_begin_sub_char_out(SPD_PROTO_DECL2 fix31 x, fix31 y, fix31 minx, fix31 miny, fix31 maxx, fix31 maxy)
 {
 #if DEBUG
 	printf("BEGIN_SUB_CHAR_OUT(%3.1f, %3.1f, %3.1f, %3.1f, %3.1f, %3.1f\n",
@@ -79,7 +79,7 @@ void sp_begin_sub_char_out(fix31 x, fix31 y, fix31 minx, fix31 miny, fix31 maxx,
 	UNUSED(miny);
 	UNUSED(maxx);
 	UNUSED(maxy);
-	sp_restart_intercepts_out();
+	sp_restart_intercepts_out(SPD_GARG1);
 	if (!sp_globals.extents_running)
 	{
 		sp_globals.bmap_xmin = 32000;
@@ -93,8 +93,9 @@ void sp_begin_sub_char_out(fix31 x, fix31 y, fix31 minx, fix31 miny, fix31 maxx,
 
 /* Called for each curve in the transformed character if curves out enabled
  */
-void sp_curve_out(fix31 x1, fix31 y1, fix31 x2, fix31 y2, fix31 x3, fix31 y3, fix15 depth)
+void sp_curve_out(SPD_PROTO_DECL2 fix31 x1, fix31 y1, fix31 x2, fix31 y2, fix31 x3, fix31 y3, fix15 depth)
 {
+	SPD_GUNUSED
 #if DEBUG
 	printf("CURVE_OUT(%3.1f, %3.1f, %3.1f, %3.1f, %3.1f, %3.1f)\n",
 		   (double) x1 / (double) sp_globals.onepix, (double) y1 / (double) sp_globals.onepix,
@@ -111,8 +112,9 @@ void sp_curve_out(fix31 x1, fix31 y1, fix31 x2, fix31 y2, fix31 x3, fix31 y3, fi
 
 /* Called after the last vector in each contour
  */
-void sp_end_contour_out(void)
+void sp_end_contour_out(SPD_PROTO_DECL1)
 {
+	SPD_GUNUSED
 #if DEBUG
 	printf("END_CONTOUR_OUT()\n");
 #endif
@@ -122,8 +124,9 @@ void sp_end_contour_out(void)
 
 /* Called after the last contour in each sub-character in a compound character
  */
-void sp_end_sub_char_out(void)
+void sp_end_sub_char_out(SPD_PROTO_DECL1)
 {
+	SPD_GUNUSED
 #if DEBUG
 	printf("END_SUB_CHAR_OUT()\n");
 #endif
@@ -132,7 +135,7 @@ void sp_end_sub_char_out(void)
 
 /*  Called to initialize intercept storage data structure
  */
-void sp_init_intercepts_out(void)
+void sp_init_intercepts_out(SPD_PROTO_DECL1)
 {
 	fix15 i;
 	fix15 no_lists;
@@ -201,9 +204,8 @@ void sp_init_intercepts_out(void)
 /*  Called by sp_make_char when a new sub character is started
  *  Freezes current sorted lists
  */
-void sp_restart_intercepts_out(void)
+void sp_restart_intercepts_out(SPD_PROTO_DECL1)
 {
-
 #if DEBUG
 	printf("    Restart intercepts:\n");
 #endif
@@ -212,7 +214,7 @@ void sp_restart_intercepts_out(void)
 
 
 
-void sp_set_first_band_out(fix31 minx, fix31 miny, fix31 maxx, fix31 maxy)
+void sp_set_first_band_out(SPD_PROTO_DECL2 fix31 minx, fix31 miny, fix31 maxx, fix31 maxy)
 {
 	sp_globals.ymin = miny;
 	sp_globals.ymax = maxy;
@@ -296,7 +298,7 @@ void sp_set_first_band_out(fix31 minx, fix31 miny, fix31 maxx, fix31 maxy)
 
 
 
-void sp_reduce_band_size_out(void)
+void sp_reduce_band_size_out(SPD_PROTO_DECL1)
 {
 	sp_globals.y_band.band_min =
 		sp_globals.y_band.band_max - ((sp_globals.y_band.band_max - sp_globals.y_band.band_min) >> 1);
@@ -306,7 +308,7 @@ void sp_reduce_band_size_out(void)
 }
 
 
-boolean sp_next_band_out(void)
+boolean sp_next_band_out(SPD_PROTO_DECL1)
 {
 	fix15 tmpfix15;
 

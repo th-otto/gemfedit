@@ -55,8 +55,9 @@ WITH THE SPEEDO SOFTWARE OR THE BITSTREAM CHARTER OUTLINE FONT.
  * Returns TRUE if output module can accept requested specifications.
  * Returns FALSE otherwise.
  */
-boolean sp_init_outline(specs_t *specsarg)
+boolean sp_init_outline(SPD_PROTO_DECL2 specs_t *specsarg)
 {
+	SPD_GUNUSED
 #if DEBUG
 	printf("INIT_OUT_2()\n");
 #endif
@@ -72,7 +73,7 @@ boolean sp_init_outline(specs_t *specsarg)
  * If only one output module is included in the configuration, begin_char() is 
  * called by sp_make_simp_char() and sp_make_comp_char().
  */
-boolean sp_begin_char_outline(
+boolean sp_begin_char_outline(SPD_PROTO_DECL2 
 	fix31 x, fix31 y,	/* End of escapement vector (sub-pixels) */
 	fix31 minx, fix31 miny,	/* Bottom left corner of bounding box */
 	fix31 maxx, fix31 maxy)							/* Top right corner of bounding box */
@@ -112,11 +113,12 @@ boolean sp_begin_char_outline(
  * If only one output module is included in the configuration, begin_sub_char() is 
  * called by sp_make_comp_char().
  */
-void sp_begin_sub_char_outline(
+void sp_begin_sub_char_outline(SPD_PROTO_DECL2 
 	fix31 x, fix31 y,	/* End of sub-char escapement vector */
 	fix31 minx, fix31 miny,							/* Bottom left corner of sub-char bounding box */
 	fix31 maxx, fix31 maxy)							/* Top right corner of sub-char bounding box */
 {
+	SPD_GUNUSED
 #if DEBUG
 	printf("BEGIN_SUB_CHAR_2(%3.1f, %3.1f, %3.1f, %3.1f, %3.1f, %3.1f)\n",
 		   (double) x / (double) sp_globals.onepix, (double) y / (double) sp_globals.onepix,
@@ -140,7 +142,7 @@ void sp_begin_sub_char_outline(
  * If only one output module is included in the configuration, begin_sub_char() is 
  * called by sp_proc_outl_data().
  */
-void sp_begin_contour_outline(
+void sp_begin_contour_outline(SPD_PROTO_DECL2 
 	fix31 x1, fix31 y1,	/* Start point of contour */
 	boolean outside)						/* TRUE if outside (counter-clockwise) contour */
 {
@@ -164,7 +166,7 @@ void sp_begin_contour_outline(
  * called by sp_proc_outl_data().
  * This function is only called when curve output is enabled.
  */
-void sp_curve_outline(
+void sp_curve_outline(SPD_PROTO_DECL2 
 	fix31 x1, fix31 y1,	/* First control point of Bezier curve */
 	fix31 x2, fix31 y2,								/* Second control point of Bezier curve */
 	fix31 x3, fix31 y3,								/* End point of Bezier curve */
@@ -199,7 +201,7 @@ void sp_curve_outline(
  * called by sp_proc_outl_data(). If curve output is enabled, line() is also
  * called by sp_split_curve().
  */
-void sp_line_outline(fix31 x1, fix31 y1)	/* End point of vector */
+void sp_line_outline(SPD_PROTO_DECL2 fix31 x1, fix31 y1)	/* End point of vector */
 {
 #if DEBUG
 	printf("LINE_2(%3.1f, %3.1f)\n", (double) x1 / (double) sp_globals.onepix, (double) y1 / (double) sp_globals.onepix);
@@ -217,7 +219,7 @@ void sp_line_outline(fix31 x1, fix31 y1)	/* End point of vector */
  * If only one output module is included in the configuration, end_contour() is 
  * called by sp_proc_outl_data().
  */
-void sp_end_contour_outline(void)
+void sp_end_contour_outline(SPD_PROTO_DECL1)
 {
 #if DEBUG
 	printf("END_CONTOUR_2()\n");
@@ -232,7 +234,7 @@ void sp_end_contour_outline(void)
  * If only one output module is included in the configuration, end_sub_char() is 
  * called by sp_make_comp_char().
  */
-void sp_end_sub_char_outline(void)
+void sp_end_sub_char_outline(SPD_PROTO_DECL1)
 {
 #if DEBUG
 	printf("END_SUB_CHAR_2()\n");
@@ -250,7 +252,7 @@ void sp_end_sub_char_outline(void)
  * Returns FALSE to repeat output of the transformed data beginning
  * with the first contour (of the first sub-char if compound).
  */
-boolean sp_end_char_outline(void)
+boolean sp_end_char_outline(SPD_PROTO_DECL1)
 {
 #if DEBUG
 	printf("END_CHAR_2()\n");

@@ -120,6 +120,7 @@ unsigned long sp_compute_data_size(FontPtr pfont, int mappad, int scanlinepad, u
 	return size;
 }
 
+
 static void finish_line(SpeedoFontPtr spf)
 {
 	int bpr = cfv->bpr;
@@ -137,7 +138,7 @@ static void finish_line(SpeedoFontPtr spf)
 }
 
 
-void sp_set_bitmap_bits(fix15 y, fix15 xbit1, fix15 xbit2)
+void sp_set_bitmap_bits(SPD_PROTO_DECL2 fix15 y, fix15 xbit1, fix15 xbit2)
 {
 	int nmiddle;
 	CARD8 startmask, endmask;
@@ -147,7 +148,7 @@ void sp_set_bitmap_bits(fix15 y, fix15 xbit1, fix15 xbit2)
 	{
 
 #ifdef CLIP_BBOX_NOISE
-		sp_write_error("Run wider than bitmap width -- truncated");
+		sp_write_error(SPD_GARG2 "Run wider than bitmap width -- truncated");
 #endif
 
 		xbit1 = cfv->bit_width;
@@ -156,7 +157,7 @@ void sp_set_bitmap_bits(fix15 y, fix15 xbit1, fix15 xbit2)
 	{
 
 #ifdef CLIP_BBOX_NOISE
-		sp_write_error("Run wider than bitmap width -- truncated");
+		sp_write_error(SPD_GARG2 "Run wider than bitmap width -- truncated");
 #endif
 
 		xbit2 = cfv->bit_width;
@@ -178,7 +179,7 @@ void sp_set_bitmap_bits(fix15 y, fix15 xbit1, fix15 xbit2)
 	{
 
 #ifdef CLIP_BBOX_NOISE
-		sp_write_error("Y larger than bitmap height -- truncated");
+		sp_write_error(SPD_GARG2 "Y larger than bitmap height -- truncated");
 #endif
 
 		cfv->trunc = 1;
@@ -213,8 +214,8 @@ void sp_set_bitmap_bits(fix15 y, fix15 xbit1, fix15 xbit2)
 	}
 }
 
-/* ARGSUSED */
-void sp_open_bitmap(fix31 xorg, fix31 yorg, fix15 xsize, fix15 ysize)
+
+void sp_open_bitmap(SPD_PROTO_DECL2 fix31 xorg, fix31 yorg, fix15 xsize, fix15 ysize)
 {
 	CharInfoPtr ci = &sp_fp_cur->encoding[cfv->char_id - sp_fp_cur->master->first_char_id];
 
@@ -277,11 +278,13 @@ void sp_open_bitmap(fix31 xorg, fix31 yorg, fix15 xsize, fix15 ysize)
 	cfv->cur_y = 0;
 }
 
-void sp_close_bitmap()
+
+void sp_close_bitmap(SPD_PROTO_DECL1)
 {
 	CharInfoPtr ci = &sp_fp_cur->encoding[cfv->char_id - sp_fp_cur->master->first_char_id];
 	int bpr = cfv->bpr;
 
+	SPD_GUNUSED
 	if (bpr == 0)
 		bpr = GLYPH_SIZE(ci, cfv->scanpad);
 	if (!cfv->trunc)
@@ -309,7 +312,8 @@ void sp_close_bitmap()
 	}
 }
 
-int sp_build_all_bitmaps(FontPtr pfont, fsBitmapFormat format, fsBitmapFormatMask fmask)
+
+int sp_build_all_bitmaps(SPD_PROTO_DECL2 FontPtr pfont, fsBitmapFormat format, fsBitmapFormatMask fmask)
 {
 	int ret;
 	int glyph = 1;
@@ -381,11 +385,11 @@ int sp_build_all_bitmaps(FontPtr pfont, fsBitmapFormat format, fsBitmapFormatMas
 		if (spf->vals.nranges && j == spf->vals.nranges)
 			continue;
 
-		if (!sp_make_char(cfv->char_index))
+		if (!sp_make_char(SPD_GARG2 cfv->char_index))
 		{
 
 #ifdef DEBUG							/* can be very common with some encodings */
-			sp_write_error("Can't make char %d", cfv->char_index);
+			sp_write_error(SPD_GARG2 "Can't make char %d", cfv->char_index);
 #endif
 		}
 	}

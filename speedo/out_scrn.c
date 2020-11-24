@@ -48,8 +48,9 @@ WITH THE SPEEDO SOFTWARE OR THE BITSTREAM CHARTER OUTLINE FONT.
  * Returns TRUE if output module can accept requested specifications.
  * Returns FALSE otherwise.
  */
-boolean sp_init_screen(specs_t *specsarg)
+boolean sp_init_screen(SPD_PROTO_DECL2 specs_t *specsarg)
 {
+	SPD_GUNUSED
 #if DEBUG
 	printf("INIT_SCREEN()\n");
 #endif
@@ -60,7 +61,7 @@ boolean sp_init_screen(specs_t *specsarg)
 
 /* Called once at the start of the character generation process
  */
-boolean sp_begin_char_screen(fix31 x, fix31 y, fix31 minx, fix31 miny, fix31 maxx, fix31 maxy)
+boolean sp_begin_char_screen(SPD_PROTO_DECL2 fix31 x, fix31 y, fix31 minx, fix31 miny, fix31 maxx, fix31 maxy)
 {
 #if DEBUG
 	printf("BEGIN_CHAR_SCREEN(%3.1f, %3.1f, %3.1f, %3.1f, %3.1f, %3.1f\n",
@@ -73,14 +74,14 @@ boolean sp_begin_char_screen(fix31 x, fix31 y, fix31 minx, fix31 miny, fix31 max
 	else
 		sp_intercepts.fracpix = sp_globals.onepix >> (sp_globals.pixshift - 8);
 
-	sp_init_char_out(x, y, minx, miny, maxx, maxy);
+	sp_init_char_out(SPD_GARG2 x, y, minx, miny, maxx, maxy);
 	return TRUE;
 }
 
 
 /*  Called by line() to add an intercept to the intercept list structure
  */
-static void sp_add_intercept_screen(fix15 y,	/* Y coordinate in relative pixel units */
+static void sp_add_intercept_screen(SPD_PROTO_DECL2 fix15 y,	/* Y coordinate in relative pixel units */
 											/* (0 is lowest sample in band) */
 											fix31 x)	/* X coordinate of intercept in subpixel units */
 {
@@ -141,7 +142,7 @@ static void sp_add_intercept_screen(fix15 y,	/* Y coordinate in relative pixel u
 }
 
 
-static void sp_vert_line_screen(fix31 x, fix15 y1, fix15 y2)
+static void sp_vert_line_screen(SPD_PROTO_DECL2 fix31 x, fix15 y1, fix15 y2)
 {
 
 #ifdef DBGCRV
@@ -164,7 +165,7 @@ static void sp_vert_line_screen(fix31 x, fix15 y1, fix15 y2)
 
 		while (y2 < y1)					/* At least one intercept left? */
 		{
-			sp_add_intercept_screen(--y1, x);	/* Add intercept */
+			sp_add_intercept_screen(SPD_GARG2 --y1, x);	/* Add intercept */
 		}
 	} else if (y2 > y1)					/* Line goes upwards ? */
 	{
@@ -178,7 +179,7 @@ static void sp_vert_line_screen(fix31 x, fix15 y1, fix15 y2)
 
 		while (y1 < y2)					/* At least one intercept left? */
 		{
-			sp_add_intercept_screen(y1++, x);	/* Add intercept */
+			sp_add_intercept_screen(SPD_GARG2 y1++, x);	/* Add intercept */
 		}
 	}
 }
@@ -186,7 +187,7 @@ static void sp_vert_line_screen(fix31 x, fix15 y1, fix15 y2)
 
 /* Called for each curve in the transformed character if curves out enabled
  */
-static void sp_scan_curve_screen(fix31 X0, fix31 Y0, fix31 X1, fix31 Y1, fix31 X2, fix31 Y2, fix31 X3, fix31 Y3)
+static void sp_scan_curve_screen(SPD_PROTO_DECL2 fix31 X0, fix31 Y0, fix31 X1, fix31 Y1, fix31 X2, fix31 Y2, fix31 X3, fix31 Y3)
 {
 	fix31 Pmidx;
 	fix31 Pmidy;
@@ -209,7 +210,7 @@ static void sp_scan_curve_screen(fix31 X0, fix31 Y0, fix31 X1, fix31 Y1, fix31 X
 	}
 	if ((X3 >> 16) == (X0 >> 16))
 	{
-		sp_vert_line_screen(X3, (fix15) (Y0 >> 16), (fix15) (Y3 >> 16));
+		sp_vert_line_screen(SPD_GARG2 X3, (fix15) (Y0 >> 16), (fix15) (Y3 >> 16));
 		return;
 	}
 	Pmidx = (X0 + (X1 + X2) * 3 + X3 + 4) >> 3;
@@ -219,20 +220,20 @@ static void sp_scan_curve_screen(fix31 X0, fix31 Y0, fix31 X1, fix31 Y1, fix31 X
 	Pctrl1y = (Y0 + Y1 + 1) >> 1;
 	Pctrl2x = (X0 + (X1 << 1) + X2 + 2) >> 2;
 	Pctrl2y = (Y0 + (Y1 << 1) + Y2 + 2) >> 2;
-	sp_scan_curve_screen(X0, Y0, Pctrl1x, Pctrl1y, Pctrl2x, Pctrl2y, Pmidx, Pmidy);
+	sp_scan_curve_screen(SPD_GARG2 X0, Y0, Pctrl1x, Pctrl1y, Pctrl2x, Pctrl2y, Pmidx, Pmidy);
 
 	Pctrl1x = (X1 + (X2 << 1) + X3 + 2) >> 2;
 	Pctrl1y = (Y1 + (Y2 << 1) + Y3 + 2) >> 2;
 	Pctrl2x = (X2 + X3 + 1) >> 1;
 	Pctrl2y = (Y2 + Y3 + 1) >> 1;
-	sp_scan_curve_screen(Pmidx, Pmidy, Pctrl1x, Pctrl1y, Pctrl2x, Pctrl2y, X3, Y3);
+	sp_scan_curve_screen(SPD_GARG2 Pmidx, Pmidy, Pctrl1x, Pctrl1y, Pctrl2x, Pctrl2y, X3, Y3);
 }
 
 
 
 /* Called at the start of each contour
  */
-void sp_begin_contour_screen(fix31 x1, fix31 y1, boolean outside)
+void sp_begin_contour_screen(SPD_PROTO_DECL2 fix31 x1, fix31 y1, boolean outside)
 {
 #if DEBUG
 	printf("BEGIN_CONTOUR_SCREEN(%3.1f, %3.1f, %s)\n",
@@ -246,7 +247,7 @@ void sp_begin_contour_screen(fix31 x1, fix31 y1, boolean outside)
 }
 
 
-void sp_curve_screen(fix31 x1, fix31 y1, fix31 x2, fix31 y2, fix31 x3, fix31 y3, fix15 depth)
+void sp_curve_screen(SPD_PROTO_DECL2 fix31 x1, fix31 y1, fix31 x2, fix31 y2, fix31 x3, fix31 y3, fix15 depth)
 {
 	fix31 X0;
 	fix31 Y0;
@@ -294,7 +295,7 @@ void sp_curve_screen(fix31 x1, fix31 y1, fix31 x2, fix31 y2, fix31 x3, fix31 y3,
 		sp_intercepts.leftedge = 0;
 	}
 
-	sp_scan_curve_screen(X0, Y0, X1, Y1, X2, Y2, X3, Y3);
+	sp_scan_curve_screen(SPD_GARG2 X0, Y0, X1, Y1, X2, Y2, X3, Y3);
 	sp_globals.x0_spxl = x3;
 	sp_globals.y0_spxl = y3;
 	sp_globals.y_pxl = (y3 + sp_globals.pixrnd) >> sp_globals.pixshift;	/* calculate new end-scan sp_globals.line */
@@ -303,7 +304,7 @@ void sp_curve_screen(fix31 x1, fix31 y1, fix31 x2, fix31 y2, fix31 x3, fix31 y3,
 
 /* Called for each vector in the transformed character
  */
-void sp_line_screen(fix31 x1, fix31 y1)
+void sp_line_screen(SPD_PROTO_DECL2 fix31 x1, fix31 y1)
 {
 	fix15 how_many_y;			/* # of intercepts at y = n + 1/2  */
 	fix15 yc;					/* Current scan-line */
@@ -424,7 +425,7 @@ void sp_line_screen(fix31 x1, fix31 y1)
 			how_many_y = 0;				/* can't go below 0 */
 		while (yc >= how_many_y)
 		{
-			sp_add_intercept_screen(yc--, xc);
+			sp_add_intercept_screen(SPD_GARG2 yc--, xc);
 			xc -= dx_dy;
 		}
 	} else
@@ -434,7 +435,7 @@ void sp_line_screen(fix31 x1, fix31 y1)
 			how_many_y = sp_globals.no_y_lists;
 		while (yc != how_many_y)
 		{
-			sp_add_intercept_screen(yc++, xc);
+			sp_add_intercept_screen(SPD_GARG2 yc++, xc);
 			xc += dx_dy;
 		}
 	}
@@ -443,7 +444,7 @@ void sp_line_screen(fix31 x1, fix31 y1)
 
 /* Called after the last vector in each contour
  */
-void sp_end_contour_screen(void)
+void sp_end_contour_screen(SPD_PROTO_DECL1)
 {
 #if DEBUG
 	printf("END_CONTOUR_SCREEN()\n");
@@ -456,7 +457,7 @@ void sp_end_contour_screen(void)
 /*  Called by sp_make_char to output accumulated intercept lists
  *  Clips output to sp_globals.xmin, sp_globals.xmax, sp_globals.ymin, sp_globals.ymax boundaries
  */
-static void sp_proc_intercepts_screen(void)
+static void sp_proc_intercepts_screen(SPD_PROTO_DECL1)
 {
 	fix15 i, j, jplus1, iminus1;
 	fix15 k, nextk, previ;
@@ -794,7 +795,7 @@ static void sp_proc_intercepts_screen(void)
  * Return FALSE to repeat output of the transformed data beginning
  * with the first contour
  */
-boolean sp_end_char_screen(void)
+boolean sp_end_char_screen(SPD_PROTO_DECL1)
 {
 	fix31 xorg;
 	fix31 yorg;
@@ -981,13 +982,13 @@ boolean sp_end_char_screen(void)
 		{
 			sp_globals.y_band.band_min = sp_globals.ymin;
 			sp_globals.y_band.band_max = sp_globals.ymax;
-			sp_init_intercepts_out();
+			sp_init_intercepts_out(SPD_GARG1);
 			sp_globals.first_pass = FALSE;
 			sp_globals.extents_running = FALSE;
 			return FALSE;
 		} else
 		{
-			sp_proc_intercepts_screen();
+			sp_proc_intercepts_screen(SPD_GARG1);
 			close_bitmap();
 			return TRUE;
 		}
@@ -995,15 +996,15 @@ boolean sp_end_char_screen(void)
 	{
 		if (sp_globals.intercept_oflo)
 		{
-			sp_reduce_band_size_out();
-			sp_init_intercepts_out();
+			sp_reduce_band_size_out(SPD_GARG1);
+			sp_init_intercepts_out(SPD_GARG1);
 			return FALSE;
 		} else
 		{
-			sp_proc_intercepts_screen();
-			if (sp_next_band_out())
+			sp_proc_intercepts_screen(SPD_GARG1);
+			if (sp_next_band_out(SPD_GARG1))
 			{
-				sp_init_intercepts_out();
+				sp_init_intercepts_out(SPD_GARG1);
 				return FALSE;
 			}
 			close_bitmap();

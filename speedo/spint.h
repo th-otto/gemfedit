@@ -141,10 +141,10 @@ typedef struct _sp_font {
 
 extern SpeedoFontPtr sp_fp_cur;
 
-extern int sp_open_font(char *, char *, FontEntryPtr, FontScalablePtr,
+extern int sp_open_font(SPD_PROTO_DECL2 char *, char *, FontEntryPtr, FontScalablePtr,
 			fsBitmapFormat, fsBitmapFormatMask, Mask,
 			SpeedoFontPtr *);
-extern int  sp_open_master(const char *, const char *, SpeedoMasterFontPtr *);
+extern int  sp_open_master(SPD_PROTO_DECL2 const char *, const char *, SpeedoMasterFontPtr *);
 extern void sp_close_font(SpeedoFontPtr);
 extern void sp_close_master_font(SpeedoMasterFontPtr);
 extern void sp_close_master_file(SpeedoMasterFontPtr);
@@ -158,7 +158,7 @@ extern int  sp_build_all_bitmaps(FontPtr, fsBitmapFormat, fsBitmapFormatMask);
 extern unsigned long sp_compute_data_size(FontPtr, int, int, unsigned long,
 						unsigned long);
 
-extern int SpeedoFontLoad(FontPtr *, char *, char *, FontEntryPtr,
+extern int SpeedoFontLoad(SPD_PROTO_DECL2 FontPtr *, char *, char *, FontEntryPtr,
 			  FontScalablePtr, fsBitmapFormat, fsBitmapFormatMask,
 			  Mask);
 

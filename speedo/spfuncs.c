@@ -128,9 +128,9 @@ static FontRendererRec renderer = {
 	NULL, SpeedoGetInfoScaleable, 0, CAP_MATRIX | CAP_CHARSUBSETTING
 };
 
-void SpeedoRegisterFontFileFunctions()
+void SpeedoRegisterFontFileFunctions(SPD_PROTO_DECL1)
 {
 	sp_make_standard_props();
-	sp_reset();
+	sp_reset(SPD_GARG1);
 	FontFileRegisterRenderer(&renderer);
 }

@@ -53,6 +53,8 @@ static FILE *fdescr;					/* Speedo outline file descriptor */
 
 #if STATIC_ALLOC
 SPEEDO_GLOBALS sp_globals;
+#elif DYNAMIC_ALLOC
+SPEEDO_GLOBALS *sp_global_ptr;
 #endif
 
 
@@ -78,23 +80,6 @@ static fix15 read_2b(ufix8 *pointer)
 }
 
 
-ufix16 sp_get_cust_no(PROTO_DECL2 const buff_t *font_buff)
-{
-	ufix8 *hdr2_org;
-	ufix16 private_off;
-
-	private_off = read_2b(font_buff->org + FH_HEDSZ);
-	if ((private_off + FH_CUSNR) > font_buff->no_bytes)
-	{
-		return 0;
-	}
-
-	hdr2_org = font_buff->org + private_off;
-
-	return read_2b(hdr2_org + FH_CUSNR);
-}
-
-
 /*
  * Reads 4-byte field from font buffer 
  */
@@ -110,12 +95,30 @@ static fix31 read_4b(ufix8 *pointer)
 }
 
 
+ufix16 sp_get_cust_no(SPD_PROTO_DECL2 const buff_t *font_buff)
+{
+	ufix8 *hdr2_org;
+	ufix16 private_off;
+
+	SPD_GUNUSED
+	private_off = read_2b(font_buff->org + FH_HEDSZ);
+	if ((private_off + FH_CUSNR) > font_buff->no_bytes)
+	{
+		return 0;
+	}
+
+	hdr2_org = font_buff->org + private_off;
+
+	return read_2b(hdr2_org + FH_CUSNR);
+}
+
+
 /*
  * Reads a 3-byte encrypted integer from the byte string starting at
  * the specified point.
  * Returns the decrypted value read as a signed integer.
  */
-fix31 sp_read_long(PROTO_DECL2 ufix8 *pointer)	/* Pointer to first byte of encrypted 3-byte integer */
+fix31 sp_read_long(SPD_PROTO_DECL2 ufix8 *pointer)	/* Pointer to first byte of encrypted 3-byte integer */
 {
 	fix31 tmpfix31;
 
@@ -135,6 +138,14 @@ int main(int argc, char **argv)
 	buff_t font;
 	const ufix8 *key;
 	ufix16 orus_per_em;
+
+#if !DYNAMIC_ALLOC && !STATIC_ALLOC
+	SPEEDO_GLOBALS *sp_global_ptr;
+#endif
+
+#if !STATIC_ALLOC
+	sp_global_ptr = calloc(1, sizeof(*sp_global_ptr));
+#endif
 
 	if (argc != 2)
 	{
@@ -164,9 +175,9 @@ int main(int argc, char **argv)
 	font.org = font_buffer;
 	font.no_bytes = bytes_read;
 
-	sp_reset_key();
-	if ((key = sp_get_key(&font)) != NULL)
-		sp_set_key(key);
+	sp_reset_key(SPD_GARG1);
+	if ((key = sp_get_key(SPD_GARG2 &font)) != NULL)
+		sp_set_key(SPD_GARG2 key);
 
 	printf("Format Identifier: %.4s\n", font_buffer + FH_FMVER);
 
@@ -314,12 +325,12 @@ int main(int argc, char **argv)
 		printf("Max ORU value: %u\n", read_2b(hdr2_org + FH_ORUMX));
 		printf("Max Pixel value: %u\n", read_2b(hdr2_org + FH_PIXMX));
 		printf("Customer Number: %u\n", read_2b(hdr2_org + FH_CUSNR));
-		printf("Offset to Char Directory: %lu\n", (unsigned long)sp_read_long(hdr2_org + FH_OFFCD));
-		printf("Offset to Constraint Data: %lu\n", (unsigned long)sp_read_long(hdr2_org + FH_OFCNS));
-		printf("Offset to Track Kerning: %lu\n", (unsigned long)sp_read_long(hdr2_org + FH_OFFTK));
-		printf("Offset to Pair Kerning: %lu\n", (unsigned long)sp_read_long(hdr2_org + FH_OFFPK));
-		printf("Offset to Character Data: %lu\n", (unsigned long)sp_read_long(hdr2_org + FH_OCHRD));
-		printf("Number of Bytes in File: %lu\n", (unsigned long)sp_read_long(hdr2_org + FH_NBYTE));
+		printf("Offset to Char Directory: %lu\n", (unsigned long)sp_read_long(SPD_GARG2 hdr2_org + FH_OFFCD));
+		printf("Offset to Constraint Data: %lu\n", (unsigned long)sp_read_long(SPD_GARG2 hdr2_org + FH_OFCNS));
+		printf("Offset to Track Kerning: %lu\n", (unsigned long)sp_read_long(SPD_GARG2 hdr2_org + FH_OFFTK));
+		printf("Offset to Pair Kerning: %lu\n", (unsigned long)sp_read_long(SPD_GARG2 hdr2_org + FH_OFFPK));
+		printf("Offset to Character Data: %lu\n", (unsigned long)sp_read_long(SPD_GARG2 hdr2_org + FH_OCHRD));
+		printf("Number of Bytes in File: %lu\n", (unsigned long)sp_read_long(SPD_GARG2 hdr2_org + FH_NBYTE));
 	}
 
 	fclose(fdescr);
