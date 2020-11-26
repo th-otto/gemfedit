@@ -648,22 +648,17 @@ static const FT_Byte Pop_Push_Count[256] = {
 
 	/*  IUP[0]    */ PACK(0, 0),
 	/*  IUP[1]    */ PACK(0, 0),
-										/*  SHP[0]    */ PACK(0, 0),
-										/* loops */
-										/*  SHP[1]    */ PACK(0, 0),
-										/* loops */
+	/*  SHP[0]    */ PACK(0, 0), /* loops */
+	/*  SHP[1]    */ PACK(0, 0), /* loops */
 	/*  SHC[0]    */ PACK(1, 0),
 	/*  SHC[1]    */ PACK(1, 0),
 	/*  SHZ[0]    */ PACK(1, 0),
 	/*  SHZ[1]    */ PACK(1, 0),
-										/*  SHPIX     */ PACK(1, 0),
-										/* loops */
-										/*  IP        */ PACK(0, 0),
-										/* loops */
+	/*  SHPIX     */ PACK(1, 0), /* loops */
+	/*  IP        */ PACK(0, 0), /* loops */
 	/*  MSIRP[0]  */ PACK(2, 0),
 	/*  MSIRP[1]  */ PACK(2, 0),
-										/*  AlignRP   */ PACK(0, 0),
-										/* loops */
+	/*  AlignRP   */ PACK(0, 0), /* loops */
 	/*  RTDG      */ PACK(0, 0),
 	/*  MIAP[0]   */ PACK(2, 0),
 	/*  MIAP[1]   */ PACK(2, 0),
@@ -736,8 +731,7 @@ static const FT_Byte Pop_Push_Count[256] = {
 	/*  SANGW     */ PACK(1, 0),
 	/*  AA        */ PACK(1, 0),
 
-										/*  FlipPT    */ PACK(0, 0),
-										/* loops */
+	/*  FlipPT    */ PACK(0, 0), /* loops */
 	/*  FlipRgON  */ PACK(2, 0),
 	/*  FlipRgOFF */ PACK(2, 0),
 	/*  INS_$83   */ PACK(0, 0),
@@ -755,8 +749,7 @@ static const FT_Byte Pop_Push_Count[256] = {
 	/*  INS_$8F   */ PACK(0, 0),
 
 	/*  INS_$90  */ PACK(0, 0),
-										/*  GETVAR   */ PACK(0, 0),
-										/* will be handled specially */
+	/*  GETVAR   */ PACK(0, 0), /* will be handled specially */
 	/*  GETDATA  */ PACK(0, 1),
 	/*  INS_$93  */ PACK(0, 0),
 	/*  INS_$94  */ PACK(0, 0),
