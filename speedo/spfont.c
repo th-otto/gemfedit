@@ -235,7 +235,7 @@ sp_open_font(SPD_PROTO_DECL2 char *fontname,
 	spmf = (SpeedoMasterFontPtr) entry->u.scalable.extra->private;
 	if (!spmf)
 	{
-		ret = sp_open_master(SPD_GARG2 fontname, filename, &spmf);
+		ret = sp_open_master(SPD_GARGS fontname, filename, &spmf);
 		if (ret != Successful)
 			return ret;
 		entry->u.scalable.extra->private = (pointer) spmf;
@@ -294,7 +294,7 @@ sp_open_font(SPD_PROTO_DECL2 char *fontname,
 	/* clobber global state to avoid wrecking future transformed fonts */
 	bzero((char *) &sp_globals, sizeof(sp_globals));
 
-	if (!sp_set_specs(SPD_GARG2 &specs, &spmf->font))
+	if (!sp_set_specs(SPD_GARGS &specs, &spmf->font))
 	{
 		sp_close_font(spf);
 		return BadFontName;
@@ -391,7 +391,7 @@ SpeedoFontLoad(SPD_PROTO_DECL2 FontPtr * ppfont,
 	if (!(pfont = CreateFontRec()))
 		return AllocError;
 
-	ret = sp_load_font(SPD_GARG2 fontname, filename, entry, vals, format, fmask, pfont, flags);
+	ret = sp_load_font(SPD_GARGS fontname, filename, entry, vals, format, fmask, pfont, flags);
 
 	if (ret == Successful)
 		*ppfont = pfont;

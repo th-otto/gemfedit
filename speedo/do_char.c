@@ -66,8 +66,8 @@ static ufix8 *sp_get_char_org(SPD_PROTO_DECL2 ufix16 char_index,	/* Index of cha
 	if (format)							/* 3-byte entries in char directory? */
 	{
 		pointer += char_index;			/* Adjust for 3-byte entries */
-		char_offset = sp_read_long(SPD_GARG2 pointer);	/* Read file offset to char data */
-		next_char_offset = sp_read_long(SPD_GARG2 pointer + 3);	/* Read offset to next char */
+		char_offset = sp_read_long(SPD_GARGS pointer);	/* Read file offset to char data */
+		next_char_offset = sp_read_long(SPD_GARGS pointer + 3);	/* Read offset to next char */
 	} else
 	{
 		char_offset = 0xffffL & NEXT_WORD(pointer);	/* Read file offset to char data */
@@ -82,7 +82,7 @@ static ufix8 *sp_get_char_org(SPD_PROTO_DECL2 ufix16 char_index,	/* Index of cha
 		return sp_globals.font.org + char_offset;	/* Return pointer into font buffer */
 
 	/* Request char data load */
-	if (sp_load_char_data(SPD_GARG2 char_offset, no_bytes, sp_globals.cb_offset, &char_data) == FALSE ||
+	if (sp_load_char_data(SPD_GARGS char_offset, no_bytes, sp_globals.cb_offset, &char_data) == FALSE ||
 		char_data.no_bytes < no_bytes)
 		return NULL;
 
@@ -127,8 +127,8 @@ static ufix8 *sp_get_char_org(SPD_PROTO_DECL2 ufix16 char_index,	/* Index of cha
 	if (format)							/* 3-byte entries in char directory? */
 	{
 		pointer += char_index;			/* Adjust for 3-byte entries */
-		char_offset = sp_read_long(SPD_GARG2 pointer);	/* Read file offset to char data */
-		next_char_offset = sp_read_long(SPD_GARG2 pointer + 3);	/* Read offset to next char */
+		char_offset = sp_read_long(SPD_GARGS pointer);	/* Read file offset to char data */
+		next_char_offset = sp_read_long(SPD_GARGS pointer + 3);	/* Read offset to next char */
 	} else
 	{
 		char_offset = 0xffffL & NEXT_WORD(pointer);	/* Read file offset to char data */
@@ -156,14 +156,14 @@ ufix16 sp_get_char_id(SPD_PROTO_DECL2 ufix16 char_index)	/* Index to character i
 
 	if (!sp_globals.specs_valid)		/* Font specs not defined? */
 	{
-		sp_report_error(SPD_GARG2 10);	/* Report font not specified */
+		sp_report_error(SPD_GARGS 10);	/* Report font not specified */
 		return 0;						/* Return zero character id */
 	}
 
-	pointer = sp_get_char_org(SPD_GARG2 char_index, TRUE);	/* Get pointer to character data */
+	pointer = sp_get_char_org(SPD_GARGS char_index, TRUE);	/* Get pointer to character data */
 	if (pointer == NULL)				/* Character data not available? */
 	{
-		sp_report_error(SPD_GARG2 12);	/* Report character data not avail */
+		sp_report_error(SPD_GARGS 12);	/* Report character data not avail */
 		return 0;						/* Return zero character id */
 	}
 
@@ -185,14 +185,14 @@ fix31 sp_get_char_width(SPD_PROTO_DECL2 ufix16 char_index)	/* Index to character
 
 	if (!sp_globals.specs_valid)		/* Font specs not defined? */
 	{
-		sp_report_error(SPD_GARG2 10);	/* Report font not specified */
+		sp_report_error(SPD_GARGS 10);	/* Report font not specified */
 		return 0;						/* Return zero character width */
 	}
 
-	pointer = sp_get_char_org(SPD_GARG2 char_index, TRUE);	/* Get pointer to character data */
+	pointer = sp_get_char_org(SPD_GARGS char_index, TRUE);	/* Get pointer to character data */
 	if (pointer == NULL)				/* Character data not available? */
 	{
-		sp_report_error(SPD_GARG2 12);	/* Report character data not avail */
+		sp_report_error(SPD_GARGS 12);	/* Report character data not avail */
 		return 0;						/* Return zero character width */
 	}
 
@@ -243,14 +243,14 @@ fix15 sp_get_track_kern(SPD_PROTO_DECL2 fix15 track,	/* Track required (0 - 3) *
 
 	if (!sp_globals.specs_valid)		/* Font specs not defined? */
 	{
-		sp_report_error(SPD_GARG2 10);	/* Report font not specified */
+		sp_report_error(SPD_GARGS 10);	/* Report font not specified */
 		return adj;						/* Return zero track kerning adjustment */
 	}
 
 	no_tracks = sp_globals.kern.no_tracks;	/* Number of kerning tracks */
 	if (track > no_tracks)				/* Required track not available? */
 	{
-		sp_report_error(SPD_GARG2 13);	/* Report track kerning data not avail */
+		sp_report_error(SPD_GARGS 13);	/* Report track kerning data not avail */
 		return adj;						/* Return zero track kerning adjustment */
 	}
 
@@ -308,14 +308,14 @@ fix31 sp_get_pair_kern(SPD_PROTO_DECL2 ufix16 char_index1,	/* Index to first cha
 
 	if (!sp_globals.specs_valid)		/* Font specs not defined? */
 	{
-		sp_report_error(SPD_GARG2 10);	/* Report font not specified */
+		sp_report_error(SPD_GARGS 10);	/* Report font not specified */
 		return adj;						/* Return zero pair kerning adjustment */
 	}
 
 	no_pairs = sp_globals.kern.no_pairs;	/* Number of kerning pairs */
 	if (no_pairs == 0)					/* Pair kerning data not available? */
 	{
-		sp_report_error(SPD_GARG2 14);	/* Report pair kerning data not avail */
+		sp_report_error(SPD_GARGS 14);	/* Report pair kerning data not avail */
 		return adj;						/* Return zero pair kerning adjustment */
 	}
 
@@ -391,16 +391,16 @@ boolean sp_get_char_bbox(SPD_PROTO_DECL2 ufix16 char_index, bbox_t *bbox, boolea
 
 	if (!sp_globals.specs_valid)		/* Font specs not defined? */
 	{
-		sp_report_error(SPD_GARG2 10);	/* Report font not specified */
+		sp_report_error(SPD_GARGS 10);	/* Report font not specified */
 		return FALSE;					/* Error return */
 	}
 
-	sp_init_tcb(SPD_GARG1);				/* Initialize transformation control block */
+	sp_init_tcb(SPD_GARG);				/* Initialize transformation control block */
 
-	pointer = sp_get_char_org(SPD_GARG2 char_index, TRUE);	/* Point to start of character data */
+	pointer = sp_get_char_org(SPD_GARGS char_index, TRUE);	/* Point to start of character data */
 	if (pointer == NULL)				/* Character data not available? */
 	{
-		sp_report_error(SPD_GARG2 12);	/* Report character data not avail */
+		sp_report_error(SPD_GARGS 12);	/* Report character data not avail */
 		return FALSE;					/* Error return */
 	}
 
@@ -414,8 +414,8 @@ boolean sp_get_char_bbox(SPD_PROTO_DECL2 ufix16 char_index, bbox_t *bbox, boolea
 		pointer += tmp;					/* Skip optional data */
 	}
 
-	pointer = sp_plaid_tcb(SPD_GARG2 pointer, format);	/* Process plaid data */
-	pointer = sp_read_bbox(SPD_GARG2 pointer, &Pmin, &Pmax, FALSE);	/* Read bounding box */
+	pointer = sp_plaid_tcb(SPD_GARGS pointer, format);	/* Process plaid data */
+	pointer = sp_read_bbox(SPD_GARGS pointer, &Pmin, &Pmax, FALSE);	/* Read bounding box */
 
 	if ((format & BIT0) && !no_adj)
 	{
@@ -444,16 +444,16 @@ static void sp_preview_bounding_box(SPD_PROTO_DECL2 ufix8 *pointer, ufix8 format
 
 	sp_globals.no_X_orus = (format & BIT2) ? (fix15) NEXT_BYTE(pointer) : 0;
 	sp_globals.no_Y_orus = (format & BIT3) ? (fix15) NEXT_BYTE(pointer) : 0;
-	pointer = sp_read_oru_table(SPD_GARG2 pointer);
+	pointer = sp_read_oru_table(SPD_GARGS pointer);
 
 	/* Skip over control zone table */
-	pointer = sp_skip_control_zone(SPD_GARG2 pointer, format);
+	pointer = sp_skip_control_zone(SPD_GARGS pointer, format);
 
 	/* Skip over interpolation table */
-	pointer = sp_skip_interpolation_table(SPD_GARG2 pointer, format);
+	pointer = sp_skip_interpolation_table(SPD_GARGS pointer, format);
 	/* sp_get_args has a pathological need for this value to be set */
 	sp_globals.Y_edge_org = sp_globals.no_X_orus;
-	pointer = sp_read_bbox(SPD_GARG2 pointer, &Pmin, &Pmax, TRUE);	/* Read bounding box */
+	pointer = sp_read_bbox(SPD_GARGS pointer, &Pmin, &Pmax, TRUE);	/* Read bounding box */
 
 }
 #endif
@@ -467,13 +467,13 @@ static boolean sp_reset_xmax(SPD_PROTO_DECL2 fix31 xmax)
 	fix15 ymax;							/* Maximum Y ORU value in font */
 
 	sp_globals.isw_modified_constants = TRUE;
-	xmin = sp_read_word_u(SPD_GARG2 sp_globals.font_org + FH_FXMIN);
-	ymin = sp_read_word_u(SPD_GARG2 sp_globals.font_org + FH_FYMIN);
-	ymax = sp_read_word_u(SPD_GARG2 sp_globals.font_org + FH_FYMAX);
+	xmin = sp_read_word_u(SPD_GARGS sp_globals.font_org + FH_FXMIN);
+	ymin = sp_read_word_u(SPD_GARGS sp_globals.font_org + FH_FYMIN);
+	ymax = sp_read_word_u(SPD_GARGS sp_globals.font_org + FH_FYMAX);
 
-	if (!sp_setup_consts(SPD_GARG2 xmin, xmax, ymin, ymax))
+	if (!sp_setup_consts(SPD_GARGS xmin, xmax, ymin, ymax))
 	{
-		sp_report_error(SPD_GARG2 3);	/* Requested specs out of range */
+		sp_report_error(SPD_GARGS 3);	/* Requested specs out of range */
 		return FALSE;
 	}
 	sp_globals.constr.data_valid = FALSE;
@@ -518,7 +518,7 @@ static boolean sp_make_simp_char(SPD_PROTO_DECL2 ufix8 *pointer, ufix8 format)
 	{
 		/* get the bounding box data before processing the character */
 		save_pointer = pointer;
-		sp_preview_bounding_box(SPD_GARG2 pointer, format);
+		sp_preview_bounding_box(SPD_GARGS pointer, format);
 		pointer = save_pointer;
 	}
 #endif
@@ -526,26 +526,26 @@ static boolean sp_make_simp_char(SPD_PROTO_DECL2 ufix8 *pointer, ufix8 format)
 	if (sp_globals.import_setwidth_act)
 	{
 		save_pointer = pointer;
-		sp_preview_bounding_box(SPD_GARG2 pointer, format);
+		sp_preview_bounding_box(SPD_GARGS pointer, format);
 		pointer = save_pointer;
 		/* make sure I'm not going to get fixed point overflow */
-		isw_scale = sp_compute_isw_scale(SPD_GARG1);
+		isw_scale = sp_compute_isw_scale(SPD_GARG);
 		if (sp_globals.bbox_xmin_orus < 0)
 			char_width = SQUEEZE_MULT((sp_globals.bbox_xmax_orus - sp_globals.bbox_xmin_orus), isw_scale);
 		else
 			char_width = SQUEEZE_MULT(sp_globals.bbox_xmax_orus, isw_scale);
 		if (char_width >= sp_globals.isw_xmax)
-			if (!sp_reset_xmax(SPD_GARG2 char_width))
+			if (!sp_reset_xmax(SPD_GARGS char_width))
 				return FALSE;
 	}
 #endif
-	pointer = sp_plaid_tcb(SPD_GARG2 pointer, format);	/* Process plaid data */
-	pointer = sp_read_bbox(SPD_GARG2 pointer, &Pmin, &Pmax, FALSE);	/* Read bounding box */
+	pointer = sp_plaid_tcb(SPD_GARGS pointer, format);	/* Process plaid data */
+	pointer = sp_read_bbox(SPD_GARGS pointer, &Pmin, &Pmax, FALSE);	/* Read bounding box */
 	if (fn_begin_char(sp_globals.Psw, Pmin, Pmax))	/* Signal start of character output */
 	{
 		do
 		{
-			sp_proc_outl_data(SPD_GARG2 pointer);	/* Process outline data */
+			sp_proc_outl_data(SPD_GARGS pointer);	/* Process outline data */
 		} while (!fn_end_char());		/* Repeat if not done */
 	}
 	return TRUE;
@@ -624,7 +624,7 @@ static boolean sp_make_comp_char(SPD_PROTO_DECL2 ufix8 *pointer)	/* Pointer to f
 #if INCL_SQUEEZING
 	sp_globals.squeezing_compound = TRUE;
 #endif
-	pointer = sp_read_bbox(SPD_GARG2 pointer, &Pmin, &Pmax, TRUE);	/* Read bounding box data */
+	pointer = sp_read_bbox(SPD_GARGS pointer, &Pmin, &Pmax, TRUE);	/* Read bounding box data */
 	pix_adj = sp_globals.onepix << 1;	/* Allow 2 pixel expansion ... */
 	Pmin.x -= pix_adj;					/* ... of components of ... */
 	Pmin.y -= pix_adj;					/* ... compound ... */
@@ -633,8 +633,8 @@ static boolean sp_make_comp_char(SPD_PROTO_DECL2 ufix8 *pointer)	/* Pointer to f
 
 #if INCL_SQUEEZING
 	/* scale the bounding box if necessary before calling begin_char */
-	squeezed_x = sp_calculate_x_scale(SPD_GARG2 &x_factor, &x_offset, 0);
-	squeezed_y = sp_calculate_y_scale(SPD_GARG2 &top_scale, &bottom_scale, 0, 0);
+	squeezed_x = sp_calculate_x_scale(SPD_GARGS &x_factor, &x_offset, 0);
+	squeezed_y = sp_calculate_y_scale(SPD_GARGS &top_scale, &bottom_scale, 0, 0);
 
 	if (squeezed_x)
 	{									/* scale the x coordinates of the bbox */
@@ -663,7 +663,7 @@ static boolean sp_make_comp_char(SPD_PROTO_DECL2 ufix8 *pointer)	/* Pointer to f
 		isw_scale = ((fix31) sp_globals.imported_width << 16) / (fix31) sp_globals.setwidth_orus;
 		char_width = SQUEEZE_MULT((sp_globals.bbox_xmax_orus - sp_globals.bbox_xmin_orus), isw_scale);
 		if (char_width >= sp_globals.isw_xmax)
-			if (!sp_reset_xmax(SPD_GARG2 char_width))
+			if (!sp_reset_xmax(SPD_GARGS char_width))
 				return FALSE;
 	}
 #endif
@@ -676,15 +676,15 @@ static boolean sp_make_comp_char(SPD_PROTO_DECL2 ufix8 *pointer)	/* Pointer to f
 			pointer = pointer_sav;		/* Point to next DOCH or END instruction */
 			while ((format = NEXT_BYTE(pointer)) != 0)	/* DOCH instruction? */
 			{
-				sp_init_tcb(SPD_GARG1);			/* Initialize transformation control block */
-				x_posn = sp_get_posn_arg(SPD_GARG2 &pointer, format);
-				y_posn = sp_get_posn_arg(SPD_GARG2 &pointer, (ufix8) (format >> 2));
-				x_scale = sp_get_scale_arg(SPD_GARG2 &pointer, (ufix8) (format & BIT4));
-				y_scale = sp_get_scale_arg(SPD_GARG2 &pointer, (ufix8) (format & BIT5));
-				sp_scale_tcb(SPD_GARG2 &sp_globals.tcb, x_posn, y_posn, x_scale, y_scale);	/* Scale for sub-char */
+				sp_init_tcb(SPD_GARG);			/* Initialize transformation control block */
+				x_posn = sp_get_posn_arg(SPD_GARGS &pointer, format);
+				y_posn = sp_get_posn_arg(SPD_GARGS &pointer, (ufix8) (format >> 2));
+				x_scale = sp_get_scale_arg(SPD_GARGS &pointer, (ufix8) (format & BIT4));
+				y_scale = sp_get_scale_arg(SPD_GARGS &pointer, (ufix8) (format & BIT5));
+				sp_scale_tcb(SPD_GARGS &sp_globals.tcb, x_posn, y_posn, x_scale, y_scale);	/* Scale for sub-char */
 				sub_char_index = (format & BIT6) ?	/* Read sub-char index */
 					NEXT_WORD(pointer) : NEXT_BYTE(pointer);
-				sub_pointer = sp_get_char_org(SPD_GARG2 sub_char_index, FALSE);	/* Point to start of sub-char */
+				sub_pointer = sp_get_char_org(SPD_GARGS sub_char_index, FALSE);	/* Point to start of sub-char */
 				if (sub_pointer == NULL)	/* Character data not available? */
 				{
 					return FALSE;		/* Abort character output */
@@ -708,10 +708,10 @@ static boolean sp_make_comp_char(SPD_PROTO_DECL2 ufix8 *pointer)	/* Pointer to f
 					tmpfix15 = (ufix8) NEXT_BYTE(sub_pointer);	/* Read size of optional data */
 					sub_pointer += tmpfix15;	/* Skip optional data */
 				}
-				sub_pointer = sp_plaid_tcb(SPD_GARG2 sub_pointer, format);	/* Process sub-character plaid data */
-				sub_pointer = sp_read_bbox(SPD_GARG2 sub_pointer, &Pmin, &Pmax, FALSE);	/* Read bounding box */
+				sub_pointer = sp_plaid_tcb(SPD_GARGS sub_pointer, format);	/* Process sub-character plaid data */
+				sub_pointer = sp_read_bbox(SPD_GARGS sub_pointer, &Pmin, &Pmax, FALSE);	/* Read bounding box */
 				fn_begin_sub_char(Pssw, Pmin, Pmax);	/* Signal start of sub-character data */
-				sp_proc_outl_data(SPD_GARG2 sub_pointer);	/* Process sub-character data */
+				sp_proc_outl_data(SPD_GARGS sub_pointer);	/* Process sub-character data */
 				fn_end_sub_char();		/* Signal end of sub-character data */
 			}
 		} while (!fn_end_char());		/* Signal end of character; repeat if required */
@@ -757,7 +757,7 @@ boolean sp_make_char(SPD_PROTO_DECL2 ufix16 char_index)
 
 	if (!sp_globals.specs_valid)		/* Font specs not defined? */
 	{
-		sp_report_error(SPD_GARG2 10);	/* Report font not specified */
+		sp_report_error(SPD_GARGS 10);	/* Report font not specified */
 		return FALSE;					/* Error return */
 	}
 
@@ -765,23 +765,23 @@ boolean sp_make_char(SPD_PROTO_DECL2 ufix16 char_index)
 #if INCL_OUTLINE
 	if (sp_globals.specs.output_mode == MODE_OUTLINE && !sp_globals.outline_device_set)
 	{
-		sp_report_error(SPD_GARG2 2);	/* Transformation matrix out of range */
+		sp_report_error(SPD_GARGS 2);	/* Transformation matrix out of range */
 		return FALSE;
 	} else
 #endif
 	if (!sp_globals.bitmap_device_set)
 	{
-		sp_report_error(SPD_GARG2 2);	/* Transformation matrix out of range */
+		sp_report_error(SPD_GARGS 2);	/* Transformation matrix out of range */
 		return FALSE;
 	}
 #endif
 
-	sp_init_tcb(SPD_GARG1);				/* Initialize transformation control block */
+	sp_init_tcb(SPD_GARG);				/* Initialize transformation control block */
 
-	pointer = sp_get_char_org(SPD_GARG2 char_index, TRUE);	/* Point to start of character data */
+	pointer = sp_get_char_org(SPD_GARGS char_index, TRUE);	/* Point to start of character data */
 	if (pointer == NULL)				/* Character data not available? */
 	{
-		sp_report_error(SPD_GARG2 12);	/* Character data not available */
+		sp_report_error(SPD_GARGS 12);	/* Character data not available */
 		return FALSE;					/* Error return */
 	}
 
@@ -814,9 +814,9 @@ boolean sp_make_char(SPD_PROTO_DECL2 ufix16 char_index)
 	}
 	if (format & BIT0)
 	{
-		return sp_make_comp_char(SPD_GARG2 pointer);	/* Output compound character */
+		return sp_make_comp_char(SPD_GARGS pointer);	/* Output compound character */
 	}
-	return sp_make_simp_char(SPD_GARG2 pointer, format);	/* Output simple character */
+	return sp_make_simp_char(SPD_GARGS pointer, format);	/* Output simple character */
 }
 
 
@@ -832,19 +832,19 @@ boolean sp_make_char_isw(SPD_PROTO_DECL2 ufix16 char_index, ufix32 imported_setw
 	sp_globals.import_setwidth_act = TRUE;
 	/* convert imported width to orus */
 	sp_globals.imported_width = (sp_globals.metric_resolution * imported_setwidth) >> 16;
-	return_value = sp_do_make_char(SPD_GARG2 char_index);
+	return_value = sp_do_make_char(SPD_GARGS char_index);
 
 	if (sp_globals.isw_modified_constants)
 	{
 		/* reset fixed point constants */
-		xmin = sp_read_word_u(SPD_GARG2 sp_globals.font_org + FH_FXMIN);
-		ymin = sp_read_word_u(SPD_GARG2 sp_globals.font_org + FH_FYMIN);
-		xmax = sp_read_word_u(SPD_GARG2 sp_globals.font_org + FH_FXMAX);
-		ymax = sp_read_word_u(SPD_GARG2 sp_globals.font_org + FH_FYMAX);
+		xmin = sp_read_word_u(SPD_GARGS sp_globals.font_org + FH_FXMIN);
+		ymin = sp_read_word_u(SPD_GARGS sp_globals.font_org + FH_FYMIN);
+		xmax = sp_read_word_u(SPD_GARGS sp_globals.font_org + FH_FXMAX);
+		ymax = sp_read_word_u(SPD_GARGS sp_globals.font_org + FH_FYMAX);
 		sp_globals.constr.data_valid = FALSE;
-		if (!sp_setup_consts(SPD_GARG2 xmin, xmax, ymin, ymax))
+		if (!sp_setup_consts(SPD_GARGS xmin, xmax, ymin, ymax))
 		{
-			sp_report_error(SPD_GARG2 3);	/* Requested specs out of range */
+			sp_report_error(SPD_GARGS 3);	/* Requested specs out of range */
 			return FALSE;
 		}
 	}
@@ -855,6 +855,6 @@ boolean sp_make_char_isw(SPD_PROTO_DECL2 ufix16 char_index, ufix32 imported_setw
 boolean sp_make_char(SPD_PROTO_DECL2 ufix16 char_index)	/* Index to character in char directory */
 {
 	sp_globals.import_setwidth_act = FALSE;
-	return sp_do_make_char(SPD_GARG2 char_index);
+	return sp_do_make_char(SPD_GARGS char_index);
 }
 #endif

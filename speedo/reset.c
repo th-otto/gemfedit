@@ -50,7 +50,7 @@ void sp_reset(SPD_PROTO_DECL1)
 	sp_globals.specs_valid = FALSE;		/* Flag specs not valid */
 
 	/* Reset decryption key */
-	sp_reset_key(SPD_GARG1);
+	sp_reset_key(SPD_GARG);
 
 #if INCL_RULES
 	sp_globals.constr.font_id_valid = FALSE;
@@ -75,14 +75,14 @@ ufix16 sp_get_cust_no(SPD_PROTO_DECL2 const buff_t *font_buff)
 	ufix8 *hdr2_org;
 	ufix16 private_off;
 
-	private_off = sp_read_word_u(SPD_GARG2 font_buff->org + FH_HEDSZ);
+	private_off = sp_read_word_u(SPD_GARGS font_buff->org + FH_HEDSZ);
 	if ((private_off + FH_CUSNR) > font_buff->no_bytes)
 	{
-		sp_report_error(SPD_GARG2 1);		/* Insufficient font data loaded */
+		sp_report_error(SPD_GARGS 1);		/* Insufficient font data loaded */
 		return FALSE;
 	}
 
 	hdr2_org = font_buff->org + private_off;
 
-	return sp_read_word_u(SPD_GARG2 hdr2_org + FH_CUSNR);
+	return sp_read_word_u(SPD_GARGS hdr2_org + FH_CUSNR);
 }

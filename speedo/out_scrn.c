@@ -74,7 +74,7 @@ boolean sp_begin_char_screen(SPD_PROTO_DECL2 fix31 x, fix31 y, fix31 minx, fix31
 	else
 		sp_intercepts.fracpix = sp_globals.onepix >> (sp_globals.pixshift - 8);
 
-	sp_init_char_out(SPD_GARG2 x, y, minx, miny, maxx, maxy);
+	sp_init_char_out(SPD_GARGS x, y, minx, miny, maxx, maxy);
 	return TRUE;
 }
 
@@ -165,7 +165,7 @@ static void sp_vert_line_screen(SPD_PROTO_DECL2 fix31 x, fix15 y1, fix15 y2)
 
 		while (y2 < y1)					/* At least one intercept left? */
 		{
-			sp_add_intercept_screen(SPD_GARG2 --y1, x);	/* Add intercept */
+			sp_add_intercept_screen(SPD_GARGS --y1, x);	/* Add intercept */
 		}
 	} else if (y2 > y1)					/* Line goes upwards ? */
 	{
@@ -179,7 +179,7 @@ static void sp_vert_line_screen(SPD_PROTO_DECL2 fix31 x, fix15 y1, fix15 y2)
 
 		while (y1 < y2)					/* At least one intercept left? */
 		{
-			sp_add_intercept_screen(SPD_GARG2 y1++, x);	/* Add intercept */
+			sp_add_intercept_screen(SPD_GARGS y1++, x);	/* Add intercept */
 		}
 	}
 }
@@ -210,7 +210,7 @@ static void sp_scan_curve_screen(SPD_PROTO_DECL2 fix31 X0, fix31 Y0, fix31 X1, f
 	}
 	if ((X3 >> 16) == (X0 >> 16))
 	{
-		sp_vert_line_screen(SPD_GARG2 X3, (fix15) (Y0 >> 16), (fix15) (Y3 >> 16));
+		sp_vert_line_screen(SPD_GARGS X3, (fix15) (Y0 >> 16), (fix15) (Y3 >> 16));
 		return;
 	}
 	Pmidx = (X0 + (X1 + X2) * 3 + X3 + 4) >> 3;
@@ -220,13 +220,13 @@ static void sp_scan_curve_screen(SPD_PROTO_DECL2 fix31 X0, fix31 Y0, fix31 X1, f
 	Pctrl1y = (Y0 + Y1 + 1) >> 1;
 	Pctrl2x = (X0 + (X1 << 1) + X2 + 2) >> 2;
 	Pctrl2y = (Y0 + (Y1 << 1) + Y2 + 2) >> 2;
-	sp_scan_curve_screen(SPD_GARG2 X0, Y0, Pctrl1x, Pctrl1y, Pctrl2x, Pctrl2y, Pmidx, Pmidy);
+	sp_scan_curve_screen(SPD_GARGS X0, Y0, Pctrl1x, Pctrl1y, Pctrl2x, Pctrl2y, Pmidx, Pmidy);
 
 	Pctrl1x = (X1 + (X2 << 1) + X3 + 2) >> 2;
 	Pctrl1y = (Y1 + (Y2 << 1) + Y3 + 2) >> 2;
 	Pctrl2x = (X2 + X3 + 1) >> 1;
 	Pctrl2y = (Y2 + Y3 + 1) >> 1;
-	sp_scan_curve_screen(SPD_GARG2 Pmidx, Pmidy, Pctrl1x, Pctrl1y, Pctrl2x, Pctrl2y, X3, Y3);
+	sp_scan_curve_screen(SPD_GARGS Pmidx, Pmidy, Pctrl1x, Pctrl1y, Pctrl2x, Pctrl2y, X3, Y3);
 }
 
 
@@ -295,7 +295,7 @@ void sp_curve_screen(SPD_PROTO_DECL2 fix31 x1, fix31 y1, fix31 x2, fix31 y2, fix
 		sp_intercepts.leftedge = 0;
 	}
 
-	sp_scan_curve_screen(SPD_GARG2 X0, Y0, X1, Y1, X2, Y2, X3, Y3);
+	sp_scan_curve_screen(SPD_GARGS X0, Y0, X1, Y1, X2, Y2, X3, Y3);
 	sp_globals.x0_spxl = x3;
 	sp_globals.y0_spxl = y3;
 	sp_globals.y_pxl = (y3 + sp_globals.pixrnd) >> sp_globals.pixshift;	/* calculate new end-scan sp_globals.line */
@@ -425,7 +425,7 @@ void sp_line_screen(SPD_PROTO_DECL2 fix31 x1, fix31 y1)
 			how_many_y = 0;				/* can't go below 0 */
 		while (yc >= how_many_y)
 		{
-			sp_add_intercept_screen(SPD_GARG2 yc--, xc);
+			sp_add_intercept_screen(SPD_GARGS yc--, xc);
 			xc -= dx_dy;
 		}
 	} else
@@ -435,7 +435,7 @@ void sp_line_screen(SPD_PROTO_DECL2 fix31 x1, fix31 y1)
 			how_many_y = sp_globals.no_y_lists;
 		while (yc != how_many_y)
 		{
-			sp_add_intercept_screen(SPD_GARG2 yc++, xc);
+			sp_add_intercept_screen(SPD_GARGS yc++, xc);
 			xc += dx_dy;
 		}
 	}
@@ -982,13 +982,13 @@ boolean sp_end_char_screen(SPD_PROTO_DECL1)
 		{
 			sp_globals.y_band.band_min = sp_globals.ymin;
 			sp_globals.y_band.band_max = sp_globals.ymax;
-			sp_init_intercepts_out(SPD_GARG1);
+			sp_init_intercepts_out(SPD_GARG);
 			sp_globals.first_pass = FALSE;
 			sp_globals.extents_running = FALSE;
 			return FALSE;
 		} else
 		{
-			sp_proc_intercepts_screen(SPD_GARG1);
+			sp_proc_intercepts_screen(SPD_GARG);
 			close_bitmap();
 			return TRUE;
 		}
@@ -996,15 +996,15 @@ boolean sp_end_char_screen(SPD_PROTO_DECL1)
 	{
 		if (sp_globals.intercept_oflo)
 		{
-			sp_reduce_band_size_out(SPD_GARG1);
-			sp_init_intercepts_out(SPD_GARG1);
+			sp_reduce_band_size_out(SPD_GARG);
+			sp_init_intercepts_out(SPD_GARG);
 			return FALSE;
 		} else
 		{
-			sp_proc_intercepts_screen(SPD_GARG1);
-			if (sp_next_band_out(SPD_GARG1))
+			sp_proc_intercepts_screen(SPD_GARG);
+			if (sp_next_band_out(SPD_GARG))
 			{
-				sp_init_intercepts_out(SPD_GARG1);
+				sp_init_intercepts_out(SPD_GARG);
 				return FALSE;
 			}
 			close_bitmap();

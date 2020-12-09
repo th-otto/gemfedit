@@ -92,7 +92,7 @@ void sp_scale_tcb(SPD_PROTO_DECL2
 	ptcb->yymult = TRANS(yy_mult, y_scale, (fix31) SCALE_RND, SCALE_SHIFT);
 	ptcb->yoffset = MULT16(yx_mult, x_pos) + MULT16(yy_mult, y_pos) + y_offset;
 
-	sp_type_tcb(SPD_GARG2 ptcb);				/* Reclassify transformation types */
+	sp_type_tcb(SPD_GARGS ptcb);				/* Reclassify transformation types */
 }
 
 
@@ -242,7 +242,7 @@ static ufix8 *sp_setup_int_table(SPD_PROTO_DECL2 ufix8 *pointer,	/* Pointer to f
 	fix15 end_pix = 0;
 
 #if INCL_PLAID_OUT						/* Plaid data monitoring included? */
-	sp_begin_int_zones(SPD_GARG2 no_X_int_zones, no_Y_int_zones);
+	sp_begin_int_zones(SPD_GARGS no_X_int_zones, no_Y_int_zones);
 #endif
 
 	i = 0;
@@ -325,7 +325,7 @@ static ufix8 *sp_setup_int_table(SPD_PROTO_DECL2 ufix8 *pointer,	/* Pointer to f
 				}
 			}
 #if INCL_PLAID_OUT						/* Plaid data monitoring included? */
-			sp_record_int_zone(SPD_GARG2 (fix31) start_pix << (16 - sp_globals.pixshift),
+			sp_record_int_zone(SPD_GARGS (fix31) start_pix << (16 - sp_globals.pixshift),
 							(fix31) end_pix << (16 - sp_globals.pixshift));
 #endif
 			zone_orus = (fix31) end_orus - (fix31) start_orus;
@@ -516,7 +516,7 @@ boolean sp_calculate_x_scale(SPD_PROTO_DECL2 fix31 *x_factor, fix31 *x_offset, f
 	{
 		/* if both isw and squeezing is going on - let the imported */
 		/* setwidth factor be factored in with the squeeze          */
-		isw_scale = sp_compute_isw_scale(SPD_GARG1);
+		isw_scale = sp_compute_isw_scale(SPD_GARG);
 		/*sp_globals.setwidth_orus = sp_globals.imported_width; */
 	} else
 	{
@@ -719,7 +719,7 @@ static ufix8 *sp_setup_pix_table(SPD_PROTO_DECL2 ufix8 *pointer,	/* Pointer to f
 #endif
 
 #if INCL_PLAID_OUT						/* Plaid data monitoring included? */
-	sp_begin_ctrl_zones(SPD_GARG2 no_X_ctrl_zones, no_Y_ctrl_zones);
+	sp_begin_ctrl_zones(SPD_GARGS no_X_ctrl_zones, no_Y_ctrl_zones);
 #endif
 
 	edge_org = 0;
@@ -734,8 +734,8 @@ static ufix8 *sp_setup_pix_table(SPD_PROTO_DECL2 ufix8 *pointer,	/* Pointer to f
 #endif
 
 #if INCL_SQUEEZING
-	squeezed_x = sp_calculate_x_scale(SPD_GARG2 &x_scale, &x_offset, no_X_ctrl_zones);
-	squeezed_y = sp_calculate_y_scale(SPD_GARG2 &y_top_scale, &y_bottom_scale, (n + 1), no_Y_ctrl_zones);
+	squeezed_x = sp_calculate_x_scale(SPD_GARGS &x_scale, &x_offset, no_X_ctrl_zones);
+	squeezed_y = sp_calculate_y_scale(SPD_GARGS &y_top_scale, &y_bottom_scale, (n + 1), no_Y_ctrl_zones);
 #if INCL_ISW
 	if (sp_globals.import_setwidth_act == TRUE)
 		setwidth_pix = ((fix15) (((fix31) sp_globals.imported_width * xppo0) >>
@@ -760,7 +760,7 @@ static ufix8 *sp_setup_pix_table(SPD_PROTO_DECL2 ufix8 *pointer,	/* Pointer to f
 		isw_setwidth_pix = 0x7fff;		/* set to maximum */
 	if (!squeezed_x && ((imported_width = sp_globals.import_setwidth_act) == TRUE))
 	{
-		isw_scale = sp_compute_isw_scale(SPD_GARG1);
+		isw_scale = sp_compute_isw_scale(SPD_GARG);
 
 		/* look for the first non-negative oru value, scale and add the offset    */
 		/* to the corresponding pixel value - note that the pixel value           */
@@ -795,10 +795,10 @@ static ufix8 *sp_setup_pix_table(SPD_PROTO_DECL2 ufix8 *pointer,	/* Pointer to f
 #if INCL_SQUEEZING
 			if (i == 0 && squeezed_x)
 			{
-				sp_calculate_x_pix(SPD_GARG2 start_edge, end_edge, constr_nr, x_scale, x_offset, ppo, setwidth_pix);
+				sp_calculate_x_pix(SPD_GARGS start_edge, end_edge, constr_nr, x_scale, x_offset, ppo, setwidth_pix);
 			} else if (i == 1 && squeezed_y)
 			{
-				sp_calculate_y_pix(SPD_GARG2 start_edge, end_edge, constr_nr,
+				sp_calculate_y_pix(SPD_GARGS start_edge, end_edge, constr_nr,
 								y_top_scale, y_bottom_scale, ppo, em_top_pix, em_bot_pix);
 			} else
 #endif
@@ -806,7 +806,7 @@ static ufix8 *sp_setup_pix_table(SPD_PROTO_DECL2 ufix8 *pointer,	/* Pointer to f
 #if INCL_ISW
 				if (i == 0 && imported_width)
 				{
-					sp_calculate_x_pix(SPD_GARG2 start_edge, end_edge, constr_nr, isw_scale, 0, ppo, isw_setwidth_pix);
+					sp_calculate_x_pix(SPD_GARGS start_edge, end_edge, constr_nr, isw_scale, 0, ppo, isw_setwidth_pix);
 				} else
 #endif
 				{
@@ -851,7 +851,7 @@ static ufix8 *sp_setup_pix_table(SPD_PROTO_DECL2 ufix8 *pointer,	/* Pointer to f
 				}
 			}
 #if INCL_PLAID_OUT						/* Plaid data monitoring included? */
-			sp_record_ctrl_zone(SPD_GARG2 (fix31) sp_plaid.pix[start_edge] << (16 - sp_globals.pixshift),
+			sp_record_ctrl_zone(SPD_GARGS (fix31) sp_plaid.pix[start_edge] << (16 - sp_globals.pixshift),
 							 (fix31) sp_plaid.pix[end_edge] << (16 - sp_globals.pixshift),
 							 (fix15) (constr_nr - constr_org));
 #endif
@@ -1055,14 +1055,14 @@ ufix8 *sp_plaid_tcb(SPD_PROTO_DECL2 ufix8 *pointer,	/* Pointer to next byte in c
 	fix15 no_Y_int_zones;
 
 #if INCL_PLAID_OUT						/* Plaid data monitoring included? */
-	sp_begin_plaid_data(SPD_GARG1);
+	sp_begin_plaid_data(SPD_GARG);
 #endif
 
-	sp_constr_update(SPD_GARG1);					/* Update constraint table if required */
+	sp_constr_update(SPD_GARG);					/* Update constraint table if required */
 
 	sp_globals.no_X_orus = (format & BIT2) ? (fix15) NEXT_BYTE(pointer) : 0;
 	sp_globals.no_Y_orus = (format & BIT3) ? (fix15) NEXT_BYTE(pointer) : 0;
-	pointer = sp_read_oru_table(SPD_GARG2 pointer);	/* Updates no_X/Y/orus to include zero values */
+	pointer = sp_read_oru_table(SPD_GARGS pointer);	/* Updates no_X/Y/orus to include zero values */
 	sp_globals.Y_edge_org = sp_globals.no_X_orus;
 	if (sp_globals.no_X_orus > 1)		/* 2 or more controlled X coordinates? */
 		sp_globals.tcb.xmode = sp_globals.tcb.xtype;	/* Enable intelligent scaling in X */
@@ -1072,15 +1072,15 @@ ufix8 *sp_plaid_tcb(SPD_PROTO_DECL2 ufix8 *pointer,	/* Pointer to next byte in c
 
 	no_X_ctrl_zones = sp_globals.no_X_orus - 1;
 	no_Y_ctrl_zones = sp_globals.no_Y_orus - 1;
-	pointer = sp_setup_pix_table(SPD_GARG2 pointer, (boolean) (format & BIT4), no_X_ctrl_zones, no_Y_ctrl_zones);
+	pointer = sp_setup_pix_table(SPD_GARGS pointer, (boolean) (format & BIT4), no_X_ctrl_zones, no_Y_ctrl_zones);
 
 	no_X_int_zones = (format & BIT6) ? (fix15) NEXT_BYTE(pointer) : 0;
 	no_Y_int_zones = (format & BIT7) ? (fix15) NEXT_BYTE(pointer) : 0;
 	sp_globals.Y_int_org = no_X_int_zones;
-	pointer = sp_setup_int_table(SPD_GARG2 pointer, no_X_int_zones, no_Y_int_zones);
+	pointer = sp_setup_int_table(SPD_GARGS pointer, no_X_int_zones, no_Y_int_zones);
 
 #if INCL_PLAID_OUT						/* Plaid data monitoring included? */
-	sp_end_plaid_data(SPD_GARG1);
+	sp_end_plaid_data(SPD_GARG);
 #endif
 
 	return pointer;
@@ -1101,14 +1101,14 @@ ufix8 *sp_plaid_tcb(SPD_PROTO_DECL2 ufix8 *pointer,	/* Pointer to next byte in c
 
 	sp_globals.no_X_orus = (format & BIT2) ? (fix15) NEXT_BYTE(pointer) : 0;
 	sp_globals.no_Y_orus = (format & BIT3) ? (fix15) NEXT_BYTE(pointer) : 0;
-	pointer = sp_read_oru_table(SPD_GARG2 pointer);	/* Updates no_X/Y/orus */
+	pointer = sp_read_oru_table(SPD_GARGS pointer);	/* Updates no_X/Y/orus */
 	sp_globals.Y_edge_org = sp_globals.no_X_orus;
 
 	/* Skip over control zone table */
-	pointer = sp_skip_control_zone(SPD_GARG2 pointer, format);
+	pointer = sp_skip_control_zone(SPD_GARGS pointer, format);
 
 	/* Skip over interpolation table */
-	pointer = sp_skip_interpolation_table(SPD_GARG2 pointer, format);
+	pointer = sp_skip_interpolation_table(SPD_GARGS pointer, format);
 	return pointer;
 }
 #endif /* INCL_RULES */

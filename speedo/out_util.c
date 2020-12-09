@@ -42,8 +42,8 @@ void sp_init_char_out(SPD_PROTO_DECL2 fix31 x, fix31 y, fix31 minx, fix31 miny, 
 {
 	sp_globals.set_width.x = (fix31) x << sp_globals.poshift;
 	sp_globals.set_width.y = (fix31) y << sp_globals.poshift;
-	sp_set_first_band_out(SPD_GARG2 minx, miny, maxx, maxy);
-	sp_init_intercepts_out(SPD_GARG1);
+	sp_set_first_band_out(SPD_GARGS minx, miny, maxx, maxy);
+	sp_init_intercepts_out(SPD_GARG);
 	if (sp_globals.normal)
 	{
 		sp_globals.bmap_xmin = minx;
@@ -79,7 +79,7 @@ void sp_begin_sub_char_out(SPD_PROTO_DECL2 fix31 x, fix31 y, fix31 minx, fix31 m
 	UNUSED(miny);
 	UNUSED(maxx);
 	UNUSED(maxy);
-	sp_restart_intercepts_out(SPD_GARG1);
+	sp_restart_intercepts_out(SPD_GARG);
 	if (!sp_globals.extents_running)
 	{
 		sp_globals.bmap_xmin = 32000;

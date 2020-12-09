@@ -175,9 +175,9 @@ int main(int argc, char **argv)
 	font.org = font_buffer;
 	font.no_bytes = bytes_read;
 
-	sp_reset_key(SPD_GARG1);
-	if ((key = sp_get_key(SPD_GARG2 &font)) != NULL)
-		sp_set_key(SPD_GARG2 key);
+	sp_reset_key(SPD_GARG);
+	if ((key = sp_get_key(SPD_GARGS &font)) != NULL)
+		sp_set_key(SPD_GARGS key);
 
 	printf("Format Identifier: %.4s\n", font_buffer + FH_FMVER);
 
@@ -325,12 +325,12 @@ int main(int argc, char **argv)
 		printf("Max ORU value: %u\n", read_2b(hdr2_org + FH_ORUMX));
 		printf("Max Pixel value: %u\n", read_2b(hdr2_org + FH_PIXMX));
 		printf("Customer Number: %u\n", read_2b(hdr2_org + FH_CUSNR));
-		printf("Offset to Char Directory: %lu\n", (unsigned long)sp_read_long(SPD_GARG2 hdr2_org + FH_OFFCD));
-		printf("Offset to Constraint Data: %lu\n", (unsigned long)sp_read_long(SPD_GARG2 hdr2_org + FH_OFCNS));
-		printf("Offset to Track Kerning: %lu\n", (unsigned long)sp_read_long(SPD_GARG2 hdr2_org + FH_OFFTK));
-		printf("Offset to Pair Kerning: %lu\n", (unsigned long)sp_read_long(SPD_GARG2 hdr2_org + FH_OFFPK));
-		printf("Offset to Character Data: %lu\n", (unsigned long)sp_read_long(SPD_GARG2 hdr2_org + FH_OCHRD));
-		printf("Number of Bytes in File: %lu\n", (unsigned long)sp_read_long(SPD_GARG2 hdr2_org + FH_NBYTE));
+		printf("Offset to Char Directory: %lu\n", (unsigned long)sp_read_long(SPD_GARGS hdr2_org + FH_OFFCD));
+		printf("Offset to Constraint Data: %lu\n", (unsigned long)sp_read_long(SPD_GARGS hdr2_org + FH_OFCNS));
+		printf("Offset to Track Kerning: %lu\n", (unsigned long)sp_read_long(SPD_GARGS hdr2_org + FH_OFFTK));
+		printf("Offset to Pair Kerning: %lu\n", (unsigned long)sp_read_long(SPD_GARGS hdr2_org + FH_OFFPK));
+		printf("Offset to Character Data: %lu\n", (unsigned long)sp_read_long(SPD_GARGS hdr2_org + FH_OCHRD));
+		printf("Number of Bytes in File: %lu\n", (unsigned long)sp_read_long(SPD_GARGS hdr2_org + FH_NBYTE));
 	}
 
 	fclose(fdescr);

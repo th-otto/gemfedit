@@ -229,28 +229,28 @@ int main(int argc, char **argv)
 #endif
 
 	/* Initialization */
-	sp_reset(SPD_GARG1);					/* Reset Speedo character generator */
+	sp_reset(SPD_GARG);					/* Reset Speedo character generator */
 
 	font.org = font_buffer;
 	font.no_bytes = bytes_read;
 
-	key = sp_get_key(SPD_GARG2 &font);
+	key = sp_get_key(SPD_GARGS &font);
 	if (key == NULL)
 	{
-		printf("Unable to use fonts for customer number %d\n", sp_get_cust_no(SPD_GARG2 &font));
+		printf("Unable to use fonts for customer number %d\n", sp_get_cust_no(SPD_GARGS &font));
 		fclose(fdescr);
 		return 1;
 	} else
 	{
-		sp_set_key(SPD_GARG2 key);					/* Set decryption key */
+		sp_set_key(SPD_GARGS key);					/* Set decryption key */
 	}
 
 #if INCL_MULTIDEV
 #if INCL_BLACK || INCL_SCREEN || INCL_2D
-	sp_set_bitmap_device(SPD_GARG2 &bfuncs, sizeof(bfuncs));
+	sp_set_bitmap_device(SPD_GARGS &bfuncs, sizeof(bfuncs));
 #endif
 #if INCL_OUTLINE
-	sp_set_outline_device(SPD_GARG2 &ofuncs, sizeof(ofuncs));
+	sp_set_outline_device(SPD_GARGS &ofuncs, sizeof(ofuncs));
 #endif
 #endif
 
@@ -270,7 +270,7 @@ int main(int argc, char **argv)
 
 
 	/* Set character generation specifications */
-	if (!sp_set_specs(SPD_GARG2 &specs, &font))
+	if (!sp_set_specs(SPD_GARGS &specs, &font))
 	{
 		printf("****** Cannot set requested specs\n");
 	} else
@@ -278,10 +278,10 @@ int main(int argc, char **argv)
 		for (i = 0; i < no_layout_chars; i++)	/* For each character in font */
 		{
 			char_index = i + first_char_index;
-			char_id = sp_get_char_id(SPD_GARG2 char_index);
+			char_id = sp_get_char_id(SPD_GARGS char_index);
 			if (char_id != SP_UNDEFINED && char_id != UNDEFINED)
 			{
-				if (!sp_make_char(SPD_GARG2 char_index))
+				if (!sp_make_char(SPD_GARGS char_index))
 				{
 					printf("****** Cannot generate character %d\n", char_index);
 				}

@@ -77,7 +77,7 @@ boolean sp_begin_char_2d(SPD_PROTO_DECL2 fix31 x, fix31 y, fix31 minx, fix31 min
 	/* Convert PIX.FRAC to 16.16 form */
 	sp_globals.x_scan_active = TRUE;	/* Assume x-scanning from the start */
 
-	sp_init_char_out(SPD_GARG2 x, y, minx, miny, maxx, maxy);
+	sp_init_char_out(SPD_GARGS x, y, minx, miny, maxx, maxy);
 	return TRUE;
 }
 
@@ -256,7 +256,7 @@ static void sp_draw_vector_to_2d(SPD_PROTO_DECL2 fix15 x0,	/* X coordinate */
 		while (yc >= how_many_y)
 		{
 			temp1 = (fix15) (xc >> 16);
-			sp_add_intercept_2d(SPD_GARG2 yc--, temp1);
+			sp_add_intercept_2d(SPD_GARGS yc--, temp1);
 			xc -= dx_dy;
 		}
 	} else
@@ -267,7 +267,7 @@ static void sp_draw_vector_to_2d(SPD_PROTO_DECL2 fix15 x0,	/* X coordinate */
 		while (yc < how_many_y)
 		{
 			temp1 = (fix15) (xc >> 16);
-			sp_add_intercept_2d(SPD_GARG2 yc++, temp1);
+			sp_add_intercept_2d(SPD_GARGS yc++, temp1);
 			xc += dx_dy;
 		}
 	}
@@ -298,10 +298,10 @@ void sp_line_2d(SPD_PROTO_DECL2 fix31 x1, fix31 y1)
 
 	if (!sp_globals.intercept_oflo)
 	{
-		sp_draw_vector_to_2d(SPD_GARG2 sp_globals.x0_spxl, sp_globals.y0_spxl, x1, y1, &sp_globals.y_band);	/* y-scan */
+		sp_draw_vector_to_2d(SPD_GARGS sp_globals.x0_spxl, sp_globals.y0_spxl, x1, y1, &sp_globals.y_band);	/* y-scan */
 
 		if (sp_globals.x_scan_active)
-			sp_draw_vector_to_2d(SPD_GARG2 sp_globals.y0_spxl, sp_globals.x0_spxl, y1, x1, &sp_globals.x_band);	/* x-scan if selected */
+			sp_draw_vector_to_2d(SPD_GARGS sp_globals.y0_spxl, sp_globals.x0_spxl, y1, x1, &sp_globals.x_band);	/* x-scan if selected */
 	}
 
 	sp_globals.x0_spxl = x1;
@@ -677,13 +677,13 @@ boolean sp_end_char_2d(SPD_PROTO_DECL1)
 			sp_globals.y_band.band_max = sp_globals.ymax;
 			sp_globals.x_scan_active = FALSE;
 			sp_globals.no_x_lists = 0;
-			sp_init_intercepts_out(SPD_GARG1);
+			sp_init_intercepts_out(SPD_GARG);
 			sp_globals.first_pass = FALSE;
 			sp_globals.extents_running = FALSE;
 			return FALSE;
 		} else
 		{
-			sp_proc_intercepts_2d(SPD_GARG1);
+			sp_proc_intercepts_2d(SPD_GARG);
 			close_bitmap();
 			return TRUE;
 		}
@@ -691,15 +691,15 @@ boolean sp_end_char_2d(SPD_PROTO_DECL1)
 	{
 		if (sp_globals.intercept_oflo)
 		{
-			sp_reduce_band_size_out(SPD_GARG1);
-			sp_init_intercepts_out(SPD_GARG1);
+			sp_reduce_band_size_out(SPD_GARG);
+			sp_init_intercepts_out(SPD_GARG);
 			return FALSE;
 		} else
 		{
-			sp_proc_intercepts_2d(SPD_GARG1);
-			if (sp_next_band_out(SPD_GARG1))
+			sp_proc_intercepts_2d(SPD_GARG);
+			if (sp_next_band_out(SPD_GARG))
 			{
-				sp_init_intercepts_out(SPD_GARG1);
+				sp_init_intercepts_out(SPD_GARG);
 				return FALSE;
 			}
 			close_bitmap();

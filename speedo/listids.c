@@ -179,12 +179,12 @@ int main(int argc, char **argv)
 		return 1;
 	}
 	/* init */
-	sp_reset(SPD_GARG1);
+	sp_reset(SPD_GARG);
 
 	font.org = f_buffer;
 	font.no_bytes = minbufsize;
 
-	key = sp_get_key(SPD_GARG2 &font);
+	key = sp_get_key(SPD_GARGS &font);
 	if (key == NULL)
 	{
 #if 0
@@ -193,7 +193,7 @@ int main(int argc, char **argv)
 #endif
 	} else
 	{
-		sp_set_key(SPD_GARG2 key);
+		sp_set_key(SPD_GARGS key);
 	}
 	
 	first_char_index = read_2b(f_buffer + FH_FCHRF);
@@ -211,7 +211,7 @@ int main(int argc, char **argv)
 	specs.output_mode = MODE_BLACK;
 	specs.out_info = NULL;
 
-	if (!sp_set_specs(SPD_GARG2 &specs, &font))
+	if (!sp_set_specs(SPD_GARGS &specs, &font))
 	{
 		fprintf(stderr, "can't set specs\n");
 	} else
@@ -219,11 +219,11 @@ int main(int argc, char **argv)
 		for (i = 0; i < num_chars; i++)
 		{
 			char_index = i + first_char_index;
-			char_id = sp_get_char_id(SPD_GARG2 char_index);
+			char_id = sp_get_char_id(SPD_GARGS char_index);
 			if (char_id != SP_UNDEFINED && char_id != UNDEFINED)
 			{
 				printf("/* %3d ID %04x */\n", char_index, char_id);
-				if (!sp_make_char(SPD_GARG2 char_index))
+				if (!sp_make_char(SPD_GARGS char_index))
 				{
 					fprintf(stderr, "can't make char %d (%x)\n", char_index, char_id);
 				}

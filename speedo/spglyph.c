@@ -148,7 +148,7 @@ void sp_set_bitmap_bits(SPD_PROTO_DECL2 fix15 y, fix15 xbit1, fix15 xbit2)
 	{
 
 #ifdef CLIP_BBOX_NOISE
-		sp_write_error(SPD_GARG2 "Run wider than bitmap width -- truncated");
+		sp_write_error(SPD_GARGS "Run wider than bitmap width -- truncated");
 #endif
 
 		xbit1 = cfv->bit_width;
@@ -157,7 +157,7 @@ void sp_set_bitmap_bits(SPD_PROTO_DECL2 fix15 y, fix15 xbit1, fix15 xbit2)
 	{
 
 #ifdef CLIP_BBOX_NOISE
-		sp_write_error(SPD_GARG2 "Run wider than bitmap width -- truncated");
+		sp_write_error(SPD_GARGS "Run wider than bitmap width -- truncated");
 #endif
 
 		xbit2 = cfv->bit_width;
@@ -179,7 +179,7 @@ void sp_set_bitmap_bits(SPD_PROTO_DECL2 fix15 y, fix15 xbit1, fix15 xbit2)
 	{
 
 #ifdef CLIP_BBOX_NOISE
-		sp_write_error(SPD_GARG2 "Y larger than bitmap height -- truncated");
+		sp_write_error(SPD_GARGS "Y larger than bitmap height -- truncated");
 #endif
 
 		cfv->trunc = 1;
@@ -385,11 +385,11 @@ int sp_build_all_bitmaps(SPD_PROTO_DECL2 FontPtr pfont, fsBitmapFormat format, f
 		if (spf->vals.nranges && j == spf->vals.nranges)
 			continue;
 
-		if (!sp_make_char(SPD_GARG2 cfv->char_index))
+		if (!sp_make_char(SPD_GARGS cfv->char_index))
 		{
 
 #ifdef DEBUG							/* can be very common with some encodings */
-			sp_write_error(SPD_GARG2 "Can't make char %d", cfv->char_index);
+			sp_write_error(SPD_GARGS "Can't make char %d", cfv->char_index);
 #endif
 		}
 	}

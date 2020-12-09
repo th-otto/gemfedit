@@ -105,7 +105,7 @@ static specs_t specsarg;
 
 void fw_reset(SPD_PROTO_DECL1)
 {
-	sp_reset(SPD_GARG1);
+	sp_reset(SPD_GARG);
 }
 
 
@@ -340,12 +340,12 @@ void fw_set_specs(SPD_PROTO_DECL2 comp_char_desc *pspecs)
 
 	specsarg.flags = mode;
 
-	sp_set_specs(SPD_GARG2 &specsarg, pspecs->pfont);
+	sp_set_specs(SPD_GARGS &specsarg, pspecs->pfont);
 }
 
 bool fw_make_char(SPD_PROTO_DECL2 ufix16 char_index)
 {
-	return sp_make_char(SPD_GARG2 char_index);
+	return sp_make_char(SPD_GARGS char_index);
 }
 
 
@@ -392,7 +392,7 @@ void sp_open_bitmap(SPD_PROTO_DECL2
 	ymax = ymin + ysize;
 
 	set_width_x = ((sp_globals.set_width.x >> 15) + 1) >> 1;
-	(*sp_globals.bitmap_device.p_open_bitmap)(SPD_GARG2 xmin, xmax, ymin, ymax);
+	(*sp_globals.bitmap_device.p_open_bitmap)(SPD_GARGS xmin, xmax, ymin, ymax);
 }
 
 /* 
@@ -405,7 +405,7 @@ void sp_set_bitmap_bits(SPD_PROTO_DECL2 fix15 y, fix15 x1, fix15 x2)
 	printf("set_bitmap_bits(%d, %d, %d)\n", y, x1, x2);
 #endif
 
-	(*sp_globals.bitmap_device.p_set_bits)(SPD_GARG2 y, x1, x2);
+	(*sp_globals.bitmap_device.p_set_bits)(SPD_GARGS y, x1, x2);
 }
 
 /* 
@@ -418,7 +418,7 @@ void sp_close_bitmap(SPD_PROTO_DECL1)
 	printf("close_bitmap()\n");
 #endif
 
-	(*sp_globals.bitmap_device.p_close_bitmap)(SPD_GARG1);
+	(*sp_globals.bitmap_device.p_close_bitmap)(SPD_GARG);
 }
 
 /*
@@ -441,7 +441,7 @@ void sp_open_outline(SPD_PROTO_DECL2
 #endif
 
 	set_width_x = ((sw_x >> 15) + 1) >> 1;
-	(*sp_globals.outline_device.p_open_outline)(SPD_GARG2 set_width_x, set_width_x, xmin, xmax, ymin, ymax);
+	(*sp_globals.outline_device.p_open_outline)(SPD_GARGS set_width_x, set_width_x, xmin, xmax, ymin, ymax);
 }
 
 /*
@@ -455,7 +455,7 @@ void sp_start_sub_char(SPD_PROTO_DECL1)
 	printf("start_sub_char()\n");
 #endif
 
-	(*sp_globals.outline_device.p_start_sub_char)(SPD_GARG1);
+	(*sp_globals.outline_device.p_start_sub_char)(SPD_GARG);
 }
 
 void sp_end_sub_char(SPD_PROTO_DECL1)
@@ -464,7 +464,7 @@ void sp_end_sub_char(SPD_PROTO_DECL1)
 	printf("end_sub_char()\n");
 #endif
 
-	(*sp_globals.outline_device.p_end_sub_char)(SPD_GARG1);
+	(*sp_globals.outline_device.p_end_sub_char)(SPD_GARG);
 }
 
 /*
@@ -485,7 +485,7 @@ void sp_start_contour(SPD_PROTO_DECL2
 	printf("start_curve(%3.1f, %3.1f, %s)\n", realx, realy, outside ? "outside" : "inside");
 #endif
 
-	(*sp_globals.outline_device.p_start_contour)(SPD_GARG2 realx, realy, outside);
+	(*sp_globals.outline_device.p_start_contour)(SPD_GARGS realx, realy, outside);
 }
 
 /*
@@ -507,7 +507,7 @@ void sp_curve_to(SPD_PROTO_DECL2
 		   (double) x2 / 65536.0, (double) y2 / 65536.0,
 		   (double) x3 / 65536.0, (double) y3 / 65536.0);
 #endif
-	(*sp_globals.outline_device.p_curve)(SPD_GARG1 x1, y1, x2, y2, x3, y3);
+	(*sp_globals.outline_device.p_curve)(SPD_GARG x1, y1, x2, y2, x3, y3);
 }
 
 
@@ -530,7 +530,7 @@ void sp_line_to(SPD_PROTO_DECL2
 	printf("line_to(%3.1f, %3.1f)\n", realx, realy);
 #endif
 
-	(*sp_globals.outline_device.p_line)(SPD_GARG2 realx, realy);
+	(*sp_globals.outline_device.p_line)(SPD_GARGS realx, realy);
 }
 
 /*
@@ -543,7 +543,7 @@ void sp_close_contour(SPD_PROTO_DECL1)
 	printf("close_curve()\n");
 #endif
 
-	(*sp_globals.outline_device.p_close_contour)(SPD_GARG1);
+	(*sp_globals.outline_device.p_close_contour)(SPD_GARG);
 }
 
 /*
@@ -556,5 +556,5 @@ void sp_close_outline(SPD_PROTO_DECL1)
 	printf("close_outline()\n");
 #endif
 
-	(*sp_globals.outline_device.p_close_outline)(SPD_GARG1);
+	(*sp_globals.outline_device.p_close_outline)(SPD_GARG);
 }

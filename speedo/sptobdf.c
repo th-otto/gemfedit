@@ -293,23 +293,23 @@ static void dump_header(SPD_PROTO_DECL2 uint16_t num_chars, const glyphinfo_t *b
 		ufix8 *hdr2_org;
 		ufix16 private_off;
 
-		private_off = sp_read_word_u(SPD_GARG2 font.org + FH_HEDSZ);
+		private_off = sp_read_word_u(SPD_GARGS font.org + FH_HEDSZ);
 		if (private_off + FH_CUSNR > font.no_bytes)
 		{
-			sp_report_error(SPD_GARG2 1);		/* Insufficient font data loaded */
+			sp_report_error(SPD_GARGS 1);		/* Insufficient font data loaded */
 		} else
 		{
 			hdr2_org = font.org + private_off;
 
-			printf("COMMENT Max ORU value: %u\n", sp_read_word_u(SPD_GARG2 hdr2_org + FH_ORUMX));
-			printf("COMMENT Max Pixel value: %u\n", sp_read_word_u(SPD_GARG2 hdr2_org + FH_PIXMX));
-			printf("COMMENT Customer Number: %u\n", sp_read_word_u(SPD_GARG2 hdr2_org + FH_CUSNR));
-			printf("COMMENT Offset to Char Directory: %lu\n", (unsigned long)sp_read_long(SPD_GARG2 hdr2_org + FH_OFFCD));
-			printf("COMMENT Offset to Constraint Data: %lu\n", (unsigned long)sp_read_long(SPD_GARG2 hdr2_org + FH_OFCNS));
-			printf("COMMENT Offset to Track Kerning: %lu\n", (unsigned long)sp_read_long(SPD_GARG2 hdr2_org + FH_OFFTK));
-			printf("COMMENT Offset to Pair Kerning: %lu\n", (unsigned long)sp_read_long(SPD_GARG2 hdr2_org + FH_OFFPK));
-			printf("COMMENT Offset to Character Data: %lu\n", (unsigned long)sp_read_long(SPD_GARG2 hdr2_org + FH_OCHRD));
-			printf("COMMENT Number of Bytes in File: %lu\n", (unsigned long)sp_read_long(SPD_GARG2 hdr2_org + FH_NBYTE));
+			printf("COMMENT Max ORU value: %u\n", sp_read_word_u(SPD_GARGS hdr2_org + FH_ORUMX));
+			printf("COMMENT Max Pixel value: %u\n", sp_read_word_u(SPD_GARGS hdr2_org + FH_PIXMX));
+			printf("COMMENT Customer Number: %u\n", sp_read_word_u(SPD_GARGS hdr2_org + FH_CUSNR));
+			printf("COMMENT Offset to Char Directory: %lu\n", (unsigned long)sp_read_long(SPD_GARGS hdr2_org + FH_OFFCD));
+			printf("COMMENT Offset to Constraint Data: %lu\n", (unsigned long)sp_read_long(SPD_GARGS hdr2_org + FH_OFCNS));
+			printf("COMMENT Offset to Track Kerning: %lu\n", (unsigned long)sp_read_long(SPD_GARGS hdr2_org + FH_OFFTK));
+			printf("COMMENT Offset to Pair Kerning: %lu\n", (unsigned long)sp_read_long(SPD_GARGS hdr2_org + FH_OFFPK));
+			printf("COMMENT Offset to Character Data: %lu\n", (unsigned long)sp_read_long(SPD_GARGS hdr2_org + FH_OCHRD));
+			printf("COMMENT Number of Bytes in File: %lu\n", (unsigned long)sp_read_long(SPD_GARGS hdr2_org + FH_NBYTE));
 		}
 		printf("COMMENT\n");
 	}
@@ -403,7 +403,7 @@ static void update_bbox(SPD_PROTO_DECL2 charinfo *c, glyphinfo_t *box)
 {
 	bbox_t bb;
 	
-	sp_get_char_bbox(SPD_GARG2 c->char_index, &bb, TRUE);
+	sp_get_char_bbox(SPD_GARGS c->char_index, &bb, TRUE);
 	c->bbox.xmin = bb.xmin;
 	c->bbox.ymin = bb.ymin;
 	c->bbox.xmax = bb.xmax;
@@ -479,12 +479,12 @@ int main(int argc, char **argv)
 		return 1;
 	}
 	/* init */
-	sp_reset(SPD_GARG1);
+	sp_reset(SPD_GARG);
 
 	font.org = font_buffer;
 	font.no_bytes = minbufsize;
 
-	key = sp_get_key(SPD_GARG2 &font);
+	key = sp_get_key(SPD_GARGS &font);
 	if (key == NULL)
 	{
 		fprintf(stderr, "Non-standard encryption for \"%s\"\n", fontfile);
@@ -493,7 +493,7 @@ int main(int argc, char **argv)
 #endif
 	} else
 	{
-		sp_set_key(SPD_GARG2 key);
+		sp_set_key(SPD_GARGS key);
 	}
 	
 	first_char_index = read_2b(font_buffer + FH_FCHRF);
@@ -536,7 +536,7 @@ int main(int argc, char **argv)
 	{
 		fontname = (char *) (font_buffer + FH_FNTNM);
 	}
-	if (!sp_set_specs(SPD_GARG2 &specs, &font))
+	if (!sp_set_specs(SPD_GARGS &specs, &font))
 	{
 		fprintf(stderr, "can't set specs\n");
 	} else
@@ -571,7 +571,7 @@ int main(int argc, char **argv)
 				if (char_id != SP_UNDEFINED && char_id != UNDEFINED)
 				{
 					real_num_chars++;
-					update_bbox(SPD_GARG2 &c, &font_bbox);
+					update_bbox(SPD_GARGS &c, &font_bbox);
 					if (c.bbox.width != 0 && c.bbox.width != monowidth)
 					{
 						if (monowidth != 0)
@@ -586,11 +586,11 @@ int main(int argc, char **argv)
 			for (i = 0; i < num_chars; i++)
 			{
 				c.char_index = char_index = i + first_char_index;
-				c.char_id = char_id = sp_get_char_id(SPD_GARG2 char_index);
+				c.char_id = char_id = sp_get_char_id(SPD_GARGS char_index);
 				if (char_id != SP_UNDEFINED && char_id != UNDEFINED)
 				{
 					real_num_chars++;
-					update_bbox(SPD_GARG2 &c, &font_bbox);
+					update_bbox(SPD_GARGS &c, &font_bbox);
 					if (c.bbox.width != 0 && c.bbox.width != monowidth)
 					{
 						if (monowidth != 0)
@@ -601,7 +601,7 @@ int main(int argc, char **argv)
 			}
 		}
 		font_bbox.ascent = font_bbox.height - font_bbox.descent;
-		dump_header(SPD_GARG2 real_num_chars, &font_bbox, is_mono);
+		dump_header(SPD_GARGS real_num_chars, &font_bbox, is_mono);
 
 		if (iso_encoding)
 		{
@@ -609,7 +609,7 @@ int main(int argc, char **argv)
 			{
 				char_index = iso_map[i + 1];
 				char_id = iso_map[i];
-				if (!sp_make_char(SPD_GARG2 char_index))
+				if (!sp_make_char(SPD_GARGS char_index))
 				{
 					fprintf(stderr, "can't make char %d (%x)\n", char_index, char_id);
 				}
@@ -619,10 +619,10 @@ int main(int argc, char **argv)
 			for (i = 0; i < num_chars; i++)
 			{
 				char_index = i + first_char_index;
-				char_id = sp_get_char_id(SPD_GARG2 char_index);
+				char_id = sp_get_char_id(SPD_GARGS char_index);
 				if (char_id != SP_UNDEFINED && char_id != UNDEFINED)
 				{
-					if (!sp_make_char(SPD_GARG2 char_index))
+					if (!sp_make_char(SPD_GARGS char_index))
 					{
 						fprintf(stderr, "can't make char %d (%x)\n", char_index, char_id);
 					}
@@ -700,13 +700,13 @@ void sp_open_bitmap(SPD_PROTO_DECL2 fix31 xorg, fix31 yorg, fix15 xsize, fix15 y
 		fprintf(stderr, "char 0x%x (0x%x) wider than max bits (%d vs %d)\n", char_index, char_id, bit_width, MAX_BITS);
 		bit_width = MAX_BITS;
 	}
-	width = sp_get_char_width(SPD_GARG2 char_index);
+	width = sp_get_char_width(SPD_GARGS char_index);
 	pix_width = width * (specs.xxmult / 65536L) + ((ufix32) width * ((ufix32) specs.xxmult & 0xffff)) / 65536L;
 	pix_width /= 65536L;
 
 	width = (pix_width * 720000L) / (point_size * x_res);
 
-	sp_get_char_bbox(SPD_GARG2 char_index, &bb, TRUE);
+	sp_get_char_bbox(SPD_GARGS char_index, &bb, TRUE);
 
 #if DEBUG
 	if (((bb.xmax - bb.xmin) >> 16) != bit_width)

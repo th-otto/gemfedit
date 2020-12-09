@@ -229,8 +229,8 @@ extern SPEEDO_GLOBALS sp_globals;
 #define sp_plaid sp_globals
 #define SPD_PROTO_DECL1 void
 #define SPD_PROTO_DECL2
-#define SPD_GARG1
-#define SPD_GARG2
+#define SPD_GARG
+#define SPD_GARGS
 #define SPD_GUNUSED
 #elif DYNAMIC_ALLOC
 extern SPEEDO_GLOBALS *sp_global_ptr;
@@ -240,8 +240,8 @@ extern SPEEDO_GLOBALS *sp_global_ptr;
 #define sp_plaid (*sp_global_ptr)
 #define SPD_PROTO_DECL1 void
 #define SPD_PROTO_DECL2
-#define SPD_GARG1
-#define SPD_GARG2
+#define SPD_GARG
+#define SPD_GARGS
 #define SPD_GUNUSED
 #elif REENTRANT_ALLOC
 #define sp_globals (*sp_global_ptr)
@@ -249,8 +249,8 @@ extern SPEEDO_GLOBALS *sp_global_ptr;
 #define sp_plaid (*(*sp_global_ptr).plaid)
 #define SPD_PROTO_DECL1 SPEEDO_GLOBALS *sp_global_ptr
 #define SPD_PROTO_DECL2 SPD_PROTO_DECL1,
-#define SPD_GARG1 sp_global_ptr
-#define SPD_GARG2 SPD_GARG1,
+#define SPD_GARG sp_global_ptr
+#define SPD_GARGS SPD_GARG,
 #define SPD_GUNUSED (void)(sp_global_ptr);
 #else
 #define sp_globals (*sp_global_ptr)
@@ -258,8 +258,8 @@ extern SPEEDO_GLOBALS *sp_global_ptr;
 #define sp_plaid (*sp_global_ptr)
 #define SPD_PROTO_DECL1 SPEEDO_GLOBALS *sp_global_ptr
 #define SPD_PROTO_DECL2 SPD_PROTO_DECL1,
-#define SPD_GARG1 sp_global_ptr
-#define SPD_GARG2 SPD_GARG1,
+#define SPD_GARG sp_global_ptr
+#define SPD_GARGS SPD_GARG,
 #define SPD_GUNUSED (void)(sp_global_ptr);
 #endif
 

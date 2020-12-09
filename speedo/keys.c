@@ -112,7 +112,7 @@ void sp_set_key(SPD_PROTO_DECL2 const ufix8 *key)	/* Specified decryption key */
 
 void sp_reset_key(SPD_PROTO_DECL1)
 {
-	sp_set_key(SPD_GARG2 mkey);
+	sp_set_key(SPD_GARGS mkey);
 }
 
 
@@ -121,7 +121,7 @@ const ufix8 *sp_get_key(SPD_PROTO_DECL2 const buff_t *font_buff)
 	ufix16 cust_no;
 	const ufix8 *key;
 
-	cust_no = sp_get_cust_no(SPD_GARG2 font_buff);
+	cust_no = sp_get_cust_no(SPD_GARGS font_buff);
 #ifdef EXTRAFONTS
 	if (cust_no == SCUS0)
 	{

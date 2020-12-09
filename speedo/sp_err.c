@@ -12,43 +12,43 @@ void sp_report_error(SPD_PROTO_DECL2 fix15 n)
 	switch (n)
 	{
 	case 1:
-		sp_write_error(SPD_GARG2 "Insufficient font data loaded");
+		sp_write_error(SPD_GARGS "Insufficient font data loaded");
 		break;
 	case 3:
-		sp_write_error(SPD_GARG2 "Transformation matrix out of range");
+		sp_write_error(SPD_GARGS "Transformation matrix out of range");
 		break;
 	case 4:
-		sp_write_error(SPD_GARG2 "Font format error");
+		sp_write_error(SPD_GARGS "Font format error");
 		break;
 	case 5:
-		sp_write_error(SPD_GARG2 "Requested specs not compatible with output module");
+		sp_write_error(SPD_GARGS "Requested specs not compatible with output module");
 		break;
 	case 7:
-		sp_write_error(SPD_GARG2 "Intelligent transformation requested but not supported");
+		sp_write_error(SPD_GARGS "Intelligent transformation requested but not supported");
 		break;
 	case 8:
-		sp_write_error(SPD_GARG2 "Unsupported output mode requested");
+		sp_write_error(SPD_GARGS "Unsupported output mode requested");
 		break;
 	case 9:
-		sp_write_error(SPD_GARG2 "Extended font loaded but only compact fonts supported");
+		sp_write_error(SPD_GARGS "Extended font loaded but only compact fonts supported");
 		break;
 	case 10:
-		sp_write_error(SPD_GARG2 "Font specs not set prior to use of font");
+		sp_write_error(SPD_GARGS "Font specs not set prior to use of font");
 		break;
 	case 11:
-		sp_write_error(SPD_GARG2 "Squeezing/Clipping requested but not supported");
+		sp_write_error(SPD_GARGS "Squeezing/Clipping requested but not supported");
 		break;
 	case 12:
-		/* sp_write_error(SPD_GARG2 "Character data not available"); */
+		/* sp_write_error(SPD_GARGS "Character data not available"); */
 		break;
 	case 13:
-		sp_write_error(SPD_GARG2 "Track kerning data not available()");
+		sp_write_error(SPD_GARGS "Track kerning data not available()");
 		break;
 	case 14:
-		sp_write_error(SPD_GARG2 "Pair kerning data not available()");
+		sp_write_error(SPD_GARGS "Pair kerning data not available()");
 		break;
 	default:
-		sp_write_error(SPD_GARG2 "report_error(%d)", n);
+		sp_write_error(SPD_GARGS "report_error(%d)", n);
 		break;
 	}
 }

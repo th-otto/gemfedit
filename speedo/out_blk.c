@@ -71,7 +71,7 @@ boolean sp_begin_char_black(SPD_PROTO_DECL2 fix31 x, fix31 y, fix31 minx, fix31 
 		   (double) minx / (double) sp_globals.onepix, (double) miny / (double) sp_globals.onepix,
 		   (double) maxx / (double) sp_globals.onepix, (double) maxy / (double) sp_globals.onepix);
 #endif
-	sp_init_char_out(SPD_GARG2 x, y, minx, miny, maxx, maxy);
+	sp_init_char_out(SPD_GARGS x, y, minx, miny, maxx, maxy);
 	return TRUE;
 }
 
@@ -224,14 +224,14 @@ void sp_line_black(SPD_PROTO_DECL2 fix31 x1, fix31 y1)
 			if ((how_many_y += yc + 1) < 0)
 				how_many_y = 0;			/* can't go below 0 */
 			for (i = yc; i >= how_many_y; i--)
-				sp_add_intercept_black(SPD_GARG2 i, temp1);
+				sp_add_intercept_black(SPD_GARGS i, temp1);
 		} else
 		{								/* Vector up */
 			/* check to see that line doesn't extend beyond top of band */
 			if ((how_many_y += yc) > sp_globals.no_y_lists)
 				how_many_y = sp_globals.no_y_lists;
 			for (i = yc; i != how_many_y; i++)
-				sp_add_intercept_black(SPD_GARG2 i, temp1);
+				sp_add_intercept_black(SPD_GARGS i, temp1);
 		}
 		return;
 	}
@@ -274,7 +274,7 @@ void sp_line_black(SPD_PROTO_DECL2 fix31 x1, fix31 y1)
 	{									/* Vector down */
 		if (how_many_y == -1)
 		{
-			sp_add_intercept_black(SPD_GARG2 yc, (fix15) (xc >> 16));
+			sp_add_intercept_black(SPD_GARGS yc, (fix15) (xc >> 16));
 		} else
 		{
 			if ((how_many_y += yc + 1) < 0)
@@ -282,7 +282,7 @@ void sp_line_black(SPD_PROTO_DECL2 fix31 x1, fix31 y1)
 			for (i = yc; i >= how_many_y; i--)
 			{
 				temp1 = (fix15) (xc >> 16);
-				sp_add_intercept_black(SPD_GARG2 i, temp1);
+				sp_add_intercept_black(SPD_GARGS i, temp1);
 				xc -= dx_dy;
 			}
 		}
@@ -291,7 +291,7 @@ void sp_line_black(SPD_PROTO_DECL2 fix31 x1, fix31 y1)
 		/* check to see that line doesn't extend beyond top of band */
 		if (how_many_y == 1)
 		{
-			sp_add_intercept_black(SPD_GARG2 yc, (fix15) (xc >> 16));
+			sp_add_intercept_black(SPD_GARGS yc, (fix15) (xc >> 16));
 		} else
 		{
 			if ((how_many_y += yc) > sp_globals.no_y_lists)
@@ -299,7 +299,7 @@ void sp_line_black(SPD_PROTO_DECL2 fix31 x1, fix31 y1)
 			for (i = yc; i != how_many_y; i++)
 			{
 				temp1 = (fix15) (xc >> 16);
-				sp_add_intercept_black(SPD_GARG2 i, temp1);
+				sp_add_intercept_black(SPD_GARGS i, temp1);
 				xc += dx_dy;
 			}
 		}
@@ -618,13 +618,13 @@ boolean sp_end_char_black(SPD_PROTO_DECL1)
 		{
 			sp_globals.y_band.band_min = sp_globals.ymin;
 			sp_globals.y_band.band_max = sp_globals.ymax;
-			sp_init_intercepts_out(SPD_GARG1);
+			sp_init_intercepts_out(SPD_GARG);
 			sp_globals.first_pass = FALSE;
 			sp_globals.extents_running = FALSE;
 			return FALSE;
 		} else
 		{
-			sp_proc_intercepts_black(SPD_GARG1);
+			sp_proc_intercepts_black(SPD_GARG);
 			close_bitmap();
 			return TRUE;
 		}
@@ -632,15 +632,15 @@ boolean sp_end_char_black(SPD_PROTO_DECL1)
 	{
 		if (sp_globals.intercept_oflo)
 		{
-			sp_reduce_band_size_out(SPD_GARG1);
-			sp_init_intercepts_out(SPD_GARG1);
+			sp_reduce_band_size_out(SPD_GARG);
+			sp_init_intercepts_out(SPD_GARG);
 			return FALSE;
 		} else
 		{
-			sp_proc_intercepts_black(SPD_GARG1);
-			if (sp_next_band_out(SPD_GARG1))
+			sp_proc_intercepts_black(SPD_GARG);
+			if (sp_next_band_out(SPD_GARG))
 			{
-				sp_init_intercepts_out(SPD_GARG1);
+				sp_init_intercepts_out(SPD_GARG);
 				return FALSE;
 			}
 			close_bitmap();

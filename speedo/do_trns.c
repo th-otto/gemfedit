@@ -207,7 +207,7 @@ ufix8 *sp_read_bbox(SPD_PROTO_DECL2
 	sp_globals.y_int = sp_globals.Y_int_org;
 	sp_globals.x_orus = sp_globals.y_orus = 0;
 	format1 = NEXT_BYTE(pointer);
-	pointer = sp_get_args(SPD_GARG2 pointer, format1, pPmin);
+	pointer = sp_get_args(SPD_GARGS pointer, format1, pPmin);
 #if INCL_SQUEEZING || INCL_ISW
 	if (set_flag)
 	{
@@ -241,7 +241,7 @@ ufix8 *sp_read_bbox(SPD_PROTO_DECL2
 			break;
 		}
 
-		pointer = sp_get_args(SPD_GARG2 pointer, format, &P);
+		pointer = sp_get_args(SPD_GARGS pointer, format, &P);
 #if INCL_SQUEEZING || INCL_ISW
 		if (set_flag && (i == 2))
 		{
@@ -319,12 +319,12 @@ static void sp_split_curve(SPD_PROTO_DECL2 fix31 x1, fix31 y1, fix31 x2, fix31 y
 		Pctrl1.y = (Y0 + Y1 + 1) >> 1;
 		Pctrl2.x = (X0 + (X1 << 1) + X2 + 2) >> 2;
 		Pctrl2.y = (Y0 + (Y1 << 1) + Y2 + 2) >> 2;
-		sp_split_curve(SPD_GARG2 Pctrl1.x, Pctrl1.y, Pctrl2.x, Pctrl2.y, Pmid.x, Pmid.y, depth);
+		sp_split_curve(SPD_GARGS Pctrl1.x, Pctrl1.y, Pctrl2.x, Pctrl2.y, Pmid.x, Pmid.y, depth);
 		Pctrl1.x = (X1 + (X2 << 1) + X3 + 2) >> 2;
 		Pctrl1.y = (Y1 + (Y2 << 1) + Y3 + 2) >> 2;
 		Pctrl2.x = (X2 + X3 + 1) >> 1;
 		Pctrl2.y = (Y2 + Y3 + 1) >> 1;
-		sp_split_curve(SPD_GARG2 Pctrl1.x, Pctrl1.y, Pctrl2.x, Pctrl2.y, P3.x, P3.y, depth);
+		sp_split_curve(SPD_GARGS Pctrl1.x, Pctrl1.y, Pctrl2.x, Pctrl2.y, P3.x, P3.y, depth);
 	}
 }
 
@@ -359,7 +359,7 @@ void sp_proc_outl_data(SPD_PROTO_DECL2 ufix8 *pointer)	/* Pointer to next byte i
 		switch (format1 >> 4)
 		{
 		case 0:						/* LINE */
-			pointer = sp_get_args(SPD_GARG2 pointer, format1, &P1);
+			pointer = sp_get_args(SPD_GARGS pointer, format1, &P1);
 #if DEBUG
 			printf("LINE %6.1f, %6.1f\n",
 				   (double) P1.x / (double) sp_globals.onepix, (double) P1.y / (double) sp_globals.onepix);
@@ -429,7 +429,7 @@ void sp_proc_outl_data(SPD_PROTO_DECL2 ufix8 *pointer)	/* Pointer to next byte i
 				fn_end_contour();
 			}
 
-			pointer = sp_get_args(SPD_GARG2 pointer, format1, &P0);
+			pointer = sp_get_args(SPD_GARGS pointer, format1, &P0);
 			sp_globals.P0 = P0;
 #if DEBUG
 			printf("MOVE %6.1f, %6.1f\n",
@@ -453,9 +453,9 @@ void sp_proc_outl_data(SPD_PROTO_DECL2 ufix8 *pointer)	/* Pointer to next byte i
 
 		default:						/* CRVE */
 			format2 = NEXT_BYTE(pointer);
-			pointer = sp_get_args(SPD_GARG2 pointer, format1, &P1);
-			pointer = sp_get_args(SPD_GARG2 pointer, format2, &P2);
-			pointer = sp_get_args(SPD_GARG2 pointer, (ufix8) (format2 >> 4), &P3);
+			pointer = sp_get_args(SPD_GARGS pointer, format1, &P1);
+			pointer = sp_get_args(SPD_GARGS pointer, format2, &P2);
+			pointer = sp_get_args(SPD_GARGS pointer, (ufix8) (format2 >> 4), &P3);
 			depth = (format1 >> 4) & 0x07;
 #if DEBUG
 			printf("CRVE %6.1f, %6.1f, %6.1f, %6.1f, %6.1f, %6.1f, %d\n",
@@ -476,7 +476,7 @@ void sp_proc_outl_data(SPD_PROTO_DECL2 ufix8 *pointer)	/* Pointer to next byte i
 				sp_globals.P0 = P3;
 				continue;
 			}
-			sp_split_curve(SPD_GARG2 P1.x, P1.y, P2.x, P2.y, P3.x, P3.y, depth);
+			sp_split_curve(SPD_GARGS P1.x, P1.y, P2.x, P2.y, P3.x, P3.y, depth);
 			continue;
 		}
 	}
