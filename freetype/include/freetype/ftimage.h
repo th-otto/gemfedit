@@ -447,14 +447,7 @@ typedef struct FT_Outline_
 #define FT_CURVE_TAG_TOUCH_X       8	/* reserved for the TrueType hinter */
 #define FT_CURVE_TAG_TOUCH_Y      16	/* reserved for the TrueType hinter */
 
-#define FT_CURVE_TAG_TOUCH_BOTH    ( FT_CURVE_TAG_TOUCH_X | \
-                                     FT_CURVE_TAG_TOUCH_Y )
-
-#define FT_Curve_Tag_On       FT_CURVE_TAG_ON
-#define FT_Curve_Tag_Conic    FT_CURVE_TAG_CONIC
-#define FT_Curve_Tag_Cubic    FT_CURVE_TAG_CUBIC
-#define FT_Curve_Tag_Touch_X  FT_CURVE_TAG_TOUCH_X
-#define FT_Curve_Tag_Touch_Y  FT_CURVE_TAG_TOUCH_Y
+#define FT_CURVE_TAG_TOUCH_BOTH    ( FT_CURVE_TAG_TOUCH_X | FT_CURVE_TAG_TOUCH_Y )
 
 
 /*************************************************************************/

@@ -411,15 +411,15 @@ FT_LOCAL_DEF(FT_Error) TT_Load_Context(TT_ExecContext exec, TT_Face face, TT_Siz
 
 	/* XXX: We reserve a little more elements on the stack to deal safely */
 	/*      with broken fonts like arialbs, courbs, timesbs, etc.         */
-	tmp = (FT_ULong) exec->stackSize;
+	tmp = exec->stackSize;
 	error = Update_Max(exec->memory, &tmp, sizeof(FT_F26Dot6), (void *) &exec->stack, maxp->maxStackElements + 32);
-	exec->stackSize = (FT_Long) tmp;
+	exec->stackSize = tmp;
 	if (error)
 		return error;
 
 	tmp = exec->glyphSize;
 	error = Update_Max(exec->memory, &tmp, sizeof(FT_Byte), (void *) &exec->glyphIns, maxp->maxSizeOfInstructions);
-	exec->glyphSize = (FT_UShort) tmp;
+	exec->glyphSize = (FT_UInt)tmp;
 	if (error)
 		return error;
 
@@ -2048,35 +2048,35 @@ static void Compute_Round(TT_ExecContext exc, FT_Byte round_mode)
 	switch (round_mode)
 	{
 	case TT_Round_Off:
-		exc->func_round = (TT_Round_Func) Round_None;
+		exc->func_round = Round_None;
 		break;
 
 	case TT_Round_To_Grid:
-		exc->func_round = (TT_Round_Func) Round_To_Grid;
+		exc->func_round = Round_To_Grid;
 		break;
 
 	case TT_Round_Up_To_Grid:
-		exc->func_round = (TT_Round_Func) Round_Up_To_Grid;
+		exc->func_round = Round_Up_To_Grid;
 		break;
 
 	case TT_Round_Down_To_Grid:
-		exc->func_round = (TT_Round_Func) Round_Down_To_Grid;
+		exc->func_round = Round_Down_To_Grid;
 		break;
 
 	case TT_Round_To_Half_Grid:
-		exc->func_round = (TT_Round_Func) Round_To_Half_Grid;
+		exc->func_round = Round_To_Half_Grid;
 		break;
 
 	case TT_Round_To_Double_Grid:
-		exc->func_round = (TT_Round_Func) Round_To_Double_Grid;
+		exc->func_round = Round_To_Double_Grid;
 		break;
 
 	case TT_Round_Super:
-		exc->func_round = (TT_Round_Func) Round_Super;
+		exc->func_round = Round_Super;
 		break;
 
 	case TT_Round_Super_45:
-		exc->func_round = (TT_Round_Func) Round_Super_45;
+		exc->func_round = Round_Super_45;
 		break;
 	}
 }
@@ -2263,32 +2263,32 @@ static void Compute_Funcs(TT_ExecContext exc)
 			 (FT_Long) exc->GS.projVector.y * exc->GS.freeVector.y) >> 14;
 
 	if (exc->GS.projVector.x == 0x4000)
-		exc->func_project = (TT_Project_Func) Project_x;
+		exc->func_project = Project_x;
 	else if (exc->GS.projVector.y == 0x4000)
-		exc->func_project = (TT_Project_Func) Project_y;
+		exc->func_project = Project_y;
 	else
-		exc->func_project = (TT_Project_Func) Project;
+		exc->func_project = Project;
 
 	if (exc->GS.dualVector.x == 0x4000)
-		exc->func_dualproj = (TT_Project_Func) Project_x;
+		exc->func_dualproj = Project_x;
 	else if (exc->GS.dualVector.y == 0x4000)
-		exc->func_dualproj = (TT_Project_Func) Project_y;
+		exc->func_dualproj = Project_y;
 	else
-		exc->func_dualproj = (TT_Project_Func) Dual_Project;
+		exc->func_dualproj = Dual_Project;
 
-	exc->func_move = (TT_Move_Func) Direct_Move;
-	exc->func_move_orig = (TT_Move_Func) Direct_Move_Orig;
+	exc->func_move = Direct_Move;
+	exc->func_move_orig = Direct_Move_Orig;
 
 	if (exc->F_dot_P == 0x4000L)
 	{
 		if (exc->GS.freeVector.x == 0x4000)
 		{
-			exc->func_move = (TT_Move_Func) Direct_Move_X;
-			exc->func_move_orig = (TT_Move_Func) Direct_Move_Orig_X;
+			exc->func_move = Direct_Move_X;
+			exc->func_move_orig = Direct_Move_Orig_X;
 		} else if (exc->GS.freeVector.y == 0x4000)
 		{
-			exc->func_move = (TT_Move_Func) Direct_Move_Y;
-			exc->func_move_orig = (TT_Move_Func) Direct_Move_Orig_Y;
+			exc->func_move = Direct_Move_Y;
+			exc->func_move_orig = Direct_Move_Orig_Y;
 		}
 	}
 
@@ -2749,7 +2749,9 @@ static void Ins_WS(TT_ExecContext exc, FT_Long * args)
 		if (exc->pedantic_hinting)
 			ARRAY_BOUND_ERROR;
 	} else
+	{
 		exc->storage[I] = args[1];
+	}
 }
 
 
@@ -2768,7 +2770,9 @@ static void Ins_WCVTP(TT_ExecContext exc, FT_Long * args)
 		if (exc->pedantic_hinting)
 			ARRAY_BOUND_ERROR;
 	} else
+	{
 		exc->func_write_cvt(exc, I, args[1]);
+	}
 }
 
 
@@ -2787,7 +2791,9 @@ static void Ins_WCVTF(TT_ExecContext exc, FT_Long * args)
 		if (exc->pedantic_hinting)
 			ARRAY_BOUND_ERROR;
 	} else
+	{
 		exc->cvt[I] = FT_MulFix(args[1], exc->tt_metrics.scale);
+	}
 }
 
 
@@ -2808,7 +2814,9 @@ static void Ins_RCVT(TT_ExecContext exc, FT_Long * args)
 		else
 			args[0] = 0;
 	} else
+	{
 		args[0] = exc->func_read_cvt(exc, I);
+	}
 }
 
 
@@ -3754,7 +3762,7 @@ static void Ins_NPUSHB(TT_ExecContext exc, FT_Long * args)
 {
 	FT_UShort L, K;
 
-	L = (FT_UShort) exc->code[exc->IP + 1];
+	L = exc->code[exc->IP + 1];
 
 	if (BOUNDS(L, exc->stackSize + 1 - exc->top))
 	{
@@ -3779,7 +3787,7 @@ static void Ins_NPUSHW(TT_ExecContext exc, FT_Long * args)
 {
 	FT_UShort L, K;
 
-	L = (FT_UShort) exc->code[exc->IP + 1];
+	L = exc->code[exc->IP + 1];
 
 	if (BOUNDS(L, exc->stackSize + 1 - exc->top))
 	{
@@ -3807,7 +3815,7 @@ static void Ins_PUSHB(TT_ExecContext exc, FT_Long * args)
 {
 	FT_UShort L, K;
 
-	L = (FT_UShort) (exc->opcode - 0xB0 + 1);
+	L = exc->opcode - 0xB0 + 1;
 
 	if (BOUNDS(L, exc->stackSize + 1 - exc->top))
 	{
@@ -3830,7 +3838,7 @@ static void Ins_PUSHW(TT_ExecContext exc, FT_Long * args)
 {
 	FT_UShort L, K;
 
-	L = (FT_UShort) (exc->opcode - 0xB8 + 1);
+	L = exc->opcode - 0xB8 + 1;
 
 	if (BOUNDS(L, exc->stackSize + 1 - exc->top))
 	{
@@ -3949,7 +3957,7 @@ static void Ins_SxyTCA(TT_ExecContext exc)
 /*                                                                       */
 static void Ins_SPVTL(TT_ExecContext exc, FT_Long * args)
 {
-	if (Ins_SxVTL(exc, (FT_UShort) args[1], (FT_UShort) args[0], &exc->GS.projVector) == SUCCESS)
+	if (Ins_SxVTL(exc, args[1], args[0], &exc->GS.projVector) == SUCCESS)
 	{
 		exc->GS.dualVector = exc->GS.projVector;
 		Compute_Funcs(exc);
@@ -3965,7 +3973,7 @@ static void Ins_SPVTL(TT_ExecContext exc, FT_Long * args)
 /*                                                                       */
 static void Ins_SFVTL(TT_ExecContext exc, FT_Long * args)
 {
-	if (Ins_SxVTL(exc, (FT_UShort) args[1], (FT_UShort) args[0], &exc->GS.freeVector) == SUCCESS)
+	if (Ins_SxVTL(exc, args[1], args[0], &exc->GS.freeVector) == SUCCESS)
 	{
 		Compute_Funcs(exc);
 	}
@@ -4065,7 +4073,7 @@ static void Ins_GFV(TT_ExecContext exc, FT_Long * args)
 /*                                                                       */
 static void Ins_SRP0(TT_ExecContext exc, FT_Long * args)
 {
-	exc->GS.rp0 = (FT_UShort) args[0];
+	exc->GS.rp0 = args[0];
 }
 
 
@@ -4077,7 +4085,7 @@ static void Ins_SRP0(TT_ExecContext exc, FT_Long * args)
 /*                                                                       */
 static void Ins_SRP1(TT_ExecContext exc, FT_Long * args)
 {
-	exc->GS.rp1 = (FT_UShort) args[0];
+	exc->GS.rp1 = args[0];
 }
 
 
@@ -4089,7 +4097,7 @@ static void Ins_SRP1(TT_ExecContext exc, FT_Long * args)
 /*                                                                       */
 static void Ins_SRP2(TT_ExecContext exc, FT_Long * args)
 {
-	exc->GS.rp2 = (FT_UShort) args[0];
+	exc->GS.rp2 = args[0];
 }
 
 
@@ -4185,7 +4193,7 @@ static void Ins_SANGW(void)
 /*                                                                       */
 static void Ins_SDB(TT_ExecContext exc, FT_Long * args)
 {
-	exc->GS.delta_base = (FT_UShort) args[0];
+	exc->GS.delta_base = args[0];
 }
 
 
@@ -4200,7 +4208,7 @@ static void Ins_SDS(TT_ExecContext exc, FT_Long * args)
 	if ((FT_ULong) args[0] > 6UL)
 		exc->error = FT_THROW(Bad_Argument);
 	else
-		exc->GS.delta_shift = (FT_UShort) args[0];
+		exc->GS.delta_shift = args[0];
 }
 
 
@@ -4213,7 +4221,7 @@ static void Ins_SDS(TT_ExecContext exc, FT_Long * args)
 static void Ins_RTHG(TT_ExecContext exc)
 {
 	exc->GS.round_state = TT_Round_To_Half_Grid;
-	exc->func_round = (TT_Round_Func) Round_To_Half_Grid;
+	exc->func_round = Round_To_Half_Grid;
 }
 
 
@@ -4226,7 +4234,7 @@ static void Ins_RTHG(TT_ExecContext exc)
 static void Ins_RTG(TT_ExecContext exc)
 {
 	exc->GS.round_state = TT_Round_To_Grid;
-	exc->func_round = (TT_Round_Func) Round_To_Grid;
+	exc->func_round = Round_To_Grid;
 }
 
 
@@ -4238,7 +4246,7 @@ static void Ins_RTG(TT_ExecContext exc)
 static void Ins_RTDG(TT_ExecContext exc)
 {
 	exc->GS.round_state = TT_Round_To_Double_Grid;
-	exc->func_round = (TT_Round_Func) Round_To_Double_Grid;
+	exc->func_round = Round_To_Double_Grid;
 }
 
 
@@ -4250,7 +4258,7 @@ static void Ins_RTDG(TT_ExecContext exc)
 static void Ins_RUTG(TT_ExecContext exc)
 {
 	exc->GS.round_state = TT_Round_Up_To_Grid;
-	exc->func_round = (TT_Round_Func) Round_Up_To_Grid;
+	exc->func_round = Round_Up_To_Grid;
 }
 
 
@@ -4263,7 +4271,7 @@ static void Ins_RUTG(TT_ExecContext exc)
 static void Ins_RDTG(TT_ExecContext exc)
 {
 	exc->GS.round_state = TT_Round_Down_To_Grid;
-	exc->func_round = (TT_Round_Func) Round_Down_To_Grid;
+	exc->func_round = Round_Down_To_Grid;
 }
 
 
@@ -4276,7 +4284,7 @@ static void Ins_RDTG(TT_ExecContext exc)
 static void Ins_ROFF(TT_ExecContext exc)
 {
 	exc->GS.round_state = TT_Round_Off;
-	exc->func_round = (TT_Round_Func) Round_None;
+	exc->func_round = Round_None;
 }
 
 
@@ -4291,7 +4299,7 @@ static void Ins_SROUND(TT_ExecContext exc, FT_Long * args)
 	SetSuperRound(exc, 0x4000, args[0]);
 
 	exc->GS.round_state = TT_Round_Super;
-	exc->func_round = (TT_Round_Func) Round_Super;
+	exc->func_round = Round_Super;
 }
 
 
@@ -4306,7 +4314,7 @@ static void Ins_S45ROUND(TT_ExecContext exc, FT_Long * args)
 	SetSuperRound(exc, 0x2D41, args[0]);
 
 	exc->GS.round_state = TT_Round_Super_45;
-	exc->func_round = (TT_Round_Func) Round_Super_45;
+	exc->func_round = Round_Super_45;
 }
 
 
@@ -4358,7 +4366,7 @@ static void Ins_SCFS(TT_ExecContext exc, FT_Long * args)
 	FT_Long K;
 	FT_UShort L;
 
-	L = (FT_UShort) args[0];
+	L = args[0];
 
 	if (BOUNDS(L, exc->zp2.n_points))
 	{
@@ -4398,8 +4406,8 @@ static void Ins_MD(TT_ExecContext exc, FT_Long * args)
 	FT_UShort K, L;
 	FT_F26Dot6 D;
 
-	K = (FT_UShort) args[1];
-	L = (FT_UShort) args[0];
+	K = args[1];
+	L = args[0];
 
 	if (BOUNDS(L, exc->zp0.n_points) || BOUNDS(K, exc->zp1.n_points))
 	{
@@ -4466,8 +4474,8 @@ static void Ins_SDPVTL(TT_ExecContext exc, FT_Long * args)
 
 	FT_Byte opcode = exc->opcode;
 
-	p1 = (FT_UShort) args[1];
-	p2 = (FT_UShort) args[0];
+	p1 = args[1];
+	p2 = args[0];
 
 	if (BOUNDS(p2, exc->zp1.n_points) || BOUNDS(p1, exc->zp2.n_points))
 	{
@@ -4554,7 +4562,7 @@ static void Ins_SZP0(TT_ExecContext exc, FT_Long * args)
 		return;
 	}
 
-	exc->GS.gep0 = (FT_UShort) args[0];
+	exc->GS.gep0 = args[0];
 }
 
 
@@ -4582,7 +4590,7 @@ static void Ins_SZP1(TT_ExecContext exc, FT_Long * args)
 		return;
 	}
 
-	exc->GS.gep1 = (FT_UShort) args[0];
+	exc->GS.gep1 = args[0];
 }
 
 
@@ -4610,7 +4618,7 @@ static void Ins_SZP2(TT_ExecContext exc, FT_Long * args)
 		return;
 	}
 
-	exc->GS.gep2 = (FT_UShort) args[0];
+	exc->GS.gep2 = args[0];
 }
 
 
@@ -4641,9 +4649,9 @@ static void Ins_SZPS(TT_ExecContext exc, FT_Long * args)
 	exc->zp1 = exc->zp0;
 	exc->zp2 = exc->zp0;
 
-	exc->GS.gep0 = (FT_UShort) args[0];
-	exc->GS.gep1 = (FT_UShort) args[0];
-	exc->GS.gep2 = (FT_UShort) args[0];
+	exc->GS.gep0 = args[0];
+	exc->GS.gep1 = args[0];
+	exc->GS.gep2 = args[0];
 }
 
 
@@ -4796,7 +4804,7 @@ static void Ins_FLIPPT(TT_ExecContext exc)
 	{
 		exc->args--;
 
-		point = (FT_UShort) exc->stack[exc->args];
+		point = exc->stack[exc->args];
 
 		if (BOUNDS(point, exc->pts.n_points))
 		{
@@ -4833,8 +4841,8 @@ static void Ins_FLIPRGON(TT_ExecContext exc, FT_Long * args)
 		return;
 #endif
 
-	K = (FT_UShort) args[1];
-	L = (FT_UShort) args[0];
+	K = args[1];
+	L = args[0];
 
 	if (BOUNDS(K, exc->pts.n_points) || BOUNDS(L, exc->pts.n_points))
 	{
@@ -4864,8 +4872,8 @@ static void Ins_FLIPRGOFF(TT_ExecContext exc, FT_Long * args)
 		return;
 #endif
 
-	K = (FT_UShort) args[1];
-	L = (FT_UShort) args[0];
+	K = args[1];
+	L = args[0];
 
 	if (BOUNDS(K, exc->pts.n_points) || BOUNDS(L, exc->pts.n_points))
 	{
@@ -4970,7 +4978,7 @@ static void Ins_SHP(TT_ExecContext exc)
 	while (exc->GS.loop > 0)
 	{
 		exc->args--;
-		point = (FT_UShort) exc->stack[exc->args];
+		point = exc->stack[exc->args];
 
 		if (BOUNDS(point, exc->zp2.n_points))
 		{
@@ -5032,13 +5040,13 @@ static void Ins_SHC(TT_ExecContext exc, FT_Long * args)
 	if (contour == 0)
 		start = 0;
 	else
-		start = (FT_UShort) (exc->zp2.contours[contour - 1] + 1 - exc->zp2.first_point);
+		start = exc->zp2.contours[contour - 1] + 1 - exc->zp2.first_point;
 
 	/* we use the number of points if in the twilight zone */
 	if (exc->GS.gep2 == 0)
 		limit = exc->zp2.n_points;
 	else
-		limit = (FT_UShort) (exc->zp2.contours[contour] - exc->zp2.first_point + 1);
+		limit = exc->zp2.contours[contour] - exc->zp2.first_point + 1;
 
 	for (i = start; i < limit; i++)
 	{
@@ -5077,9 +5085,9 @@ static void Ins_SHZ(TT_ExecContext exc, FT_Long * args)
 	/*      Normal zone's `n_points' includes phantoms, so must    */
 	/*      use end of last contour.                               */
 	if (exc->GS.gep2 == 0)
-		limit = (FT_UShort) exc->zp2.n_points;
+		limit = exc->zp2.n_points;
 	else if (exc->GS.gep2 == 1 && exc->zp2.n_contours > 0)
-		limit = (FT_UShort) (exc->zp2.contours[exc->zp2.n_contours - 1] + 1);
+		limit = exc->zp2.contours[exc->zp2.n_contours - 1] + 1;
 	else
 		limit = 0;
 
@@ -5125,7 +5133,7 @@ static void Ins_SHPIX(TT_ExecContext exc, FT_Long * args)
 	{
 		exc->args--;
 
-		point = (FT_UShort) exc->stack[exc->args];
+		point = exc->stack[exc->args];
 
 		if (BOUNDS(point, exc->zp2.n_points))
 		{
@@ -5253,7 +5261,7 @@ static void Ins_MSIRP(TT_ExecContext exc, FT_Long * args)
 	}
 #endif /* TT_SUPPORT_SUBPIXEL_HINTING_INFINALITY */
 
-	point = (FT_UShort) args[0];
+	point = args[0];
 
 	if (BOUNDS(point, exc->zp1.n_points) || BOUNDS(exc->GS.rp0, exc->zp0.n_points))
 	{
@@ -5302,7 +5310,7 @@ static void Ins_MDAP(TT_ExecContext exc, FT_Long * args)
 	FT_F26Dot6 cur_dist;
 	FT_F26Dot6 distance;
 
-	point = (FT_UShort) args[0];
+	point = args[0];
 
 	if (BOUNDS(point, exc->zp0.n_points))
 	{
@@ -5346,7 +5354,7 @@ static void Ins_MIAP(TT_ExecContext exc, FT_Long * args)
 
 	control_value_cutin = exc->GS.control_value_cutin;
 	cvtEntry = (FT_ULong) args[1];
-	point = (FT_UShort) args[0];
+	point = args[0];
 
 #ifdef TT_SUPPORT_SUBPIXEL_HINTING_INFINALITY
 	if (SUBPIXEL_HINTING_INFINALITY &&
@@ -5442,7 +5450,7 @@ static void Ins_MDRP(TT_ExecContext exc, FT_Long * args)
 		minimum_distance = 0;
 #endif /* TT_SUPPORT_SUBPIXEL_HINTING_INFINALITY */
 
-	point = (FT_UShort) args[0];
+	point = args[0];
 
 	if (BOUNDS(point, exc->zp1.n_points) || BOUNDS(exc->GS.rp0, exc->zp0.n_points))
 	{
@@ -5551,14 +5559,12 @@ static void Ins_MIRP(TT_ExecContext exc, FT_Long * args)
 
 #ifdef TT_SUPPORT_SUBPIXEL_HINTING_INFINALITY
 	FT_Int B1 = 0;						/* pacify compiler */
-	FT_Int B2 = 0;
-	FT_Bool reverse_move = FALSE;
 #endif /* TT_SUPPORT_SUBPIXEL_HINTING_INFINALITY */
 
 	minimum_distance = exc->GS.minimum_distance;
 	control_value_cutin = exc->GS.control_value_cutin;
-	point = (FT_UShort) args[0];
-	cvtEntry = (FT_ULong) (args[1] + 1);
+	point = args[0];
+	cvtEntry = args[1] + 1;
 
 #ifdef TT_SUPPORT_SUBPIXEL_HINTING_INFINALITY
 	if (SUBPIXEL_HINTING_INFINALITY &&
@@ -5679,7 +5685,7 @@ static void Ins_MIRP(TT_ExecContext exc, FT_Long * args)
 #ifdef TT_SUPPORT_SUBPIXEL_HINTING_INFINALITY
 	if (SUBPIXEL_HINTING_INFINALITY)
 	{
-		B1 = (FT_Int) exc->zp1.cur[point].y;
+		B1 = exc->zp1.cur[point].y;
 
 		/* Round moves if necessary */
 		if (exc->ignore_x_mode &&
@@ -5698,7 +5704,8 @@ static void Ins_MIRP(TT_ExecContext exc, FT_Long * args)
 #ifdef TT_SUPPORT_SUBPIXEL_HINTING_INFINALITY
 	if (SUBPIXEL_HINTING_INFINALITY)
 	{
-		B2 = (FT_Int) exc->zp1.cur[point].y;
+		FT_Bool reverse_move = FALSE;
+		FT_Int B2 = exc->zp1.cur[point].y;
 
 		/* Reverse move if necessary */
 		if (exc->ignore_x_mode)
@@ -5757,7 +5764,7 @@ static void Ins_ALIGNRP(TT_ExecContext exc)
 	{
 		exc->args--;
 
-		point = (FT_UShort) exc->stack[exc->args];
+		point = exc->stack[exc->args];
 
 		if (BOUNDS(point, exc->zp1.n_points))
 		{
@@ -5800,16 +5807,18 @@ static void Ins_ISECT(TT_ExecContext exc, FT_Long * args)
 
 	FT_Vector R;
 
-	point = (FT_UShort) args[0];
+	point = args[0];
 
-	a0 = (FT_UShort) args[1];
-	a1 = (FT_UShort) args[2];
-	b0 = (FT_UShort) args[3];
-	b1 = (FT_UShort) args[4];
+	a0 = args[1];
+	a1 = args[2];
+	b0 = args[3];
+	b1 = args[4];
 
 	if (BOUNDS(b0, exc->zp0.n_points) ||
 		BOUNDS(b1, exc->zp0.n_points) ||
-		BOUNDS(a0, exc->zp1.n_points) || BOUNDS(a1, exc->zp1.n_points) || BOUNDS(point, exc->zp2.n_points))
+		BOUNDS(a0, exc->zp1.n_points) ||
+		BOUNDS(a1, exc->zp1.n_points) ||
+		BOUNDS(point, exc->zp2.n_points))
 	{
 		if (exc->pedantic_hinting)
 			exc->error = FT_THROW(Invalid_Reference);
@@ -5876,8 +5885,8 @@ static void Ins_ALIGNPTS(TT_ExecContext exc, FT_Long * args)
 	FT_UShort p1, p2;
 	FT_F26Dot6 distance;
 
-	p1 = (FT_UShort) args[0];
-	p2 = (FT_UShort) args[1];
+	p1 = args[0];
+	p2 = args[1];
 
 	if (BOUNDS(p1, exc->zp1.n_points) || BOUNDS(p2, exc->zp0.n_points))
 	{
@@ -6023,7 +6032,7 @@ static void Ins_IP(TT_ExecContext exc)
 		} else
 			new_dist = 0;
 
-		exc->func_move(exc, &exc->zp2, (FT_UShort) point, SUB_LONG(new_dist, cur_dist));
+		exc->func_move(exc, &exc->zp2, point, SUB_LONG(new_dist, cur_dist));
 	}
 
   Fail:
@@ -6043,7 +6052,7 @@ static void Ins_UTP(TT_ExecContext exc, FT_Long * args)
 	FT_UShort point;
 	FT_Byte mask;
 
-	point = (FT_UShort) args[0];
+	point = args[0];
 
 	if (BOUNDS(point, exc->zp0.n_points))
 	{
@@ -6221,15 +6230,15 @@ static void Ins_IUP(TT_ExecContext exc)
 	if (exc->opcode & 1)
 	{
 		mask = FT_CURVE_TAG_TOUCH_X;
-		V.orgs = exc->pts.org;
-		V.curs = exc->pts.cur;
-		V.orus = exc->pts.orus;
+		V.orgs = (FT_Vector *) &exc->pts.org->x;
+		V.curs = (FT_Vector *) &exc->pts.cur->x;
+		V.orus = (FT_Vector *) &exc->pts.orus->x;
 	} else
 	{
 		mask = FT_CURVE_TAG_TOUCH_Y;
-		V.orgs = (FT_Vector *) ((FT_Pos *) exc->pts.org + 1);
-		V.curs = (FT_Vector *) ((FT_Pos *) exc->pts.cur + 1);
-		V.orus = (FT_Vector *) ((FT_Pos *) exc->pts.orus + 1);
+		V.orgs = (FT_Vector *) &exc->pts.org->y;
+		V.curs = (FT_Vector *) &exc->pts.org->y;
+		V.orus = (FT_Vector *) &exc->pts.org->y;
 	}
 	V.max_points = exc->pts.n_points;
 
@@ -6278,7 +6287,7 @@ static void Ins_IUP(TT_ExecContext exc)
 				_iup_worker_shift(&V, first_point, end_point, cur_touched);
 			else
 			{
-				_iup_worker_interpolate(&V, (FT_UShort) (cur_touched + 1), end_point, cur_touched, first_touched);
+				_iup_worker_interpolate(&V, cur_touched + 1, end_point, cur_touched, first_touched);
 
 				if (first_touched > 0)
 					_iup_worker_interpolate(&V, first_point, first_touched - 1, cur_touched, first_touched);
@@ -6310,8 +6319,8 @@ static void Ins_DELTAP(TT_ExecContext exc, FT_Long * args)
 		goto Fail;
 #endif /* TT_SUPPORT_SUBPIXEL_HINTING_INFINALITY */
 
-	P = (FT_ULong) exc->func_cur_ppem(exc);
-	nump = (FT_ULong) args[0];			/* some points theoretically may occur more
+	P = exc->func_cur_ppem(exc);
+	nump = args[0];			/* some points theoretically may occur more
 										   than once, thus UShort isn't enough */
 
 	for (k = 1; k <= nump; k++)
@@ -6326,7 +6335,7 @@ static void Ins_DELTAP(TT_ExecContext exc, FT_Long * args)
 
 		exc->args -= 2;
 
-		A = (FT_UShort) exc->stack[exc->args + 1];
+		A = exc->stack[exc->args + 1];
 		B = exc->stack[exc->args];
 
 		/* XXX: Because some popular fonts contain some invalid DeltaP */
@@ -6384,7 +6393,7 @@ static void Ins_DELTAP(TT_ExecContext exc, FT_Long * args)
 					else if (exc->ignore_x_mode && exc->GS.freeVector.y != 0)
 					{
 						/* save the y value of the point now; compare after move */
-						B1 = (FT_UShort) exc->zp0.cur[A].y;
+						B1 = exc->zp0.cur[A].y;
 
 						/* Standard subpixel hinting: Allow y move for y-touched */
 						/* points.  This messes up DejaVu ...                    */
@@ -6404,7 +6413,7 @@ static void Ins_DELTAP(TT_ExecContext exc, FT_Long * args)
 								exc->func_move(exc, &exc->zp0, A, B);
 						}
 
-						B2 = (FT_UShort) exc->zp0.cur[A].y;
+						B2 = exc->zp0.cur[A].y;
 
 						/* Reverse this move if it results in a disallowed move */
 						if (exc->GS.freeVector.y != 0 &&
@@ -6455,8 +6464,8 @@ static void Ins_DELTAC(TT_ExecContext exc, FT_Long * args)
 	FT_ULong A, C, P;
 	FT_Long B;
 
-	P = (FT_ULong) exc->func_cur_ppem(exc);
-	nump = (FT_ULong) args[0];
+	P = exc->func_cur_ppem(exc);
+	nump = args[0];
 
 	for (k = 1; k <= nump; k++)
 	{
@@ -6906,7 +6915,7 @@ FT_EXPORT_DEF(FT_Error) TT_RunIns(TT_ExecContext exc)
 		FT_TRACE5(("TT_RunIns: Resetting number of twilight points\n"
 				   "           from %d to the more reasonable value %d\n",
 				   exc->twilight.n_points, num_twilight_points));
-		exc->twilight.n_points = (FT_UShort) num_twilight_points;
+		exc->twilight.n_points = num_twilight_points;
 	}
 
 	/* Set up loop detectors.  We restrict the number of LOOPCALL loops */
