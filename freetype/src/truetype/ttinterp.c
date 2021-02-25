@@ -5575,7 +5575,8 @@ static void Ins_MIRP(TT_ExecContext exc, FT_Long * args)
 	/* XXX: UNDOCUMENTED! cvt[-1] = 0 always */
 
 	if (BOUNDS(point, exc->zp1.n_points) ||
-		BOUNDSL(cvtEntry, exc->cvtSize + 1) || BOUNDS(exc->GS.rp0, exc->zp0.n_points))
+		BOUNDSL(cvtEntry, exc->cvtSize + 1) ||
+		BOUNDS(exc->GS.rp0, exc->zp0.n_points))
 	{
 		if (exc->pedantic_hinting)
 			exc->error = FT_THROW(Invalid_Reference);
