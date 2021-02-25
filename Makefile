@@ -1,4 +1,4 @@
-VERSION = 1.0.2
+VERSION = 1.0.3
 
 SUBDIRS = fonts include freetype tools tos unix win32 speedo spdview
 

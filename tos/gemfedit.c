@@ -422,7 +422,7 @@ static void draw_char(fchar_t c, _WORD x0, _WORD y0)
 	width = width_table[c];
 	if ((_UWORD)width == F_NO_CHAR)
 		return;
-	nf_debugprintf("draw_char: %x: %d\n", cur_char, width);
+	/* nf_debugprintf("draw_char: %x: %d\n", cur_char, width); */
 	height = font_ch;
 
 	vsf_color(vdihandle, G_BLACK);
@@ -1268,7 +1268,7 @@ static _BOOL get_widths(uint16_t *off_tab, fchar_t num)
 	{
 		width_table[i] = F_NO_CHAR;
 		off = off_tab[i];
-		nf_debugprintf("%x: %d-%d\n", i, off_tab[i+1], off_tab[i]);
+		/* nf_debugprintf("%x: %d-%d\n", i, off_tab[i+1], off_tab[i]); */
 		if (off != F_NO_CHAR)
 		{
 			for (j = i + 1; j <= num; j++)
