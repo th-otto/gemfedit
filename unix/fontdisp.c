@@ -12,6 +12,11 @@
 #include <stdint.h>
 #include <unistd.h>
 #include <errno.h>
+#ifdef HAVE_PNG_H
+#include <setjmp.h>
+#include <png.h>
+#include <zlib.h>
+#endif
 
 #define INLINE __inline
 
@@ -56,6 +61,8 @@ static Pixmap *scaled_pixmaps;
 static UB *bitmap;
 static int bitmap_line_width;
 static UB *off_table;
+static UB *dat_table;
+static UW form_width;
 
 
 #define VDI_FONTNAMESIZE 32
@@ -317,7 +324,7 @@ static void create_scaled_images(FONT_DESC *sf)
 			DeleteObject(scaled_pixmaps[i]);
 			scaled_pixmaps[i] = 0;
 		}
-		if (width == F_NO_CHAR)
+		if (width == F_NO_CHAR || width == 0)
 		{
 			/* TODO: display a cross or similar */
 			continue;
@@ -362,7 +369,7 @@ static void create_scaled_images(FONT_DESC *sf)
 
 static UW get_width(int i, int numoffs)
 {
-	int off = LM_UW(off_table + 2 * i);
+	int off;
 	unsigned short next;
 	
 	off = LM_UW(off_table + 2 * i);
@@ -383,12 +390,11 @@ static UW get_width(int i, int numoffs)
 static FONT_DESC *font_gen_gemfont(UB **m, const char *filename, unsigned int l)
 {
 	FONT_DESC *font;
-	UW form_width, form_height;
+	UW form_height;
 	UW flags;
 	UW firstc, lastc;
 	int i, numoffs;
 	UB *hor_table;
-	UB *dat_table;
 	UB *u;
 	int bitmap_width, bitmap_height;
 	UL dat_offset, off_offset, hor_offset;
@@ -740,6 +746,310 @@ static gboolean font_load_gemfont(const char *filename)
 }
 
 
+#ifdef HAVE_PNG_H
+
+typedef struct _writepng_info {
+	long width;
+	long height;
+	size_t rowbytes;
+	FILE *outfile;
+	png_structp png_ptr;
+	png_infop info_ptr;
+	unsigned char *image_data;
+	unsigned char **row_pointers;
+	jmp_buf jmpbuf;
+	int num_palette;
+	png_color palette[PNG_MAX_PALETTE_LENGTH];
+} writepng_info;
+
+
+static void writepng_warning_handler(png_structp png_ptr, png_const_charp msg)
+{
+	/*
+	 * Silently ignore any warning messages from libpng.
+	 * They stupidly tend to introduce new warnings with every release,
+	 * with the default warning handler writing to stdout and/or stderr,
+	 * messing up the output of the CGI scripts.
+	 */
+	(void) png_ptr;
+	(void) msg;
+}
+
+
+static void writepng_error_handler(png_structp png_ptr, png_const_charp msg)
+{
+	writepng_info *wpnginfo;
+
+	(void) msg;
+	
+	wpnginfo = (writepng_info *)png_get_error_ptr(png_ptr);
+	if (wpnginfo == NULL)
+	{									/* we are completely hosed now */
+		fprintf(stderr, "writepng severe error:  jmpbuf not recoverable; terminating.\n");
+		fflush(stderr);
+		exit(99);
+	}
+
+	longjmp(wpnginfo->jmpbuf, 1);
+}
+
+
+static void fill_rect(unsigned char *image, int left, int right, int top, int bottom, unsigned char pixel)
+{
+	unsigned char *ptr;
+	int x, y;
+	size_t srcrowbytes;
+	
+	srcrowbytes = scaled_w;
+	for (y = top; y < bottom; y++)
+	{
+		ptr = image + y * srcrowbytes;
+		for (x = left; x < right; x++)
+			ptr[x] = pixel;
+	}
+}
+
+
+static void draw_character(unsigned char *image, int c, int x0, int y0)
+{
+	FONT_DESC *sf = sysfont;
+	int off = LM_UW(off_table + 2 * c);
+	int numoffs = sf->last_char - sf->first_char + 1;
+	int w = get_width(c, numoffs);
+	int x, y;
+
+	if (w == F_NO_CHAR)
+		return;
+	for (y = 0; y < sf->cellheight; y++)
+	{
+		int b;
+		UB inmask;
+		int p;
+		UB *dat = dat_table + y * form_width;
+		
+		b = (off & 7);
+		inmask = 0x80 >> b;
+		p = off >> 3;
+		for (x = 0; x < w; x++)
+		{
+			if (dat[p] & inmask)
+			{
+				fill_rect(image, x0 + x * scale, x0 + x * scale + scale, y0 + y * scale, y0 + y * scale + scale, 1);
+			}
+			inmask >>= 1;
+			b++;
+			if (b == 8)
+			{
+				p++;
+				inmask = 0x80;
+				b = 0;
+			}
+		}
+	}
+}
+
+
+static int make_screenshot(void)
+{
+	png_structp png_ptr;				/* note:  temporary variables! */
+	png_infop info_ptr;
+	char filename[80];
+	int x, y;
+	FONT_DESC *sf = sysfont;
+	writepng_info *wpnginfo;
+	
+	static int filenum;
+	
+	for (;;)
+	{
+		FILE *fp;
+		sprintf(filename, "font_%03d.png", ++filenum);
+		fp = fopen(filename, "rb");
+		if (fp == NULL)
+			break;
+		fclose(fp);
+		if (filenum == 999)
+		{
+			fprintf(stderr, "too many screenshots present\n");
+			return -1;
+		}
+	}
+	
+	wpnginfo = (writepng_info *)malloc(sizeof(*wpnginfo));
+	
+	if (wpnginfo == NULL)
+	{
+		int err = errno;
+		fprintf(stderr, "%s: %s\n", filename, strerror(err));
+		return err;
+	}
+
+	wpnginfo->width = scaled_w;
+	wpnginfo->height = scaled_h;
+	wpnginfo->rowbytes = wpnginfo->width;
+	wpnginfo->num_palette = 3;
+	wpnginfo->palette[0].red = 255;
+	wpnginfo->palette[0].green = 255;
+	wpnginfo->palette[0].blue = 255;
+	wpnginfo->palette[1].red = 0;
+	wpnginfo->palette[1].green = 0;
+	wpnginfo->palette[1].blue = 0;
+	wpnginfo->palette[2].red = 255;
+	wpnginfo->palette[2].green = 0;
+	wpnginfo->palette[2].blue = 0;
+	
+	wpnginfo->image_data = (unsigned char *)malloc(wpnginfo->rowbytes * wpnginfo->height);
+	if (wpnginfo->image_data == NULL)
+	{
+		int err = errno;
+		free(wpnginfo);
+		fprintf(stderr, "%s: %s\n", filename, strerror(err));
+		return err;
+	}
+	memset(wpnginfo->image_data, 0, wpnginfo->rowbytes * wpnginfo->height);
+	
+	wpnginfo->outfile = fopen(filename, "wb");
+	if (wpnginfo->outfile == NULL)
+	{
+		int err = errno;
+		free(wpnginfo->image_data);
+		free(wpnginfo);
+		fprintf(stderr, "%s: %s\n", filename, strerror(err));
+		return err;
+	}
+	
+	png_ptr = png_create_write_struct(PNG_LIBPNG_VER_STRING, wpnginfo, writepng_error_handler, writepng_warning_handler);
+	if (!png_ptr)
+	{
+		int err = ENOMEM;					/* out of memory */
+		free(wpnginfo->image_data);
+		free(wpnginfo);
+		fprintf(stderr, "%s: %s\n", filename, strerror(err));
+		return err;
+	}
+
+	info_ptr = png_create_info_struct(png_ptr);
+	if (!info_ptr)
+	{
+		int err = ENOMEM;					/* out of memory */
+		png_destroy_write_struct(&png_ptr, NULL);
+		free(wpnginfo->image_data);
+		free(wpnginfo);
+		fprintf(stderr, "%s: %s\n", filename, strerror(err));
+		return err;
+	}
+
+	wpnginfo->png_ptr = png_ptr;
+	wpnginfo->info_ptr = info_ptr;
+
+
+	if (setjmp(wpnginfo->jmpbuf))
+	{
+		png_destroy_write_struct(&wpnginfo->png_ptr, &wpnginfo->info_ptr);
+		if (wpnginfo->outfile)
+			fclose(wpnginfo->outfile);
+		unlink(filename);
+		free(wpnginfo->image_data);
+		free(wpnginfo);
+		return EFAULT;
+	}
+
+	png_init_io(png_ptr, wpnginfo->outfile);
+	
+	png_set_compression_level(png_ptr, Z_BEST_COMPRESSION);
+
+	png_set_IHDR(png_ptr, info_ptr, (png_uint_32)wpnginfo->width, (png_uint_32)wpnginfo->height,
+				 8, PNG_COLOR_TYPE_PALETTE, PNG_INTERLACE_NONE,
+				 PNG_COMPRESSION_TYPE_DEFAULT, PNG_FILTER_TYPE_DEFAULT);
+
+	png_set_PLTE(png_ptr, info_ptr, wpnginfo->palette, wpnginfo->num_palette);
+
+	{
+		png_time modtime;
+		time_t t;
+		
+		t = time(0);
+		png_convert_from_time_t(&modtime, t);
+		png_set_tIME(png_ptr, info_ptr, &modtime);
+	}
+
+	/* write all chunks up to (but not including) first IDAT */
+
+	png_write_info(png_ptr, info_ptr);
+	png_set_packing(png_ptr);
+
+	/*
+	 * draw the grid, in red
+	 */
+	if (scaled_margin > 0)
+	{
+		int left, top, bottom, right;
+		
+		for (y = 0; y < 17; y++)
+		{
+			left = 0;
+			top = y * (ch * scale + scaled_margin);
+			right = left + scaled_w;
+			bottom = top + scaled_margin;
+			
+			fill_rect(wpnginfo->image_data, left, right, top, bottom, 2);
+		}
+		for (x = 0; x < 17; x++)
+		{
+			left = x * (cw * scale + scaled_margin);
+			top = 0;
+			right = left + scaled_margin;
+			bottom = top + scaled_h;
+			fill_rect(wpnginfo->image_data, left, right, top, bottom, 2);
+		}
+	}
+
+	/*
+	 * draw the characters
+	 */
+	for (y = 0; y < 16; y++)
+	{
+		for (x = 0; x < 16; x++)
+		{
+			int c = y * 16 + x;
+			int x0 = x * (cw * scale + scaled_margin) + scaled_margin;
+			int y0 = y * (ch * scale + scaled_margin) + scaled_margin;
+			if (c < sf->first_char || c > sf->last_char)
+				c = sf->default_char;
+			{
+				c -= sf->first_char;
+				if (sf->per_char[c].width == F_NO_CHAR || sf->per_char[c].width == 0)
+					continue;
+				draw_character(wpnginfo->image_data, c, x0, y0);
+			}
+		}
+	}
+	
+	/*
+	 * write the image
+	 */
+	{
+		unsigned char *image_data = wpnginfo->image_data;
+		
+		for (y = wpnginfo->height; y > 0; --y)
+		{
+			png_write_row(png_ptr, image_data);
+			image_data += wpnginfo->rowbytes;
+		}
+		png_write_end(png_ptr, NULL);
+	}
+	
+	png_destroy_write_struct(&wpnginfo->png_ptr, &wpnginfo->info_ptr);
+	fclose(wpnginfo->outfile);
+	free(wpnginfo->image_data);
+	free(wpnginfo);
+	
+	printf("wrote %s\n", filename);
+	return 0;
+}
+#endif
+
+
 
 #ifdef VDI_DRIVER_WIN32
 
@@ -908,6 +1218,11 @@ static LRESULT CALLBACK mainWndProc(HWND hwnd, UINT message, WPARAM wparam, LPAR
 			hide_grid = !hide_grid;
 			create_win();
 			break;
+		case 'p':
+#ifdef HAVE_PNG_H
+			make_screenshot();
+#endif
+			break;
 		}
 		break;
 	}
@@ -1070,7 +1385,7 @@ static void draw_window(void)
 			XFillRectangle(x_display, win, gc, x * (cw * scale + scaled_margin), 0, scaled_margin, scaled_h);
 		}
 	}
-	
+
 	/*
 	 * draw the characters
 	 */
@@ -1248,6 +1563,11 @@ int main(int argc, const char **argv)
 			case 'q':
 			case XK_Escape:
 				XDestroyWindow(x_display, win);
+				break;
+			case 'p':
+#ifdef HAVE_PNG_H
+				make_screenshot();
+#endif
 				break;
 			}
 			break;
