@@ -30,6 +30,7 @@ typedef long LONG;
 #define FILE_FNT 3
 #define FILE_BMP 4
 #define FILE_C16 5
+#define FILE_CRX 6
 static int convert_from;
 static int convert_to;
 static int scale = 1;
@@ -1927,6 +1928,84 @@ static struct font *read_eps_c16(const char *fname)
 }
 
 
+static struct font *read_stos_font(const char *fname)
+{
+	struct font *p;
+	FILE *f;
+	struct {
+		unsigned char magic[4];
+		unsigned char width[2];
+		unsigned char height[2];
+	} header;
+	unsigned char maptab[256];
+	char inbuf[256 * 16];
+	int c, l;
+	unsigned int offset;
+	const char *basen;
+	unsigned int char_width;
+	unsigned int insize;
+	
+	f = open_input(&fname, "rb");
+	if (fread(&header, 1, sizeof(header), f) != sizeof(header) ||
+		fread(maptab, 1, sizeof(maptab), f) != sizeof(maptab))
+		fatal("read");
+
+	p = xmalloc(sizeof(struct font));
+	memset(p, 0, sizeof(*p));
+
+	if (get_b_long(header.magic) != 0x06071963l ||
+		(char_width = get_b_word(header.width)) != 1 ||
+		((p->form_height = get_b_word(header.height)) < 6 || p->form_height > 16))
+		fatal("unsupported format");
+	insize = fread(inbuf, 1, p->form_height * 256, f);
+	fclose(f);
+
+	p->dat_table = xmalloc(sizeof(inbuf));
+	p->off_table = xmalloc((256 + 1) * sizeof(*p->off_table));
+	p->font_id = 999;
+	p->point = p->form_height >= 16 ? 10 : 9;
+	basen = strrchr(fname, '/');
+	if (basen == NULL)
+		basen = fname;
+	else
+		++basen;
+	strncpy(p->name, basen, sizeof(p->name) - 1);
+	p->first_ade = 0;
+	p->last_ade = 255;
+	p->top = p->form_height >= 16 ? 13 : 6;
+	p->ascent = p->form_height >= 16 ? 11 : 6;
+	p->half = p->form_height >= 16 ? 8 : 4;
+	p->descent = p->form_height >= 16 ? 2 : 1;
+	p->bottom = p->form_height >= 16 ? 2 : 1;
+	p->max_char_width = 8;
+	p->max_cell_width = 8;
+	p->left_offset = 1;
+	p->right_offset = 1;
+	p->thicken = 1;
+	p->ul_size = 1;
+	p->lighten = 0x5555;
+	p->skew = 0x5555;
+	p->flags = F_MONOSPACE;
+	for (c = 0; c <= 256; c++)
+		p->off_table[c] = c * 8;
+	p->form_width = 256;
+	
+	for (c = 0; c < 256; c++)
+	{
+		offset = maptab[c];
+		offset = offset * char_width * p->form_height;
+		if (offset + p->form_height > insize)
+			fatal("offset %u for character %u out of range", maptab[c], c);
+		for (l = 0; l < p->form_height; l++)
+		{
+			p->dat_table[l * 256 + c] = inbuf[offset + l];
+		}
+	}
+
+	return p;
+}
+
+
 static int file_type(const char *c)
 {
 	int n;
@@ -1946,6 +2025,11 @@ static int file_type(const char *c)
 		return FILE_BMP;
 	if (strcmp(c + n - 3, "c16") == 0 || strcmp(c + n - 3, "C16") == 0)
 		return FILE_C16;
+	if (strcmp(c + n - 3, "cr0") == 0 || strcmp(c + n - 3, "CR0") == 0 ||
+		strcmp(c + n - 3, "cr1") == 0 || strcmp(c + n - 3, "CR1") == 0 ||
+		strcmp(c + n - 3, "cr2") == 0 || strcmp(c + n - 3, "CR2") == 0 ||
+		strcmp(c + n - 3, "cr3") == 0 || strcmp(c + n - 3, "CR3") == 0)
+		return FILE_CRX;
 	return 0;
 }
 
@@ -2004,6 +2088,10 @@ Options:\n\
   -O, --no-offtable     do not write the offsets table\n\
   -s, --scale <factor>  scale picture up (BMP only)\n\
   -g, --grid <width>    draw grid around characters (BMP only)\n\
+Supported formats for reading:\n\
+  .txt, .fnt, .c16, .cr0\n\
+Supported formats for writing:\n\
+  .c, .txt, .fnt, .c16, .bmp\n\
 ");
 	exit(errcode);
 }
@@ -2097,6 +2185,9 @@ int main(int argc, char **argv)
 	case FILE_C16:
 		p = read_eps_c16(from);
 		break;
+	case FILE_CRX:
+		p = read_stos_font(from);
+		break;
 	default:
 		fatal("wrong file type");
 		return EXIT_FAILURE;
@@ -2123,6 +2214,7 @@ int main(int argc, char **argv)
 	case FILE_C16:
 		write_eps_c16(p, to);
 		break;
+	case FILE_CRX:
 	default:
 		fatal("wrong file type");
 		return EXIT_FAILURE;
