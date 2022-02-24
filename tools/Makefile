@@ -1,5 +1,5 @@
 CC = gcc
-CFLAGS = -O2 -Wall -I../include
+CFLAGS = -O2 -fomit-frame-pointer -Wall -I../include
 LDFLAGS = -s
 LIBS=
 

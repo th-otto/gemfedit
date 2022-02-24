@@ -17,6 +17,7 @@
 #include <string.h>
 #include <stdarg.h>
 #include <getopt.h>
+#include <ctype.h>
 
 typedef unsigned char UBYTE;
 typedef signed char BYTE;
@@ -31,6 +32,7 @@ typedef long LONG;
 #define FILE_BMP 4
 #define FILE_C16 5
 #define FILE_CRX 6
+#define FILE_BGI 7
 static int convert_from;
 static int convert_to;
 static int scale = 1;
@@ -44,6 +46,10 @@ static int for_plain = 0;
 static int do_off_table = 1;
 static const char *varname = "THISFONT";
 
+
+/* ************************************************************************** */
+/* -------------------------------------------------------------------------- */
+/* ************************************************************************** */
 
 /*
  * internal error routine
@@ -60,6 +66,7 @@ static void fatal(const char *s, ...)
 	exit(EXIT_FAILURE);
 }
 
+/* -------------------------------------------------------------------------- */
 
 /*
  * memory
@@ -72,6 +79,8 @@ static void *xmalloc(size_t s)
 		fatal("memory");
 	return a;
 }
+
+/* -------------------------------------------------------------------------- */
 
 /*
  * xstrdup
@@ -86,6 +95,7 @@ static char *xstrdup(const char *s)
 	return a;
 }
 
+/* -------------------------------------------------------------------------- */
 
 /*
  * little/big endian conversion
@@ -98,6 +108,7 @@ static LONG get_b_long(void *addr)
 	return (uaddr[0] << 24) + (uaddr[1] << 16) + (uaddr[2] << 8) + uaddr[3];
 }
 
+/* -------------------------------------------------------------------------- */
 
 static void set_b_long(void *addr, LONG value)
 {
@@ -109,6 +120,7 @@ static void set_b_long(void *addr, LONG value)
 	uaddr[3] = value;
 }
 
+/* -------------------------------------------------------------------------- */
 
 static WORD get_b_word(void *addr)
 {
@@ -117,6 +129,7 @@ static WORD get_b_word(void *addr)
 	return (uaddr[0] << 8) + uaddr[1];
 }
 
+/* -------------------------------------------------------------------------- */
 
 static void set_b_word(void *addr, WORD value)
 {
@@ -126,6 +139,8 @@ static void set_b_word(void *addr, WORD value)
 	uaddr[1] = value;
 }
 
+/* -------------------------------------------------------------------------- */
+
 static LONG get_l_long(void *addr)
 {
 	UBYTE *uaddr = (UBYTE *) addr;
@@ -133,6 +148,7 @@ static LONG get_l_long(void *addr)
 	return (uaddr[3] << 24) + (uaddr[2] << 16) + (uaddr[1] << 8) + uaddr[0];
 }
 
+/* -------------------------------------------------------------------------- */
 
 static void set_l_long(void *addr, LONG value)
 {
@@ -144,6 +160,7 @@ static void set_l_long(void *addr, LONG value)
 	uaddr[0] = value;
 }
 
+/* -------------------------------------------------------------------------- */
 
 static void set_l_word(void *addr, WORD value)
 {
@@ -153,6 +170,7 @@ static void set_l_word(void *addr, WORD value)
 	uaddr[0] = value;
 }
 
+/* -------------------------------------------------------------------------- */
 
 static WORD get_l_word(void *addr)
 {
@@ -161,6 +179,7 @@ static WORD get_l_word(void *addr)
 	return (uaddr[1] << 8) + uaddr[0];
 }
 
+/* -------------------------------------------------------------------------- */
 
 #if 0
 static void set_l_word(void *addr, WORD value)
@@ -172,6 +191,9 @@ static void set_l_word(void *addr, WORD value)
 }
 #endif
 
+/* ************************************************************************** */
+/* -------------------------------------------------------------------------- */
+/* ************************************************************************** */
 
 /*
  * fontdef.h - font-header definitions
@@ -263,7 +285,7 @@ struct font
 #define F_NO_CHAR 0xFFFFu
 #define F_NO_CHARL 0xFFFFFFFFul
 
-
+/* -------------------------------------------------------------------------- */
 
 static FILE *open_output(const char **filename, const char *mode)
 {
@@ -271,6 +293,7 @@ static FILE *open_output(const char **filename, const char *mode)
 	
 	if (*filename == NULL || strcmp(*filename, "-") == 0)
 	{
+		fflush(stdout);
 		f = fdopen(fileno(stdout), mode);
 		*filename = "<stdout>";
 	} else
@@ -282,6 +305,7 @@ static FILE *open_output(const char **filename, const char *mode)
 	return f;
 }
 
+/* -------------------------------------------------------------------------- */
 
 static FILE *open_input(const char **filename, const char *mode)
 {
@@ -300,6 +324,9 @@ static FILE *open_input(const char **filename, const char *mode)
 	return f;
 }
 
+/* ************************************************************************** */
+/* -------------------------------------------------------------------------- */
+/* ************************************************************************** */
 
 /*
  * text input files
@@ -319,6 +346,8 @@ typedef struct ifile
 	int ateof;
 } IFILE;
 
+/* -------------------------------------------------------------------------- */
+
 static void irefill(IFILE *f)
 {
 	if (f->size > BACKSIZ)
@@ -330,6 +359,7 @@ static void irefill(IFILE *f)
 	f->size += fread(f->buf + f->size, 1, READSIZ, f->fh);
 }
 
+/* -------------------------------------------------------------------------- */
 
 static IFILE *ifopen(const char *fname)
 {
@@ -349,6 +379,7 @@ static IFILE *ifopen(const char *fname)
 	return f;
 }
 
+/* -------------------------------------------------------------------------- */
 
 static void ifclose(IFILE *f)
 {
@@ -356,6 +387,7 @@ static void ifclose(IFILE *f)
 	free(f);
 }
 
+/* -------------------------------------------------------------------------- */
 
 static void iback(IFILE *f)
 {
@@ -368,6 +400,7 @@ static void iback(IFILE *f)
 	}
 }
 
+/* -------------------------------------------------------------------------- */
 
 static int igetc(IFILE *f)
 {
@@ -383,6 +416,7 @@ static int igetc(IFILE *f)
 	return f->buf[f->index++];
 }
 
+/* -------------------------------------------------------------------------- */
 
 /* returns the next logical char, in sh syntax */
 static int inextsh(IFILE *f)
@@ -413,6 +447,7 @@ static int inextsh(IFILE *f)
 	}
 }
 
+/* -------------------------------------------------------------------------- */
 
 /* read a line, ignoring comments, initial white, trailing white,
  * empty lines and long lines 
@@ -462,6 +497,7 @@ static int igetline(IFILE *f, char *buf, int max)
 	return 1;
 }
 
+/* -------------------------------------------------------------------------- */
 
 /*
  * functions to try read some patterns.
@@ -540,6 +576,7 @@ static int try_backslash(char **cc, long *val)
 	return 1;
 }
 
+/* -------------------------------------------------------------------------- */
 
 static int try_unsigned(char **cc, long *val)
 {
@@ -614,6 +651,7 @@ static int try_unsigned(char **cc, long *val)
 	return 1;
 }
 
+/* -------------------------------------------------------------------------- */
 
 #if 0
 static int try_signed(char **cc, long *val)
@@ -639,6 +677,7 @@ static int try_signed(char **cc, long *val)
 }
 #endif
 
+/* -------------------------------------------------------------------------- */
 
 static int try_given_string(char **cc, char *s)
 {
@@ -654,6 +693,7 @@ static int try_given_string(char **cc, char *s)
 	}
 }
 
+/* -------------------------------------------------------------------------- */
 
 static int try_c_string(char **cc, char *s, int max)
 {
@@ -693,6 +733,7 @@ static int try_c_string(char **cc, char *s, int max)
 	return 1;
 }
 
+/* -------------------------------------------------------------------------- */
 
 static int try_white(char **cc)
 {
@@ -709,12 +750,14 @@ static int try_white(char **cc)
 		return 0;
 }
 
+/* -------------------------------------------------------------------------- */
 
 static int try_eol(char **cc)
 {
 	return (**cc == 0) ? 1 : 0;
 }
 
+/* -------------------------------------------------------------------------- */
 
 /*
  * simple bitmap read/write
@@ -722,14 +765,17 @@ static int try_eol(char **cc)
 
 static int get_bit(UBYTE *addr, long i)
 {
-	return (addr[i / 8] & (1 << (7 - (i & 7)))) ? 1 : 0;
+	return (addr[i >> 3] & (1 << (7 - (i & 7)))) ? 1 : 0;
 }
+
+/* -------------------------------------------------------------------------- */
 
 static void set_bit(UBYTE *addr, long i)
 {
-	addr[i / 8] |= (1 << (7 - (i & 7)));
+	addr[i >> 3] |= (1 << (7 - (i & 7)));
 }
 
+/* -------------------------------------------------------------------------- */
 
 static unsigned long get_width(struct font *p, unsigned short ch)
 {
@@ -751,6 +797,7 @@ static unsigned long get_width(struct font *p, unsigned short ch)
 	return off;
 }
 
+/* -------------------------------------------------------------------------- */
 
 static void check_monospaced(struct font *p, const char *filename)
 {
@@ -781,6 +828,9 @@ static void check_monospaced(struct font *p, const char *filename)
 	}
 }
 
+/* ************************************************************************** */
+/* -------------------------------------------------------------------------- */
+/* ************************************************************************** */
 
 /*
  * read functions
@@ -871,7 +921,7 @@ static struct font *read_txt(const char *fname)
 	{
 		fatal("wrong char range : first = %d, last = %d", first, last);
 	}
-	if (p->max_cell_width >= 40 || p->form_height >= 40)
+	if (p->max_cell_width >= 100 || p->form_height >= 100)
 	{
 		fatal("unreasonable font size %dx%d", p->max_cell_width, height);
 	}
@@ -1032,6 +1082,7 @@ static struct font *read_txt(const char *fname)
 	return NULL;
 }
 
+/* -------------------------------------------------------------------------- */
 
 static struct font *read_fnt(const char *fname)
 {
@@ -1209,6 +1260,7 @@ static struct font *read_fnt(const char *fname)
 	return p;
 }
 
+/* -------------------------------------------------------------------------- */
 
 static void write_fnt(struct font *p, const char *fname)
 {
@@ -1225,7 +1277,7 @@ static void write_fnt(struct font *p, const char *fname)
 	
 	bmnum = p->last_ade - p->first_ade + 1;
 
-	if (p->off_table[bmnum] >= 0x10000L)
+	if (p->off_table[bmnum] >= 0x10000L || p->form_height >= 0x10000L)
 	{
 		fprintf(stderr, "%s: form width %ld too large for GEM font\n", fname, p->off_table[bmnum]);
 		exit(EXIT_FAILURE);
@@ -1297,6 +1349,7 @@ static void write_fnt(struct font *p, const char *fname)
 		fatal("fclose");
 }
 
+/* -------------------------------------------------------------------------- */
 
 static void write_bmp(struct font *p, const char *fname)
 {
@@ -1437,6 +1490,7 @@ static void write_bmp(struct font *p, const char *fname)
 #undef CHAR_COLUMNS
 }
 
+/* -------------------------------------------------------------------------- */
 
 static void write_txt(struct font *p, const char *filename)
 {
@@ -1543,6 +1597,7 @@ static void write_txt(struct font *p, const char *filename)
 	fclose(f);
 }
 
+/* -------------------------------------------------------------------------- */
 
 static void write_c_emutos(struct font *p, const char *filename, int plain)
 {
@@ -1760,6 +1815,7 @@ static void write_c_emutos(struct font *p, const char *filename, int plain)
 	fclose(f);
 }
 
+/* -------------------------------------------------------------------------- */
 
 static void write_c_aranym(struct font *p, const char *filename)
 {
@@ -1833,6 +1889,7 @@ static void write_c_aranym(struct font *p, const char *filename)
 	fclose(f);
 }
 
+/* -------------------------------------------------------------------------- */
 
 static void write_eps_c16(struct font *p, const char *filename)
 {
@@ -1869,6 +1926,7 @@ static void write_eps_c16(struct font *p, const char *filename)
 		fatal("fclose");
 }
 
+/* -------------------------------------------------------------------------- */
 
 static struct font *read_eps_c16(const char *fname)
 {
@@ -1927,6 +1985,7 @@ static struct font *read_eps_c16(const char *fname)
 	return p;
 }
 
+/* -------------------------------------------------------------------------- */
 
 static struct font *read_stos_font(const char *fname)
 {
@@ -2005,6 +2064,429 @@ static struct font *read_stos_font(const char *fname)
 	return p;
 }
 
+/* -------------------------------------------------------------------------- */
+
+static void setpixel(unsigned char *bitmap, unsigned long offset, unsigned long form_width, int x, int y)
+{
+	unsigned char *pos;
+
+	offset += x;
+	pos = bitmap + y * form_width + (offset >> 3);
+	*pos |= 0x80 >> (offset & 7);
+}
+
+/* -------------------------------------------------------------------------- */
+
+static void draw_line(unsigned char *bitmap, unsigned long offset, unsigned long form_width, int x1, int y1, int x2, int y2)
+{
+	int dx, dy;
+	int tmp;
+	int yinc;
+	int vec;
+	int e1, e2, epsilon;
+
+ 	if (x1 == x2)
+	{
+		int y;
+
+		if (y1 < y2)
+		{
+			for (y = y1; y <= y2; y++)
+				setpixel(bitmap, offset, form_width, x1, y);
+		} else
+		{
+			for (y = y1; y >= y2; y--)
+				setpixel(bitmap, offset, form_width, x1, y);
+		}
+	} else if (y1 == y2)
+	{
+		int x;
+
+		if (x1 < x2)
+		{
+			for (x = x1; x <= x2; x++)
+				setpixel(bitmap, offset, form_width, x, y1);
+		} else
+		{
+			for (x = x1; x >= x2; x--)
+				setpixel(bitmap, offset, form_width, x, y1);
+		}
+	} else
+	{
+		if (x1 > x2)
+		{
+			tmp = x1;
+			x1 = x2;
+			x2 = tmp;
+			tmp = y1;
+			y1 = y2;
+			y2 = tmp;
+		}
+		dx = x2 - x1;
+		yinc = 1;
+		dy = y2 - y1;
+		if (dy < 0)
+		{
+			dy = -dy;
+			yinc = -1;
+		}
+		vec = 0;
+		if (dx >= dy)
+		{
+			tmp = dx;
+			dx = dy;
+			dy = tmp;
+			vec = 1;
+		}
+		e1 = 2 * dx;
+		epsilon = e1 - dy;
+		e2 = epsilon - dy;
+		
+		if (vec == 0)
+		{
+			/* dY > dX */
+			do
+			{
+				setpixel(bitmap, offset, form_width, x1, y1);
+				y1 += yinc;
+				if (epsilon >= 0)
+				{
+					x1++;
+					epsilon += e2;
+				} else
+				{
+					epsilon += e1;
+				}
+			} while (--dy >= 0);
+		} else
+		{
+			/* dX > dY */
+			do
+			{
+				setpixel(bitmap, offset, form_width, x1, y1);
+				x1++;
+				if (epsilon >= 0)
+				{
+					y1 += yinc;
+					epsilon += e2;
+				} else
+				{
+					epsilon += e1;
+				}
+			} while (--dy >= 0);
+		}
+	}
+}
+
+/* -------------------------------------------------------------------------- */
+
+static struct font *read_bgi_font(const char *fname)
+{
+	struct font *p;
+	FILE *f;
+	struct {
+		unsigned char magic[4];
+		char copyright[86];
+		unsigned char header_size[2];		/* Version 2.0 Header Format    */
+		char font_name[4];					/* Font Internal Name       */
+		unsigned char font_size[2];			/* Size in byte of file     */
+		unsigned char font_major;			/* Driver Version Information   */
+		unsigned char font_minor;
+		unsigned char min_major;			/* BGI Revision Information */
+		unsigned char min_minor;
+		char filler[26];
+		
+		unsigned char sig;					/* SIGNATURE byte           */
+		unsigned char nr_chars[2];			/* number of characters in file     */
+		char mystery;						/* Currently Undefined          */
+		unsigned char first_char;			/* first character in file */
+		unsigned char cdefs[2];				/* offset to char definitions (relative to start of header) */
+		unsigned char scan_flag;			/* True if set is scanable */
+		signed char org_to_cap;				/* Height from origin to top of capitol */
+		signed char org_to_base;			/* Height from origin to baseline   */
+		signed char org_to_dec;				/* Height from origin to bot of decender */
+		char fntname[4];					/* Four character name of font      */
+		unsigned char unused;				/* Currently undefined          */
+	} header;
+
+	enum OP_CODES
+	{
+		END_OF_CHAR = 0,
+		DO_SCAN = 1,
+		MOVE = 2,
+		DRAW = 3
+	};
+
+	unsigned int nr_chars;
+	unsigned int last_chr;
+	unsigned char offsetbuf[256 * 2];
+	unsigned char widthbuf[256];
+	struct {
+		unsigned int offset;
+		unsigned char width;
+		int bitmap_width;
+		int bitmap_height;
+		int minx;
+		int miny;
+		int maxx;
+		int maxy;
+		unsigned int stroke_count;
+		struct {
+			unsigned char opcode;
+			int x;
+			int y;
+		} *stroke;
+	} charinfo[256];
+	unsigned int i, j;
+	long current, length;
+	signed char *fontdata;
+	unsigned long bitmap_offset;
+	int minx, maxx, miny, maxy;
+	int x, y, prevx, prevy;
+	int xop, yop;
+
+	f = open_input(&fname, "rb");
+	if (fread(&header, 1, sizeof(header), f) != sizeof(header) ||
+		get_b_long(header.magic) != 0x504b0808L ||
+		(nr_chars = get_l_word(header.nr_chars)) == 0 ||
+		(header.first_char + nr_chars) > 256)
+		fatal("unsupported format");
+
+	last_chr = header.first_char + nr_chars;
+
+	memset(offsetbuf, 0, sizeof(offsetbuf));
+	fread(&offsetbuf[header.first_char << 1], nr_chars, 2, f);
+	memset(widthbuf, 0, sizeof(widthbuf));
+	fread(&widthbuf[header.first_char], nr_chars, 1, f);
+	memset(charinfo, 0, sizeof(charinfo));
+	for (i = header.first_char; i < last_chr; i++)
+	{
+		charinfo[i].width = widthbuf[i];
+		charinfo[i].offset = get_l_word(&offsetbuf[i << 1]);
+	}
+	
+	current = ftell(f);
+	fseek(f, 0, SEEK_END);
+	length = ftell(f);
+	fseek(f, current, SEEK_SET);
+	length -= current;
+	if (length <= 0)
+	{
+		fatal("corrupted font?");
+	}
+	fontdata = xmalloc(length);
+	fread(fontdata, length, 1, f);
+	fclose(f);
+	
+	for (i = header.first_char; i < last_chr; i++)
+	{
+		charinfo[i].width = widthbuf[i];
+		charinfo[i].offset = get_l_word(&offsetbuf[i << 1]);
+		if (charinfo[i].offset >= length)
+		{
+			fatal("corrupted font?");
+		}
+	}
+
+	p = xmalloc(sizeof(*p));
+	memset(p, 0, sizeof(*p));
+
+	p->font_id = 999;
+	p->point = 10;
+	strncpy(p->name, header.font_name, 4);
+	p->first_ade = header.first_char;
+	p->last_ade = last_chr - 1;
+	p->left_offset = 1;
+	p->right_offset = 1;
+	p->thicken = 1;
+	p->ul_size = 1;
+	p->lighten = 0x5555;
+	p->skew = 0x5555;
+	p->flags = 0;
+	
+	p->off_table = xmalloc((nr_chars + 1) * sizeof(*p->off_table));
+	bitmap_offset = 0;
+	minx = 0;
+	maxx = -1;
+	miny = 0;
+	maxy = -1;
+	for (i = 0; i < nr_chars; ++i)
+	{
+		unsigned int c = i + header.first_char;
+		signed char *pb;
+		unsigned int num_ops;
+		int width, height;
+
+		if (charinfo[c].offset == 0 && i != 0)
+			continue;
+		num_ops = 0;
+		pb = fontdata + charinfo[c].offset;
+		for (;;)
+		{
+			++num_ops;
+			xop = *pb++;
+			yop = *pb++;
+			if (xop >= 0 && yop >= 0)
+				break;
+		}
+		charinfo[c].stroke_count = num_ops;
+		charinfo[c].stroke = xmalloc(num_ops * sizeof(*(charinfo[c].stroke)));
+		pb = fontdata + charinfo[c].offset;
+		x = y = prevx = prevy = 0;
+		charinfo[c].maxx = -1;
+		charinfo[c].maxy = -1;
+		for (j = 0; j < num_ops; j++)
+		{
+			xop = *pb++;
+			yop = *pb++;
+			charinfo[c].stroke[j].x = xop & 0x7f;
+			charinfo[c].stroke[j].y = yop & 0x7f;
+			if (charinfo[c].stroke[j].x & 0x40)
+				charinfo[c].stroke[j].x -= 128;
+			if (charinfo[c].stroke[j].y & 0x40)
+				charinfo[c].stroke[j].y -= 128;
+			charinfo[c].stroke[j].opcode = 0;
+			if (xop < 0)
+				charinfo[c].stroke[j].opcode += 2;
+			if (yop < 0)
+				charinfo[c].stroke[j].opcode += 1;
+			switch (charinfo[c].stroke[j].opcode)
+			{
+			case END_OF_CHAR:
+			case DO_SCAN:
+				break;
+			case MOVE:
+				xop = x + charinfo[c].stroke[j].x;
+				yop = y + charinfo[c].stroke[j].y;
+				prevx = xop;
+				prevy = yop;
+				break;
+			case DRAW:
+				xop = x + charinfo[c].stroke[j].x;
+				yop = y + charinfo[c].stroke[j].y;
+				if (prevx < charinfo[c].minx)
+					charinfo[c].minx = prevx;
+				if (prevx > charinfo[c].maxx)
+					charinfo[c].maxx = prevx;
+				if (prevy < charinfo[c].miny)
+					charinfo[c].miny = prevy;
+				if (prevy > charinfo[c].maxy)
+					charinfo[c].maxy = prevy;
+				if (xop < charinfo[c].minx)
+					charinfo[c].minx = xop;
+				if (xop > charinfo[c].maxx)
+					charinfo[c].maxx = xop;
+				if (yop < charinfo[c].miny)
+					charinfo[c].miny = yop;
+				if (yop > charinfo[c].maxy)
+					charinfo[c].maxy = yop;
+				prevx = xop;
+				prevy = yop;
+				break;
+			}
+		}
+		width = charinfo[c].maxx - charinfo[c].minx + 1;
+		height = charinfo[c].maxy - charinfo[c].miny + 1;
+		p->off_table[i] = bitmap_offset;
+		if (width == 0)
+			width = charinfo[c].width;
+		bitmap_offset += width;
+		charinfo[c].bitmap_width = width;
+		charinfo[c].bitmap_height = height;
+		if (charinfo[c].minx < minx)
+			minx = charinfo[c].minx;
+		if (charinfo[c].maxx > maxx)
+			maxx = charinfo[c].maxx;
+		if (charinfo[c].miny < miny)
+			miny = charinfo[c].miny;
+		if (charinfo[c].maxy > maxy)
+			maxy = charinfo[c].maxy;
+	}
+	p->off_table[i] = bitmap_offset;
+
+	p->form_width = bitmap_offset;
+	p->form_width = ((p->form_width + 15) >> 4) << 1;
+	
+	p->max_char_width = maxx - minx + 1;
+	p->max_cell_width = p->max_char_width;
+	p->form_height = maxy - miny + 1;
+
+	p->top = p->form_height - 1;
+	p->ascent = header.org_to_cap - header.org_to_dec;
+	p->bottom = -header.org_to_dec;
+	p->descent = p->bottom;
+	p->half = -header.org_to_dec + header.org_to_cap / 2;
+
+	p->dat_table = xmalloc((size_t)p->form_width * p->form_height);
+	memset(p->dat_table, 0, (size_t)p->form_width * p->form_height);
+	
+	for (i = 0; i < nr_chars; i++)
+	{
+		unsigned int c = i + header.first_char;
+
+		if (charinfo[c].offset == 0 && i != 0)
+		{
+			p->off_table[i] = F_NO_CHARL;
+			continue;
+		}
+		
+		x = -charinfo[c].minx;
+		y = -miny;
+		prevx = x;
+		prevy = y;
+#if 0
+		fprintf(stderr, "Char $%02x (%c)    Offset: $%04x   Width: %-5d   Stroke Count: %d   Bounding = %d %d %d %d\n",
+			c, isprint(c) ? c : '.',
+			charinfo[c].offset, charinfo[c].width, charinfo[c].stroke_count,
+			charinfo[c].minx, charinfo[c].maxx, charinfo[c].miny, charinfo[c].maxy);
+#endif
+
+		for (j = 0; j < charinfo[c].stroke_count; j++)
+		{
+
+#if 0
+			static const char *const OpName[] = {
+				"End    ",
+				"Do Scan",
+				"Move To",
+				"Line To"
+			};
+
+			fprintf(stderr, "  %3d : OpCode: %s (%d)   X: %4d   Y: %4d\n", j, OpName[charinfo[c].stroke[j].opcode], charinfo[c].stroke[j].opcode, charinfo[c].stroke[j].x, charinfo[c].stroke[j].y);
+#endif
+
+			switch (charinfo[c].stroke[j].opcode)
+			{
+			case END_OF_CHAR:
+			case DO_SCAN:
+				break;
+			case MOVE:
+				xop = x + charinfo[c].stroke[j].x;
+				yop = y + charinfo[c].stroke[j].y;
+				prevx = xop;
+				prevy = yop;
+				break;
+			case DRAW:
+				xop = x + charinfo[c].stroke[j].x;
+				yop = y + charinfo[c].stroke[j].y;
+				draw_line(p->dat_table, p->off_table[i], p->form_width, prevx, p->form_height - prevy - 1, xop, p->form_height - yop - 1);
+				prevx = xop;
+				prevy = yop;
+				break;
+			}
+		}
+	}
+
+	for (i = 0; i < nr_chars; i++)
+		free(charinfo[i].stroke);
+	free(fontdata);
+
+	return p;
+}
+
+/* ************************************************************************** */
+/* -------------------------------------------------------------------------- */
+/* ************************************************************************** */
 
 static int file_type(const char *c)
 {
@@ -2030,9 +2512,12 @@ static int file_type(const char *c)
 		strcmp(c + n - 3, "cr2") == 0 || strcmp(c + n - 3, "CR2") == 0 ||
 		strcmp(c + n - 3, "cr3") == 0 || strcmp(c + n - 3, "CR3") == 0)
 		return FILE_CRX;
+	if (strcmp(c + n - 3, "chr") == 0 || strcmp(c + n - 3, "CHR") == 0)
+		return FILE_BGI;
 	return 0;
 }
 
+/* -------------------------------------------------------------------------- */
 
 enum opt {
 	OPTION_FLAG_SET = 0,
@@ -2065,11 +2550,13 @@ static struct option const long_options[] = {
 	{ NULL, no_argument, NULL, 0 }
 };
 
+/* -------------------------------------------------------------------------- */
 
 static void print_version(void)
 {
 }
 
+/* -------------------------------------------------------------------------- */
 
 static void usage(FILE *f, int errcode)
 {
@@ -2089,15 +2576,14 @@ Options:\n\
   -s, --scale <factor>  scale picture up (BMP only)\n\
   -g, --grid <width>    draw grid around characters (BMP only)\n\
 Supported formats for reading:\n\
-  .txt, .fnt, .c16, .cr0\n\
+  .txt, .fnt, .c16, .cr0, .chr\n\
 Supported formats for writing:\n\
   .c, .txt, .fnt, .c16, .bmp\n\
 ");
 	exit(errcode);
 }
 
-
-
+/* -------------------------------------------------------------------------- */
 
 int main(int argc, char **argv)
 {
@@ -2188,6 +2674,9 @@ int main(int argc, char **argv)
 	case FILE_CRX:
 		p = read_stos_font(from);
 		break;
+	case FILE_BGI:
+		p = read_bgi_font(from);
+		break;
 	default:
 		fatal("wrong file type");
 		return EXIT_FAILURE;
@@ -2215,6 +2704,7 @@ int main(int argc, char **argv)
 		write_eps_c16(p, to);
 		break;
 	case FILE_CRX:
+	case FILE_BGI:
 	default:
 		fatal("wrong file type");
 		return EXIT_FAILURE;
