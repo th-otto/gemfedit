@@ -18,13 +18,11 @@
 #include <stdarg.h>
 #include <getopt.h>
 #include <ctype.h>
+#include <stdint.h>
+#include <errno.h>
 
-typedef unsigned char UBYTE;
-typedef signed char BYTE;
-typedef unsigned short UWORD;
-typedef short WORD;
-typedef unsigned long ULONG;
-typedef long LONG;
+#include "fontdef.h"
+#include "array.h"
 
 #define FILE_C 1
 #define FILE_TXT 2
@@ -33,6 +31,7 @@ typedef long LONG;
 #define FILE_C16 5
 #define FILE_CRX 6
 #define FILE_BGI 7
+#define FILE_TTF 8
 static int convert_from;
 static int convert_to;
 static int scale = 1;
@@ -71,12 +70,23 @@ static void fatal(const char *s, ...)
 /*
  * memory
  */
-static void *xmalloc(size_t s)
+void *xmalloc(size_t s)
 {
 	void *a = calloc(1, s);
 
 	if (a == 0)
-		fatal("memory");
+		fatal("%s", strerror(errno));
+	return a;
+}
+
+/* -------------------------------------------------------------------------- */
+
+void *xrealloc(void *p, size_t size)
+{
+	void *a = realloc(p, size);
+
+	if (a == 0)
+		fatal("%s", strerror(errno));
 	return a;
 }
 
@@ -89,7 +99,7 @@ static void *xmalloc(size_t s)
 static char *xstrdup(const char *s)
 {
 	size_t len = strlen(s);
-	char *a = xmalloc(len + 1);
+	char *a = (char *)xmalloc(len + 1);
 
 	strcpy(a, s);
 	return a;
@@ -101,18 +111,18 @@ static char *xstrdup(const char *s)
  * little/big endian conversion
  */
 
-static LONG get_b_long(void *addr)
+static int32_t get_b_long(void *addr)
 {
-	UBYTE *uaddr = (UBYTE *) addr;
+	uint8_t *uaddr = (uint8_t *) addr;
 
 	return (uaddr[0] << 24) + (uaddr[1] << 16) + (uaddr[2] << 8) + uaddr[3];
 }
 
 /* -------------------------------------------------------------------------- */
 
-static void set_b_long(void *addr, LONG value)
+static void set_b_long(void *addr, int32_t value)
 {
-	UBYTE *uaddr = (UBYTE *) addr;
+	uint8_t *uaddr = (uint8_t *) addr;
 
 	uaddr[0] = value >> 24;
 	uaddr[1] = value >> 16;
@@ -122,18 +132,18 @@ static void set_b_long(void *addr, LONG value)
 
 /* -------------------------------------------------------------------------- */
 
-static WORD get_b_word(void *addr)
+static int16_t get_b_word(void *addr)
 {
-	UBYTE *uaddr = (UBYTE *) addr;
+	uint8_t *uaddr = (uint8_t *) addr;
 
 	return (uaddr[0] << 8) + uaddr[1];
 }
 
 /* -------------------------------------------------------------------------- */
 
-static void set_b_word(void *addr, WORD value)
+static void set_b_word(void *addr, int16_t value)
 {
-	UBYTE *uaddr = (UBYTE *) addr;
+	uint8_t *uaddr = (uint8_t *) addr;
 
 	uaddr[0] = value >> 8;
 	uaddr[1] = value;
@@ -141,18 +151,18 @@ static void set_b_word(void *addr, WORD value)
 
 /* -------------------------------------------------------------------------- */
 
-static LONG get_l_long(void *addr)
+static int32_t get_l_long(void *addr)
 {
-	UBYTE *uaddr = (UBYTE *) addr;
+	uint8_t *uaddr = (uint8_t *) addr;
 
 	return (uaddr[3] << 24) + (uaddr[2] << 16) + (uaddr[1] << 8) + uaddr[0];
 }
 
 /* -------------------------------------------------------------------------- */
 
-static void set_l_long(void *addr, LONG value)
+static void set_l_long(void *addr, int32_t value)
 {
-	UBYTE *uaddr = (UBYTE *) addr;
+	uint8_t *uaddr = (uint8_t *) addr;
 
 	uaddr[3] = value >> 24;
 	uaddr[2] = value >> 16;
@@ -162,9 +172,9 @@ static void set_l_long(void *addr, LONG value)
 
 /* -------------------------------------------------------------------------- */
 
-static void set_l_word(void *addr, WORD value)
+static void set_l_word(void *addr, int16_t value)
 {
-	UBYTE *uaddr = (UBYTE *) addr;
+	uint8_t *uaddr = (uint8_t *) addr;
 
 	uaddr[1] = value >> 8;
 	uaddr[0] = value;
@@ -172,9 +182,9 @@ static void set_l_word(void *addr, WORD value)
 
 /* -------------------------------------------------------------------------- */
 
-static WORD get_l_word(void *addr)
+static int16_t get_l_word(void *addr)
 {
-	UBYTE *uaddr = (UBYTE *) addr;
+	uint8_t *uaddr = (uint8_t *) addr;
 
 	return (uaddr[1] << 8) + uaddr[0];
 }
@@ -182,9 +192,9 @@ static WORD get_l_word(void *addr)
 /* -------------------------------------------------------------------------- */
 
 #if 0
-static void set_l_word(void *addr, WORD value)
+static void set_l_word(void *addr, int16_t value)
 {
-	UBYTE *uaddr = (UBYTE *) addr;
+	uint8_t *uaddr = (uint8_t *) addr;
 
 	uaddr[1] = value >> 8;
 	uaddr[0] = value;
@@ -194,98 +204,6 @@ static void set_l_word(void *addr, WORD value)
 /* ************************************************************************** */
 /* -------------------------------------------------------------------------- */
 /* ************************************************************************** */
-
-/*
- * fontdef.h - font-header definitions
- *
- */
-
-/* fh_flags   */
-
-#define F_DEFAULT    1					/* this is the default font (face and size) */
-#define F_HORZ_OFF   2					/* there are left and right offset tables */
-#define F_STDFORM    4					/* is the font in standard (bigendian) format */
-#define F_MONOSPACE  8					/* is the font monospaced */
-#define F_EXT_HDR    32					/* extended header */
-
-/* flags that this tool supports */
-#define F_SUPPORTED (F_STDFORM|F_MONOSPACE|F_DEFAULT|F_HORZ_OFF|F_EXT_HDR)
-
-
-#define F_EXT_HDR_SIZE 62				/* size of an additional extended header */
-
-/* style bits */
-
-#define F_THICKEN 1
-#define F_LIGHT	2
-#define F_SKEW	4
-#define F_UNDER	8
-#define F_OUTLINE 16
-#define F_SHADOW	32
-
-struct font_file_hdr
-{										/* describes a .FNT file header */
-	UBYTE font_id[2];
-	UBYTE point[2];
-	char name[32];
-	UBYTE first_ade[2];
-	UBYTE last_ade[2];
-	UBYTE top[2];
-	UBYTE ascent[2];
-	UBYTE half[2];
-	UBYTE descent[2];
-	UBYTE bottom[2];
-	UBYTE max_char_width[2];
-	UBYTE max_cell_width[2];
-	UBYTE left_offset[2];				/* amount character slants left when skewed */
-	UBYTE right_offset[2];				/* amount character slants right */
-	UBYTE thicken[2];					/* number of pixels to smear */
-	UBYTE ul_size[2];					/* size of the underline */
-	UBYTE lighten[2];					/* mask to and with to lighten  */
-	UBYTE skew[2];						/* mask for skewing */
-	UBYTE flags[2];
-
-	UBYTE hor_table[4];					/* offset of horizontal offsets */
-	UBYTE off_table[4];					/* offset of character offsets  */
-	UBYTE dat_table[4];					/* offset of character definitions */
-	UBYTE form_width[2];
-	UBYTE form_height[2];
-	UBYTE next_font[4];
-};
-
-struct font
-{										/* describes a font in memory */
-	WORD font_id;
-	WORD point;
-	char name[32];
-	UWORD first_ade;
-	UWORD last_ade;
-	UWORD top;
-	UWORD ascent;
-	UWORD half;
-	UWORD descent;
-	UWORD bottom;
-	UWORD max_char_width;
-	UWORD max_cell_width;
-	UWORD left_offset;					/* amount character slants left when skewed */
-	UWORD right_offset;					/* amount character slants right */
-	UWORD thicken;						/* number of pixels to smear */
-	UWORD ul_size;						/* size of the underline */
-	UWORD lighten;						/* mask to and with to lighten  */
-	UWORD skew;							/* mask for skewing */
-	UWORD flags;
-
-	UBYTE *hor_table;					/* horizontal offsets, 2 bytes per character */
-	unsigned long *off_table;			/* character offsets, 0xFFFF if no char present.  */
-	UBYTE *dat_table;					/* character definitions */
-	unsigned long form_width;
-	UWORD form_height;
-};
-
-#define F_NO_CHAR 0xFFFFu
-#define F_NO_CHARL 0xFFFFFFFFul
-
-/* -------------------------------------------------------------------------- */
 
 static FILE *open_output(const char **filename, const char *mode)
 {
@@ -340,7 +258,7 @@ typedef struct ifile
 	long lineno;
 	char *fname;
 	FILE *fh;
-	UBYTE buf[BACKSIZ + READSIZ];
+	uint8_t buf[BACKSIZ + READSIZ];
 	long size;
 	long index;
 	int ateof;
@@ -363,7 +281,7 @@ static void irefill(IFILE *f)
 
 static IFILE *ifopen(const char *fname)
 {
-	IFILE *f = xmalloc(sizeof(IFILE));
+	IFILE *f = (IFILE *)xmalloc(sizeof(IFILE));
 
 	f->fh = open_input(&fname, "rb");
 	if (f->fh == NULL)
@@ -763,14 +681,14 @@ static int try_eol(char **cc)
  * simple bitmap read/write
  */
 
-static int get_bit(UBYTE *addr, long i)
+static int get_bit(uint8_t *addr, long i)
 {
 	return (addr[i >> 3] & (1 << (7 - (i & 7)))) ? 1 : 0;
 }
 
 /* -------------------------------------------------------------------------- */
 
-static void set_bit(UBYTE *addr, long i)
+static void set_bit(uint8_t *addr, long i)
 {
 	addr[i >> 3] |= (1 << (7 - (i & 7)));
 }
@@ -844,17 +762,17 @@ static struct font *read_txt(const char *fname)
 	int height;
 	unsigned long width = 0;
 	int w;
-	UBYTE *bms;
+	uint8_t *bms;
 	int bmsize, bmnum;
 	int first, last;
-	UBYTE *b;
+	uint8_t *b;
 	char *c;
 	long u;
 	char line[200];
 	struct font *p;
 	int max = 80;
 
-	p = xmalloc(sizeof(*p));
+	p = (struct font *)xmalloc(sizeof(*p));
 	if (p == NULL)
 		fatal("memory");
 	f = ifopen(fname);
@@ -921,7 +839,7 @@ static struct font *read_txt(const char *fname)
 	{
 		fatal("wrong char range : first = %d, last = %d", first, last);
 	}
-	if (p->max_cell_width >= 100 || p->form_height >= 100)
+	if (p->max_cell_width >= 100 || height >= 100)
 	{
 		fatal("unreasonable font size %dx%d", p->max_cell_width, height);
 	}
@@ -929,8 +847,8 @@ static struct font *read_txt(const char *fname)
 	/* allocate a big buffer to hold all bitmaps */
 	bmnum = last - first + 1;
 	bmsize = (p->max_cell_width * height + 7) >> 3;
-	bms = xmalloc((size_t)bmsize * bmnum);
-	p->off_table = xmalloc(sizeof(*p->off_table) * (bmnum + 1));
+	bms = (uint8_t *)xmalloc((size_t)bmsize * bmnum);
+	p->off_table = (unsigned long *)xmalloc(sizeof(*p->off_table) * (bmnum + 1));
 	for (i = 0; i < bmnum; i++)
 	{
 		p->off_table[i] = F_NO_CHARL;
@@ -1000,7 +918,7 @@ static struct font *read_txt(const char *fname)
 			if (i == 0)
 			{
 				width = w;
-			} else if (w != width)
+			} else if ((unsigned long)w != width)
 			{
 				fprintf(stderr, "bitmap lines of different lengths\n");
 				goto fail;
@@ -1045,7 +963,7 @@ static struct font *read_txt(const char *fname)
 		exit(EXIT_FAILURE);
 	}
 	p->form_width = ((off + 15) >> 4) << 1;
-	p->dat_table = xmalloc((size_t)height * p->form_width);
+	p->dat_table = (uint8_t *)xmalloc((size_t)height * p->form_width);
 
 	check_monospaced(p, fname);
 	
@@ -1060,7 +978,7 @@ static struct font *read_txt(const char *fname)
 		k = 0;
 		for (j = 0; j < height; j++)
 		{
-			for (w = 0; w < width; w++)
+			for (w = 0; w < (int)width; w++)
 			{
 				if (get_bit(b, k))
 				{
@@ -1096,7 +1014,7 @@ static struct font *read_fnt(const char *fname)
 	int bigendian = 0;
 	int bmnum;
 
-	p = xmalloc(sizeof(struct font));
+	p = (struct font *)xmalloc(sizeof(struct font));
 	f = open_input(&fname, "rb");
 
 	count = fread(&h, 1, sizeof(h), f);
@@ -1168,7 +1086,7 @@ static struct font *read_fnt(const char *fname)
 	if (fseek(f, off_off_table, SEEK_SET))
 		fatal("seek");
 	bmnum = p->last_ade - p->first_ade + 1;
-	p->off_table = xmalloc(sizeof(*p->off_table) * (bmnum + 1));
+	p->off_table = (unsigned long *)xmalloc(sizeof(*p->off_table) * (bmnum + 1));
 	
 	{
 		int i;
@@ -1211,7 +1129,7 @@ static struct font *read_fnt(const char *fname)
 	if (fseek(f, off_dat_table, SEEK_SET))
 		fatal("seek");
 	count = p->form_height * p->form_width;
-	p->dat_table = xmalloc(count);
+	p->dat_table = (uint8_t *)xmalloc(count);
 	if ((long)fread(p->dat_table, 1, count, f) != count)
 		fatal("short read");
 
@@ -1235,7 +1153,7 @@ static struct font *read_fnt(const char *fname)
 			p->flags &= ~F_HORZ_OFF;
 		} else
 		{
-			p->hor_table = xmalloc(count);
+			p->hor_table = (uint8_t *)xmalloc(count);
 			if (fseek(f, off_hor_table, SEEK_SET))
 				fatal("seek");
 			if ((long)fread(p->hor_table, 1, count, f) != count)
@@ -1277,7 +1195,7 @@ static void write_fnt(struct font *p, const char *fname)
 	
 	bmnum = p->last_ade - p->first_ade + 1;
 
-	if (p->off_table[bmnum] >= 0x10000L || p->form_height >= 0x10000L)
+	if (p->off_table[bmnum] >= 0x10000L || (unsigned long)p->form_height >= 0xFFFFUL)
 	{
 		fprintf(stderr, "%s: form width %ld too large for GEM font\n", fname, p->off_table[bmnum]);
 		exit(EXIT_FAILURE);
@@ -1333,7 +1251,7 @@ static void write_fnt(struct font *p, const char *fname)
 	if (p->flags & F_HORZ_OFF)
 	{
 		i = bmnum * 2;
-		if (i != fwrite(p->hor_table, 1, i, f))
+		if (i != (int)fwrite(p->hor_table, 1, i, f))
 			fatal("write");
 	}
 	for (i = 0; i <= bmnum; i++)
@@ -1429,7 +1347,7 @@ static void write_bmp(struct font *p, const char *fname)
 	
 	f = open_output(&fname, "wb");
 
-	bitmap = xmalloc(datasize);
+	bitmap = (unsigned char *)xmalloc(datasize);
 	
 	if (grid > 0)
 	{
@@ -1455,7 +1373,9 @@ static void write_bmp(struct font *p, const char *fname)
 		unsigned long off;
 		int y0;
 		int x0;
-		int x, y, sx, sy;
+		unsigned long x;
+		uint16_t y;
+		int sx, sy;
 		
 		if (i < p->first_ade)
 			continue;
@@ -1481,13 +1401,23 @@ static void write_bmp(struct font *p, const char *fname)
 	
 	if (fwrite(&fileheader, 1, sizeof(fileheader), f) != sizeof(fileheader) ||
 		fwrite(&bmpheader, 1, sizeof(bmpheader), f) != sizeof(bmpheader) ||
-		fwrite(palette, 1, cmapsize, f) != cmapsize ||
-		fwrite(bitmap, 1, datasize, f) != datasize)
+		(int)fwrite(palette, 1, cmapsize, f) != cmapsize ||
+		(long)fwrite(bitmap, 1, datasize, f) != datasize)
 		fatal("write");
 		
 	fclose(f);
 
 #undef CHAR_COLUMNS
+}
+
+/* -------------------------------------------------------------------------- */
+
+#include "truetype.h"
+
+static void write_ttf(struct font *p, const char *fname)
+{
+	(void)p;
+	(void)fname;
 }
 
 /* -------------------------------------------------------------------------- */
@@ -1553,7 +1483,8 @@ static void write_txt(struct font *p, const char *filename)
 	/* then, output char bitmaps */
 	for (i = p->first_ade; i <= p->last_ade; i++)
 	{
-		int r, c;
+		uint16_t r;
+		unsigned long c;
 		unsigned long w;
 		unsigned long off;
 
@@ -1661,16 +1592,16 @@ static void write_c_emutos(struct font *p, const char *filename, int plain)
 			
 	if (do_off_table)
 	{
-		fprintf(f, "static %s %s[] =\n{\n", plain ? "uint16_t const" : "const UWORD", off_table_name);
+		fprintf(f, "static %s %s[] =\n{\n", plain ? "UWORD const" : "const UWORD", off_table_name);
 		{
-			for (i = 0; i <= bmnum; i++)
+			for (i = 0; i <= (unsigned long)bmnum; i++)
 			{
 				if ((i & 7) == 0)
 					fprintf(f, "    ");
 				else
 					fprintf(f, " ");
 				fprintf(f, "0x%04lx", p->off_table[i]);
-				if (i != bmnum)
+				if (i != (unsigned long)bmnum)
 					fprintf(f, ",");
 				if ((i & 7) == 7)
 					fprintf(f, "\n");
@@ -1684,11 +1615,11 @@ static void write_c_emutos(struct font *p, const char *filename, int plain)
 		if (p->first_ade == 0 && p->last_ade == 255 && (p->flags & F_MONOSPACE) &&
 			p->max_cell_width == 8 && p->form_height == 16)
 		{
-			fprintf(f, "extern %s %s[];\n", plain ? "uint16_t const" : "const UWORD", "off_8x8_table");
+			fprintf(f, "extern %s %s[];\n", plain ? "UWORD const" : "const UWORD", "off_8x8_table");
 			fprintf(f, "#define %s %s\n", off_table_name, "off_8x8_table");
 		} else
 		{
-			fprintf(f, "extern %s %s[];\n", plain ? "uint16_t const" : "const UWORD", off_table_name);
+			fprintf(f, "extern %s %s[];\n", plain ? "UWORD const" : "const UWORD", off_table_name);
 		}
 		fprintf(f, "\n");
 	}
@@ -1719,7 +1650,7 @@ static void write_c_emutos(struct font *p, const char *filename, int plain)
 		fprintf(f, "};\n\n");
 	}
 	
-	fprintf(f, "static %s dat_table[] =\n{\n", plain ? "uint16_t const" : "const UWORD");
+	fprintf(f, "static %s dat_table[] =\n{\n", plain ? "UWORD const" : "const UWORD");
 	{
 		unsigned long h;
 		unsigned int a;
@@ -1905,7 +1836,7 @@ static void write_eps_c16(struct font *p, const char *filename)
 		exit(EXIT_FAILURE);
 	}
 	bmnum = p->last_ade - p->first_ade + 1;
-	if (!(p->flags & F_MONOSPACE) || p->form_width != ((bmnum + 1) & ~1) || p->form_height != 16)
+	if (!(p->flags & F_MONOSPACE) || p->form_width != (unsigned long)((bmnum + 1) & ~1) || p->form_height != 16)
 	{
 		fprintf(stderr, "%s: need monospaced 8x16 font for C16\n", filename);
 		exit(EXIT_FAILURE);
@@ -1941,10 +1872,10 @@ static struct font *read_eps_c16(const char *fname)
 		fatal("read");
 	fclose(f);
 
-	p = xmalloc(sizeof(struct font));
-	memset(p, 0, sizeof(*p));
-	p->dat_table = xmalloc(sizeof(inbuf));
-	p->off_table = xmalloc((256 + 1) * sizeof(*p->off_table));
+
+	p = (struct font *)xmalloc(sizeof(struct font));
+	p->dat_table = (uint8_t *)xmalloc(sizeof(inbuf));
+	p->off_table = (unsigned long *)xmalloc((256 + 1) * sizeof(*p->off_table));
 
 	p->font_id = 999;
 	p->point = 10;
@@ -2009,8 +1940,7 @@ static struct font *read_stos_font(const char *fname)
 		fread(maptab, 1, sizeof(maptab), f) != sizeof(maptab))
 		fatal("read");
 
-	p = xmalloc(sizeof(struct font));
-	memset(p, 0, sizeof(*p));
+	p = (struct font *)xmalloc(sizeof(struct font));
 
 	if (get_b_long(header.magic) != 0x06071963l ||
 		(char_width = get_b_word(header.width)) != 1 ||
@@ -2019,8 +1949,8 @@ static struct font *read_stos_font(const char *fname)
 	insize = fread(inbuf, 1, p->form_height * 256, f);
 	fclose(f);
 
-	p->dat_table = xmalloc(sizeof(inbuf));
-	p->off_table = xmalloc((256 + 1) * sizeof(*p->off_table));
+	p->dat_table = (uint8_t *)xmalloc(sizeof(inbuf));
+	p->off_table = (unsigned long *)xmalloc((256 + 1) * sizeof(*p->off_table));
 	p->font_id = 999;
 	p->point = p->form_height >= 16 ? 10 : 9;
 	basen = strrchr(fname, '/');
@@ -2180,6 +2110,12 @@ static void draw_line(unsigned char *bitmap, unsigned long offset, unsigned long
 
 /* -------------------------------------------------------------------------- */
 
+struct stroke {
+	unsigned char opcode;
+	int x;
+	int y;
+};
+
 static struct font *read_bgi_font(const char *fname)
 {
 	struct font *p;
@@ -2231,11 +2167,7 @@ static struct font *read_bgi_font(const char *fname)
 		int maxx;
 		int maxy;
 		unsigned int stroke_count;
-		struct {
-			unsigned char opcode;
-			int x;
-			int y;
-		} *stroke;
+		struct stroke *stroke;
 	} charinfo[256];
 	unsigned int i, j;
 	long current, length;
@@ -2274,7 +2206,7 @@ static struct font *read_bgi_font(const char *fname)
 	{
 		fatal("corrupted font?");
 	}
-	fontdata = xmalloc(length);
+	fontdata = (signed char *)xmalloc(length);
 	fread(fontdata, length, 1, f);
 	fclose(f);
 	
@@ -2288,8 +2220,7 @@ static struct font *read_bgi_font(const char *fname)
 		}
 	}
 
-	p = xmalloc(sizeof(*p));
-	memset(p, 0, sizeof(*p));
+	p = (struct font *)xmalloc(sizeof(*p));
 
 	p->font_id = 999;
 	p->point = 10;
@@ -2304,7 +2235,7 @@ static struct font *read_bgi_font(const char *fname)
 	p->skew = 0x5555;
 	p->flags = 0;
 	
-	p->off_table = xmalloc((nr_chars + 1) * sizeof(*p->off_table));
+	p->off_table = (unsigned long *)xmalloc((nr_chars + 1) * sizeof(*p->off_table));
 	bitmap_offset = 0;
 	minx = 0;
 	maxx = -1;
@@ -2330,7 +2261,7 @@ static struct font *read_bgi_font(const char *fname)
 				break;
 		}
 		charinfo[c].stroke_count = num_ops;
-		charinfo[c].stroke = xmalloc(num_ops * sizeof(*(charinfo[c].stroke)));
+		charinfo[c].stroke = (struct stroke *)xmalloc(num_ops * sizeof(*(charinfo[c].stroke)));
 		pb = fontdata + charinfo[c].offset;
 		x = y = prevx = prevy = 0;
 		charinfo[c].maxx = -1;
@@ -2417,8 +2348,7 @@ static struct font *read_bgi_font(const char *fname)
 	p->descent = p->bottom;
 	p->half = -header.org_to_dec + header.org_to_cap / 2;
 
-	p->dat_table = xmalloc((size_t)p->form_width * p->form_height);
-	memset(p->dat_table, 0, (size_t)p->form_width * p->form_height);
+	p->dat_table = (uint8_t *)xmalloc((size_t)p->form_width * p->form_height);
 	
 	for (i = 0; i < nr_chars; i++)
 	{
@@ -2514,6 +2444,8 @@ static int file_type(const char *c)
 		return FILE_CRX;
 	if (strcmp(c + n - 3, "chr") == 0 || strcmp(c + n - 3, "CHR") == 0)
 		return FILE_BGI;
+	if (strcmp(c + n - 3, "ttf") == 0 || strcmp(c + n - 3, "TTF") == 0)
+		return FILE_TTF;
 	return 0;
 }
 
@@ -2677,6 +2609,9 @@ int main(int argc, char **argv)
 	case FILE_BGI:
 		p = read_bgi_font(from);
 		break;
+	case FILE_TTF:
+		fatal("cannot read TTF files");
+		return EXIT_FAILURE;
 	default:
 		fatal("wrong file type");
 		return EXIT_FAILURE;
@@ -2702,6 +2637,9 @@ int main(int argc, char **argv)
 		break;
 	case FILE_C16:
 		write_eps_c16(p, to);
+		break;
+	case FILE_TTF:
+		write_ttf(p, to);
 		break;
 	case FILE_CRX:
 	case FILE_BGI:

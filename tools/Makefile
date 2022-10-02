@@ -1,5 +1,6 @@
 CC = gcc
-CFLAGS = -O2 -fomit-frame-pointer -Wall -I../include
+WARN = -Wall -W -Wstrict-prototypes -Wmissing-prototypes -Wc++-compat -Wdeclaration-after-statement -Wc90-c99-compat
+CFLAGS = -O2 -fomit-frame-pointer $(WARN) -I../include
 LDFLAGS = -s
 LIBS=
 
@@ -13,8 +14,8 @@ fnt2bdf: fnt2bdf.c
 pcf2bdf: pcf2bdf.c
 	$(CC) $(CFLAGS) $(LDFLAGS) $< $(LIBS) -o $@
 
-fntconv: fntconv.c
-	$(CC) $(CFLAGS) $(LDFLAGS) $< $(LIBS) -o $@
+fntconv: fntconv.c array.c
+	$(CC) $(CFLAGS) $(LDFLAGS) $^ $(LIBS) -o $@
 
 clean::
 	rm -f $(PROGRAMS)

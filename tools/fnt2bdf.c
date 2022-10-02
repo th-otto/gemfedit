@@ -488,6 +488,7 @@ static void fnttobdf(UB *b, int l, FILE *out, const char *filename)
 	fprintf(out, "FONT %s\n", font_name(facename_buf, LOAD_UW(h + 2), max_cell_width, form_height, flags, LOAD_UW(h + 0)));
 	fprintf(out, "SIZE %d 100 100\n", LOAD_UW(h + 2));
 	fprintf(out, "FONTBOUNDINGBOX %d %d 0 0\n", max_cell_width, form_height);
+	fprintf(out, "PIXEL_SIZE %d\n", form_height); /* needed by bdf2ttf */
 	fprintf(out, "STARTPROPERTIES 12\n");
 	fprintf(out, "FACE_NAME \"%s\"\n", facename_buf);
 	fprintf(out, "FAMILY_NAME \"%s\"\n", family_name);
@@ -496,7 +497,7 @@ static void fnttobdf(UB *b, int l, FILE *out, const char *filename)
 	fprintf(out, "SPACING \"%c\"\n", mono ? 'M' : 'P');
 	if (translate)
 	{
-		fprintf(out, "CHARSET_REGISTRY \"ISO8859\"\n");
+		fprintf(out, "CHARSET_REGISTRY \"ISO8859-1\"\n");
 		fprintf(out, "CHARSET_ENCODING \"1\"\n");
 	} else
 	{
@@ -658,7 +659,7 @@ int main(int argc, char **argv)
 		fseek(in, 0, SEEK_END);
 		l = ftell(in);
 		fseek(in, 0, SEEK_SET);
-		m = malloc(l);
+		m = (UB *)malloc(l);
 		l = fread(m, 1, l, in);
 	
 		fnttobdf(m, l, out, filename);
