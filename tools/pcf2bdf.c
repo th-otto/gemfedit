@@ -37,7 +37,7 @@ enum type32
 	PCF_BDF_ENCODINGS = (1 << 5),
 	PCF_SWIDTHS = (1 << 6),
 	PCF_GLYPH_NAMES = (1 << 7),
-	PCF_BDF_ACCELERATORS = (1 << 8),
+	PCF_BDF_ACCELERATORS = (1 << 8)
 };
 
 /* section format */
@@ -397,7 +397,9 @@ static void skip(int n)
 static void bit_order_invert(uint8_t *data, int size)
 {
 	static const uint8_t invert[16] = { 0, 8, 4, 12, 2, 10, 6, 14, 1, 9, 5, 13, 3, 11, 7, 15 };
-	for (int i = 0; i < size; i++)
+	int i;
+
+	for (i = 0; i < size; i++)
 	{
 		data[i] = (invert[data[i] & 15] << 4) | invert[(data[i] >> 4) & 15];
 	}
@@ -405,8 +407,10 @@ static void bit_order_invert(uint8_t *data, int size)
 
 static void two_byte_swap(uint8_t *data, int size)
 {
+	int i;
+
 	size &= ~1;
-	for (int i = 0; i < size; i += 2)
+	for (i = 0; i < size; i += 2)
 	{
 		uint8_t tmp = data[i];
 
@@ -417,8 +421,10 @@ static void two_byte_swap(uint8_t *data, int size)
 
 static void four_byte_swap(uint8_t *data, int size)
 {
+	int i;
+
 	size &= ~3;
-	for (int i = 0; i < size; i += 4)
+	for (i = 0; i < size; i += 4)
 	{
 		uint8_t tmp = data[i];
 
@@ -437,7 +443,9 @@ static void four_byte_swap(uint8_t *data, int size)
 /* search and seek a section of 'type' */
 static bool seek(enum type32 type)
 {
-	for (int i = 0; i < nTables; i++)
+	int i;
+
+	for (i = 0; i < nTables; i++)
 	{
 		if (tables[i].type == type)
 		{
@@ -458,7 +466,9 @@ static bool seek(enum type32 type)
 /* does a section of 'type' exist? */
 static bool is_exist_section(enum type32 type)
 {
-	for (int i = 0; i < nTables; i++)
+	int i;
+
+	for (i = 0; i < nTables; i++)
 	{
 		if (tables[i].type == type)
 		{
@@ -561,7 +571,9 @@ static void read_accelerators(void)
 /* search a property named 'name', and return its string if it is a string */
 static char *get_property_string(const char *name)
 {
-	for (int i = 0; i < nProps; i++)
+	int i;
+
+	for (i = 0; i < nProps; i++)
 	{
 		if (strcmp(name, props[i].name.s) == 0)
 		{
@@ -581,7 +593,9 @@ static char *get_property_string(const char *name)
 /* search a property named 'name', and return its value if it is a value */
 static int32_t get_property_value(const char *name)
 {
-	for (int i = 0; i < nProps; i++)
+	int i;
+
+	for (i = 0; i < nProps; i++)
 	{
 		if (strcmp(name, props[i].name.s) == 0)
 		{
@@ -601,7 +615,9 @@ static int32_t get_property_value(const char *name)
 /* does a property named 'name' exist? */
 static bool is_exist_property_value(const char *name)
 {
-	for (int i = 0; i < nProps; i++)
+	int i;
+
+	for (i = 0; i < nProps; i++)
 	{
 		if (strcmp(name, props[i].name.s) == 0)
 		{
@@ -630,7 +646,10 @@ int main(int argc, char *argv[])
 	int i;
 	char *ifilename = NULL;
 	char *ofilename = NULL;
-
+	int32_t rx, ry;
+	int nPropsd;
+	int32_t version;
+	
 	/* read options */
 	for (i = 1; i < argc; i++)
 	{
@@ -669,17 +688,18 @@ int main(int argc, char *argv[])
 		_setmode(fileno(stdin), O_BINARY);
 		ifp = stdin;
 	}
-	int32_t version = read_int32_big();
+	version = read_int32_big();
 
 	if ((version >> 16) == 0x1f9d ||	/* compress'ed */
 		(version >> 16) == 0x1f8b)		/* gzip'ed */
 	{
+		char buf[1024];
+
 		if (!ifilename)
 		{
 			return error_exit("stdin is gzip'ed or compress'ed\n");
 		}
 		fclose(ifp);
-		char buf[1024];
 
 		sprintf(buf, "gzip -dc %s", ifilename);	/* TODO */
 		ifp = popen(buf, "r");
@@ -825,6 +845,7 @@ int main(int argc, char *argv[])
 	{
 	default:
 		error_invalid_exit("metrics");
+		break;
 	case PCF_DEFAULT_FORMAT:
 		nMetrics = read_int32();
 		metrics = (struct metric_t *)calloc(nMetrics, sizeof(struct metric_t));
@@ -1015,17 +1036,19 @@ int main(int argc, char *argv[])
 		}
 	} else
 	{
+		double p;
+		
 		if (verbose)
 		{
 			fprintf(stderr, "no PCF_SWIDTHS\n");
 		}
-		int32_t rx = get_property_value("RESOLUTION_X");
+		rx = get_property_value("RESOLUTION_X");
 
 		if (rx <= 0)
 		{
 			rx = (int) (get_property_value("RESOLUTION") / 100.0 * 72.27);
 		}
-		double p = get_property_value("POINT_SIZE") / 10.0;
+		p = get_property_value("POINT_SIZE") / 10.0;
 
 		for (i = 0; i < nSwidths; i++)
 		{
@@ -1095,9 +1118,8 @@ int main(int argc, char *argv[])
 
 	fprintf(ofp, "STARTFONT 2.1\n");
 	fprintf(ofp, "FONT %s\n", get_property_string("FONT"));
-	int32_t rx = get_property_value("RESOLUTION_X");
-
-	int32_t ry = get_property_value("RESOLUTION_Y");
+	rx = get_property_value("RESOLUTION_X");
+	ry = get_property_value("RESOLUTION_Y");
 
 	if (!is_exist_property_value("RESOLUTION_X") || !is_exist_property_value("RESOLUTION_Y"))
 	{
@@ -1107,8 +1129,7 @@ int main(int argc, char *argv[])
 	fprintf(ofp, "FONTBOUNDINGBOX %d %d %d %d\n\n",
 			widthBits(&fontbbx), height(&fontbbx), fontbbx.leftSideBearing, -fontbbx.descent);
 
-	int nPropsd = -1;
-
+	nPropsd = -1;
 	if (!is_exist_property_value("DEFAULT_CHAR") && defaultCh != NO_SUCH_CHAR)
 	{
 		nPropsd++;
@@ -1141,8 +1162,10 @@ int main(int argc, char *argv[])
 		fprintf(ofp, "%s ", props[i].name.s);
 		if (props[i].isStringProp)
 		{
+			const char *p;
+			
 			fprintf(ofp, "\"");
-			for (const char *p = props[i].value.s; *p; ++p)
+			for (p = props[i].value.s; *p; ++p)
 			{
 				if (*p == '"')
 				{
@@ -1175,18 +1198,25 @@ int main(int argc, char *argv[])
 
 	for (i = 0; i < nEncodings; i++)
 	{
+		int c, r;
+		int col, row;
+		uint16_t charcode;
+		struct metric_t *m;
+		int Bytes;
+		int w;
+		uint8_t *b;
+		
 		if (encodings[i] == NO_SUCH_CHAR)
 		{
 			continue;
 		}
 
-		int col = i % (lastCol - firstCol + 1) + firstCol;
+		col = i % (lastCol - firstCol + 1) + firstCol;
+		row = i / (lastCol - firstCol + 1) + firstRow;
 
-		int row = i / (lastCol - firstCol + 1) + firstRow;
+		charcode = make_charcode(row, col);
 
-		uint16_t charcode = make_charcode(row, col);
-
-		struct metric_t *m = &metrics[encodings[i]];
+		m = &metrics[encodings[i]];
 		if (m->glyphName.s)
 		{
 			fprintf(ofp, "STARTCHAR %s\n", m->glyphName.s);
@@ -1207,16 +1237,16 @@ int main(int argc, char *argv[])
 		}
 		fprintf(ofp, "BITMAP\n");
 
-		int Bytes = widthBytes(m, &format);
+		Bytes = widthBytes(m, &format);
 
-		int w = (widthBits(m) + 7) / 8;
+		w = (widthBits(m) + 7) / 8;
 
 		w = w < 1 ? 1 : w;
-		uint8_t *b = m->bitmaps;
+		b = m->bitmaps;
 
-		for (int r = 0; r < height(m); r++)
+		for (r = 0; r < height(m); r++)
 		{
-			for (int c = 0; c < Bytes; c++)
+			for (c = 0; c < Bytes; c++)
 			{
 				if (c < w)
 				{
