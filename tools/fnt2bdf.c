@@ -34,6 +34,7 @@ static gboolean translate = FALSE;
 static gboolean info = FALSE;
 static gboolean verbose = FALSE;
 static gboolean quiet = FALSE;
+static gboolean nocomment = FALSE;
 static const char *foundry = "atari";
 
 
@@ -525,14 +526,17 @@ static void fnttobdf(UB *b, int l, FILE *out, const char *filename)
 		int w = LOAD_UW(off_table + 2 * i + 2) - o;
 
 		fprintf(out, "STARTCHAR dec%d\n", i + firstc);
-		fprintf(out, "ENCODING %d\n", tr[i + firstc]);
+		fprintf(out, "ENCODING %d\n", i + firstc < 256 ? tr[i + firstc] : i + firstc);
 		fprintf(out, "SWIDTH %d 0\n", 100 * w);
 		fprintf(out, "DWIDTH %d 0\n", w);
 		fprintf(out, "BBX %d %d %d %d\n", w, form_height, 0, top - form_height);
 		fprintf(out, "BITMAP\n");
-		for (j = 0; j < form_height; j++)
+		if (!nocomment)
 		{
-			print_comment(dat_table + form_width * j, o, w, out);
+			for (j = 0; j < form_height; j++)
+			{
+				print_comment(dat_table + form_width * j, o, w, out);
+			}
 		}
 		for (j = 0; j < form_height; j++)
 		{
@@ -552,6 +556,7 @@ static struct option const long_options[] = {
 	{ "info", no_argument, NULL, 'i' },
 	{ "verbose", no_argument, NULL, 'v' },
 	{ "quiet", no_argument, NULL, 'q' },
+	{ "nocomment", no_argument, NULL, 'c' },
 	{ "help", no_argument, NULL, 'h' },
 	{ "version", no_argument, NULL, 'V' },
 	{ NULL, no_argument, NULL, 0 }
@@ -567,6 +572,7 @@ static void usage(FILE *fp)
 	fprintf(fp, "  -t, --translate  write bdf file with iso-latin-1 encoding\n");
 	fprintf(fp, "  -v, --verbose    be verbose\n");
 	fprintf(fp, "  -q, --quiet      be quiet\n");
+	fprintf(fp, "  -c, --nocomment  do not write comments\n");
 	fprintf(fp, "      --help       print this help and exit\n");
 }
 
@@ -584,7 +590,7 @@ int main(int argc, char **argv)
 	const char *filename = NULL;
 	int c;
 	
-	while ((c = getopt_long(argc, argv, "tivqhV", long_options, NULL)) != EOF)
+	while ((c = getopt_long(argc, argv, "tivqchV", long_options, NULL)) != EOF)
 	{
 		switch (c)
 		{
@@ -599,6 +605,9 @@ int main(int argc, char **argv)
 			break;
 		case 'q':
 			quiet = TRUE;
+			break;
+		case 'c':
+			nocomment = TRUE;
 			break;
 		case 'h':
 			usage(stdout);
