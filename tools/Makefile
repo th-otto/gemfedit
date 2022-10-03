@@ -14,7 +14,7 @@ fnt2bdf: fnt2bdf.c
 pcf2bdf: pcf2bdf.c
 	$(CC) $(CFLAGS) $(LDFLAGS) $< $(LIBS) -o $@
 
-fntconv: fntconv.c array.c
+fntconv: fntconv.c array.c ttfout.c
 	$(CC) $(CFLAGS) $(LDFLAGS) $^ $(LIBS) -o $@
 
 clean::

@@ -334,6 +334,8 @@ typedef struct _TT_tablerec {
 	tt_uint32  offset;					/* table file offset */
 	tt_uint32  length;					/*      table length */
 } TT_tablerec;
+#define SIZEOF_TT_tablerec 16
+
 
 /* TTAG_gasp */
 typedef struct
@@ -885,6 +887,7 @@ typedef struct _TT_fileheader {
 	TT_tablerec *records;
 #endif
 } TT_fileheader;
+#define SIZEOF_TT_fileheader 12
 
 #endif
 

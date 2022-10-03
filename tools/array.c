@@ -3,6 +3,7 @@
 #include <string.h>
 #include <errno.h>
 #include <stdint.h>
+#include <assert.h>
 #include "array.h"
 
 /* ************************************************************************** */
@@ -13,8 +14,7 @@ void array_addWideString(array *a, const unichar_t *str)
 {
 	while (*str)
 	{
-		array_addByte(a, (*str >> 8) & 0xff);
-		array_addByte(a, (*str >> 0) & 0xff);
+		array_addShort(a, *str);
 		++str;
 	}
 }
@@ -47,25 +47,6 @@ void array_delete(array *a)
 
 /* -------------------------------------------------------------------------- */
 
-void array_addShort(array *a, unsigned short s)
-{
-    array_addByte(a, (unsigned char)(s >> 8));
-    array_addByte(a, (unsigned char)s);
-}
-
-/* -------------------------------------------------------------------------- */
-
-void array_addArray(array *a, array *from)
-{
-	int len = (int) array_getLen(from);
-	int i;
-
-	for (i = 0; i < len; ++i)
-		array_addByte(a, from->data[i]);
-}
-
-/* -------------------------------------------------------------------------- */
-
 static void array_extend(array *a)
 {
 	unsigned char *nd;
@@ -88,10 +69,46 @@ void array_addByte(array *a, unsigned char b)
 
 /* -------------------------------------------------------------------------- */
 
+void array_addShort(array *a, unsigned short s)
+{
+	array_addByte(a, (unsigned char)(s >> 8));
+	array_addByte(a, (unsigned char)s);
+}
+
+/* -------------------------------------------------------------------------- */
+
+void array_setShort(array *a, size_t offset, unsigned short s)
+{
+	assert(offset + 2 <= a->len);
+	a->data[offset + 0] = (unsigned char)(s >> 8);
+	a->data[offset + 1] = (unsigned char)s;
+}
+
+/* -------------------------------------------------------------------------- */
+
+void array_addArray(array *a, array *from)
+{
+	int len = (int) array_getLen(from);
+	int i;
+
+	for (i = 0; i < len; ++i)
+		array_addByte(a, from->data[i]);
+}
+
+/* -------------------------------------------------------------------------- */
+
 void array_addLong(array *a, unsigned long s)
 {
 	array_addShort(a, (unsigned short)(s >> 16));
-    array_addShort(a, (unsigned short)s);
+	array_addShort(a, (unsigned short)s);
+}
+
+/* -------------------------------------------------------------------------- */
+
+void array_addQuad(array *a, uint64_t s)
+{
+	array_addLong(a, s >> 32);
+	array_addLong(a, s & 0xffffffffUL);
 }
 
 /* ************************************************************************** */
@@ -102,9 +119,9 @@ table *table_new(void)
 {
 	table *t = (table *)xmalloc(sizeof(*t));
 	
-    t->chk = t->off = t->len = 0;
-    t->mapTo = NULL;
-    t->ary = array_new();
+	t->chk = t->off = t->len = 0;
+	t->mapTo = NULL;
+	t->ary = array_new();
 	return t;
 }
 

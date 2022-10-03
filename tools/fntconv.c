@@ -23,6 +23,7 @@
 
 #include "fontdef.h"
 #include "array.h"
+#include "stcharmap.h"
 
 #define FILE_C 1
 #define FILE_TXT 2
@@ -88,6 +89,17 @@ void *xrealloc(void *p, size_t size)
 	if (a == 0)
 		fatal("%s", strerror(errno));
 	return a;
+}
+
+/* -------------------------------------------------------------------------- */
+
+static struct font *font_alloc(void)
+{
+	struct font *p;
+
+	p = (struct font *)xmalloc(sizeof(*p));
+	p->flagAutoName = 1;
+	return p;
 }
 
 /* -------------------------------------------------------------------------- */
@@ -219,8 +231,17 @@ static FILE *open_output(const char **filename, const char *mode)
 		f = fopen(*filename, mode);
 	}
 	if (f == NULL)
-		fatal("can't create %s", *filename);
+		fatal("can't create %s: %s", *filename, strerror(errno));
 	return f;
+}
+
+/* -------------------------------------------------------------------------- */
+
+static void close_output(FILE *f)
+{
+	fflush(f);
+	if (f != stdout && fclose(f) != 0)
+		fatal("fclose");
 }
 
 /* -------------------------------------------------------------------------- */
@@ -238,7 +259,7 @@ static FILE *open_input(const char **filename, const char *mode)
 		f = fopen(*filename, mode);
 	}
 	if (f == NULL)
-		fatal("can't open %s", *filename);
+		fatal("can't open %s: %s", *filename, strerror(errno));
 	return f;
 }
 
@@ -772,9 +793,7 @@ static struct font *read_txt(const char *fname)
 	struct font *p;
 	int max = 80;
 
-	p = (struct font *)xmalloc(sizeof(*p));
-	if (p == NULL)
-		fatal("memory");
+	p = font_alloc();
 	f = ifopen(fname);
 
 #define EXPECT(a) \
@@ -1014,7 +1033,7 @@ static struct font *read_fnt(const char *fname)
 	int bigendian = 0;
 	int bmnum;
 
-	p = (struct font *)xmalloc(sizeof(struct font));
+	p = font_alloc();
 	f = open_input(&fname, "rb");
 
 	count = fread(&h, 1, sizeof(h), f);
@@ -1263,8 +1282,7 @@ static void write_fnt(struct font *p, const char *fname)
 	count = p->form_width * p->form_height;
 	if (count != (long)fwrite(p->dat_table, 1, count, f))
 		fatal("write");
-	if (fclose(f))
-		fatal("fclose");
+	close_output(f);
 }
 
 /* -------------------------------------------------------------------------- */
@@ -1405,7 +1423,7 @@ static void write_bmp(struct font *p, const char *fname)
 		(long)fwrite(bitmap, 1, datasize, f) != datasize)
 		fatal("write");
 		
-	fclose(f);
+	close_output(f);
 
 #undef CHAR_COLUMNS
 }
@@ -1414,10 +1432,51 @@ static void write_bmp(struct font *p, const char *fname)
 
 #include "truetype.h"
 
-static void write_ttf(struct font *p, const char *fname)
+static void write_ttf(struct font *font, const char *fname)
 {
-	(void)p;
-	(void)fname;
+	FILE *fp;
+	uint32_t i;
+	int id;
+	unsigned long w;
+	
+	fp = open_output(&fname, "wb");
+	font->glyphs = (struct glyph *)xmalloc(MAX_GLYPH * sizeof(*font->glyphs));
+	for (i = 0; i < MAX_GLYPH; i++)
+	{
+		font->glyphs[i].id = -1;
+		font->glyphs[i].idx = 0;
+		font->glyphs[i].width = 0;
+	}
+	for (i = font->first_ade; i <= font->last_ade; i++)
+	{
+		if ((w = get_width(font, i - font->first_ade)) != F_NO_CHARL)
+		{
+			unsigned short uni;
+			
+			uni = i < 0x80 || i >= 0x100 ? i : known_pairs[i - 0x80].uni;
+			font->glyphs[uni].idx = i - font->first_ade;
+			font->glyphs[uni].width = w;
+			font->glyphs[uni].bbx.width = w;
+			font->glyphs[uni].bbx.height = font->form_height;
+			font->glyphs[uni].bbx.x = 0;
+			font->glyphs[uni].bbx.y = font->top - font->form_height;
+		}
+	}
+	id = 0;
+	for (i = 0; i < MAX_GLYPH; i++)
+	{
+		if (font->glyphs[i].width != 0)
+		{
+			font->glyphs[i].id = id;
+			id++;
+		}
+	}
+	font->num_glyphs = id;
+	ttf_output(font, fp);
+
+	close_output(fp);
+	free(font->glyphs);
+	font->glyphs = NULL;
 }
 
 /* -------------------------------------------------------------------------- */
@@ -1525,7 +1584,7 @@ static void write_txt(struct font *p, const char *filename)
 		fprintf(f, "endchar\n");
 	}
 	fprintf(f, "endfont\n");
-	fclose(f);
+	close_output(f);
 }
 
 /* -------------------------------------------------------------------------- */
@@ -1743,7 +1802,7 @@ static void write_c_emutos(struct font *p, const char *filename, int plain)
 	}
 	fprintf(f, "};\n");
 
-	fclose(f);
+	close_output(f);
 }
 
 /* -------------------------------------------------------------------------- */
@@ -1817,7 +1876,7 @@ static void write_c_aranym(struct font *p, const char *filename)
 	}
 	fprintf(f, "};\n");
 
-	fclose(f);
+	close_output(f);
 }
 
 /* -------------------------------------------------------------------------- */
@@ -1853,8 +1912,7 @@ static void write_eps_c16(struct font *p, const char *filename)
 	count = sizeof(outbuf);
 	if (count != (long)fwrite(outbuf, 1, count, f))
 		fatal("write");
-	if (fclose(f))
-		fatal("fclose");
+	close_output(f);
 }
 
 /* -------------------------------------------------------------------------- */
@@ -1873,7 +1931,7 @@ static struct font *read_eps_c16(const char *fname)
 	fclose(f);
 
 
-	p = (struct font *)xmalloc(sizeof(struct font));
+	p = font_alloc();
 	p->dat_table = (uint8_t *)xmalloc(sizeof(inbuf));
 	p->off_table = (unsigned long *)xmalloc((256 + 1) * sizeof(*p->off_table));
 
@@ -1940,7 +1998,7 @@ static struct font *read_stos_font(const char *fname)
 		fread(maptab, 1, sizeof(maptab), f) != sizeof(maptab))
 		fatal("read");
 
-	p = (struct font *)xmalloc(sizeof(struct font));
+	p = font_alloc();
 
 	if (get_b_long(header.magic) != 0x06071963l ||
 		(char_width = get_b_word(header.width)) != 1 ||
@@ -2220,7 +2278,7 @@ static struct font *read_bgi_font(const char *fname)
 		}
 	}
 
-	p = (struct font *)xmalloc(sizeof(*p));
+	p = font_alloc();
 
 	p->font_id = 999;
 	p->point = 10;
@@ -2421,7 +2479,8 @@ static struct font *read_bgi_font(const char *fname)
 static int file_type(const char *c)
 {
 	int n;
-
+	const char *ext;
+	
 	if (c == NULL || strcmp(c, "-") == 0)
 		return FILE_TXT;
 	n = (int)strlen(c);
@@ -2429,22 +2488,23 @@ static int file_type(const char *c)
 		return FILE_C;
 	if (n < 5 || c[n - 4] != '.')
 		return 0;
-	if (strcmp(c + n - 3, "txt") == 0 || strcmp(c + n - 3, "TXT") == 0)
+	ext = c + n - 3;
+	if (strcmp(ext, "txt") == 0 || strcmp(ext, "TXT") == 0)
 		return FILE_TXT;
-	if (strcmp(c + n - 3, "fnt") == 0 || strcmp(c + n - 3, "FNT") == 0)
+	if (strcmp(ext, "fnt") == 0 || strcmp(ext, "FNT") == 0)
 		return FILE_FNT;
-	if (strcmp(c + n - 3, "bmp") == 0 || strcmp(c + n - 3, "BMP") == 0)
+	if (strcmp(ext, "bmp") == 0 || strcmp(ext, "BMP") == 0)
 		return FILE_BMP;
-	if (strcmp(c + n - 3, "c16") == 0 || strcmp(c + n - 3, "C16") == 0)
+	if (strcmp(ext, "c16") == 0 || strcmp(ext, "C16") == 0)
 		return FILE_C16;
-	if (strcmp(c + n - 3, "cr0") == 0 || strcmp(c + n - 3, "CR0") == 0 ||
-		strcmp(c + n - 3, "cr1") == 0 || strcmp(c + n - 3, "CR1") == 0 ||
-		strcmp(c + n - 3, "cr2") == 0 || strcmp(c + n - 3, "CR2") == 0 ||
-		strcmp(c + n - 3, "cr3") == 0 || strcmp(c + n - 3, "CR3") == 0)
+	if (strcmp(ext, "cr0") == 0 || strcmp(ext, "CR0") == 0 ||
+		strcmp(ext, "cr1") == 0 || strcmp(ext, "CR1") == 0 ||
+		strcmp(ext, "cr2") == 0 || strcmp(ext, "CR2") == 0 ||
+		strcmp(ext, "cr3") == 0 || strcmp(ext, "CR3") == 0)
 		return FILE_CRX;
-	if (strcmp(c + n - 3, "chr") == 0 || strcmp(c + n - 3, "CHR") == 0)
+	if (strcmp(ext, "chr") == 0 || strcmp(ext, "CHR") == 0)
 		return FILE_BGI;
-	if (strcmp(c + n - 3, "ttf") == 0 || strcmp(c + n - 3, "TTF") == 0)
+	if (strcmp(ext, "ttf") == 0 || strcmp(ext, "TTF") == 0)
 		return FILE_TTF;
 	return 0;
 }
@@ -2460,6 +2520,7 @@ enum opt {
 	OPTION_ALLCHARS = 'A',
 	OPTION_NO_OFFTABLE = 'O',
 	OPTION_VARNAME = 'v',
+	OPTION_FONTNAME = 'n',
 	OPTION_SCALE = 's',
 	OPTION_GRID = 'g',
 	
@@ -2474,6 +2535,7 @@ static struct option const long_options[] = {
 	{ "all-chars", no_argument, NULL, OPTION_ALLCHARS },
 	{ "output", required_argument, NULL, OPTION_OUTPUT },
 	{ "varname", required_argument, NULL, OPTION_VARNAME },
+	{ "name", required_argument, NULL, OPTION_FONTNAME },
 	{ "no-offtable", no_argument, NULL, OPTION_NO_OFFTABLE },
 	{ "scale", required_argument, NULL, OPTION_SCALE },
 	{ "grid", required_argument, NULL, OPTION_GRID },
@@ -2496,7 +2558,7 @@ static void usage(FILE *f, int errcode)
 Usage: \n\
   fntconv -o <to> <from>\n\
     converts BDOS font between types C, TXT, FNT.\n\
-    the file types are inferred from the file extensions.\n\
+    The file types are inferred from the file extensions\n\
     (not all combinations are allowed.)\n\
 Options:\n\
   -o, --output <file>   write output to <file>\n\
@@ -2504,13 +2566,14 @@ Options:\n\
   -p, --plain           output C sourcecode for TOS\n\
   -A, --all-chars       output data also for non-existent chars\n\
   -v, --varname <name>  set the name of the font header variable\n\
+  -n, --name <name>     set the name of the font\n\
   -O, --no-offtable     do not write the offsets table\n\
   -s, --scale <factor>  scale picture up (BMP only)\n\
   -g, --grid <width>    draw grid around characters (BMP only)\n\
 Supported formats for reading:\n\
   .txt, .fnt, .c16, .cr0, .chr\n\
 Supported formats for writing:\n\
-  .c, .txt, .fnt, .c16, .bmp\n\
+  .c, .txt, .fnt, .c16, .bmp, .ttf\n\
 ");
 	exit(errcode);
 }
@@ -2524,7 +2587,7 @@ int main(int argc, char **argv)
 	const char *to = NULL;
 	int c;
 	
-	while ((c = getopt_long_only(argc, argv, "o:ag:s:AOhV", long_options, NULL)) != EOF)
+	while ((c = getopt_long_only(argc, argv, "o:ag:s:v:n:pAOhV", long_options, NULL)) != EOF)
 	{
 		const char *arg = optarg;
 		switch ((enum opt) c)
@@ -2547,6 +2610,9 @@ int main(int argc, char **argv)
 			break;
 		case OPTION_VARNAME:
 			varname = optarg;
+			break;
+		case OPTION_FONTNAME:
+			g_fontname = optarg;
 			break;
 		case OPTION_SCALE:
 			scale = (int)strtol(optarg, NULL, 0);
@@ -2616,6 +2682,7 @@ int main(int argc, char **argv)
 		fatal("wrong file type");
 		return EXIT_FAILURE;
 	}
+
 	switch (convert_to)
 	{
 	case FILE_C:
@@ -2647,5 +2714,6 @@ int main(int argc, char **argv)
 		fatal("wrong file type");
 		return EXIT_FAILURE;
 	}
+
 	return EXIT_SUCCESS;
 }

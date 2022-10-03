@@ -1,3 +1,6 @@
+#ifndef __FONTDEF_H__
+#define __FONTDEF_H__
+
 /*
  * fontdef.h - font-header definitions
  *
@@ -56,6 +59,21 @@ struct font_file_hdr
 	uint8_t next_font[4];
 };
 
+
+struct boundingbox {
+    int width;
+    int height;
+	int x;
+	int y;
+};
+
+struct glyph {
+	int id;
+	uint16_t idx;
+	int width;
+	struct boundingbox bbx;
+};
+
 struct font
 {										/* describes a font in memory */
 	int16_t font_id;
@@ -79,11 +97,35 @@ struct font
 	uint16_t flags;
 
 	uint8_t *hor_table;					/* horizontal offsets, 2 bytes per character */
-	unsigned long *off_table;			/* character offsets, 0xFFFF if no char present.  */
+	unsigned long *off_table;			/* character offsets, 0xFFFF if no char present. */
 	uint8_t *dat_table;					/* character definitions */
 	unsigned long form_width;
 	uint16_t form_height;
+	
+	/*
+	 * for TTF output only:
+	 */
+	int flagAutoName;
+	int flagBold;
+	int flagItalic;
+	struct glyph *glyphs;
+	int num_glyphs;
+	int emX;
+	int emY;
+	int emDescent;
+	int emAscent;
 };
 
 #define F_NO_CHAR 0xFFFFu
 #define F_NO_CHARL 0xFFFFFFFFul
+
+#define MAX_GLYPH 0x10000
+
+extern const char	*g_copyright;
+extern const char	*g_fontname;
+extern const char	*g_version;
+extern const char	*g_trademark;
+
+void ttf_output(struct font *font, FILE *fp);
+
+#endif /* __FONTDEF_H__ */

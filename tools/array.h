@@ -14,6 +14,8 @@ void array_delete(array *a);
 void array_addByte(array *a, unsigned char b);
 void array_addShort(array *a, unsigned short s);
 void array_addLong(array *a, unsigned long s);
+void array_addQuad(array *a, uint64_t s);
+void array_setShort(array *a, size_t offset, unsigned short s);
 
 #define array_getLen(a) ((a)->len)
 #define array_getBuf(a) ((a)->data)
