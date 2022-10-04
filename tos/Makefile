@@ -52,7 +52,7 @@ SPDLIB = reset.o do_char.o do_trns.o set_spcs.o set_trns.o \
 sptobdf.ttp: sptobdf.o $(SPDLIB)
 	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $^ $(MATH_LIB)
 
-fntconv.ttp: fntconv.o getopt.o
+fntconv.ttp: fntconv.o ttfout.o array.o getopt.o
 	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $^ $(MATH_LIB)
 
 spdview.prg: spdview.o $(SPDLIB)
@@ -101,6 +101,12 @@ bics2uni.o: ../speedo/bics2uni.c
 	$(CC) $(CFLAGS) -c -o $@ $<
 
 fntconv.o: ../tools/fntconv.c
+	$(CC) $(CFLAGS) -c -o $@ $<
+
+ttfout.o: ../tools/ttfout.c
+	$(CC) $(CFLAGS) -c -o $@ $<
+
+array.o: ../tools/array.c
 	$(CC) $(CFLAGS) -c -o $@ $<
 
 
