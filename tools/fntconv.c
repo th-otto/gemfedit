@@ -98,7 +98,6 @@ static struct font *font_alloc(void)
 	struct font *p;
 
 	p = (struct font *)xmalloc(sizeof(*p));
-	p->flagAutoName = 1;
 	return p;
 }
 
@@ -1472,7 +1471,7 @@ static void write_ttf(struct font *font, const char *fname)
 		}
 	}
 	font->num_glyphs = id;
-	ttf_output(font, fp);
+	ttf_output(&font, 1, fp);
 
 	close_output(fp);
 	free(font->glyphs);

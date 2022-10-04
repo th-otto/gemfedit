@@ -101,19 +101,12 @@ struct font
 	uint8_t *dat_table;					/* character definitions */
 	unsigned long form_width;
 	uint16_t form_height;
-	
+
 	/*
 	 * for TTF output only:
 	 */
-	int flagAutoName;
-	int flagBold;
-	int flagItalic;
 	struct glyph *glyphs;
 	int num_glyphs;
-	int emX;
-	int emY;
-	int emDescent;
-	int emAscent;
 };
 
 #define F_NO_CHAR 0xFFFFu
@@ -126,6 +119,6 @@ extern const char	*g_fontname;
 extern const char	*g_version;
 extern const char	*g_trademark;
 
-void ttf_output(struct font *font, FILE *fp);
+void ttf_output(struct font **fonts, int num_fonts, FILE *fp);
 
 #endif /* __FONTDEF_H__ */

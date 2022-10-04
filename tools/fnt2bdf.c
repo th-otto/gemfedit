@@ -279,14 +279,14 @@ static void fix_name(char *name)
 	{
 		while (len > 0 && name[len - 1] == ' ')
 			name[--len] = '\0';
-		if (len > 0 && isdigit(name[len - 1]))
+		if (len > 0 && isdigit((unsigned char)name[len - 1]))
 		{
-			while (len > 0 && isdigit(name[len - 1]))
+			while (len > 0 && isdigit((unsigned char)name[len - 1]))
 				name[--len] = '\0';
 			if (len > 0 && name[len - 1] == 'x')
 			{
 				name[--len] = '\0';
-				while (len > 0 && isdigit(name[len - 1]))
+				while (len > 0 && isdigit((unsigned char)name[len - 1]))
 					name[--len] = '\0';
 			}
 			continue;

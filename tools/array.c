@@ -86,6 +86,17 @@ void array_setShort(array *a, size_t offset, unsigned short s)
 
 /* -------------------------------------------------------------------------- */
 
+void array_setLong(array *a, size_t offset, unsigned long l)
+{
+	assert(offset + 4 <= a->len);
+	a->data[offset + 0] = (unsigned char)(l >> 24);
+	a->data[offset + 1] = (unsigned char)(l >> 16);
+	a->data[offset + 2] = (unsigned char)(l >> 8);
+	a->data[offset + 3] = (unsigned char)l;
+}
+
+/* -------------------------------------------------------------------------- */
+
 void array_addArray(array *a, array *from)
 {
 	int len = (int) array_getLen(from);

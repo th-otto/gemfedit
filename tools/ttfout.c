@@ -1,8 +1,7 @@
 /*
- * bdf2ttf.c - BDF to TTF converter.
+ * ttfout.c - TTF converter.
  *
- * Written By:	MURAOKA Taro <koron.kaoriya@gmail.com>
- * Last Change: 03-Jul-2016.
+ * Written By:	Thorsten Otto
  */
 
 #include "version.h"
@@ -73,6 +72,20 @@ static unsigned char prep_prog[8] = {
 	0x18,								/* round to grid */
 };
 
+struct ttf {
+	int flagAutoName;
+	int flagBold;
+	int flagItalic;
+	struct glyph *glyphs;
+	int num_glyphs;
+	int emX;
+	int emY;
+	int emDescent;
+	int emAscent;
+	int indexFirst;
+	int indexLast;
+};
+
 static const size_t SIZE_BITMAPSIZETABLE = (sizeof(uint32_t) * 4
 											+ sizeof(char[12]) * 2 + sizeof(uint16_t) * 2 + sizeof(char) * 4);
 static const size_t SIZE_INDEXSUBTABLEARRAY = 8;
@@ -127,7 +140,7 @@ static int name_addstr(table *t, array *p, const char *buf, short platformID, sh
 
 	if (buf == NULL || *buf == '\0')
 		return 0;
-	len = strlen(buf);
+	len = (int)strlen(buf);
 	array_addShort(t->ary, platformID);
 	array_addShort(t->ary, encodingID);
 	array_addShort(t->ary, languageID);
@@ -243,7 +256,7 @@ static int name_addunistr(table *t, array *p, const char *buf, short platformID,
 	array_addShort(t->ary, array_getLen(p));
 	array_addWideString(p, unibuf);
 	free(unibuf);
-	
+
 	return 1;
 }
 
@@ -341,8 +354,8 @@ static int generate_eb_rawbitmap(bdf_t *bdf, table *ebdt, array *st)
 	array_addShort(st, 1);					/* indexFormat */
 	array_addShort(st, 6);					/* imageFormat */
 	array_addLong(st, 0);					/* imageDataOffset */
-
 	array_addLong(st, array_getLen(ebdt->ary));
+
 	for (i = 0; i < MAX_GLYPH; ++i)
 	{
 		bdf_glyph_t *glyph = bdf_get_glyph(bdf, i);
@@ -396,7 +409,7 @@ static int count_subtable(struct font *font)
 
 /* -------------------------------------------------------------------------- */
 
-static int generate_eb_optbitmap(struct font *font, table *ebdt, array *st)
+static int generate_eb_optbitmap(struct ttf *ttf, struct font *font, table *ebdt, array *st)
 {
 	int n_subtbl = count_subtable(font);
 	int i;
@@ -419,7 +432,7 @@ static int generate_eb_optbitmap(struct font *font, table *ebdt, array *st)
 				continue;
 
 			bbx = font->glyphs[i].bbx;
-			idStart = idEnd = get_glyph_id(font, i);
+			idStart = idEnd = get_glyph_id(ttf, i);
 			encStart = encEnd = i;
 			
 			for (j = i + 1; j < MAX_GLYPH; ++j)
@@ -462,12 +475,11 @@ static int generate_eb_optbitmap(struct font *font, table *ebdt, array *st)
 			{
 				if (!is_glyph_available(font, j))
 				{
-#if 0
 					int k;
 					
-					for (k = 0; k < imgsize; ++k)
-						array_addByte(ebdt->ary, 0);
-#endif
+					if (is_glyph_available(ttf, j))
+						for (k = 0; k < imgsize; ++k)
+							array_addByte(ebdt->ary, 0);
 				} else
 				{
 					unsigned char *buf = get_glyph_bitmap(font, &font->glyphs[j]);
@@ -507,7 +519,7 @@ static void add_sbitLineMetric(array *t,
 
 /* -------------------------------------------------------------------------- */
 
-static void generate_eb_location(struct font *font,
+static void generate_eb_location(struct ttf *ttf,
 	table *eblc, array *subtable, array *starray,
 	int n_plane, int n_subtbl, int width, int height, int origsize)
 {
@@ -536,7 +548,7 @@ static void generate_eb_location(struct font *font,
 	add_sbitLineMetric(eblc->ary, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
 
 	array_addShort(eblc->ary, 1);					/* startGlyphIndex */
-	n_glyph = font->num_glyphs;
+	n_glyph = ttf->num_glyphs;
 
 	array_addShort(eblc->ary, n_glyph);			/* endGlyphIndex */
 	array_addByte(eblc->ary, origsize);			/* ppemX */
@@ -571,11 +583,11 @@ static void add_scaletable(table *ebsc, int targetsize, int width, int height, i
 
 /* -------------------------------------------------------------------------- */
 
-static void generate_EBDT_EBLC_EBSC(struct font *font)
+static void generate_EBDT_EBLC_EBSC(struct ttf *ttf, struct font **fonts, int num_fonts)
 {
-	int n_plane = 1;
 	int scsize = 1;
 	array *starray;
+	int i;
 
 	table *ebdt = ttfTbl[EBDT];
 	table *eblc = ttfTbl[EBLC];
@@ -583,13 +595,15 @@ static void generate_EBDT_EBLC_EBSC(struct font *font)
 
 	array_addLong(ebdt->ary, 0x00020000);
 	array_addLong(eblc->ary, 0x00020000);
-	array_addLong(eblc->ary, n_plane);
-	array_addLong(ebsc->ary, 0x00020000);			/* version */
-	array_addLong(ebsc->ary, MAX_SCALE - n_plane);	/* numSizes */
+	array_addLong(eblc->ary, num_fonts);
+	array_addLong(ebsc->ary, 0x00020000);				/* version */
+	array_addLong(ebsc->ary, MAX_SCALE - num_fonts);	/* numSizes */
 
 	starray = array_new();
 
+	for (i = 0; i < num_fonts; ++i)
 	{
+		struct font *font = fonts[i];
 		array *subtable;
 		int w, h;
 		int orig;
@@ -602,11 +616,11 @@ static void generate_EBDT_EBLC_EBSC(struct font *font)
 		orig = font->form_height;		/*(w > h / 2) ? w : w * 2; */
 
 		subtable = array_new();
-		n_subtable = generate_eb_optbitmap(font, ebdt, subtable);
-		generate_eb_location(font, eblc, subtable, starray, n_plane, n_subtable, w, h, orig);
+		n_subtable = generate_eb_optbitmap(ttf, font, ebdt, subtable);
+		generate_eb_location(ttf, eblc, subtable, starray, num_fonts, n_subtable, w, h, orig);
 		array_addArray(starray, subtable);
 
-		nextsize = MAX_SCALE;
+		nextsize = (i < num_fonts - 1) ? fonts[i + 1]->form_height : MAX_SCALE;
 
 		for (; scsize <= nextsize; ++scsize)
 			add_scaletable(ebsc, scsize, w, h, orig);
@@ -624,14 +638,14 @@ static void generate_EBDT_EBLC_EBSC(struct font *font)
 
 /* -------------------------------------------------------------------------- */
 
-static void glyph_simple(struct font *font, array *glyf)
+static void glyph_simple(struct ttf *ttf, array *glyf)
 {
 	array_addShort(glyf, 1);					/* numberOfContours */
 	array_addShort(glyf, 0);					/* xMin */
-	array_addShort(glyf, -font->emDescent);		/* yMin */
-	array_addShort(glyf, font->emX / 2);		/* xMax */
+	array_addShort(glyf, -ttf->emDescent);		/* yMin */
+	array_addShort(glyf, ttf->emX / 2);			/* xMax */
 	/* hmtx define the kerning, not here */
-	array_addShort(glyf, font->emAscent);		/* yMax */
+	array_addShort(glyf, ttf->emAscent);		/* yMax */
 
 	array_addShort(glyf, 0);					/* endPtsOfContours[n] */
 	array_addShort(glyf, 0);					/* instructionLength */
@@ -643,9 +657,8 @@ static void glyph_simple(struct font *font, array *glyf)
 
 /* -------------------------------------------------------------------------- */
 
-static void glyph_empty(struct font *font, array *glyf)
+static void glyph_empty(array *glyf)
 {
-	(void)font;
 	array_addShort(glyf, 0);					/* numberOfContours */
 	array_addShort(glyf, 0);					/* xMin */
 	array_addShort(glyf, 0);					/* yMin */
@@ -656,7 +669,7 @@ static void glyph_empty(struct font *font, array *glyf)
 
 /* -------------------------------------------------------------------------- */
 
-static void generate_LOCA_GLYF(struct font *font)
+static void generate_LOCA_GLYF(struct ttf *ttf)
 {
 	table *loca = ttfTbl[LOCA];
 	table *glyf = ttfTbl[GLYF];
@@ -666,21 +679,25 @@ static void generate_LOCA_GLYF(struct font *font)
 
 	/* #0 */
 	array_addLong(loca->ary, 0);
-	glyph_simple(font, glyf->ary);
+	glyph_simple(ttf, glyf->ary);
 	empty_off = array_getLen(glyf->ary);
 
-	remain = font->num_glyphs;
+	remain = ttf->num_glyphs;
 
 	for (i = 0; i < MAX_GLYPH; ++i)
 	{
-		if (is_glyph_available(font, i))
+		if (is_glyph_available(ttf, i))
 		{
 			array_addLong(loca->ary, empty_off);
 			--remain;
 		}
 	}
+	/*
+	 * add extra offset for idnex #num_glyphs,
+	 * to be able to calculate size from offset[index + ] - offset[index]
+	 */
 	array_addLong(loca->ary, empty_off);
-	glyph_empty(font, glyf->ary);
+	glyph_empty(glyf->ary);
 
 	table_calcSum(glyf);
 	table_calcSum(loca);
@@ -816,29 +833,29 @@ static void generate_CMAP(struct font *font)
 
 /* -------------------------------------------------------------------------- */
 
-static void generate_OS2_PREP(struct font *font)
+static void generate_OS2_PREP(struct ttf *ttf)
 {
 	short fsSelection = 0x0000;
 	short usWeightClass = 400;
 	char bWeight = 5;
 	table *os2;
 	
-	if (font->flagBold)
+	if (ttf->flagBold)
 	{
 		fsSelection |= 0x0020;
 		usWeightClass = 700;
 		bWeight = 8;
 	}
-	if (font->flagItalic)
+	if (ttf->flagItalic)
 		fsSelection |= 0x0001;
-	if (!font->flagItalic && !font->flagBold)
+	if (!ttf->flagItalic && !ttf->flagBold)
 		fsSelection |= 0x0040; /* Regular */
 
 	/* Generate OS/2 and PREP */
 	os2 = ttfTbl[OS2];
 
 	array_addShort(os2->ary, 0x0001);				/* version */
-	array_addShort(os2->ary, font->emX / 2);		/* xAvgCharWidth */
+	array_addShort(os2->ary, ttf->emX / 2);		/* xAvgCharWidth */
 	array_addShort(os2->ary, usWeightClass);		/* usWeightClass */
 	array_addShort(os2->ary, 5);					/* usWidthClass */
 	array_addShort(os2->ary, 0x0004);				/* fsType */
@@ -870,14 +887,14 @@ static void generate_OS2_PREP(struct font *font)
 	array_addLong(os2->ary, 0xffffffff);			/* ulUnicodeRange4 */
 	array_addString(os2->ary, "KRN ");				/* achVendID */
 	array_addShort(os2->ary, fsSelection);			/* fsSelection */
-	array_addShort(os2->ary, font->first_ade);		/* usFirstCharIndex */
-	array_addShort(os2->ary, font->last_ade);		/* usLastCharIndex */
+	array_addShort(os2->ary, ttf->indexFirst);		/* usFirstCharIndex */
+	array_addShort(os2->ary, ttf->indexLast);		/* usLastCharIndex */
 
-	array_addShort(os2->ary, font->emAscent);		/* sTypoAscender */
-	array_addShort(os2->ary, -font->emDescent);		/* sTypoDescender */
+	array_addShort(os2->ary, ttf->emAscent);		/* sTypoAscender */
+	array_addShort(os2->ary, -ttf->emDescent);		/* sTypoDescender */
 	array_addShort(os2->ary, 0);					/* sTypoLineGap */
-	array_addShort(os2->ary, font->emAscent);		/* usWinAscent */
-	array_addShort(os2->ary, font->emDescent);		/* usWinDesent */
+	array_addShort(os2->ary, ttf->emAscent);		/* usWinAscent */
+	array_addShort(os2->ary, ttf->emDescent);		/* usWinDesent */
 #if 1
 	/* TODO */
 #if 0
@@ -937,15 +954,15 @@ static void generate_GASP(struct font *font)
 
 /* -------------------------------------------------------------------------- */
 
-static void generate_HEAD(struct font *font)
+static void generate_HEAD(struct ttf *ttf)
 {
 	short macStyle = 0x0000;
 	table *tmp;
 	time_t t;
 
-	if (font->flagBold)
+	if (ttf->flagBold)
 		macStyle |= 0x0001;
-	if (font->flagItalic)
+	if (ttf->flagItalic)
 		macStyle |= 0x0002;
 
 	tmp = ttfTbl[HEAD];
@@ -961,9 +978,9 @@ static void generate_HEAD(struct font *font)
 	array_addQuad(tmp->ary, t);						/* createdTime */
 	array_addQuad(tmp->ary, t);						/* modifiedTime */
 	array_addShort(tmp->ary, 0);					/* xMin */
-	array_addShort(tmp->ary, -font->emDescent);		/* yMin */
-	array_addShort(tmp->ary, font->emX);			/* xMax */
-	array_addShort(tmp->ary, font->emAscent);		/* yMax */
+	array_addShort(tmp->ary, -ttf->emDescent);		/* yMin */
+	array_addShort(tmp->ary, ttf->emX);			/* xMax */
+	array_addShort(tmp->ary, ttf->emAscent);		/* yMax */
 	array_addShort(tmp->ary, macStyle);				/* macStyle */
 	array_addShort(tmp->ary, 7);					/* lowestRecPPEM */
 	array_addShort(tmp->ary, 1);					/* fontDirectionHint */
@@ -974,19 +991,19 @@ static void generate_HEAD(struct font *font)
 
 /* -------------------------------------------------------------------------- */
 
-static void generate_HHEA(struct font *font)
+static void generate_HHEA(struct ttf *ttf)
 {
 	table *tmp;
 
 	tmp = ttfTbl[HHEA];
 	array_addLong(tmp->ary, 0x10000);				/* version */
-	array_addShort(tmp->ary, font->emAscent);		/* Ascender */
-	array_addShort(tmp->ary, -font->emDescent);		/* Descender */
+	array_addShort(tmp->ary, ttf->emAscent);		/* Ascender */
+	array_addShort(tmp->ary, -ttf->emDescent);		/* Descender */
 	array_addShort(tmp->ary, 0);					/* yLineGap */
-	array_addShort(tmp->ary, font->emX);			/* advanceWidthMax */
+	array_addShort(tmp->ary, ttf->emX);				/* advanceWidthMax */
 	array_addShort(tmp->ary, 0);					/* minLeftSideBearing */
 	array_addShort(tmp->ary, 0);					/* minRightSideBearing */
-	array_addShort(tmp->ary, font->emX);			/* xMaxExtent */
+	array_addShort(tmp->ary, ttf->emX);				/* xMaxExtent */
 	array_addShort(tmp->ary, 1);					/* caretSlopeRise */
 	array_addShort(tmp->ary, 0);					/* caretSlopeRun */
 	array_addShort(tmp->ary, 0);					/* caretOffset */
@@ -995,7 +1012,7 @@ static void generate_HHEA(struct font *font)
 	array_addShort(tmp->ary, 0);					/* (reserved) */
 	array_addShort(tmp->ary, 0);					/* (reserved) */
 	array_addShort(tmp->ary, 0);					/* metricDataFormat */
-	array_addShort(tmp->ary, font->num_glyphs + 1);	/* numberOfHMetrics */
+	array_addShort(tmp->ary, ttf->num_glyphs + 1);	/* numberOfHMetrics */
 	table_calcSum(tmp);
 }
 
@@ -1047,14 +1064,14 @@ static void generate_MAXP(struct font *font)
 
 /* -------------------------------------------------------------------------- */
 
-static void generate_POST(struct font *font)
+static void generate_POST(struct ttf *ttf, struct font *font)
 {
 	table *tmp;
 
 	tmp = ttfTbl[POST];
 	array_addLong(tmp->ary, 0x30000);				/* Version */
 	array_addLong(tmp->ary, 0);						/* italicAngle */
-	array_addShort(tmp->ary, -font->descent);		/* underlinePosition */
+	array_addShort(tmp->ary, -ttf->emDescent);		/* underlinePosition */
 	array_addShort(tmp->ary, font->ul_size);		/* underlineThickness */
 	array_addLong(tmp->ary, font->flags & F_MONOSPACE ? 1 : 0);						/* isFixedPitch */
 	array_addLong(tmp->ary, 0);						/* minMemType42 */
@@ -1066,7 +1083,7 @@ static void generate_POST(struct font *font)
 
 /* -------------------------------------------------------------------------- */
 
-static void generate_NAME(struct font *font)
+static void generate_NAME(struct ttf *ttf, struct font *font)
 {
 	int num = 0;
 	array *p = array_new();
@@ -1076,13 +1093,13 @@ static void generate_NAME(struct font *font)
 	const char *fontname = g_fontname ? g_fontname : font->name;
 
 	g_style = STYLE_REGULAR;
-	if (font->flagAutoName)
+	if (ttf->flagAutoName)
 	{
-		if (font->flagBold && font->flagItalic)
+		if (ttf->flagBold && ttf->flagItalic)
 			g_style = STYLE_BOLDITALIC;
-		else if (font->flagBold)
+		else if (ttf->flagBold)
 			g_style = STYLE_BOLD;
-		else if (font->flagItalic)
+		else if (ttf->flagItalic)
 			g_style = STYLE_ITALIC;
 	}
 
@@ -1213,30 +1230,72 @@ static void map_table_for_macintosh(void)
 /* -------------------------------------------------------------------------- */
 /* ************************************************************************** */
 
-void ttf_output(struct font *font, FILE *fp)
+void ttf_output(struct font **fonts, int num_fonts, FILE *fp)
 {
 	int i;
+	struct ttf *ttf;
+	struct font *font;
+
+	ttf = (struct ttf *)xmalloc(sizeof(*ttf));
+	ttf->flagAutoName = 1;
+	ttf->glyphs = (struct glyph *)xmalloc(MAX_GLYPH * sizeof(*ttf->glyphs));
+	for (i = 0; i < MAX_GLYPH; i++)
+	{
+		ttf->glyphs[i].id = -1;
+		ttf->glyphs[i].idx = 0;
+		ttf->glyphs[i].width = 0;
+	}
+
+	ttf->num_glyphs = 0;
+	ttf->indexFirst = -1;
+	ttf->indexLast = -1;
+	for (i = 0; i < num_fonts; i++)
+	{
+		font = fonts[i];
+		for (i = 0; i < MAX_GLYPH; ++i)
+		{
+			if (is_glyph_available(font, i))
+			{
+				ttf->glyphs[i].id = ttf->num_glyphs;
+				++ttf->num_glyphs;
+			}
+		}
+	}
 	
+	for (i = 0; i < MAX_GLYPH; ++i)
+	{
+		if (is_glyph_available(ttf, i))
+		{
+			if (ttf->indexFirst < 0)
+				ttf->indexFirst = i;
+			ttf->indexLast = i;
+		}
+	}
+
 	for (i = 0; i < NUM_TABLE; i++)
 		ttfTbl[i] = table_new();
 
-	font->emX = emCalc(font->max_cell_width, font->form_height);
-	font->emY = emCalc(font->form_height, font->form_height);
-	font->emDescent = emCalc(font->form_height - font->top, font->form_height);
-	font->emAscent = emCalc(font->top, font->form_height);
+	font = fonts[num_fonts - 1];
+
+	ttf->emX = emCalc(font->max_cell_width, font->form_height);
+	ttf->emY = emCalc(font->form_height, font->form_height);
+	ttf->emDescent = emCalc(font->descent, font->form_height);
+	ttf->emAscent = emCalc(font->top, font->form_height);
+	ttf->emDescent = 0;
+	ttf->emAscent = ttf->emY;
 	
 	map_table_for_macintosh();
-	generate_EBDT_EBLC_EBSC(font);
-	generate_LOCA_GLYF(font);
+	generate_EBDT_EBLC_EBSC(ttf, fonts, num_fonts);
+	generate_LOCA_GLYF(ttf);
 	generate_CMAP(font);
-	generate_OS2_PREP(font);
+	generate_OS2_PREP(ttf);
 	generate_GASP(font);
-	generate_HEAD(font);
-	generate_HHEA(font);
+	generate_HEAD(ttf);
+	generate_HHEA(ttf);
 	generate_HMTX(font);
 	generate_MAXP(font);
-	generate_POST(font);
-	generate_NAME(font);
+	generate_POST(ttf, font);
+	generate_NAME(ttf, font);
 
 	write_all_tables(fp);
 
