@@ -122,7 +122,7 @@ static struct {
 	{ 0xef, 0x2229 },						/* INTERSECTION */
 	{ 0xf0, 0x2261 },						/* IDENTICAL TO */
 	{ 0xf1, 0xb1 },							/* +- PLUS-MINUS SIGN */
-	{ 0xf2, 0x22b5 },						/* >= GREATER-THAN OR EQUAL TO */
+	{ 0xf2, 0x2265 },						/* >= GREATER-THAN OR EQUAL TO */
 	{ 0xf3, 0x2264 },						/* <= LESS-THAN OR EQUAL TO */
 	{ 0xf4, 0x2320 },						/* TOP HALF INTEGRAL */
 	{ 0xf5, 0x2321 },						/* BOTTOM HALF INTEGRAL */
