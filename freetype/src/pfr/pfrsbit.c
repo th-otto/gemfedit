@@ -689,10 +689,12 @@ FT_LOCAL(FT_Error) pfr_slot_load_bitmap(PFR_Slot glyph, PFR_Size size, FT_UInt32
 		 */
 		if (xpos > FT_INT_MAX ||
 			xpos < FT_INT_MIN ||
-			ysize > FT_INT_MAX || ypos > FT_INT_MAX - (FT_Long) ysize || ypos + (FT_Long) ysize < FT_INT_MIN)
+			ysize > FT_INT_MAX ||
+			ypos > FT_INT_MAX - (FT_Long) ysize ||
+			ypos + (FT_Long) ysize < FT_INT_MIN)
 		{
 			FT_TRACE1(("pfr_slot_load_bitmap:"));
-			FT_TRACE1(("huge bitmap glyph %dx%d over FT_GlyphSlot\n", xpos, ypos));
+			FT_TRACE1(("huge bitmap glyph %ldx%ld over FT_GlyphSlot\n", xpos, ypos));
 			error = FT_THROW(Invalid_Pixel_Size);
 		}
 

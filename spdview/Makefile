@@ -38,7 +38,7 @@ SPDLIB = reset.o do_char.o do_trns.o set_spcs.o set_trns.o \
 	out_bl2d.o out_blk.o out_scrn.o out_util.o out_outl.o \
 	keys.o sp_err.o bics2uni.o
 
-TTFLIB = 
+TTFLIB = ../freetype/libttf.a
 
 PROGRAMS = spdview.cgi ttfview.cgi
 

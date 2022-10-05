@@ -943,19 +943,40 @@ static gboolean load_ttf_font(const char *filename, GString *body)
 	if (ft_error == FT_Err_Ok)
 	{
 		/*
-		 * If DPI is not given, use pixes to specify the size.
+		 * If DPI is not given, use pixels to specify the size.
 		 */
 		if (x_res > 0)
-			ft_error = FT_Set_Char_Size(face, ((point_size / 10) << 6) * bpp_mul, 0, x_res, y_res);
+			ft_error = FT_Set_Char_Size(face, ((point_size << 6) * bpp_mul) / 10, 0, x_res, y_res);
 		else
-			ft_error = FT_Set_Pixel_Sizes(face, 0, (point_size / 10) * bpp_mul);
+			ft_error = FT_Set_Pixel_Sizes(face, 0, (point_size * bpp_mul) / 10);
+		if (ft_error == FT_Err_Invalid_Pixel_Size && bpp_mul != 1)
+		{
+			bpp_mul = 1;
+			ft_error = FT_Set_Char_Size(face, ((point_size << 6) * bpp_mul) / 10, 0, x_res, y_res);
+		}
+		if (ft_error == FT_Err_Invalid_Pixel_Size)
+		{
+			bpp_mul = 1;
+			ft_error = FT_Set_Pixel_Sizes(face, 0, (point_size * bpp_mul) / 10);
+		}
+		if (ft_error == FT_Err_Invalid_Pixel_Size)
+		{
+			long end = point_size * 2;
+			while (ft_error == FT_Err_Invalid_Pixel_Size && point_size < end)
+			{
+				point_size += 10;
+				ft_error = FT_Set_Pixel_Sizes(face, 0, (point_size * bpp_mul) / 10);
+			}
+		}
 	}
 	if (ft_error == FT_Err_Ok)
+	{
 		ft_error = FT_Select_Charmap(face, FT_ENCODING_UNICODE);
+	}
 	if (ft_error != FT_Err_Ok)
 	{
 		const char *str = FT_Error_String(ft_error);
-		g_string_append_printf(errorout, "%s: %s\n", filename, str ? str : "unknown error");
+		g_string_append_printf(errorout, "%s: %s\n", xbasename(filename), str ? str : "unknown error");
 		ret = FALSE;
 	} else
 	{

@@ -73,8 +73,8 @@ FT_BEGIN_HEADER
 #define FT_HYPOT( x, y )                 \
           ( x = FT_ABS( x ),             \
             y = FT_ABS( y ),             \
-            x > y ? x + ( 3 * y >> 3 )   \
-                  : y + ( 3 * x >> 3 ) )
+            x > y ? x + ( (3 * y) >> 3 )   \
+                  : y + ( (3 * x) >> 3 ) )
 /* we use FT_TYPEOF to suppress signedness compilation warnings */
 #define FT_PAD_FLOOR( x, n )  ( (x) & ~FT_TYPEOF( x )( (n)-1 ) )
 #define FT_PAD_ROUND( x, n )  FT_PAD_FLOOR( (x) + (n)/2, n )

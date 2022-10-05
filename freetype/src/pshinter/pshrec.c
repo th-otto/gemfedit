@@ -748,7 +748,7 @@ static void ps_hints_stem(PS_Hints hints, FT_UInt dimension, FT_Int count, FT_Lo
 		error = ps_dimension_add_t1stem(dim, (FT_Int) stems[0], (FT_Int) stems[1], memory, NULL);
 		if (error)
 		{
-			FT_ERROR(("ps_hints_stem: could not add stem" " (%d,%d) to hints table\n", stems[0], stems[1]));
+			FT_ERROR(("ps_hints_stem: could not add stem (%ld,%ld) to hints table\n", stems[0], stems[1]));
 
 			hints->error = error;
 			return;

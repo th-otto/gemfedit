@@ -512,8 +512,8 @@ cff_index_access_element(CFF_Index idx, FT_UInt32 element, FT_Byte ** pbytes, FT
 		if (off2 > stream->size + 1 || idx->data_offset > stream->size - off2 + 1)
 		{
 			FT_ERROR(("cff_index_access_element:"
-					  " offset to next entry (%d)"
-					  " exceeds the end of stream (%d)\n", off2, stream->size - idx->data_offset + 1));
+					  " offset to next entry (%ld)"
+					  " exceeds the end of stream (%ld)\n", off2, stream->size - idx->data_offset + 1));
 			off2 = stream->size - idx->data_offset + 1;
 		}
 
@@ -886,7 +886,7 @@ static FT_Error cff_charset_load(CFF_Charset charset,
 					if (glyph_sid > 0xFFFFL - nleft)
 					{
 						FT_ERROR(("cff_charset_load: invalid SID range trimmed"
-								  " nleft=%d -> %d\n", nleft, 0xFFFFL - glyph_sid));
+								  " nleft=%d -> %ld\n", nleft, 0xFFFFL - glyph_sid));
 						nleft = (FT_UInt) (0xFFFFL - glyph_sid);
 					}
 

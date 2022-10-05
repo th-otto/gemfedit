@@ -12,7 +12,7 @@ RANLIB = $(CROSS_PREFIX)ranlib
 
 ft2_srcdir = .
 WARN = -fno-common -Wall -W -Wunused -Wundef -Wstrict-prototypes -Wmissing-prototypes
-CFLAGS = -O2 -g -fomit-frame-pointer $(WARN) -I../include -I$(ft2_srcdir)/include
+CFLAGS = -O2 -fomit-frame-pointer $(WARN) -I../include -I$(ft2_srcdir)/include
 LDFLAGS = -s
 LIBS= -lX11
 
@@ -23,7 +23,21 @@ all: $(PROGRAMS)
 ftdebug.o: $(ft2_srcdir)/src/base/ftdebug.c
 	$(AM_V_CC)$(CC) -c $(CFLAGS) -o $@ $<
 
-ftbase.o: $(ft2_srcdir)/src/base/ftbase.c
+ftbase.o: $(ft2_srcdir)/src/base/ftbase.c \
+		$(ft2_srcdir)/src/base/ftadvanc.c \
+		$(ft2_srcdir)/src/base/ftcalc.c \
+		$(ft2_srcdir)/src/base/ftdbgmem.c \
+		$(ft2_srcdir)/src/base/ftfntfmt.c \
+		$(ft2_srcdir)/src/base/ftgloadr.c \
+		$(ft2_srcdir)/src/base/fthash.c \
+		$(ft2_srcdir)/src/base/ftmac.c \
+		$(ft2_srcdir)/src/base/ftobjs.c \
+		$(ft2_srcdir)/src/base/ftoutln.c \
+		$(ft2_srcdir)/src/base/ftrfork.c \
+		$(ft2_srcdir)/src/base/ftsnames.c \
+		$(ft2_srcdir)/src/base/ftstream.c \
+		$(ft2_srcdir)/src/base/fttrigon.c \
+		$(ft2_srcdir)/src/base/ftutil.c
 	$(AM_V_CC)$(CC) -c $(CFLAGS) -o $@ $<
 
 ftbbox.o: $(ft2_srcdir)/src/base/ftbbox.c
@@ -103,7 +117,22 @@ ftbzip2.o: $(ft2_srcdir)/src/bzip2/ftbzip2.c
 ftcache.o: $(ft2_srcdir)/src/cache/ftcache.c
 	$(AM_V_CC)$(CC) -c $(CFLAGS) -o $@ $<
 
-cff.o: $(ft2_srcdir)/src/cff/cff.c
+cff.o: $(ft2_srcdir)/src/cff/cff.c \
+	$(ft2_srcdir)/src/cff/cffcmap.c \
+	$(ft2_srcdir)/src/cff/cffdrivr.c \
+	$(ft2_srcdir)/src/cff/cffgload.c \
+	$(ft2_srcdir)/src/cff/cffload.c \
+	$(ft2_srcdir)/src/cff/cffobjs.c \
+	$(ft2_srcdir)/src/cff/cffparse.c \
+	$(ft2_srcdir)/src/cff/cf2arrst.c \
+	$(ft2_srcdir)/src/cff/cf2blues.c \
+	$(ft2_srcdir)/src/cff/cf2error.c \
+	$(ft2_srcdir)/src/cff/cf2font.c \
+	$(ft2_srcdir)/src/cff/cf2ft.c \
+	$(ft2_srcdir)/src/cff/cf2hints.c \
+	$(ft2_srcdir)/src/cff/cf2intrp.c \
+	$(ft2_srcdir)/src/cff/cf2read.c \
+	$(ft2_srcdir)/src/cff/cf2stack.c
 	$(AM_V_CC)$(CC) -c $(CFLAGS) -o $@ $<
 
 type1cid.o: $(ft2_srcdir)/src/cid/type1cid.c
@@ -118,13 +147,23 @@ ftlzw.o: $(ft2_srcdir)/src/lzw/ftlzw.c
 pcf.o: $(ft2_srcdir)/src/pcf/pcf.c
 	$(AM_V_CC)$(CC) -c $(CFLAGS) -o $@ $<
 
-pfr.o: $(ft2_srcdir)/src/pfr/pfr.c
+pfr.o: $(ft2_srcdir)/src/pfr/pfr.c \
+	$(ft2_srcdir)/src/pfr/pfrcmap.c \
+	$(ft2_srcdir)/src/pfr/pfrdrivr.c \
+	$(ft2_srcdir)/src/pfr/pfrgload.c \
+	$(ft2_srcdir)/src/pfr/pfrload.c \
+	$(ft2_srcdir)/src/pfr/pfrobjs.c \
+	$(ft2_srcdir)/src/pfr/pfrsbit.c
 	$(AM_V_CC)$(CC) -c $(CFLAGS) -o $@ $<
 
 psaux.o: $(ft2_srcdir)/src/psaux/psaux.c
 	$(AM_V_CC)$(CC) -c $(CFLAGS) -o $@ $<
 
-pshinter.o: $(ft2_srcdir)/src/pshinter/pshinter.c
+pshinter.o: $(ft2_srcdir)/src/pshinter/pshinter.c \
+	$(ft2_srcdir)/src/pshinter/pshalgo.c \
+	$(ft2_srcdir)/src/pshinter/pshglob.c \
+	$(ft2_srcdir)/src/pshinter/pshmod.c \
+	$(ft2_srcdir)/src/pshinter/pshrec.c
 	$(AM_V_CC)$(CC) -c $(CFLAGS) -o $@ $<
 
 psnames.o: $(ft2_srcdir)/src/psnames/psnames.c
@@ -136,7 +175,9 @@ raster.o: $(ft2_srcdir)/src/raster/raster.c
 sfnt.o: $(ft2_srcdir)/src/sfnt/sfnt.c
 	$(AM_V_CC)$(CC) -c $(CFLAGS) -o $@ $<
 
-smooth.o: $(ft2_srcdir)/src/smooth/smooth.c
+smooth.o: $(ft2_srcdir)/src/smooth/smooth.c \
+	$(ft2_srcdir)/src/smooth/ftgrays.c \
+	$(ft2_srcdir)/src/smooth/ftsmooth.c
 	$(AM_V_CC)$(CC) -c $(CFLAGS) -o $@ $<
 
 truetype.o: $(ft2_srcdir)/src/truetype/truetype.c

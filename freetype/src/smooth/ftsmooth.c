@@ -240,7 +240,7 @@ static FT_Error ft_smooth_render_generic(FT_Renderer render,
 	/* but we care realistic cases only.  Always pitch <= width. */
 	if (width > 0x7FFF || height > 0x7FFF)
 	{
-		FT_ERROR(("ft_smooth_render_generic: glyph too large: %u x %u\n", width, height));
+		FT_ERROR(("ft_smooth_render_generic: glyph too large: %lu x %lu\n", width, height));
 		error = FT_THROW(Raster_Overflow);
 		goto Exit;
 	}
