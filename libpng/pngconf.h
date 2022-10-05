@@ -1,11 +1,12 @@
 
-/* pngconf.h - machine configurable file for libpng
+/* pngconf.h - machine-configurable file for libpng
  *
- * libpng version 1.6.34, September 29, 2017
+ * libpng version 1.6.37
  *
- * Copyright (c) 1998-2002,2004,2006-2016 Glenn Randers-Pehrson
- * (Version 0.96 Copyright (c) 1996, 1997 Andreas Dilger)
- * (Version 0.88 Copyright (c) 1995, 1996 Guy Eric Schalnat, Group 42, Inc.)
+ * Copyright (c) 2018-2019 Cosmin Truta
+ * Copyright (c) 1998-2002,2004,2006-2016,2018 Glenn Randers-Pehrson
+ * Copyright (c) 1996-1997 Andreas Dilger
+ * Copyright (c) 1995-1996 Guy Eric Schalnat, Group 42, Inc.
  *
  * This code is released under the libpng license.
  * For conditions of distribution and use, see the disclaimer
@@ -57,14 +58,13 @@
 
 #endif /* PNG_BUILDING_SYMBOL_TABLE */
 
-/* Prior to 1.6.0 it was possible to turn off 'const' in declarations using
- * PNG_NO_CONST; this is no longer supported except for data declarations which
- * apparently still cause problems in 2011 on some compilers.
+/* Prior to 1.6.0, it was possible to turn off 'const' in declarations,
+ * using PNG_NO_CONST.  This is no longer supported.
  */
 #define PNG_CONST const /* backward compatibility only */
 
-/* This controls optimization of the reading of 16-bit and 32-bit values
- * from PNG files.  It can be set on a per-app-file basis - it
+/* This controls optimization of the reading of 16-bit and 32-bit
+ * values from PNG files.  It can be set on a per-app-file basis: it
  * just changes whether a macro is used when the function is called.
  * The library builder sets the default; if read functions are not
  * built into the library the macro implementation is forced on.
@@ -127,7 +127,7 @@
  *
  * These cases only differ if the operating system does not use the C
  * calling convention, at present this just means the above cases
- * (x86 DOS/Windows sytems) and, even then, this does not apply to
+ * (x86 DOS/Windows systems) and, even then, this does not apply to
  * Cygwin running on those systems.
  *
  * Note that the value must be defined in pnglibconf.h so that what
@@ -250,6 +250,11 @@
 #  endif /* other system, !OS/2 */
 #endif /* !Windows/x86 */
 
+#if defined(PNGLIB_SLB) && (defined(__PUREC__) || defined(__TURBOC__) || defined(__AHCC__))
+#  define PNGCAPI cdecl
+#  define PNGCBAPI cdecl
+#endif
+
 /* Now do all the defaulting . */
 #ifndef PNGCAPI
 #  define PNGCAPI
@@ -298,7 +303,7 @@
 
 #ifndef PNG_EXPORTA
 #  define PNG_EXPORTA(ordinal, type, name, args, attributes) \
-      PNG_FUNCTION(PNG_EXPORT_TYPE(type), (PNGAPI name), PNGARG(args), \
+      PNG_FUNCTION(PNG_EXPORT_TYPE(type), PNGAPI name, PNGARG(args), \
       PNG_LINKAGE_API attributes)
 #endif
 
@@ -483,40 +488,53 @@
 #  error "libpng requires 8-bit bytes"
 #endif
 
-#if INT_MIN == -32768 && INT_MAX == 32767
+#if INT_MIN == (-32767 - 1) && INT_MAX == 32767
    typedef int png_int_16;
-#elif SHRT_MIN == -32768 && SHRT_MAX == 32767
+#elif SHRT_MIN == (-32767 - 1) && SHRT_MAX == 32767
    typedef short png_int_16;
 #else
 #  error "libpng requires a signed 16-bit type"
 #endif
 
-#if UINT_MAX == 65535
+#if UINT_MAX == 65535U
    typedef unsigned int png_uint_16;
-#elif USHRT_MAX == 65535
+#elif USHRT_MAX == 65535U
    typedef unsigned short png_uint_16;
 #else
 #  error "libpng requires an unsigned 16-bit type"
 #endif
 
-#if INT_MIN < -2147483646 && INT_MAX > 2147483646
+#if INT_MIN < -2147483646L && INT_MAX > 2147483646L
    typedef int png_int_32;
-#elif LONG_MIN < -2147483646 && LONG_MAX > 2147483646
+#elif LONG_MIN < -2147483646L && LONG_MAX > 2147483646L
    typedef long int png_int_32;
 #else
 #  error "libpng requires a signed 32-bit (or more) type"
 #endif
 
-#if UINT_MAX > 4294967294U
+#if UINT_MAX > 4294967294UL
    typedef unsigned int png_uint_32;
-#elif ULONG_MAX > 4294967294U
+#elif ULONG_MAX > 4294967294UL
    typedef unsigned long int png_uint_32;
 #else
 #  error "libpng requires an unsigned 32-bit (or more) type"
 #endif
 
-/* Prior to 1.6.0 it was possible to disable the use of size_t, 1.6.0, however,
- * requires an ISOC90 compiler and relies on consistent behavior of sizeof.
+#if (defined(__MSHORT__) || defined(__PUREC__) || defined(__TURBOC__) || defined(__AHCC__)) && defined(PNGLIB_SLB)
+typedef unsigned long png_uint_t;
+typedef long png_int_t;
+#else
+typedef unsigned int png_uint_t;
+typedef int png_int_t;
+#endif
+#if defined(PNGLIB_SLB) && !defined(ZLIB_SLB)
+#define ZLIB_SLB 1
+#endif
+
+/* Prior to 1.6.0, it was possible to disable the use of size_t and ptrdiff_t.
+ * From 1.6.0 onwards, an ISO C90 compiler, as well as a standard-compliant
+ * behavior of sizeof and ptrdiff_t are required.
+ * The legacy typedefs are provided here for backwards compatibility.
  */
 typedef size_t png_size_t;
 typedef ptrdiff_t png_ptrdiff_t;
@@ -531,19 +549,18 @@ typedef ptrdiff_t png_ptrdiff_t;
     * 32 bits (some of these systems may no longer work because of the lack of
     * 'far' support; see above.)
     */
-#  if (defined(__TURBOC__) && !defined(__FLAT__)) ||\
+#  if (defined(__TURBOC__) && !defined(__PUREC__) && !defined(__FLAT__)) ||\
    (defined(_MSC_VER) && defined(MAXSEG_64K))
 #     define PNG_SMALL_SIZE_T
 #  endif
 #endif
 
-/* png_alloc_size_t is guaranteed to be no smaller than png_size_t, and no
- * smaller than png_uint_32.  Casts from png_size_t or png_uint_32 to
- * png_alloc_size_t are not necessary; in fact, it is recommended not to use
- * them at all so that the compiler can complain when something turns out to be
- * problematic.
+/* png_alloc_size_t is guaranteed to be no smaller than size_t, and no smaller
+ * than png_uint_32.  Casts from size_t or png_uint_32 to png_alloc_size_t are
+ * not necessary; in fact, it is recommended not to use them at all, so that
+ * the compiler can complain when something turns out to be problematic.
  *
- * Casts in the other direction (from png_alloc_size_t to png_size_t or
+ * Casts in the other direction (from png_alloc_size_t to size_t or
  * png_uint_32) should be explicitly applied; however, we do not expect to
  * encounter practical situations that require such conversions.
  *
@@ -553,7 +570,7 @@ typedef ptrdiff_t png_ptrdiff_t;
 #ifdef PNG_SMALL_SIZE_T
    typedef png_uint_32 png_alloc_size_t;
 #else
-   typedef png_size_t png_alloc_size_t;
+   typedef size_t png_alloc_size_t;
 #endif
 
 /* Prior to 1.6.0 libpng offered limited support for Microsoft C compiler
@@ -589,8 +606,8 @@ typedef char                  * png_charp;
 typedef const char            * png_const_charp;
 typedef png_fixed_point       * png_fixed_point_p;
 typedef const png_fixed_point * png_const_fixed_point_p;
-typedef png_size_t            * png_size_tp;
-typedef const png_size_t      * png_const_size_tp;
+typedef size_t                * png_size_tp;
+typedef const size_t          * png_const_size_tp;
 
 #ifdef PNG_STDIO_SUPPORTED
 typedef FILE            * png_FILE_p;

@@ -1,10 +1,10 @@
 
 /* pngpriv.h - private declarations for use inside libpng
  *
- * Last changed in libpng 1.6.32 [August 24, 2017]
- * Copyright (c) 1998-2002,2004,2006-2017 Glenn Randers-Pehrson
- * (Version 0.96 Copyright (c) 1996, 1997 Andreas Dilger)
- * (Version 0.88 Copyright (c) 1995, 1996 Guy Eric Schalnat, Group 42, Inc.)
+ * Copyright (c) 2018-2019 Cosmin Truta
+ * Copyright (c) 1998-2002,2004,2006-2018 Glenn Randers-Pehrson
+ * Copyright (c) 1996-1997 Andreas Dilger
+ * Copyright (c) 1995-1996 Guy Eric Schalnat, Group 42, Inc.
  *
  * This code is released under the libpng license.
  * For conditions of distribution and use, see the disclaimer
@@ -35,7 +35,7 @@
  * Windows/Visual Studio) there is no effect; the OS specific tests below are
  * still required (as of 2011-05-02.)
  */
-#ifndef _POSIX_SOURCE
+#if !defined(_POSIX_SOURCE) && !defined(__PUREC__)
 # define _POSIX_SOURCE 1 /* Just the POSIX 1003.1 and C89 APIs */
 #endif
 
@@ -160,7 +160,10 @@
 #     else /* !defined __ARM_NEON__ */
          /* The 'intrinsics' code simply won't compile without this -mfpu=neon:
           */
-#        define PNG_ARM_NEON_IMPLEMENTATION 2
+#        if !defined(__aarch64__)
+            /* The assembler code currently does not work on ARM64 */
+#          define PNG_ARM_NEON_IMPLEMENTATION 2
+#        endif /* __aarch64__ */
 #     endif /* __ARM_NEON__ */
 #  endif /* !PNG_ARM_NEON_IMPLEMENTATION */
 
@@ -480,8 +483,8 @@
       typedef unsigned long png_ptruint;
 #  endif
 #  define png_constcast(type, value) ((type)(png_ptruint)(const void*)(value))
-#  define png_aligncast(type, value) ((type)(value))
-#  define png_aligncastconst(type, value) ((const type)(value))
+#  define png_aligncast(type, value) ((type)(void*)(value))
+#  define png_aligncastconst(type, value) ((const type)(const void*)(value))
 #endif /* __cplusplus */
 
 #if defined(PNG_FLOATING_POINT_SUPPORTED) ||\
@@ -617,38 +620,38 @@
 #define PNG_IS_READ_STRUCT        0x8000U /* Else is a write struct */
 
 /* Flags for the transformations the PNG library does on the image data */
-#define PNG_BGR                 0x0001U
-#define PNG_INTERLACE           0x0002U
-#define PNG_PACK                0x0004U
-#define PNG_SHIFT               0x0008U
-#define PNG_SWAP_BYTES          0x0010U
-#define PNG_INVERT_MONO         0x0020U
-#define PNG_QUANTIZE            0x0040U
-#define PNG_COMPOSE             0x0080U    /* Was PNG_BACKGROUND */
-#define PNG_BACKGROUND_EXPAND   0x0100U
-#define PNG_EXPAND_16           0x0200U    /* Added to libpng 1.5.2 */
-#define PNG_16_TO_8             0x0400U    /* Becomes 'chop' in 1.5.4 */
-#define PNG_RGBA                0x0800U
-#define PNG_EXPAND              0x1000U
-#define PNG_GAMMA               0x2000U
-#define PNG_GRAY_TO_RGB         0x4000U
-#define PNG_FILLER              0x8000U
-#define PNG_PACKSWAP           0x10000U
-#define PNG_SWAP_ALPHA         0x20000U
-#define PNG_STRIP_ALPHA        0x40000U
-#define PNG_INVERT_ALPHA       0x80000U
-#define PNG_USER_TRANSFORM    0x100000U
-#define PNG_RGB_TO_GRAY_ERR   0x200000U
-#define PNG_RGB_TO_GRAY_WARN  0x400000U
-#define PNG_RGB_TO_GRAY       0x600000U /* two bits, RGB_TO_GRAY_ERR|WARN */
-#define PNG_ENCODE_ALPHA      0x800000U /* Added to libpng-1.5.4 */
-#define PNG_ADD_ALPHA        0x1000000U /* Added to libpng-1.2.7 */
-#define PNG_EXPAND_tRNS      0x2000000U /* Added to libpng-1.2.9 */
-#define PNG_SCALE_16_TO_8    0x4000000U /* Added to libpng-1.5.4 */
-                       /*    0x8000000U unused */
-                       /*   0x10000000U unused */
-                       /*   0x20000000U unused */
-                       /*   0x40000000U unused */
+#define PNG_BGR                 0x0001UL
+#define PNG_INTERLACE           0x0002UL
+#define PNG_PACK                0x0004UL
+#define PNG_SHIFT               0x0008UL
+#define PNG_SWAP_BYTES          0x0010UL
+#define PNG_INVERT_MONO         0x0020UL
+#define PNG_QUANTIZE            0x0040UL
+#define PNG_COMPOSE             0x0080UL   /* Was PNG_BACKGROUND */
+#define PNG_BACKGROUND_EXPAND   0x0100UL
+#define PNG_EXPAND_16           0x0200UL   /* Added to libpng 1.5.2 */
+#define PNG_16_TO_8             0x0400UL   /* Becomes 'chop' in 1.5.4 */
+#define PNG_RGBA                0x0800UL
+#define PNG_EXPAND              0x1000UL
+#define PNG_GAMMA               0x2000UL
+#define PNG_GRAY_TO_RGB         0x4000UL
+#define PNG_FILLER              0x8000UL
+#define PNG_PACKSWAP           0x10000UL
+#define PNG_SWAP_ALPHA         0x20000UL
+#define PNG_STRIP_ALPHA        0x40000UL
+#define PNG_INVERT_ALPHA       0x80000UL
+#define PNG_USER_TRANSFORM    0x100000UL
+#define PNG_RGB_TO_GRAY_ERR   0x200000UL
+#define PNG_RGB_TO_GRAY_WARN  0x400000UL
+#define PNG_RGB_TO_GRAY       0x600000UL /* two bits, RGB_TO_GRAY_ERR|WARN */
+#define PNG_ENCODE_ALPHA      0x800000UL /* Added to libpng-1.5.4 */
+#define PNG_ADD_ALPHA        0x1000000UL /* Added to libpng-1.2.7 */
+#define PNG_EXPAND_tRNS      0x2000000UL /* Added to libpng-1.2.9 */
+#define PNG_SCALE_16_TO_8    0x4000000UL /* Added to libpng-1.5.4 */
+                       /*    0x8000000UL unused */
+                       /*   0x10000000UL unused */
+                       /*   0x20000000UL unused */
+                       /*   0x40000000UL unused */
 /* Flags for png_create_struct */
 #define PNG_STRUCT_PNG   0x0001U
 #define PNG_STRUCT_INFO  0x0002U
@@ -669,22 +672,22 @@
 #define PNG_FLAG_ASSUME_sRGB              0x1000U /* Added to libpng-1.5.4 */
 #define PNG_FLAG_OPTIMIZE_ALPHA           0x2000U /* Added to libpng-1.5.4 */
 #define PNG_FLAG_DETECT_UNINITIALIZED     0x4000U /* Added to libpng-1.5.4 */
-/* #define PNG_FLAG_KEEP_UNKNOWN_CHUNKS      0x8000U */
-/* #define PNG_FLAG_KEEP_UNSAFE_CHUNKS      0x10000U */
-#define PNG_FLAG_LIBRARY_MISMATCH        0x20000U
-#define PNG_FLAG_STRIP_ERROR_NUMBERS     0x40000U
-#define PNG_FLAG_STRIP_ERROR_TEXT        0x80000U
-#define PNG_FLAG_BENIGN_ERRORS_WARN     0x100000U /* Added to libpng-1.4.0 */
-#define PNG_FLAG_APP_WARNINGS_WARN      0x200000U /* Added to libpng-1.6.0 */
-#define PNG_FLAG_APP_ERRORS_WARN        0x400000U /* Added to libpng-1.6.0 */
-                                  /*    0x800000U    unused */
-                                  /*   0x1000000U    unused */
-                                  /*   0x2000000U    unused */
-                                  /*   0x4000000U    unused */
-                                  /*   0x8000000U    unused */
-                                  /*  0x10000000U    unused */
-                                  /*  0x20000000U    unused */
-                                  /*  0x40000000U    unused */
+/* #define PNG_FLAG_KEEP_UNKNOWN_CHUNKS      0x8000UL */
+/* #define PNG_FLAG_KEEP_UNSAFE_CHUNKS      0x10000UL */
+#define PNG_FLAG_LIBRARY_MISMATCH        0x20000UL
+#define PNG_FLAG_STRIP_ERROR_NUMBERS     0x40000UL
+#define PNG_FLAG_STRIP_ERROR_TEXT        0x80000UL
+#define PNG_FLAG_BENIGN_ERRORS_WARN     0x100000UL /* Added to libpng-1.4.0 */
+#define PNG_FLAG_APP_WARNINGS_WARN      0x200000UL /* Added to libpng-1.6.0 */
+#define PNG_FLAG_APP_ERRORS_WARN        0x400000UL /* Added to libpng-1.6.0 */
+                                  /*    0x800000UL    unused */
+                                  /*   0x1000000UL    unused */
+                                  /*   0x2000000UL    unused */
+                                  /*   0x4000000UL    unused */
+                                  /*   0x8000000UL    unused */
+                                  /*  0x10000000UL    unused */
+                                  /*  0x20000000UL    unused */
+                                  /*  0x40000000UL    unused */
 
 #define PNG_FLAG_CRC_ANCILLARY_MASK (PNG_FLAG_CRC_ANCILLARY_USE | \
                                      PNG_FLAG_CRC_ANCILLARY_NOWARN)
@@ -709,14 +712,14 @@
  * 65535 - this has a maximum error of .502.  Over the range 0..65535*65535 it
  * only gives off-by-one errors and only for 0.5% (1 in 200) of the values.
  */
-#define PNG_DIV65535(v24) (((v24) + 32895) >> 16)
+#define PNG_DIV65535(v24) (((v24) + 32895L) >> 16)
 #define PNG_DIV257(v16) PNG_DIV65535((png_uint_32)(v16) * 255)
 
 /* Added to libpng-1.2.6 JB */
 #define PNG_ROWBYTES(pixel_bits, width) \
     ((pixel_bits) >= 8 ? \
-    ((png_size_t)(width) * (((png_size_t)(pixel_bits)) >> 3)) : \
-    (( ((png_size_t)(width) * ((png_size_t)(pixel_bits))) + 7) >> 3) )
+    ((size_t)(width) * (((size_t)(pixel_bits)) >> 3)) : \
+    (( ((size_t)(width) * ((size_t)(pixel_bits))) + 7) >> 3) )
 
 /* This returns the number of trailing bits in the last byte of a row, 0 if the
  * last byte is completely full of pixels.  It is, in principle, (pixel_bits x
@@ -879,9 +882,9 @@
 #define PNG_CHUNK_SAFE_TO_COPY(c) (1 & ((c) >>  5))
 
 /* Gamma values (new at libpng-1.5.4): */
-#define PNG_GAMMA_MAC_OLD 151724  /* Assume '1.8' is really 2.2/1.45! */
-#define PNG_GAMMA_MAC_INVERSE 65909
-#define PNG_GAMMA_sRGB_INVERSE 45455
+#define PNG_GAMMA_MAC_OLD ((png_fixed_point)151724L)  /* Assume '1.8' is really 2.2/1.45! */
+#define PNG_GAMMA_MAC_INVERSE ((png_fixed_point)65909L)
+#define PNG_GAMMA_sRGB_INVERSE ((png_fixed_point)45455L)
 
 /* Almost everything below is C specific; the #defines above can be used in
  * non-C code (so long as it is C-preprocessed) the rest of this stuff cannot.
@@ -904,7 +907,7 @@
     * PNG files the -I directives must match.
     *
     * The most likely explanation is that you passed a -I in CFLAGS. This will
-    * not work; all the preprocessor directories and in particular all the -I
+    * not work; all the preprocessor directives and in particular all the -I
     * directives must be in CPPFLAGS.
     */
 #endif
@@ -991,14 +994,14 @@ PNG_INTERNAL_FUNCTION(png_voidp,png_malloc_base,(png_const_structrp png_ptr,
  * just returns NULL.
  */
 PNG_INTERNAL_FUNCTION(png_voidp,png_malloc_array,(png_const_structrp png_ptr,
-   int nelements, size_t element_size),PNG_ALLOCATED);
+   png_int_32 nelements, size_t element_size),PNG_ALLOCATED);
 
 /* The same but an existing array is extended by add_elements.  This function
  * also memsets the new elements to 0 and copies the old elements.  The old
  * array is not freed or altered.
  */
 PNG_INTERNAL_FUNCTION(png_voidp,png_realloc_array,(png_const_structrp png_ptr,
-   png_const_voidp array, int old_elements, int add_elements,
+   png_const_voidp array, png_int_32 old_elements, png_int_32 add_elements,
    size_t element_size),PNG_ALLOCATED);
 #endif /* text, sPLT or unknown chunks */
 
@@ -1033,15 +1036,15 @@ PNG_INTERNAL_FUNCTION(void,png_zfree,(voidpf png_ptr, voidpf ptr),PNG_EMPTY);
  */
 
 PNG_INTERNAL_FUNCTION(void PNGCBAPI,png_default_read_data,(png_structp png_ptr,
-    png_bytep data, png_size_t length),PNG_EMPTY);
+    png_bytep data, size_t length),PNG_EMPTY);
 
 #ifdef PNG_PROGRESSIVE_READ_SUPPORTED
 PNG_INTERNAL_FUNCTION(void PNGCBAPI,png_push_fill_buffer,(png_structp png_ptr,
-    png_bytep buffer, png_size_t length),PNG_EMPTY);
+    png_bytep buffer, size_t length),PNG_EMPTY);
 #endif
 
 PNG_INTERNAL_FUNCTION(void PNGCBAPI,png_default_write_data,(png_structp png_ptr,
-    png_bytep data, png_size_t length),PNG_EMPTY);
+    png_bytep data, size_t length),PNG_EMPTY);
 
 #ifdef PNG_WRITE_FLUSH_SUPPORTED
 #  ifdef PNG_STDIO_SUPPORTED
@@ -1055,7 +1058,7 @@ PNG_INTERNAL_FUNCTION(void,png_reset_crc,(png_structrp png_ptr),PNG_EMPTY);
 
 /* Write the "data" buffer to whatever output you are using */
 PNG_INTERNAL_FUNCTION(void,png_write_data,(png_structrp png_ptr,
-    png_const_bytep data, png_size_t length),PNG_EMPTY);
+    png_const_bytep data, size_t length),PNG_EMPTY);
 
 /* Read and check the PNG file signature */
 PNG_INTERNAL_FUNCTION(void,png_read_sig,(png_structrp png_ptr,
@@ -1067,7 +1070,7 @@ PNG_INTERNAL_FUNCTION(png_uint_32,png_read_chunk_header,(png_structrp png_ptr),
 
 /* Read data from whatever input you are using into the "data" buffer */
 PNG_INTERNAL_FUNCTION(void,png_read_data,(png_structrp png_ptr, png_bytep data,
-    png_size_t length),PNG_EMPTY);
+    size_t length),PNG_EMPTY);
 
 /* Read bytes into buf, and update png_ptr->crc */
 PNG_INTERNAL_FUNCTION(void,png_crc_read,(png_structrp png_ptr, png_bytep buf,
@@ -1085,7 +1088,7 @@ PNG_INTERNAL_FUNCTION(int,png_crc_error,(png_structrp png_ptr),PNG_EMPTY);
  * since this is the maximum buffer size we can specify.
  */
 PNG_INTERNAL_FUNCTION(void,png_calculate_crc,(png_structrp png_ptr,
-   png_const_bytep ptr, png_size_t length),PNG_EMPTY);
+   png_const_bytep ptr, size_t length),PNG_EMPTY);
 
 #ifdef PNG_WRITE_FLUSH_SUPPORTED
 PNG_INTERNAL_FUNCTION(void,png_flush,(png_structrp png_ptr),PNG_EMPTY);
@@ -1168,7 +1171,7 @@ PNG_INTERNAL_FUNCTION(void,png_write_hIST,(png_structrp png_ptr,
 /* Chunks that have keywords */
 #ifdef PNG_WRITE_tEXt_SUPPORTED
 PNG_INTERNAL_FUNCTION(void,png_write_tEXt,(png_structrp png_ptr,
-   png_const_charp key, png_const_charp text, png_size_t text_len),PNG_EMPTY);
+   png_const_charp key, png_const_charp text, size_t text_len),PNG_EMPTY);
 #endif
 
 #ifdef PNG_WRITE_zTXt_SUPPORTED
@@ -1515,10 +1518,10 @@ PNG_INTERNAL_FUNCTION(void,png_handle_zTXt,(png_structrp png_ptr,
 #endif
 
 PNG_INTERNAL_FUNCTION(void,png_check_chunk_name,(png_const_structrp png_ptr,
-    const png_uint_32 chunk_name),PNG_EMPTY);
+    png_uint_32 chunk_name),PNG_EMPTY);
 
 PNG_INTERNAL_FUNCTION(void,png_check_chunk_length,(png_const_structrp png_ptr,
-    const png_uint_32 chunk_length),PNG_EMPTY);
+    png_uint_32 chunk_length),PNG_EMPTY);
 
 PNG_INTERNAL_FUNCTION(void,png_handle_unknown,(png_structrp png_ptr,
     png_inforp info_ptr, png_uint_32 length, int keep),PNG_EMPTY);
@@ -1561,10 +1564,10 @@ PNG_INTERNAL_FUNCTION(void,png_push_check_crc,(png_structrp png_ptr),PNG_EMPTY);
 PNG_INTERNAL_FUNCTION(void,png_push_save_buffer,(png_structrp png_ptr),
     PNG_EMPTY);
 PNG_INTERNAL_FUNCTION(void,png_push_restore_buffer,(png_structrp png_ptr,
-    png_bytep buffer, png_size_t buffer_length),PNG_EMPTY);
+    png_bytep buffer, size_t buffer_length),PNG_EMPTY);
 PNG_INTERNAL_FUNCTION(void,png_push_read_IDAT,(png_structrp png_ptr),PNG_EMPTY);
 PNG_INTERNAL_FUNCTION(void,png_process_IDAT_data,(png_structrp png_ptr,
-    png_bytep buffer, png_size_t buffer_length),PNG_EMPTY);
+    png_bytep buffer, size_t buffer_length),PNG_EMPTY);
 PNG_INTERNAL_FUNCTION(void,png_push_process_row,(png_structrp png_ptr),
     PNG_EMPTY);
 PNG_INTERNAL_FUNCTION(void,png_push_handle_unknown,(png_structrp png_ptr,
@@ -1692,8 +1695,7 @@ PNG_INTERNAL_FUNCTION(void,png_check_IHDR,(png_const_structrp png_ptr,
     int filter_type),PNG_EMPTY);
 
 /* Added at libpng version 1.5.10 */
-#if defined(PNG_READ_CHECK_FOR_INVALID_INDEX_SUPPORTED) || \
-    defined(PNG_WRITE_CHECK_FOR_INVALID_INDEX_SUPPORTED)
+#if defined(PNG_READ_CHECK_FOR_INVALID_INDEX_SUPPORTED) || defined(PNG_WRITE_CHECK_FOR_INVALID_INDEX_SUPPORTED)
 PNG_INTERNAL_FUNCTION(void,png_do_check_palette_indexes,
    (png_structrp png_ptr, png_row_infop row_info),PNG_EMPTY);
 #endif
@@ -1834,13 +1836,13 @@ PNG_INTERNAL_FUNCTION(void,png_chunk_report,(png_const_structrp png_ptr,
 
 #ifdef PNG_FLOATING_POINT_SUPPORTED
 PNG_INTERNAL_FUNCTION(void,png_ascii_from_fp,(png_const_structrp png_ptr,
-   png_charp ascii, png_size_t size, double fp, unsigned int precision),
+   png_charp ascii, size_t size, double fp, unsigned int precision),
    PNG_EMPTY);
 #endif /* FLOATING_POINT */
 
 #ifdef PNG_FIXED_POINT_SUPPORTED
 PNG_INTERNAL_FUNCTION(void,png_ascii_from_fixed,(png_const_structrp png_ptr,
-   png_charp ascii, png_size_t size, png_fixed_point fp),PNG_EMPTY);
+   png_charp ascii, size_t size, png_fixed_point fp),PNG_EMPTY);
 #endif /* FIXED_POINT */
 #endif /* sCAL */
 
@@ -1933,7 +1935,7 @@ PNG_INTERNAL_FUNCTION(void,png_ascii_from_fixed,(png_const_structrp png_ptr,
  * the problem character.)  This has not been tested within libpng.
  */
 PNG_INTERNAL_FUNCTION(int,png_check_fp_number,(png_const_charp string,
-   png_size_t size, int *statep, png_size_tp whereami),PNG_EMPTY);
+   size_t size, int *statep, png_size_tp whereami),PNG_EMPTY);
 
 /* This is the same but it checks a complete string and returns true
  * only if it just contains a floating point number.  As of 1.5.4 this
@@ -1942,7 +1944,7 @@ PNG_INTERNAL_FUNCTION(int,png_check_fp_number,(png_const_charp string,
  * for negative or zero values using the sticky flag.
  */
 PNG_INTERNAL_FUNCTION(int,png_check_fp_string,(png_const_charp string,
-   png_size_t size),PNG_EMPTY);
+   size_t size),PNG_EMPTY);
 #endif /* pCAL || sCAL */
 
 #if defined(PNG_GAMMA_SUPPORTED) ||\
@@ -1996,7 +1998,7 @@ PNG_INTERNAL_FUNCTION(int,png_gamma_significant,(png_fixed_point gamma_value),
  */
 PNG_INTERNAL_FUNCTION(png_uint_16,png_gamma_correct,(png_structrp png_ptr,
    unsigned int value, png_fixed_point gamma_value),PNG_EMPTY);
-PNG_INTERNAL_FUNCTION(png_uint_16,png_gamma_16bit_correct,(unsigned int value,
+PNG_INTERNAL_FUNCTION(png_uint_16,png_gamma_16bit_correct,(png_uint_32 value,
    png_fixed_point gamma_value),PNG_EMPTY);
 PNG_INTERNAL_FUNCTION(png_byte,png_gamma_8bit_correct,(unsigned int value,
    png_fixed_point gamma_value),PNG_EMPTY);
@@ -2017,7 +2019,7 @@ typedef struct png_control
    png_voidp   error_buf;           /* Always a jmp_buf at present. */
 
    png_const_bytep memory;          /* Memory buffer. */
-   png_size_t      size;            /* Size of the memory buffer. */
+   size_t          size;            /* Size of the memory buffer. */
 
    unsigned int for_write       :1; /* Otherwise it is a read structure */
    unsigned int owned_file      :1; /* We own the file in io_ptr */
@@ -2029,7 +2031,7 @@ typedef struct png_control
 #ifdef __cplusplus
 #  define png_control_jmp_buf(pc) (((jmp_buf*)((pc)->error_buf))[0])
 #else
-#  define png_control_jmp_buf(pc) (((jmp_buf *)((pc)->error_buf))[0])
+#  define png_control_jmp_buf(pc) (((jmp_buf*)((pc)->error_buf))[0])
 #endif
 
 /* Utility to safely execute a piece of libpng code catching and logging any
@@ -2095,9 +2097,59 @@ PNG_INTERNAL_FUNCTION(void, png_init_filter_functions_sse2,
 PNG_INTERNAL_FUNCTION(png_uint_32, png_check_keyword, (png_structrp png_ptr,
    png_const_charp key, png_bytep new_key), PNG_EMPTY);
 
+#if defined(PNG_ARM_NEON_IMPLEMENTATION) && PNG_ARM_NEON_IMPLEMENTATION == 1
+PNG_INTERNAL_FUNCTION(void,
+                      png_riffle_palette_neon,
+                      (png_structrp),
+                      PNG_EMPTY);
+PNG_INTERNAL_FUNCTION(int,
+                      png_do_expand_palette_rgba8_neon,
+                      (png_structrp,
+                       png_row_infop,
+                       png_const_bytep,
+                       const png_bytepp,
+                       const png_bytepp),
+                      PNG_EMPTY);
+PNG_INTERNAL_FUNCTION(int,
+                      png_do_expand_palette_rgb8_neon,
+                      (png_structrp,
+                       png_row_infop,
+                       png_const_bytep,
+                       const png_bytepp,
+                       const png_bytepp),
+                      PNG_EMPTY);
+#endif
+
+#if defined(PNG_ARM_NEON_IMPLEMENTATION) && PNG_ARM_NEON_IMPLEMENTATION == 1
+PNG_INTERNAL_FUNCTION(void,
+                      png_riffle_palette_neon,
+                      (png_structrp),
+                      PNG_EMPTY);
+PNG_INTERNAL_FUNCTION(int,
+                      png_do_expand_palette_rgba8_neon,
+                      (png_structrp,
+                       png_row_infop,
+                       png_const_bytep,
+                       const png_bytepp,
+                       const png_bytepp),
+                      PNG_EMPTY);
+PNG_INTERNAL_FUNCTION(int,
+                      png_do_expand_palette_rgb8_neon,
+                      (png_structrp,
+                       png_row_infop,
+                       png_const_bytep,
+                       const png_bytepp,
+                       const png_bytepp),
+                      PNG_EMPTY);
+#endif
+
 /* Maintainer: Put new private prototypes here ^ */
 
 #include "pngdebug.h"
+
+#if defined(PNGLIB_SLB)
+#include "libslb.h"
+#endif
 
 #ifdef __cplusplus
 }

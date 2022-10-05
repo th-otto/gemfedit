@@ -1,7 +1,8 @@
 CC = gcc
-CFLAGS = -O2 -Wall -I../include -DHAVE_PNG_H
+
+CFLAGS = -O2 -Wall -I../include -I../libpng -DHAVE_PNG_H
 LDFLAGS = -s
-LIBS= -lX11 -lpng
+LIBS= -L../libpng -lX11 -lpng
 
 PROGRAMS = fontdisp
 
@@ -13,15 +14,8 @@ fontdisp: fontdisp.o decode.o
 fontdisp.o: fontdisp.c
 	$(CC) $(CFLAGS) $< -c -o $@
 
-deocde.o: decode.c
+decode.o: decode.c
 	$(CC) $(CFLAGS) $< -c -o $@
-
-win32: fontdisp.exe
-
-fontdisp.exe:
-	i686-pc-mingw32-gcc $(CFLAGS) -c fontdisp.c
-	i686-pc-mingw32-gcc $(CFLAGS) -c decode.c
-	i686-pc-mingw32-gcc $(LDFLAGS) -o $@ fontdisp.o decode.o -lgdi32 -lcomdlg32
 
 clean::
 	rm -f $(PROGRAMS) fontdisp.exe *.o
