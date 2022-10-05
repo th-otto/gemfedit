@@ -10,6 +10,7 @@ LIBS = -lcurl
 #USE_PNG14=1
 #USE_PNG16=1
 USE_PNG_INCLUDED=1
+USE_ZLIB_INCLUDED=1
 
 ifdef USE_PNG12
 LIBPNG = -lpng12
@@ -30,9 +31,15 @@ endif
 ifndef LIBPNG
 LIBPNG = -lpng
 endif
+ifdef USE_ZLIB_INCLUDED
+LIBZ = -L../zlib -lz
+endif
+ifndef LIBZ
+LIBZ = -lz
+endif
 
 LIBS += $(LIBPNG)
-LIBS += -lz
+LIBS += $(LIBZ)
 
 SPDLIB = reset.o do_char.o do_trns.o set_spcs.o set_trns.o \
 	out_bl2d.o out_blk.o out_scrn.o out_util.o out_outl.o \

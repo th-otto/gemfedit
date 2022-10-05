@@ -1,6 +1,6 @@
 CC = gcc
 WARN = -fno-common -Wall -W -Wunused -Wundef -Wstrict-prototypes -Wmissing-prototypes -Werror
-CFLAGS = -O2 -g -fomit-frame-pointer $(WARN) -I. -I../include
+CFLAGS = -O2 -g -fomit-frame-pointer $(WARN) -I. -I../include -I../zlib
 LDFLAGS = -s
 
 all: libpng.a

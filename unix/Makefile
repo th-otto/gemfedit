@@ -2,7 +2,7 @@ CC = gcc
 
 CFLAGS = -O2 -Wall -I../include -I../libpng -DHAVE_PNG_H
 LDFLAGS = -s
-LIBS= -L../libpng -lX11 -lpng
+LIBS= -L../libpng -lX11 -lpng -lz -lm
 
 PROGRAMS = fontdisp
 

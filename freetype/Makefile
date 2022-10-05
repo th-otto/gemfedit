@@ -12,7 +12,7 @@ RANLIB = $(CROSS_PREFIX)ranlib
 
 ft2_srcdir = .
 WARN = -fno-common -Wall -W -Wunused -Wundef -Wstrict-prototypes -Wmissing-prototypes
-CFLAGS = -O2 -fomit-frame-pointer $(WARN) -I../include -I$(ft2_srcdir)/include
+CFLAGS = -O2 -fomit-frame-pointer $(WARN) -I../include -I$(ft2_srcdir)/include -I../libpng -I../zlib
 LDFLAGS = -s
 LIBS= -lX11
 
@@ -331,7 +331,7 @@ FONTDOBJ = cff.o type1.o type42.o type1cid.o truetype.o bdf.o pfr.o winfnt.o gem
 TTFLIB = $(BASEOBJ) $(AHINTOBJ) $(PSOBJ) $(RASTEROBJ) sfnt.o ftcache.o otvalid.o gxvalid.o $(FONTDOBJ) $(GZOBJ)
 
 libttf.a: $(TTFLIB)
-	@rm $@
+	@rm -f $@
 	$(AM_V_AR)$(AR) crs $@ $(TTFLIB); $(RANLIB) $@
 
 clean::
