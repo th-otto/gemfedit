@@ -1,4 +1,4 @@
-EVAL_X11 := case `uname -s` in CYGWIN*) echo no ;; *) echo yes;; esac
+EVAL_X11 := case `uname -s` in CYGWIN*|MINGW*) echo no ;; *) echo yes;; esac
 X11 = $(shell $(EVAL_X11))
 CC = gcc
 

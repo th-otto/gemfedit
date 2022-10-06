@@ -3,6 +3,9 @@
  * For conditions of distribution and use, see copyright notice in zlib.h
  */
 
+#ifndef __ZLIB_GZGUTS_H__
+#define __ZLIB_GZGUTS_H__
+
 #ifdef _LARGEFILE64_SOURCE
 #  ifndef _LARGEFILE_SOURCE
 #    define _LARGEFILE_SOURCE 1
@@ -221,3 +224,5 @@ unsigned ZLIB_INTERNAL gz_intmax OF((void));
 #if defined(ZLIB_COMPILATION) && defined(ZLIB_SLB)
 #include "zlibslb.h"
 #endif
+
+#endif /* __ZLIB_GZGUTS_H__ */

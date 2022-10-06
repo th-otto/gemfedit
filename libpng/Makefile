@@ -1,5 +1,6 @@
 CC = gcc
 WARN = -fno-common -Wall -W -Wunused -Wundef -Wstrict-prototypes -Wmissing-prototypes -Werror
+CPPFLAGS = -DZLIB_STATIC
 CFLAGS = -O2 -g -fomit-frame-pointer $(WARN) -I. -I../include -I../zlib
 LDFLAGS = -s
 

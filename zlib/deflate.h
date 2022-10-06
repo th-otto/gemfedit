@@ -19,9 +19,6 @@
    trailer creation by deflate().  NO_GZIP would be used to avoid linking in
    the crc code when it is not needed.  For shared libraries, gzip encoding
    should be left enabled. */
-#ifndef NO_GZIP
-#  define GZIP
-#endif
 
 /* ===========================================================================
  * Internal compression state.
@@ -52,7 +49,7 @@
 /* size of bit buffer in bi_buf */
 
 #define INIT_STATE    42    /* zlib header -> BUSY_STATE */
-#ifdef GZIP
+#ifndef NO_GZIP
 #  define GZIP_STATE  57    /* gzip header -> BUSY_STATE | EXTRA_STATE */
 #endif
 #define EXTRA_STATE   69    /* gzip extra block -> NAME_STATE */
@@ -75,11 +72,6 @@ typedef struct ct_data_s {
         ush  len;        /* length of bit string */
     } dl;
 } FAR ct_data;
-
-#define Freq fc.freq
-#define Code fc.code
-#define Dad  dl.dad
-#define Len  dl.len
 
 struct static_tree_desc_s {
     const ct_data *static_tree;  /* static tree or NULL */
@@ -339,7 +331,7 @@ void ZLIB_INTERNAL _tr_stored_block OF((deflate_state *s, charf *buf,
   { uch cc = (c); \
     s->d_buf[s->last_lit] = 0; \
     s->l_buf[s->last_lit++] = cc; \
-    s->dyn_ltree[cc].Freq++; \
+    s->dyn_ltree[cc].fc.freq++; \
     flush = (s->last_lit == s->lit_bufsize-1); \
    }
 # define _tr_tally_dist(s, distance, length, flush) \
@@ -348,8 +340,8 @@ void ZLIB_INTERNAL _tr_stored_block OF((deflate_state *s, charf *buf,
     s->d_buf[s->last_lit] = dist; \
     s->l_buf[s->last_lit++] = len; \
     dist--; \
-    s->dyn_ltree[_length_code[len]+LITERALS+1].Freq++; \
-    s->dyn_dtree[d_code(dist)].Freq++; \
+    s->dyn_ltree[_length_code[len]+LITERALS+1].fc.freq++; \
+    s->dyn_dtree[d_code(dist)].fc.freq++; \
     flush = (s->last_lit == s->lit_bufsize-1); \
   }
 #else

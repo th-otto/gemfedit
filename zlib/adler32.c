@@ -19,6 +19,12 @@ local uLong adler32_combine_ OF((uLong adler1, uLong adler2, z_off64_t len2));
 #define NMAX 5552
 /* NMAX is the largest n such that 255n(n+1)/2 + (n+1)(BASE-1) <= 2^32-1 */
 
+#undef DO1
+#undef DO2
+#undef DO4
+#undef DO8
+#undef DO16
+
 #define DO1(buf,i)  {adler += (buf)[i]; sum2 += adler;}
 #define DO2(buf,i)  DO1(buf,i); DO1(buf,i+1);
 #define DO4(buf,i)  DO2(buf,i); DO2(buf,i+2);
@@ -132,6 +138,12 @@ uLong ZEXPORT adler32_z(uLong adler, const Bytef *buf, z_size_t len)
     /* return recombined sums */
     return adler | (sum2 << 16);
 }
+
+#undef DO1
+#undef DO2
+#undef DO4
+#undef DO8
+#undef DO16
 
 /* ========================================================================= */
 uLong ZEXPORT adler32(uLong adler, const Bytef *buf, uInt len)

@@ -1,3 +1,6 @@
+#ifndef __ZLIB_CRC32_H__
+#define __ZLIB_CRC32_H__
+
 /* crc32.h -- tables for rapid CRC calculation
  * Generated automatically by crc32.c
  */
@@ -439,3 +442,5 @@ local const z_crc_t FAR crc_table[TBLS][256] =
 #endif
   }
 };
+
+#endif

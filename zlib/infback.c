@@ -21,9 +21,6 @@
 struct internal_state      {int dummy;}; /* for buggy compilers */
 #endif
 
-/* function prototypes */
-local void fixedtables OF((struct inflate_state FAR *state));
-
 /*
    strm provides memory allocation functions in zalloc and zfree, or
    Z_NULL to use the library memory allocation functions.
@@ -80,7 +77,7 @@ int ZEXPORT inflateBackInit_(z_streamp strm, int windowBits, unsigned char FAR *
    used for threaded applications, since the rewriting of the tables and virgin
    may not be thread-safe.
  */
-local void fixedtables(struct inflate_state FAR *state)
+local void infback_fixedtables(struct inflate_state FAR *state)
 {
 #ifdef BUILDFIXED
     static int virgin = 1;
@@ -125,6 +122,7 @@ local void fixedtables(struct inflate_state FAR *state)
 /* Macros for inflateBack(): */
 
 /* Load returned state from inflate_fast() */
+#undef LOAD
 #define LOAD() \
     do { \
         put = strm->next_out; \
@@ -136,6 +134,7 @@ local void fixedtables(struct inflate_state FAR *state)
     } while (0)
 
 /* Set state from registers for inflate_fast() */
+#undef RESTORE
 #define RESTORE() \
     do { \
         strm->next_out = put; \
@@ -147,6 +146,7 @@ local void fixedtables(struct inflate_state FAR *state)
     } while (0)
 
 /* Clear the input bit accumulator */
+#undef INITBITS
 #define INITBITS() \
     do { \
         hold = 0; \
@@ -155,6 +155,7 @@ local void fixedtables(struct inflate_state FAR *state)
 
 /* Assure that some input is available.  If input is requested, but denied,
    then return a Z_BUF_ERROR from inflateBack(). */
+#undef PULL
 #define PULL() \
     do { \
         if (have == 0) { \
@@ -169,6 +170,7 @@ local void fixedtables(struct inflate_state FAR *state)
 
 /* Get a byte of input into the bit accumulator, or return from inflateBack()
    with an error if there is no input available. */
+#undef PULLBYTE
 #define PULLBYTE() \
     do { \
         PULL(); \
@@ -180,6 +182,7 @@ local void fixedtables(struct inflate_state FAR *state)
 /* Assure that there are at least n bits in the bit accumulator.  If there is
    not enough available input to do that, then return from inflateBack() with
    an error. */
+#undef NEEDBITS
 #define NEEDBITS(n) \
     do { \
         while (bits < (unsigned)(n)) \
@@ -187,10 +190,12 @@ local void fixedtables(struct inflate_state FAR *state)
     } while (0)
 
 /* Return the low n bits of the bit accumulator (n < 16) */
+#undef BITS
 #define BITS(n) \
     ((unsigned)hold & ((1U << (n)) - 1))
 
 /* Remove n bits from the bit accumulator */
+#undef DROPBITS
 #define DROPBITS(n) \
     do { \
         hold >>= (n); \
@@ -198,6 +203,7 @@ local void fixedtables(struct inflate_state FAR *state)
     } while (0)
 
 /* Remove zero to seven bits as needed to go to a byte boundary */
+#undef BYTEBITS
 #define BYTEBITS() \
     do { \
         hold >>= bits & 7; \
@@ -207,6 +213,7 @@ local void fixedtables(struct inflate_state FAR *state)
 /* Assure that some output space is available, by writing out the window
    if it's full.  If the write fails, return from inflateBack() with a
    Z_BUF_ERROR. */
+#undef ROOM
 #define ROOM() \
     do { \
         if (left == 0) { \
@@ -301,7 +308,7 @@ int ZEXPORT inflateBack(z_streamp strm, in_func in, void FAR *in_desc, out_func 
                 state->mode = STORED;
                 break;
             case 1:                             /* fixed block */
-                fixedtables(state);
+                infback_fixedtables(state);
                 Tracev((stderr, "inflate:     fixed codes block%s\n",
                         state->last ? " (last)" : ""));
                 state->mode = LEN;              /* decode codes */
@@ -633,3 +640,15 @@ int ZEXPORT inflateBackEnd(z_streamp strm)
     Tracev((stderr, "inflate: end\n"));
     return Z_OK;
 }
+
+
+#undef LOAD
+#undef RESTORE
+#undef INITBITS
+#undef PULL
+#undef PULLBYTE
+#undef NEEDBITS
+#undef BITS
+#undef DROPBITS
+#undef BYTEBITS
+#undef ROOM

@@ -2,7 +2,6 @@ CC = gcc
 WARN = -fno-common -Wall -W -Wunused -Wundef -Wstrict-prototypes -Wmissing-prototypes -Werror
 CFLAGS = -O2 -g -fomit-frame-pointer $(WARN) -I../include
 LDFLAGS = -s
-LIBS= -lX11
 
 PROGRAMS = htest nsample sptobdf listids spdinfo
 

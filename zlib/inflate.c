@@ -99,15 +99,9 @@ struct internal_state      {int dummy;}; /* for buggy compilers */
 #endif
 
 /* function prototypes */
-local int inflateStateCheck OF((z_streamp strm));
-local void fixedtables OF((struct inflate_state FAR *state));
-local int updatewindow OF((z_streamp strm, const unsigned char FAR *end,
-                           unsigned copy));
 #ifdef BUILDFIXED
    void makefixed OF((void));
 #endif
-local unsigned syncsearch OF((unsigned FAR *have, const unsigned char FAR *buf,
-                              unsigned len));
 
 local int inflateStateCheck(z_streamp strm)
 {
@@ -267,7 +261,7 @@ int ZEXPORT inflatePrime(z_streamp strm, int bits, int value)
    used for threaded applications, since the rewriting of the tables and virgin
    may not be thread-safe.
  */
-local void fixedtables(struct inflate_state FAR * state)
+local void inflate_fixedtables(struct inflate_state FAR * state)
 {
 #ifdef BUILDFIXED
     static int virgin = 1;
@@ -335,7 +329,7 @@ void makefixed(void)
     unsigned low, size;
     struct inflate_state state;
 
-    fixedtables(&state);
+    inflate_fixedtables(&state);
     puts("    /* inffixed.h -- table for decoding fixed codes");
     puts("     * Generated automatically by makefixed().");
     puts("     */");
@@ -461,6 +455,7 @@ local int updatewindow(z_streamp strm, const Bytef *end, unsigned copy)
 #endif
 
 /* Load registers with state in inflate() for speed */
+#undef LOAD
 #define LOAD() \
     do { \
         put = strm->next_out; \
@@ -472,6 +467,7 @@ local int updatewindow(z_streamp strm, const Bytef *end, unsigned copy)
     } while (0)
 
 /* Restore state from registers in inflate() */
+#undef RESTORE
 #define RESTORE() \
     do { \
         strm->next_out = put; \
@@ -483,6 +479,7 @@ local int updatewindow(z_streamp strm, const Bytef *end, unsigned copy)
     } while (0)
 
 /* Clear the input bit accumulator */
+#undef INITBITS
 #define INITBITS() \
     do { \
         hold = 0; \
@@ -491,6 +488,7 @@ local int updatewindow(z_streamp strm, const Bytef *end, unsigned copy)
 
 /* Get a byte of input into the bit accumulator, or return from inflate()
    if there is no input available. */
+#undef PULLBYTE
 #define PULLBYTE() \
     do { \
         if (have == 0) { goto inf_leave; } \
@@ -501,6 +499,7 @@ local int updatewindow(z_streamp strm, const Bytef *end, unsigned copy)
 
 /* Assure that there are at least n bits in the bit accumulator.  If there is
    not enough available input to do that, then return from inflate(). */
+#undef NEEDBITS
 #define NEEDBITS(n) \
     do { \
         while (bits < (unsigned)(n)) { \
@@ -509,10 +508,12 @@ local int updatewindow(z_streamp strm, const Bytef *end, unsigned copy)
     } while (0)
 
 /* Return the low n bits of the bit accumulator (n < 16) */
+#undef BITS
 #define BITS(n) \
     (((unsigned)hold & ((1U << (n)) - 1u)))
 
 /* Remove n bits from the bit accumulator */
+#undef DROPBITS
 #define DROPBITS(n) \
     do { \
         hold >>= (n); \
@@ -520,6 +521,7 @@ local int updatewindow(z_streamp strm, const Bytef *end, unsigned copy)
     } while (0)
 
 /* Remove zero to seven bits as needed to go to a byte boundary */
+#undef BYTEBITS
 #define BYTEBITS() \
     do { \
         hold >>= bits & 7; \
@@ -859,7 +861,7 @@ int ZEXPORT inflate(z_streamp strm, int flush)
                 state->mode = STORED;
                 break;
             case 1:                             /* fixed block */
-                fixedtables(state);
+                inflate_fixedtables(state);
                 Tracev((stderr, "inflate:     fixed codes block%s\n",
                         state->last ? " (last)" : ""));
                 state->mode = LEN_;             /* decode codes */
@@ -1552,3 +1554,12 @@ unsigned long ZEXPORT inflateCodesUsed(z_streamp strm)
     state = (struct inflate_state FAR *)strm->state;
     return (unsigned long)(state->next - state->codes);
 }
+
+#undef LOAD
+#undef RESTORE
+#undef INITBITS
+#undef PULLBYTE
+#undef NEEDBITS
+#undef BITS
+#undef DROPBITS
+#undef BYTEBITS

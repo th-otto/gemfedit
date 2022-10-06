@@ -1,3 +1,6 @@
+#ifndef __ZLIB_INFLATE_H__
+#define __ZLIB_INFLATE_H__
+
 /* inflate.h -- internal inflate state definition
  * Copyright (C) 1995-2016 Mark Adler
  * For conditions of distribution and use, see copyright notice in zlib.h
@@ -123,3 +126,5 @@ struct inflate_state {
     int back;                   /* bits back of last unprocessed length/lit */
     unsigned was;               /* initial length of match */
 };
+
+#endif /* __ZLIB_INFLATE_H__ */

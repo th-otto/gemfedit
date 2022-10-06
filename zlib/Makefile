@@ -28,7 +28,8 @@ ZLIB = \
 	contrib/minizip/ioapi.o \
 	contrib/minizip/zip.o \
 	contrib/minizip/unzip.o \
-	contrib/minizip/iowin32.o
+	contrib/minizip/iowin32.o \
+	$(empty)
 
 match.o: match.S
 	$(CPP) match.S > _match.s
