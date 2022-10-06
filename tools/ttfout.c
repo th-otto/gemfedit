@@ -277,11 +277,10 @@ static int get_pixel_glyph(struct font *font, struct glyph *glyph, int x, int y)
 {
 	if (x >= 0 && y >= 0 && x < glyph->bbx.width && y < glyph->bbx.height)
 	{
-		unsigned long offset = font->off_table[glyph->idx];
+		unsigned long offset = font->off_table[glyph->idx] + x;
 		unsigned char *data = font->dat_table + y * font->form_width;
 
-		x += offset;
-		return data[(x >> 3)] & (0x80 >> (x & 7)) ? 1 : 0;
+		return data[(offset >> 3)] & (0x80 >> (int)(offset & 7)) ? 1 : 0;
 	}
 	return -1;
 }
@@ -382,12 +381,12 @@ static int generate_eb_rawbitmap(bdf_t *bdf, table *ebdt, array *st)
 static int count_subtable(struct font *font)
 {
 	int n_subtbl = 0;
-	int i;
+	long i;
 	
 	for (i = 0; i < MAX_GLYPH; ++i)
 	{
 		struct boundingbox bbx;
-		int j;
+		long j;
 
 		if (!is_glyph_available(font, i))
 			continue;
@@ -412,7 +411,7 @@ static int count_subtable(struct font *font)
 static int generate_eb_optbitmap(struct ttf *ttf, struct font *font, table *ebdt, array *st)
 {
 	int n_subtbl = count_subtable(font);
-	int i;
+	long i;
 
 	/* for indexFormat 2, imageFormat 5 */
 	{
@@ -422,10 +421,10 @@ static int generate_eb_optbitmap(struct ttf *ttf, struct font *font, table *ebdt
 		{
 			int idStart;
 			int idEnd;
-			int encStart;
-			int encEnd;
+			long encStart;
+			long encEnd;
 			struct boundingbox bbx;
-			int j;
+			long j;
 			int w, h, imgsize;
 
 			if (!is_glyph_available(font, i))
@@ -593,10 +592,10 @@ static void generate_EBDT_EBLC_EBSC(struct ttf *ttf, struct font **fonts, int nu
 	table *eblc = ttfTbl[EBLC];
 	table *ebsc = ttfTbl[EBSC];
 
-	array_addLong(ebdt->ary, 0x00020000);
-	array_addLong(eblc->ary, 0x00020000);
+	array_addLong(ebdt->ary, 0x00020000L);
+	array_addLong(eblc->ary, 0x00020000L);
 	array_addLong(eblc->ary, num_fonts);
-	array_addLong(ebsc->ary, 0x00020000);				/* version */
+	array_addLong(ebsc->ary, 0x00020000L);				/* version */
 	array_addLong(ebsc->ary, MAX_SCALE - num_fonts);	/* numSizes */
 
 	starray = array_new();
@@ -674,7 +673,7 @@ static void generate_LOCA_GLYF(struct ttf *ttf)
 	table *loca = ttfTbl[LOCA];
 	table *glyf = ttfTbl[GLYF];
 	int remain;
-	int i;
+	long i;
 	size_t empty_off;
 
 	/* #0 */
@@ -710,7 +709,7 @@ static void generate_CMAP(struct font *font)
 	array *fmat0 = array_new();
 	array *fmat4 = array_new();
 	int numtbl;
-	int offset;
+	long offset;
 	table *cmap;
 
 	/* Make format 0 */
@@ -736,7 +735,7 @@ static void generate_CMAP(struct font *font)
 		array *idDeleta = array_new();
 		array *idRangeOffset = array_new();
 		int segCount = 0;
-		int i, j;
+		long i, j;
 		unsigned short segCountX2;
 		unsigned short entrySelector;
 		unsigned short searchRange;
@@ -881,10 +880,10 @@ static void generate_OS2_PREP(struct ttf *ttf)
 	array_addByte(os2->ary, 0);						/* panose.bMidline */
 	array_addByte(os2->ary, 0);						/* panose.bXHeight */
 	/* TODO  */
-	array_addLong(os2->ary, 0xffffffff);			/* ulUnicodeRange1 */
-	array_addLong(os2->ary, 0xffffffff);			/* ulUnicodeRange2 */
-	array_addLong(os2->ary, 0xffffffff);			/* ulUnicodeRange3 */
-	array_addLong(os2->ary, 0xffffffff);			/* ulUnicodeRange4 */
+	array_addLong(os2->ary, 0xffffffffUL);			/* ulUnicodeRange1 */
+	array_addLong(os2->ary, 0xffffffffUL);			/* ulUnicodeRange2 */
+	array_addLong(os2->ary, 0xffffffffUL);			/* ulUnicodeRange3 */
+	array_addLong(os2->ary, 0xffffffffUL);			/* ulUnicodeRange4 */
 	array_addString(os2->ary, "KRN ");				/* achVendID */
 	array_addShort(os2->ary, fsSelection);			/* fsSelection */
 	array_addShort(os2->ary, ttf->indexFirst);		/* usFirstCharIndex */
@@ -898,11 +897,11 @@ static void generate_OS2_PREP(struct ttf *ttf)
 #if 1
 	/* TODO */
 #if 0
-	array_addLong(os2->ary, 0x4002000F);			/* ulCodePageRange1 */
-	array_addLong(os2->ary, 0xD2000000);			/* ulCodePageRange2 */
+	array_addLong(os2->ary, 0x4002000FUL);			/* ulCodePageRange1 */
+	array_addLong(os2->ary, 0xD2000000UL);			/* ulCodePageRange2 */
 #else
-	array_addLong(os2->ary, 0xffffffff);			/* ulCodePageRange1 */
-	array_addLong(os2->ary, 0xffffffff);			/* ulCodePageRange2 */
+	array_addLong(os2->ary, 0xffffffffUL);			/* ulCodePageRange1 */
+	array_addLong(os2->ary, 0xffffffffUL);			/* ulCodePageRange2 */
 #endif
 #endif
 #if 0
@@ -915,7 +914,7 @@ static void generate_OS2_PREP(struct ttf *ttf)
 #endif
 	table_calcSum(os2);
 
-	addbytes(ttfTbl[PREP]->ary, &prep_prog[0], arraysize(prep_prog));
+	addbytes(ttfTbl[PREP]->ary, &prep_prog[0], (int)arraysize(prep_prog));
 	table_calcSum(ttfTbl[PREP]);
 }
 
@@ -967,16 +966,23 @@ static void generate_HEAD(struct ttf *ttf)
 
 	tmp = ttfTbl[HEAD];
 
-	array_addLong(tmp->ary, 0x10000);				/* version */
-	array_addLong(tmp->ary, 0x10000);				/* fontRevision */
+	array_addLong(tmp->ary, 0x10000UL);				/* version */
+	array_addLong(tmp->ary, 0x10000UL);				/* fontRevision */
 	array_addLong(tmp->ary, 0);						/* checkSumAdjustment */
-	array_addLong(tmp->ary, 0x5f0f3cf5);			/* magicNumber */
+	array_addLong(tmp->ary, 0x5f0f3cf5UL);			/* magicNumber */
 	array_addShort(tmp->ary, 0x000b);				/* flags */
 	array_addShort(tmp->ary, EMMAX);				/* unitPerEm */
 	t = time(NULL);
 	t += 2082844800L;
+#ifdef __PUREC__
+	array_addLong(tmp->ary, 0);						/* createdTime */
+	array_addLong(tmp->ary, t);						/* createdTime */
+	array_addLong(tmp->ary, 0);						/* modifiedTime */
+	array_addLong(tmp->ary, t);						/* modifiedTime */
+#else
 	array_addQuad(tmp->ary, t);						/* createdTime */
 	array_addQuad(tmp->ary, t);						/* modifiedTime */
+#endif
 	array_addShort(tmp->ary, 0);					/* xMin */
 	array_addShort(tmp->ary, -ttf->emDescent);		/* yMin */
 	array_addShort(tmp->ary, ttf->emX);			/* xMax */
@@ -996,7 +1002,7 @@ static void generate_HHEA(struct ttf *ttf)
 	table *tmp;
 
 	tmp = ttfTbl[HHEA];
-	array_addLong(tmp->ary, 0x10000);				/* version */
+	array_addLong(tmp->ary, 0x10000UL);				/* version */
 	array_addShort(tmp->ary, ttf->emAscent);		/* Ascender */
 	array_addShort(tmp->ary, -ttf->emDescent);		/* Descender */
 	array_addShort(tmp->ary, 0);					/* yLineGap */
@@ -1021,7 +1027,7 @@ static void generate_HHEA(struct ttf *ttf)
 static void generate_HMTX(struct font *font)
 {
 	table *tmp;
-	int i;
+	long i;
 
 	tmp = ttfTbl[HMTX];
 	/* #0 */
@@ -1044,7 +1050,7 @@ static void generate_MAXP(struct font *font)
 	table *tmp;
 
 	tmp = ttfTbl[MAXP];
-	array_addLong(tmp->ary, 0x10000);				/* Version */
+	array_addLong(tmp->ary, 0x10000UL);				/* Version */
 	array_addShort(tmp->ary, font->num_glyphs + 1);	/* numGlyphs */
 	array_addShort(tmp->ary, 800);					/* maxPoints */
 	array_addShort(tmp->ary, 40);					/* maxContours */
@@ -1069,7 +1075,7 @@ static void generate_POST(struct ttf *ttf, struct font *font)
 	table *tmp;
 
 	tmp = ttfTbl[POST];
-	array_addLong(tmp->ary, 0x30000);				/* Version */
+	array_addLong(tmp->ary, 0x30000UL);				/* Version */
 	array_addLong(tmp->ary, 0);						/* italicAngle */
 	array_addShort(tmp->ary, -ttf->emDescent);		/* underlinePosition */
 	array_addShort(tmp->ary, font->ul_size);		/* underlineThickness */
@@ -1161,10 +1167,10 @@ static void write_all_tables(FILE *fn)
 	};
 	table *hob = table_new();
 	uint32_t sum = 0;
-	int numTbl = arraysize(order);
+	int numTbl = (int)arraysize(order);
 	int order2[arraysize(order)];
 
-	array_addLong(hob->ary, 0x10000);				/* Version */
+	array_addLong(hob->ary, 0x10000UL);				/* Version */
 	array_addShort(hob->ary, numTbl);				/* number of tables */
 	array_addShort(hob->ary, 128);					/* search range */
 	array_addShort(hob->ary, 3);					/* entry selector */
@@ -1210,7 +1216,7 @@ static void write_all_tables(FILE *fn)
 	for (i = 0; i < numTbl; ++i)
 		if (table_getMapTable(ttfTbl[order[i]]) == NULL)
 			table_write(ttfTbl[order[i]], fn);
-	sum = 0xb1b0afba - sum;
+	sum = 0xb1b0afbaUL - sum;
 	fseek(fn, ttfTbl[HEAD]->off + 8, SEEK_SET);
 	fwrite(&sum, 1, 4, fn);
 	
@@ -1232,7 +1238,7 @@ static void map_table_for_macintosh(void)
 
 void ttf_output(struct font **fonts, int num_fonts, FILE *fp)
 {
-	int i;
+	long i;
 	struct ttf *ttf;
 	struct font *font;
 
@@ -1267,8 +1273,8 @@ void ttf_output(struct font **fonts, int num_fonts, FILE *fp)
 		if (is_glyph_available(ttf, i))
 		{
 			if (ttf->indexFirst < 0)
-				ttf->indexFirst = i;
-			ttf->indexLast = i;
+				ttf->indexFirst = (int)i;
+			ttf->indexLast = (int)i;
 		}
 	}
 

@@ -14,7 +14,9 @@ void array_delete(array *a);
 void array_addByte(array *a, unsigned char b);
 void array_addShort(array *a, unsigned short s);
 void array_addLong(array *a, unsigned long s);
+#ifndef __PUREC__
 void array_addQuad(array *a, uint64_t s);
+#endif
 void array_setShort(array *a, size_t offset, unsigned short s);
 void array_setLong(array *a, size_t offset, unsigned long l);
 

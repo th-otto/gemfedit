@@ -112,7 +112,7 @@ struct font
 #define F_NO_CHAR 0xFFFFu
 #define F_NO_CHARL 0xFFFFFFFFul
 
-#define MAX_GLYPH 0x10000
+#define MAX_GLYPH 0x10000L
 
 extern const char	*g_copyright;
 extern const char	*g_fontname;

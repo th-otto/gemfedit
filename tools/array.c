@@ -116,11 +116,13 @@ void array_addLong(array *a, unsigned long s)
 
 /* -------------------------------------------------------------------------- */
 
+#ifndef __PUREC__
 void array_addQuad(array *a, uint64_t s)
 {
 	array_addLong(a, s >> 32);
 	array_addLong(a, s & 0xffffffffUL);
 }
+#endif
 
 /* ************************************************************************** */
 /* -------------------------------------------------------------------------- */
@@ -175,10 +177,10 @@ unsigned long table_calcSum(table *t)
 		for (l = i = 0; i < 4; i++)
 		{
 			c = (buf < eot) ? *buf++ : 0;
-			l = ((l >> 8) & 0xffffff) + (c << 24);
+			l = ((l >> 8) & 0xffffffUL) + (c << 24);
 		}
 		t->chk += l;
-		t->chk &= 0xffffffff;
+		t->chk &= 0xffffffffUL;
 	}
 	return t->chk;
 }

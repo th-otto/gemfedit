@@ -223,7 +223,11 @@ static FILE *open_output(const char **filename, const char *mode)
 	if (*filename == NULL || strcmp(*filename, "-") == 0)
 	{
 		fflush(stdout);
+#ifdef __PUREC__
+		f = stdout;
+#else
 		f = fdopen(fileno(stdout), mode);
+#endif
 		*filename = "<stdout>";
 	} else
 	{
@@ -251,7 +255,11 @@ static FILE *open_input(const char **filename, const char *mode)
 	
 	if (*filename == NULL || strcmp(*filename, "-") == 0)
 	{
+#ifdef __PUREC__
+		f = stdin;
+#else
 		f = fdopen(fileno(stdin), mode);
+#endif
 		*filename = "<stdin>";
 	} else
 	{
@@ -1454,8 +1462,8 @@ static void write_ttf(struct font *font, const char *fname)
 			
 			uni = i < 0x80 || i >= 0x100 ? i : known_pairs[i - 0x80].uni;
 			font->glyphs[uni].idx = i - font->first_ade;
-			font->glyphs[uni].width = w;
-			font->glyphs[uni].bbx.width = w;
+			font->glyphs[uni].width = (int)w;
+			font->glyphs[uni].bbx.width = (int)w;
 			font->glyphs[uni].bbx.height = font->form_height;
 			font->glyphs[uni].bbx.x = 0;
 			font->glyphs[uni].bbx.y = font->top - font->form_height;
@@ -1987,10 +1995,10 @@ static struct font *read_stos_font(const char *fname)
 	unsigned char maptab[256];
 	char inbuf[256 * 16];
 	int c, l;
-	unsigned int offset;
+	size_t offset;
 	const char *basen;
 	unsigned int char_width;
-	unsigned int insize;
+	size_t insize;
 	
 	f = open_input(&fname, "rb");
 	if (fread(&header, 1, sizeof(header), f) != sizeof(header) ||
