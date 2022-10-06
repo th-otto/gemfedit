@@ -1,10 +1,14 @@
+EVAL_X11 := case `uname -s` in CYGWIN*) echo no ;; *) echo yes;; esac
+X11 = $(shell $(EVAL_X11))
 CC = gcc
 
 CFLAGS = -O2 -Wall -I../include -I../libpng -DHAVE_PNG_H
 LDFLAGS = -s
-LIBS= -L../libpng -lX11 -lpng -lz -lm
+LIBS= -L../libpng -L../zlib -lX11 -lpng -lz -lm
 
+ifeq ($(X11),yes)
 PROGRAMS = fontdisp
+endif
 
 all: $(PROGRAMS)
 
