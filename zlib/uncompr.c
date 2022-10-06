@@ -5,7 +5,6 @@
 
 /* @(#) $Id$ */
 
-#define ZLIB_INTERNAL
 #define ZLIB_COMPILATION
 #include <linux/libcwrap.h>
 #include "zlib.h"
@@ -48,7 +47,7 @@ int ZEXPORT uncompress2 (Bytef *dest, uLongf *destLen, const Bytef *source, uLon
         dest = buf;
     }
 
-    stream.next_in = (z_const Bytef *)source;
+    stream.next_in = source;
     stream.avail_in = 0;
     stream.zalloc = (alloc_func)0;
     stream.zfree = (free_func)0;

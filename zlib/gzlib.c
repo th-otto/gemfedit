@@ -1,5 +1,5 @@
 /* gzlib.c -- zlib functions common to reading and writing gzip files
- * Copyright (C) 2004-2017 Mark Adler
+ * Copyright (C) 2004-2019 Mark Adler
  * For conditions of distribution and use, see copyright notice in zlib.h
  */
 
@@ -7,7 +7,7 @@
 #include <linux/libcwrap.h>
 #include "gzguts.h"
 
-#if defined(_WIN32) && !defined(__BORLANDC__) && !defined(__MINGW32__)
+#if defined(_WIN32) && !defined(__BORLANDC__)
 #  define LSEEK _lseeki64
 #else
 #if defined(_LARGEFILE64_SOURCE) && _LFS64_LARGEFILE-0
@@ -23,7 +23,7 @@ struct internal_state      {int dummy;}; /* for buggy compilers */
 
 /* Local functions */
 local void gz_reset OF((gz_statep));
-local gzFile gz_open OF((const void *, int, const char *));
+local gzFile gz_open OF((const char *, int, const char *));
 
 #if defined UNDER_CE
 
@@ -85,6 +85,8 @@ local void gz_reset(gz_statep state)
         state->past = 0;            /* have not read past end yet */
         state->how = LOOK;          /* look for gzip header */
     }
+    else                            /* for writing ... */
+        state->reset = 0;           /* no deflateReset pending */
     state->seek = 0;                /* no seek request pending */
     gz_error(state, Z_OK, NULL);    /* clear error */
     state->x.pos = 0;               /* no uncompressed data yet */
@@ -92,7 +94,7 @@ local void gz_reset(gz_statep state)
 }
 
 /* Open a gzip file either by name or file descriptor. */
-local gzFile gz_open(const void *path, int fd, const char *mode)
+local gzFile gz_open(const char *path, int fd, const char *mode)
 {
     gz_statep state;
     z_size_t len;
@@ -211,7 +213,7 @@ local gzFile gz_open(const void *path, int fd, const char *mode)
             *(state->path) = 0;
     else
 #endif
-        strcpy(state->path, (const char *)path);
+        strcpy(state->path, path);
 
     /* compute the flags for open() */
     oflag =
@@ -283,7 +285,12 @@ gzFile ZEXPORT gzdopen(int fd, const char *mode)
 
     if (fd == -1 || (path = (char *)z_malloc(7 + 3 * sizeof(int))) == NULL)
         return NULL;
+#ifdef ZLIB_SLB
+	/* avoid reference to sprintf; it is the only one */
+	strcpy(path, "<fd>");
+#else
     sprintf(path, "<fd:%d>", fd);   /* for debugging */
+#endif
     gz = gz_open(path, fd, mode);
     z_free(path);
     return gz;
@@ -293,7 +300,7 @@ gzFile ZEXPORT gzdopen(int fd, const char *mode)
 #ifdef WIDECHAR
 gzFile ZEXPORT gzopen_w(const wchar_t *path, const char *mode)
 {
-    return gz_open(path, -2, mode);
+    return gz_open((const char *)path, -2, mode);
 }
 #endif
 
@@ -376,7 +383,7 @@ z_off64_t ZEXPORT gzseek64(gzFile file, z_off64_t offset, int whence)
     /* if within raw area while reading, just go there */
     if (state->mode == GZ_READ && state->how == COPY &&
             state->x.pos + offset >= 0) {
-        ret = LSEEK(state->fd, offset - state->x.have, SEEK_CUR);
+        ret = LSEEK(state->fd, offset - (z_off64_t)state->x.have, SEEK_CUR);
         if (ret == -1)
             return -1;
         state->x.have = 0;

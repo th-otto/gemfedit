@@ -229,11 +229,7 @@
 #  endif
 #endif
 
-#if !defined(z_const)
-#  define z_const const
-#else
-#  define z_const
-#endif
+#define z_const const
 
 #ifdef Z_SOLO
    typedef unsigned long z_size_t;
@@ -546,10 +542,6 @@ __extension__ typedef long long z_off64_t_;
 #  else
 #    define z_off64_t off_t
 #  endif
-#endif
-
-#ifdef __GNUC__
-#define NO_DUMMY_DECL
 #endif
 
 /* MVS linker does not support external names larger than 8 bytes */

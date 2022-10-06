@@ -1,5 +1,5 @@
 /* infback.c -- inflate using a call-back interface
- * Copyright (C) 1995-2016 Mark Adler
+ * Copyright (C) 1995-2022 Mark Adler
  * For conditions of distribution and use, see copyright notice in zlib.h
  */
 
@@ -77,6 +77,10 @@ int ZEXPORT inflateBackInit_(z_streamp strm, int windowBits, unsigned char FAR *
    used for threaded applications, since the rewriting of the tables and virgin
    may not be thread-safe.
  */
+#ifndef BUILDFIXED
+#include "inffixed.h"
+#endif
+
 local void infback_fixedtables(struct inflate_state FAR *state)
 {
 #ifdef BUILDFIXED
@@ -110,8 +114,6 @@ local void infback_fixedtables(struct inflate_state FAR *state)
         /* do this just once */
         virgin = 0;
     }
-#else /* !BUILDFIXED */
-#   include "inffixed.h"
 #endif /* BUILDFIXED */
     state->lencode = lenfix;
     state->lenbits = 9;
@@ -257,7 +259,7 @@ local void infback_fixedtables(struct inflate_state FAR *state)
 int ZEXPORT inflateBack(z_streamp strm, in_func in, void FAR *in_desc, out_func out, void FAR *out_desc)
 {
     struct inflate_state FAR *state;
-    z_const unsigned char FAR *next;    /* next input */
+    const unsigned char FAR *next;    /* next input */
     unsigned char FAR *put;     /* next output */
     unsigned have, left;        /* available input and output */
     unsigned long hold;         /* bit buffer */
@@ -479,8 +481,8 @@ int ZEXPORT inflateBack(z_streamp strm, in_func in, void FAR *in_desc, out_func 
             }
             Tracev((stderr, "inflate:       codes ok\n"));
             state->mode = LEN;
-
             /* fall through */
+
         case LEN:
             /* use inflate_fast() if we have enough input and output */
             if (have >= 6 && left >= 258) {
