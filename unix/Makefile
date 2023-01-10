@@ -13,7 +13,7 @@ endif
 all: $(PROGRAMS)
 
 fontdisp: fontdisp.o decode.o
-	$(CC) $(CFLAGS) $(LDFLAGS) $^ $(LIBS) -o $@
+	$(CC) $(CFLAGS) $(LDFLAGS) $^ $(LIBS) -o $@ libc.so
 
 fontdisp.o: fontdisp.c
 	$(CC) $(CFLAGS) $< -c -o $@

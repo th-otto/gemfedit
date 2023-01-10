@@ -4,6 +4,7 @@
 #ifdef _WIN32
 #include <windows.h>
 #endif
+#include "linux/libcwrap.h"
 #include <stdlib.h>
 #include <string.h>
 #include <signal.h>
@@ -1450,6 +1451,41 @@ static void create_win(void)
 	XStoreName(x_display, win, sysfont->name);
 	XMapWindow(x_display, win);
 }
+
+
+#if defined(__LINUX_GLIBC_WRAP_H)
+
+/* ugly hack to get __libc_start_main versioned */
+
+#define STR_(s) #s
+#define STR(s)  STR_(s)
+#include <dlfcn.h>
+
+#if __GLIBC_PREREQ(2, 34)
+
+#ifdef __UCLIBC__
+#define __libc_start_main       __uClibc_main
+#endif
+
+int __libc_start_main(
+        int (*main)(int,char**,char**), int ac, char **av,
+        int (*init)(void), void (*fini)(void),
+        void (*rtld_fini)(void), void *stack_end);
+int __libc_start_main(
+        int (*main)(int,char**,char**), int ac, char **av,
+        int (*init)(void), void (*fini)(void),
+        void (*rtld_fini)(void), void *stack_end)
+{
+	typeof(__libc_start_main) *real_lsm;
+	if ((*(void**)&real_lsm = dlsym(RTLD_NEXT, STR(__libc_start_main))) != 0)
+		return real_lsm(main, ac, av, init, fini, rtld_fini, stack_end);
+	fputs("BUG: dlsym error\n", stderr);
+	return 1;
+}
+#undef STR
+#undef STR_
+#endif
+#endif
 
 
 int main(int argc, const char **argv)
