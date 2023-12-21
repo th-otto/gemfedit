@@ -527,7 +527,7 @@ static gboolean gen_ttf_font(GString *body)
 	time_t t;
 	struct tm tm;
 	char *basename;
-	int columns;
+	int columns = 0;
 	uint32_t num_glyphs;
 	FT_UInt gindex;
 	uint32_t char_id, id;
@@ -995,6 +995,10 @@ static gboolean load_ttf_font(const char *filename, GString *body)
 /*****************************************************************************/
 /* ------------------------------------------------------------------------- */
 /*****************************************************************************/
+
+/* ------------------------------------------------------------------------- */
+
+#include "linux/libcmain.h"
 
 int main(void)
 {

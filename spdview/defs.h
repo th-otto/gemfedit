@@ -5,6 +5,7 @@
 #include <string.h>
 #include <errno.h>
 #include <sys/stat.h>
+#include "stat_.h"
 
 #ifndef __GNUC_PREREQ
 # ifdef __GNUC__

@@ -1,6 +1,6 @@
 CC = gcc
 
-WARN = -fno-common -Wall -W -Wunused -Wundef -Wstrict-prototypes -Wmissing-prototypes -Werror
+WARN = -fno-common -Wall -W -Wunused -Wundef -Wstrict-prototypes -Wmissing-prototypes -Wno-deprecated-declarations -Werror
 CFLAGS = -O2 -g -fomit-frame-pointer $(WARN)
 CPPFLAGS = -I../include -I../speedo -I../freetype/include
 LDFLAGS = -s

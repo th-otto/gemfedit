@@ -1,3 +1,5 @@
+#define _GNU_SOURCE
+
 #include "linux/libcwrap.h"
 #include "defs.h"
 #include <sys/time.h>

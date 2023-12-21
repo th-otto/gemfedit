@@ -1,3 +1,7 @@
+#if defined(__CYGWIN__) && !defined(_WIN32)
+/* workaround bug in cygwin curl header */
+#define SOCKET int
+#endif
 #include <curl/curl.h>
 
 #define _(x) x
