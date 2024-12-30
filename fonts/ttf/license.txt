@@ -1,0 +1,8 @@
+﻿The FontStruction “Atari ST 8×16”
+(https://fontstruct.com/fontstructions/show/1687936) by Patrick H. Lauke is
+licensed under a Creative Commons Attribution license
+(http://creativecommons.org/licenses/by/3.0/).
+“Atari ST 8×16” was originally cloned (copied) from the FontStruction
+“Atari ST” (https://fontstruct.com/fontstructions/show/1687728) by Patrick
+H. Lauke, which is licensed under a Creative Commons Attribution license
+(http://creativecommons.org/licenses/by/3.0/).
