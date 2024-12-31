@@ -7,7 +7,12 @@ LIBS= -lgdi32 -lcomdlg32
 
 PROGRAMS = fontdisp.exe
 
+ifneq (,$(shell which $(CC) 2>/dev/null))
 all: $(PROGRAMS)
+else
+all:
+	@echo "$(CC) not found, not building for win32" >&2
+endif
 
 fontdisp.exe: fontdisp.o decode.o pnglib.o zlib.o
 	$(CC) $(CFLAGS) $(LDFLAGS) $^ $(LIBS) -o $@

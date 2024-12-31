@@ -27,7 +27,12 @@ MATH_LIB = -lm
 
 PROGRAMS = gemfedit.prg fontdisp.prg spdview.prg sptobdf.ttp fntconv.ttp
 
+ifneq (,$(shell which $(CC) 2>/dev/null))
 all: $(PROGRAMS)
+else
+all:
+	@echo "$(CC) not found, not building for tos" >&2
+endif
 
 
 gemfedit.prg: gemfedit.o decode.o
